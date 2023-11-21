@@ -5,15 +5,15 @@
 \alias{respiratory}
 \title{Clinical trial comparing two treatments for a respiratory illness}
 \format{
-A data frame with 555 rows and 7 columns:
+A data frame with 444 rows and 7 columns:
 \describe{
-  \item{id}{a factor with 56 levels}
-  \item{gender}{a factor with levels F and M}
-  \item{center}{a factor with levels C1 and C2}
-  \item{treatment}{a factor with levels placebo and active}
-  \item{age}{a numeric vector}
-  \item{visit}{a numeric vector.}
-  \item{status}{a factor with levels poor and good (response)}
+  \item{id}{patients' id}
+  \item{y}{respiratory status coded as 1 = good and 0 = poor}
+  \item{baseline}{respiratory status at baseline, coded as 1 = good and 0 = poor}
+  \item{treatment}{treatment group variable, coded as placebo or active}
+  \item{visit}{identifier of each of the four visits}
+  \item{age}{the age in years at baseline}
+  \item{center}{identifier of the two centers}
   }
 }
 \usage{
@@ -25,9 +25,9 @@ where 111 patients from two different clinics were randomized to receive
 either placebo or an active treatment.
 }
 \details{
-Patients were examined at baseline and at four visits during treatment. At
-each examination, respiratory status (categorized as 1 = good, 0 = poor) was
-determined.
+Patients were examined at baseline and at four visits during treatment. The
+respiratory status (coded as 1 = good and 0 = poor) was determined at the
+baseline and at each visit.
 }
 \references{
 Stokes ME, Davis CS, Koch GG (1995) Categorical Data Analysis

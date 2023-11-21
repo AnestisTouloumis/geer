@@ -1,7 +1,14 @@
 ## code to prepare `respiratory` dataset goes here
 
-library("ALA")
 library("tidyverse")
-data("respir")
+data("respiratory", package = "mdhglm")
 respiratory <-
-  respir
+  respiratory |>
+  mutate(id = patient) |>
+  group_by(id) |>
+  mutate(visit = 1:4,
+         gender = sex) |>
+  ungroup(id) |>
+  select(-patient, -past, - sex) |>
+  relocate(id, y, baseline, treatment, visit, gender, age, center)
+usethis::use_data(respiratory, overwrite = TRUE)
