@@ -14,4 +14,4 @@ Anestis Touloumis
 
 Maintainer: Anestis Touloumis \email{A.Touloumis@brighton.ac.uk}
 }
-\keyword{package}
+\keyword{internal}

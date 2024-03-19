@@ -2,6 +2,7 @@ geer <- function(x, ...) { # nolint
   UseMethod("geer")
 }
 
+#' @export
 geer.default <- function(x, ...) {
   object <- list()
   object$call <- x$call

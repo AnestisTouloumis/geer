@@ -5,7 +5,6 @@
 #'
 #' @name geer-package
 #' @aliases geer
-#' @docType package
 #' @author Anestis Touloumis
 #'
 #' Maintainer: Anestis Touloumis \email{A.Touloumis@@brighton.ac.uk}
@@ -18,5 +17,5 @@
 #' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients
 #' @importFrom stats update pchisq formula family
 #' @importFrom utils combn
-#' @keywords package
-NULL
+#' @keywords internal
+"_PACKAGE"
