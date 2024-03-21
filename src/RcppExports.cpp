@@ -78,27 +78,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// fit_bingee_hybrid
-Rcpp::List fit_bingee_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, arma::vec beta_vector, const int& maxiter, const double& tolerance, const arma::vec& offset, const arma::vec& alpha_vector, const char * type);
-RcppExport SEXP _geer_fit_bingee_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP offsetSEXP, SEXP alpha_vectorSEXP, SEXP typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type maxiter(maxiterSEXP);
-    Rcpp::traits::input_parameter< const double& >::type tolerance(toleranceSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type offset(offsetSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_bingee_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fit_bingee_or
 Rcpp::List fit_bingee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, arma::vec beta_vector, const int& maxiter, const double& tolerance, const arma::vec& offset, const arma::vec& alpha_vector, const char * type);
 RcppExport SEXP _geer_fit_bingee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP offsetSEXP, SEXP alpha_vectorSEXP, SEXP typeSEXP) {
@@ -690,49 +669,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpparma_hello_world
-arma::mat rcpparma_hello_world();
-RcppExport SEXP _geer_rcpparma_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpparma_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparma_outerproduct
-arma::mat rcpparma_outerproduct(const arma::colvec& x);
-RcppExport SEXP _geer_rcpparma_outerproduct(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_outerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparma_innerproduct
-double rcpparma_innerproduct(const arma::colvec& x);
-RcppExport SEXP _geer_rcpparma_innerproduct(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_innerproduct(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpparma_bothproducts
-Rcpp::List rcpparma_bothproducts(const arma::colvec& x);
-RcppExport SEXP _geer_rcpparma_bothproducts(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::colvec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpparma_bothproducts(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // update_beta_gee
 arma::vec update_beta_gee(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_update_beta_gee(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
@@ -863,121 +799,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const char* >::type type(typeSEXP);
     rcpp_result_gen = Rcpp::wrap(update_beta(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_robust_hybrid
-arma::vec update_beta_robust_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_robust_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_robust_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_gee_hybrid
-arma::vec update_beta_gee_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_gee_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_gee_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_naive_hybrid
-arma::vec update_beta_naive_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_naive_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_naive_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_empirical_hybrid
-arma::vec update_beta_empirical_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_empirical_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_empirical_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_jeffreys_hybrid
-arma::vec update_beta_jeffreys_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_jeffreys_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// update_beta_hybrid
-arma::vec update_beta_hybrid(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector, const char* type);
-RcppExport SEXP _geer_update_beta_hybrid(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP, SEXP typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const char* >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_hybrid(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1227,7 +1048,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_covariance_matrices", (DL_FUNC) &_geer_get_covariance_matrices, 11},
     {"_geer_get_covariance_matrices_or", (DL_FUNC) &_geer_get_covariance_matrices_or, 8},
     {"_geer_fit_geesolver", (DL_FUNC) &_geer_fit_geesolver, 18},
-    {"_geer_fit_bingee_hybrid", (DL_FUNC) &_geer_fit_bingee_hybrid, 11},
     {"_geer_fit_bingee_or", (DL_FUNC) &_geer_fit_bingee_or, 11},
     {"_geer_arma2vec", (DL_FUNC) &_geer_arma2vec, 1},
     {"_geer_vec2arma", (DL_FUNC) &_geer_vec2arma, 1},
@@ -1274,22 +1094,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_bivariate_distribution_mu", (DL_FUNC) &_geer_get_bivariate_distribution_mu, 2},
     {"_geer_get_g_matrix_mu", (DL_FUNC) &_geer_get_g_matrix_mu, 2},
     {"_geer_get_weight_matrix_mu_or", (DL_FUNC) &_geer_get_weight_matrix_mu_or, 2},
-    {"_geer_rcpparma_hello_world", (DL_FUNC) &_geer_rcpparma_hello_world, 0},
-    {"_geer_rcpparma_outerproduct", (DL_FUNC) &_geer_rcpparma_outerproduct, 1},
-    {"_geer_rcpparma_innerproduct", (DL_FUNC) &_geer_rcpparma_innerproduct, 1},
-    {"_geer_rcpparma_bothproducts", (DL_FUNC) &_geer_rcpparma_bothproducts, 1},
     {"_geer_update_beta_gee", (DL_FUNC) &_geer_update_beta_gee, 12},
     {"_geer_update_beta_naive", (DL_FUNC) &_geer_update_beta_naive, 12},
     {"_geer_update_beta_robust", (DL_FUNC) &_geer_update_beta_robust, 12},
     {"_geer_update_beta_empirical", (DL_FUNC) &_geer_update_beta_empirical, 12},
     {"_geer_update_beta_jeffreys", (DL_FUNC) &_geer_update_beta_jeffreys, 12},
     {"_geer_update_beta", (DL_FUNC) &_geer_update_beta, 13},
-    {"_geer_update_beta_robust_hybrid", (DL_FUNC) &_geer_update_beta_robust_hybrid, 9},
-    {"_geer_update_beta_gee_hybrid", (DL_FUNC) &_geer_update_beta_gee_hybrid, 9},
-    {"_geer_update_beta_naive_hybrid", (DL_FUNC) &_geer_update_beta_naive_hybrid, 9},
-    {"_geer_update_beta_empirical_hybrid", (DL_FUNC) &_geer_update_beta_empirical_hybrid, 9},
-    {"_geer_update_beta_jeffreys_hybrid", (DL_FUNC) &_geer_update_beta_jeffreys_hybrid, 9},
-    {"_geer_update_beta_hybrid", (DL_FUNC) &_geer_update_beta_hybrid, 10},
     {"_geer_update_beta_gee_or", (DL_FUNC) &_geer_update_beta_gee_or, 9},
     {"_geer_update_beta_naive_or", (DL_FUNC) &_geer_update_beta_naive_or, 9},
     {"_geer_update_beta_robust_or", (DL_FUNC) &_geer_update_beta_robust_or, 9},

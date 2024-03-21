@@ -3,34 +3,36 @@
 \docType{data}
 \name{respiratory}
 \alias{respiratory}
-\title{Clinical trial comparing two treatments for a respiratory illness}
+\title{Respiratory Clinical Trial}
 \format{
 A data frame with 444 rows and 7 columns:
 \describe{
-  \item{id}{patients' id}
-  \item{y}{respiratory status coded as 1 = good and 0 = poor}
-  \item{baseline}{respiratory status at baseline, coded as 1 = good and 0 = poor}
-  \item{treatment}{treatment group variable, coded as placebo or active}
-  \item{visit}{identifier of each of the four visits}
-  \item{age}{the age in years at baseline}
-  \item{center}{identifier of the two centers}
+  \item{id}{Patient identifier.}
+  \item{visit}{Visit identifier.}
+  \item{y}{Respiratory status variable with two levels: good and poor.}
+  \item{baseline}{Respiratory status variable at baseline with two levels:
+   good and poor.}
+  \item{treatment}{Treatment group variable with two levels: placebo and active.}
+  \item{gender}{The gender of the patient.}
+  \item{age}{The age in years recorded at baseline.}
+  \item{center}{Center identifier.}
   }
 }
 \usage{
 respiratory
 }
 \description{
-The data are from a clinical trial of patients with respiratory illness,
-where 111 patients from two different clinics were randomized to receive
-either placebo or an active treatment.
+The data are from a clinical trial of patients with respiratory illness.
 }
 \details{
-Patients were examined at baseline and at four visits during treatment. The
-respiratory status (coded as 1 = good and 0 = poor) was determined at the
-baseline and at each visit.
+A total of 111 patients from two different centers were enrolled in a randomized
+clinical trial. Prior to receiving treatment, patients were examined at baseline.
+After receiving treatment (placebo or active), patients were examined at four
+visits during. The respiratory status was determined at the baseline and at
+each of the four follow-up visits.
 }
 \references{
-Stokes ME, Davis CS, Koch GG (1995) Categorical Data Analysis
-using the SAS System. Cary, NC: SAS Institute, Inc.
+Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis
+using the SAS System.} Cary, NC: SAS Institute, Inc.
 }
 \keyword{datasets}

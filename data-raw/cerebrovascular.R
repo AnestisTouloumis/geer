@@ -1,11 +1,9 @@
 ## code to prepare `cerebrovascular` dataset goes here
 
-usethis::use_data(cerebrovascular, overwrite = TRUE)
 library("tidyverse")
 library("ALA")
-data("ecg")
 cerebrovascular <-
-  ecg |>
+  ALA::ecg |>
   mutate(treatment =
            if_else(sequence == "P->A" & period == 1,
                    "placebo",
@@ -17,4 +15,12 @@ cerebrovascular <-
                    )
            )
   ) |>
-  select(-sequence)
+  select(-sequence) |>
+  relocate(id, period, ecg, treatment) |>
+  mutate(id = factor(id),
+         period = factor(period),
+         ecg = factor(ecg),
+         treatment = factor(treatment)) |>
+  as.data.frame()
+rownames(cerebrovascular) <- 1:nrow(cerebrovascular)
+usethis::use_data(cerebrovascular, overwrite = TRUE)

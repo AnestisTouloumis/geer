@@ -3,35 +3,33 @@
 \docType{data}
 \name{cerebrovascular}
 \alias{cerebrovascular}
-\title{Two-period crossover trial study on cerebrovascular deficiency}
+\title{Cerebrovascular Deficiency Crossover Trial}
 \format{
 A data frame with 134 rows and 4 columns:
 \describe{
-  \item{id}{a factor with 67 levels}
-  \item{period}{a factor with levels 1 and 2}
-  \item{ecg}{a factor (ECG response) with levels normal and abnormal}
-  \item{treatment}{a factor with levels placebo and active}
+  \item{id}{Patient identifier.}
+  \item{period}{Period identifier.}
+  \item{ecg}{Response indicating whether an electrocardiogram was
+  abnormal or normal.}
+  \item{treatment}{Treatment group varaible with two levels: placebo and active.}
   }
 }
 \usage{
 cerebrovascular
 }
 \description{
-The dataset consists of safety data from a crossover trial on the disease
-cerebrovascular deficiency.
+The dataset consists of safety data from a crossover trial on cerebrovascular deficiency.
 }
 \details{
 The response variable is not a trial endpoint but rather a potential side
-effect. In this two-period crossover trial, comparing the effects of active
-drug to placebo, 67 patients were randomly allocated to the two treatment
-sequences, with 34 patients receiving placebo followed by active treatment,
-and 33 patients receiving active treatment followed by placebo. The response
-variable is binary, indicating whether an electrocardiogram (ECG) was
-abnormal (1) or normal (0). Each patient has a bivariate binary response
-vector.
+effect, indicating whether an electrocardiogram (ECG) was abnormal or normal.
+This two-period crossover trial compares the effects of active drug to placebo.
+The 67 patients were randomly allocated to the two treatment sequences, with
+34 patients receiving placebo followed by active treatment, and 33 patients
+receiving active treatment followed by placebo.
 }
 \references{
-Jones B., Kenward M.G. (1989) Design and Analysis of Cross-over
-Trials. London: Chapman and Hall/CRC Press.
+Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
+Trials.} London: Chapman and Hall/CRC Press.
 }
 \keyword{datasets}

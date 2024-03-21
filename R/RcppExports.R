@@ -13,10 +13,6 @@ fit_geesolver <- function(y_vector, model_matrix, id_vector, repeated_vector, li
     .Call(`_geer_fit_geesolver`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, correlation_structure, mdependence, use_params, maxiter, tolerance, offset, phi, phi_fixed, alpha_vector, alpha_fixed, type)
 }
 
-fit_bingee_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type) {
-    .Call(`_geer_fit_bingee_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type)
-}
-
 fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type) {
     .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type)
 }
@@ -201,22 +197,6 @@ get_weight_matrix_mu_or <- function(mu_vector, odds_ratios_vector) {
     .Call(`_geer_get_weight_matrix_mu_or`, mu_vector, odds_ratios_vector)
 }
 
-rcpparma_hello_world <- function() {
-    .Call(`_geer_rcpparma_hello_world`)
-}
-
-rcpparma_outerproduct <- function(x) {
-    .Call(`_geer_rcpparma_outerproduct`, x)
-}
-
-rcpparma_innerproduct <- function(x) {
-    .Call(`_geer_rcpparma_innerproduct`, x)
-}
-
-rcpparma_bothproducts <- function(x) {
-    .Call(`_geer_rcpparma_bothproducts`, x)
-}
-
 update_beta_gee <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
     .Call(`_geer_update_beta_gee`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
@@ -239,30 +219,6 @@ update_beta_jeffreys <- function(y_vector, model_matrix, id_vector, repeated_vec
 
 update_beta <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type) {
     .Call(`_geer_update_beta`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type)
-}
-
-update_beta_robust_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_robust_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_gee_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_gee_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_naive_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_naive_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_empirical_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_empirical_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_jeffreys_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_jeffreys_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_hybrid <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, type) {
-    .Call(`_geer_update_beta_hybrid`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, type)
 }
 
 update_beta_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {

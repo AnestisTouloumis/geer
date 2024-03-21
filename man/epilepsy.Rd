@@ -3,39 +3,35 @@
 \docType{data}
 \name{epilepsy}
 \alias{epilepsy}
-\title{Seizure counts for 59 epileptics}
+\title{Epilepsy Clinical Trial}
 \format{
-A data frame with 295 rows and 5 columns:
+A data frame with 295 rows and 6 columns:
 \describe{
-  \item{id}{a factor with 59 levels}
-  \item{treatment}{a factor with levels placebo and progabide}
-  \item{age}{a numeric vector}
-  \item{week}{a numeric vector; 0 represents the baseline over the
+  \item{id}{Patient identifier.}
+  \item{week}{Week identifier: 0 represents the baseline over the
   preceeding 8 weeks}
-  \item{nSeizures}{a numeric vector; number of seizures}
-  \item{response}{a factor indicating if the subject had 5 or less seisures.}
+  \item{y}{Response coded as (1) if the subject had 5 or less seizures and as (0) otherwise.}
+  \item{treatment}{Treatment group variable with two levels: placebo and progabide.}
+  \item{age}{Age recorded at baseline.}
+  \item{nSeizures}{The number of seizures.}
   }
 }
 \usage{
 epilepsy
 }
 \description{
-The data are from a placebo-controlled clinical trial of 59 epileptics.
-Patients with partial seizures were enrolled in a randomized clinical trial
-of the anti-epileptic drug, progabide.
+The data are from a placebo-controlled clinical trial on epilepsy.
 }
 \details{
-Participants in the study were randomized to either progabide or a placebo,
-as an adjuvant to the standard anti-epileptic chemotherapy. Progabide is an
-anti-epileptic drug whose primary mechanism of action is to enhance
-gamma-aminobutyric acid (GABA) content; GABA is the primary inhibitory
-neurotransmitter in the brain. Prior to receiving treatment, baseline data
-on the number of epileptic seizures during the preceding 8-week interval were
-recorded. Counts of epileptic seizures during 2-week intervals before each of
-four successive post-randomization clinic visits were recorded.
+A total of 57 patients with partial seizures were enrolled in a randomized
+clinical trial. Patients were allocated to either the anti-epileptic drug
+progabide or to placebo. Prior to receiving treatment,
+the number of epileptic seizures during the preceding 8-week interval were
+recorded. After receiving treatment, the number of epileptic seizures were
+recorded at each of four 2-week intervals clinic visits.
 }
 \references{
-Thall PF, Vail SC (1990) Some covariance models for longitudinal
-count data with overdispersion. Biometrics 46:657-671
+Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
+count data with overdispersion. \emph{Biometrics}, \strong{46}, 657-671.
 }
 \keyword{datasets}
