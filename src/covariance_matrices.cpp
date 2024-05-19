@@ -23,7 +23,6 @@ Rcpp::List get_covariance_matrices(const arma::vec & y_vector,
                                    const double & phi) {
   double sample_size = max(id_vector);
   double params_no = model_matrix.n_cols;
-  arma::vec u_vector = arma::zeros(params_no);
   arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
   arma::mat meat_matrix = arma::zeros(params_no, params_no);
   arma::vec delta_star_vector = mueta(link, eta_vector);
@@ -43,7 +42,6 @@ Rcpp::List get_covariance_matrices(const arma::vec & y_vector,
                               phi, correlation_matrix_inverse_full);
     arma::vec u_vector_i =
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
-    u_vector += u_vector_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     meat_matrix += u_vector_i * trans(u_vector_i);
   }

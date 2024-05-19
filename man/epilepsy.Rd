@@ -30,6 +30,10 @@ the number of epileptic seizures during the preceding 8-week interval were
 recorded. After receiving treatment, the number of epileptic seizures were
 recorded at each of four 2-week intervals clinic visits.
 }
+\examples{
+data("epilepsy")
+str("epilepsy")
+}
 \references{
 Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
 count data with overdispersion. \emph{Biometrics}, \strong{46}, 657-671.

@@ -17,7 +17,7 @@
 #' @param type character indicating whether the sandwich (robust) covariance
 #' matrix (\code{type = "robust"}), the model-based (naive) covariance
 #' matrix (\code{type = "naive"}) or the bias-corrected covariance
-#' matrix (\code{type = "bias_corrected"}) should be returned.
+#' matrix (\code{type = "bias-corrected"}) should be returned.
 #' @param ... additional argument(s) for methods.
 #'
 #' @return A matrix of the estimated covariances between the parameter estimates
@@ -29,13 +29,13 @@
 
 vcov.geer <- function(object, type = "robust", ...) {
   icheck <- pmatch(type,
-                   c("robust", "naive", "bias_corrected"),
+                   c("robust", "naive", "bias-corrected"),
                    nomatch = 0,
                    duplicates.ok = FALSE)
   if (icheck == 0) stop("unknown method for the covariance matrix")
   if (type == "robust") {
     object$robust_covariance
-    } else if (type == "bias_corrected") {
+    } else if (type == "bias-corrected") {
       object$bias_corrected_covariance
     } else {
       object$naive_covariance

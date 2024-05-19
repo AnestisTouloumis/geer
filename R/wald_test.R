@@ -7,7 +7,7 @@
 #'
 #' @param object0 A fitted model of the class \code{geer}.
 #' @param object1 A fitted model of the class \code{geer}.
-#' @param type 	character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be returned.
+#' @param type 	character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.
 #'
 #' @author Anestis Touloumis
 #'
@@ -63,4 +63,4 @@ wald_test <- function(object0, object1, type = "robust"){
   ans <- structure(table, heading = c(title, topnote),
                    class = c("anova", "data.frame"))
   ans
-  }
+}

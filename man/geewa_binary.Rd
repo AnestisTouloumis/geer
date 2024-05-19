@@ -85,9 +85,9 @@ association structure.}
 \item{model_matrix}{the model matrix.}
 \item{obs_no}{the number of observations across clusters.}
 \item{family}{the \link{family} object used.}
-\item{fitted_values}{a numeric vector of fitted values.}
+\item{fitted.values}{a numeric vector of fitted values.}
 \item{residuals}{a numeric vector of residuals.}
-\item{linear_predictors}{a numeric vector of linear predictors.}
+\item{linear.predictors}{a numeric vector of linear predictors.}
 \item{clusters_no}{the number of clusters.}
 \item{min_cluster_size}{the minimum cluster size.}
 \item{max_cluster_size}{the maximum cluster size.}

@@ -13,7 +13,7 @@
 \item{type}{character indicating whether the sandwich (robust) covariance
 matrix (\code{type = "robust"}), the model-based (naive) covariance
 matrix (\code{type = "naive"}) or the bias-corrected covariance
-matrix (\code{type = "bias_corrected"}) should be returned.}
+matrix (\code{type = "bias-corrected"}) should be returned.}
 
 \item{...}{additional argument(s) for methods.}
 }

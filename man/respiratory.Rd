@@ -31,6 +31,10 @@ After receiving treatment (placebo or active), patients were examined at four
 visits during. The respiratory status was determined at the baseline and at
 each of the four follow-up visits.
 }
+\examples{
+data("respiratory")
+str("respiratory")
+}
 \references{
 Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis
 using the SAS System.} Cary, NC: SAS Institute, Inc.

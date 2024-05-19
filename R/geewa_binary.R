@@ -73,9 +73,9 @@
 #' \item{model_matrix}{the model matrix.}
 #' \item{obs_no}{the number of observations across clusters.}
 #' \item{family}{the \link{family} object used.}
-#' \item{fitted_values}{a numeric vector of fitted values.}
+#' \item{fitted.values}{a numeric vector of fitted values.}
 #' \item{residuals}{a numeric vector of residuals.}
-#' \item{linear_predictors}{a numeric vector of linear predictors.}
+#' \item{linear.predictors}{a numeric vector of linear predictors.}
 #' \item{clusters_no}{the number of clusters.}
 #' \item{min_cluster_size}{the minimum cluster size.}
 #' \item{max_cluster_size}{the maximum cluster size.}
@@ -340,9 +340,6 @@ geewa_binary <- function(formula = formula(data),
 
     fit$phi <- 1
 
-
-
-    fit$ee_value <- geesolver_fit$uvec
     fit$niter <- ncol(geesolver_fit$beta_mat) - 1
     fit$criterion <- geesolver_fit$criterion[fit$niter]
     fit$converged <- fit$criterion <= tolerance
@@ -351,16 +348,19 @@ geewa_binary <- function(formula = formula(data),
     }
 
     fit$terms <- model_terms
+    fit$contrasts <- attr(model_matrix, "contrasts")
+    fit$levels <- .getXlevels(attr(model_frame,"terms"), model_frame)
     fit$y <- y
     fit$model_matrix <- model_matrix
     fit$obs_no <- nrow(model_matrix)
     fit$family <- binomial(link = link)
 
-    fit$fitted_values <- c(geesolver_fit$fitted)
+    fit$fitted.values <- c(geesolver_fit$fitted)
     fit$residuals <- c(geesolver_fit$residuals)
-    fit$linear_predictors <- c(geesolver_fit$eta)
+    fit$linear.predictors <- c(geesolver_fit$eta)
 
-
+    fit$id <- as.numeric(id)
+    fit$repeated <- as.numeric(repeated)
     fit$clusters_no <- max(id)
     clusters_sizes <- unlist(lapply(split(repeated, id), length))
     fit$min_cluster_size <- min(unique(clusters_sizes))
@@ -376,7 +376,7 @@ geewa_binary <- function(formula = formula(data),
               call. = FALSE)
 
     eps <- 10 * .Machine$double.eps
-    if (any(fit$fitted_values > 1 - eps) || any(fit$fitted_values < eps))
+    if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps))
         warning("geewa_binary: fitted probabilities numerically 0 or 1 occurred",
                 call. = FALSE)
 

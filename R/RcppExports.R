@@ -197,6 +197,14 @@ get_weight_matrix_mu_or <- function(mu_vector, odds_ratios_vector) {
     .Call(`_geer_get_weight_matrix_mu_or`, mu_vector, odds_ratios_vector)
 }
 
+estimating_equations_gee <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_estimating_equations_gee`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
+estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
+}
+
 update_beta_gee <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
     .Call(`_geer_update_beta_gee`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }

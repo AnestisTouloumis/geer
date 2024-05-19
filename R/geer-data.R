@@ -20,6 +20,8 @@
 #'
 #' @references Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
 #' Trials.} London: Chapman and Hall/CRC Press.
+#' data("cerebrovascular")
+#' str("cerebrovascular")
 "cerebrovascular"
 
 
@@ -47,6 +49,9 @@
 #'
 #' @references Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
 #' count data with overdispersion. \emph{Biometrics}, \strong{46}, 657-671.
+#' @examples
+#' data("epilepsy")
+#' str("epilepsy")
 "epilepsy"
 
 
@@ -76,6 +81,9 @@
 #'
 #' @references Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis
 #' using the SAS System.} Cary, NC: SAS Institute, Inc.
+#' @examples
+#' data("respiratory")
+#' str("respiratory")
 "respiratory"
 
 
@@ -109,6 +117,9 @@
 #'  zygocity and the ancestry of each twin were recorded.
 #'
 #' @references Turnbaugh et al. (2009) A core gut microbiome in obese and lean twins. \emph{Nature} , \strong{457}, 480–484.
+#' @examples
+#' data("obesity")
+#' str("obesity")
 "obesity"
 
 
@@ -135,4 +146,7 @@
 #'
 #' @references Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}.
 #' Ames, Iowa: Iowa State University Press.
-"obesity"
+#' @examples
+#' data("leprosy")
+#' str("leprosy")
+"leprosy"

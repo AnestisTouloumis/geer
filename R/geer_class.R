@@ -21,14 +21,18 @@ geer.default <- function(x, ...) {
   object$family <- x$family
   object$y <- x$y
   object$model_matrix <- x$model_matrix
+  object$id <- x$id
+  object$repeated <- x$repeated
   object$residuals <- x$residuals
-  object$fitted_values <- x$fitted_values
-  object$linear_predictors <- x$linear_predictors
+  object$fitted.values <- x$fitted.values
+  object$linear.predictors <- x$linear.predictors
   object$obs_no <- x$obs_no
   object$clusters_no <- x$clusters_no
   object$min_cluster_size <- x$min_cluster_size
   object$max_cluster_size <- x$max_cluster_size
   object$method <- x$method
+  object$levels <- x$levels
+  object$contrasts <- x$contrasts
   class(object) <- "geer"
   object
 }
@@ -114,7 +118,7 @@ coef.geer <- function(object, ...){
 #' @method fitted geer
 #' @export
 fitted.geer <- function(object, ...){
-  object$fitted_values
+  object$fitted.values
 }
 
 #' @method confint geer
@@ -143,9 +147,68 @@ confint.geer <- function(object, parm, level = 0.95, type = "robust", ...) {
 residuals.geer <- function(object, type = c("working", "pearson"), ...) {
   type <- match.arg(type)
   r   <- object$residuals
-  mu  <- object$fitted_values
+  mu  <- object$fitted.values
   res <- switch(type,
                 pearson = r/sqrt(object$family$variance(mu)),
                 working = r)
   res
+}
+
+
+#' @title Predict Method for Generalized Estimating Equations Fits
+#' @description Obtains predictions and optionally estimates standard errors of those predictions from a fitted generalized estimating equations object.
+#' @param object a fitted object of class inheriting from \code{geewa} or \code{geewa_binary}.
+#' @param newdata	optionally, a \code{data frame} in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.
+#' @param type the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.
+#' @param se.fit logical switch indicating if standard errors are required. Default is set to \code{FALSE}.
+#' @param vartype an (optional) character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust sandwich-type estimator ("robust"), degrees-of-freedom-adjusted estimator ("df-adjusted"), bias-corrected estimator ("bias-corrected"), and the model-based or naive estimator ("model"). As default, \code{varest} is set to "robust".
+#' @param ... further arguments passed to or from other methods.
+#' @return A matrix with so many rows as \code{newdata} and one column with the predictions. If \code{se.fit=}TRUE then a second column with estimates standard errors is included.
+#' @method predict geer
+#' @export
+predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
+                         vartype = c("robust", "bias-corrected", "naive"),
+                         se.fit = FALSE, ...){
+  type <- match.arg(type)
+  vartype <- match.arg(vartype)
+  if (missing(newdata)) {
+    if (type == "link") {
+      predicts <- object$linear.predictors
+    } else {
+      predicts <- object$fitted.values
+    }
+    if (se.fit) {
+      covariance_matrix <- vcov(object, type = vartype)
+      model_matrix <- object$model_matrix
+      se.fit <-
+        sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
+      if (type == "response")
+        se.fit <- se.fit * abs(object$family$mu.eta(object$linear.predictors))
+      names(predicts) <- names(se.fit)
+      predicts <- list(fit = predicts, se.fit = se.fit)
+    }
+  } else {
+    newdata <- data.frame(newdata)
+    model_frame <-
+      model.frame(delete.response(object$terms), newdata, xlev = object$levels)
+    model_matrix <-
+      model.matrix(delete.response(object$terms), model_frame, contrasts = object$contrasts)
+    predicts <- c(model_matrix %*% object$coefficients)
+    offset_term <- model.offset(model_frame)
+    if (!is.null(offset_term)) predicts <- predicts + c(offset_term)
+    if (se.fit) {
+      covariance_matrix <- vcov(object, vartype)
+      se.fit <-
+        sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
+      if (type == "response") {
+        se.fit <- se.fit * abs(object$family$mu.eta(predicts))
+        predicts <- object$family$linkinv(predicts)
+      }
+      names(predicts) <- names(se.fit)
+      predicts <- list(fit = predicts, se.fit = se.fit)
+    } else if (type == "response") {
+      predicts <- object$family$linkinv(predicts)
+    }
+  }
+  predicts
 }

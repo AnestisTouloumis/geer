@@ -18,24 +18,12 @@ A data frame with 195 rows and 7 columns:
   African (AA).}
   \item{bacteroides}{the abundance of bacteroides.}
   }
-
-A data frame with 80 rows and 4 columns:
-\describe{
-  \item{id}{Patient identifier.}
-  \item{period}{Period identifier.}
-  \item{bacilli}{The number of leprosy bacilli at six sites of the body.}
-  \item{treatment}{Treatment group variable with three levels: A, B and C.}
-  }
 }
 \usage{
-obesity
-
 obesity
 }
 \description{
 The data are from the Missouri Adolescent Female Twin Study.
-
-The data are from a clinical trial of patients with leprosy.
 }
 \details{
 The data were collected from 54 families with adult female twin pairs born
@@ -47,20 +35,12 @@ in Missouri. The obesity category for each individual was recorded as Obese
  using RNA sequencing. This dataset is a subset of the original dataset that
  includes only the abundance of Bacteroides. In addition, the age, the
  zygocity and the ancestry of each twin were recorded.
-
-A total of 30 patients were enrolled in a randomized clinical trial in
-Philippines. Prior to receiving treatment, the number of leprosy bacilli at
-six sites of the body were recorded. After receiving treatment (A, B or C),
-the number of leprosy bacilli were recorded again. The respiratory status
-was determined at the baseline and at each of the four follow-up visits. One
-of the goals of this study is whether treatment with antibiotics
-(treatments A and B) reduces the abundance of leprosy bacilli at the six sites
-of the body when compared to placebo (treatment C).
+}
+\examples{
+data("obesity")
+str("obesity")
 }
 \references{
 Turnbaugh et al. (2009) A core gut microbiome in obese and lean twins. \emph{Nature} , \strong{457}, 480–484.
-
-Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}.
-Ames, Iowa: Iowa State University Press.
 }
 \keyword{datasets}

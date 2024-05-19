@@ -15,7 +15,8 @@
 #'
 #' @importFrom stats gaussian glm model.extract model.matrix model.response
 #' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients
-#' @importFrom stats update pchisq formula family
+#' @importFrom stats update pchisq formula family .getXlevels delete.response
+#' @importFrom stats model.frame model.offset
 #' @importFrom utils combn
 #' @keywords internal
 "_PACKAGE"

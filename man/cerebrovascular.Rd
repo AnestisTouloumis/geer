@@ -31,5 +31,7 @@ receiving active treatment followed by placebo.
 \references{
 Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
 Trials.} London: Chapman and Hall/CRC Press.
+data("cerebrovascular")
+str("cerebrovascular")
 }
 \keyword{datasets}
