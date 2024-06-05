@@ -10,7 +10,7 @@ geewa(
   id = id,
   repeated = NULL,
   family = gaussian(link = "identity"),
-  maxiter = 25,
+  maxiter = 200,
   tolerance = 1e-06,
   beta_start = NULL,
   correlation_structure = "independence",
@@ -145,6 +145,28 @@ bias-reducing estimators, respectively. If \code{method = "bcgee_naive"},
 GEE will be adjusted to produce naive, robust or emprical bias-corrected
 estimators. If \code{method = "pgee_jeffreys"}, then penalized GEE will be
 solved.
+}
+\examples{
+data("leprosy")
+fitted_model_gee <- geewa(
+   formula = bacilli ~ time+time:I(treatment == "C"),
+   data = leprosy,
+   id = id,
+   family = poisson(link = "log"),
+   correlation_structure = "exchangeable",
+   method = "gee")
+summary(fitted_model_gee, type = "bias-corrected")
+fitted_model_brgee_robust <-
+ update(fitted_model_gee, method = "brgee_robust")
+summary(fitted_model_brgee_robust, type = "bias-corrected")
+fitted_model_brgee_naive <-
+ update(fitted_model_gee, method = "brgee_naive")
+summary(fitted_model_brgee_naive, type = "bias-corrected")
+fitted_model_brgee_empirical <-
+  update(fitted_model_gee, method = "brgee_robust")
+summary(fitted_model_brgee_empirical, type = "bias-corrected")#'
+
+
 }
 \author{
 Anestis Touloumis

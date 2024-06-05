@@ -83,6 +83,36 @@
 #'
 #' @author Anestis Touloumis
 #'
+#' @examples
+#' data("respiratory")
+#' fitted_model <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
+#'                              id = id,
+#'                              repeated = visit,
+#'                              link = "probit",
+#'                              data = respiratory[respiratory$center==2, ],
+#'                              or_structure = "independence",
+#'                              method = "pgee_jeffreys")
+#' summary(fitted_model, type = "bias-corrected")
+#'
+#' data("obesity")
+#' fitted_model_gee <- geewa_binary(
+#'   formula = I(obesity == "Obese") ~ age + zygosity + ancestry + bacteroides,
+#'   id = fid,
+#'   data = obesity,
+#'   link = "logit",
+#'   or_structure = "independence",
+#'   method = "gee")
+#' summary(fitted_model_gee, type = "bias-corrected")
+#' fitted_model_brgee_robust <-
+#'   update(fitted_model_gee, method = "brgee_robust")
+#' summary(fitted_model_brgee_robust, type = "bias-corrected")
+#' fitted_model_brgee_naive <-
+#'   update(fitted_model_gee, method = "brgee_naive")
+#' summary(fitted_model_brgee_naive, type = "bias-corrected")
+#' fitted_model_brgee_empirical <-
+#'   update(fitted_model_gee, method = "brgee_robust")
+#' summary(fitted_model_brgee_empirical, type = "bias-corrected")
+#'
 #' @export
 geewa_binary <- function(formula = formula(data),
                          data = parent.frame(),
@@ -90,11 +120,11 @@ geewa_binary <- function(formula = formula(data),
                          id = id,
                          repeated = NULL,
                          or_structure = "exchangeable",
-                         maxiter = 25,
+                         maxiter = 200,
                          tolerance = 1e-6,
                          beta_start = NULL,
                          alpha_vector = NULL,
-                         method = "type",
+                         method = "gee",
                          ...) {
     ## call
     call <- match.call()
@@ -232,7 +262,7 @@ geewa_binary <- function(formula = formula(data),
     method <- as.character(method)
     icheck <- as.integer(match(method, methods, -1))
     if (icheck < 1)
-      stop("`type` must be one of `gee`, `brgee_naive`, `brgee_robust`,
+      stop("`method` must be one of `gee`, `brgee_naive`, `brgee_robust`,
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
 

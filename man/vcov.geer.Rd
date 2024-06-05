@@ -5,15 +5,16 @@
 \alias{vcov}
 \title{Calculate Variance-Covariance Matrix for a Fitted \code{geer} Object.}
 \usage{
-\method{vcov}{geer}(object, type = "robust", ...)
+\method{vcov}{geer}(object, cov_type = "robust", ...)
 }
 \arguments{
 \item{object}{a fitted model geer object.}
 
-\item{type}{character indicating whether the sandwich (robust) covariance
-matrix (\code{type = "robust"}), the model-based (naive) covariance
-matrix (\code{type = "naive"}) or the bias-corrected covariance
-matrix (\code{type = "bias-corrected"}) should be returned.}
+\item{cov_type}{character indicating whether the sandwich (robust) covariance
+matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+matrix (\code{cov_type = "naive"}) or the bias-corrected covariance
+matrix (\code{cov_type = "bias-corrected"}) should be returned. By default,
+the robust covariance matrix is returned.}
 
 \item{...}{additional argument(s) for methods.}
 }
@@ -31,4 +32,15 @@ Default is to obtain the estimated sandwich (robust) covariance matrix. Setting
 \code{type = "naive"} obtains the estimated model-based (naive) covariance
 matrix and \code{type = "bias_corrected"} obtains the estimated bias-corrected
 covariance matrix.
+}
+\examples{
+data("cerebrovascular")
+fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
+                             id = id,
+                             data = cerebrovascular,
+                             link = "logit",
+                             or_structure = "exchangeable")
+vcov(fitted_model)
+vcov(fitted_model, cov_type = "bias-corrected")
+
 }

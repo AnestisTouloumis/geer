@@ -15,7 +15,7 @@ test_that("gee-glm", {
                coef(fit_glm),
                tolerance = 1e-5)
   expect_equal(vcov(fit_gee,
-                    type = "naive"),
+                    cov_type = "naive"),
                vcov(fit_glm),
                tolerance = 1e-5)
 })
@@ -52,7 +52,7 @@ test_that("jeffreys = glm - logit", {
                coef(fit_pgee_jeffreys),
                tolerance = 1e-5)
   expect_equal(vcov(fit_glm_jeffreys),
-               vcov(fit_pgee_jeffreys, type = "naive"),
+               vcov(fit_pgee_jeffreys, cov_type = "naive"),
                tolerance = 1e-5)
 })
 
@@ -68,6 +68,6 @@ test_that("jeffreys = glm - probit", {
                coef(fit_pgee_jeffreys_probit),
                tolerance = 1e-5)
   expect_equal(vcov(fit_glm_jeffreys_probit),
-               vcov(fit_pgee_jeffreys_probit, type = "naive"),
+               vcov(fit_pgee_jeffreys_probit, cov_type = "naive"),
                tolerance = 1e-5)
 })

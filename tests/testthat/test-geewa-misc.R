@@ -17,7 +17,7 @@ test_that("gee-glm", {
                coef(fit_glm),
                tolerance = 1e-5)
   expect_equal(vcov(fit_gee,
-                    type = "naive"),
+                    cov_type = "naive"),
                vcov(fit_glm),
                tolerance = 1e-5)
 })
@@ -30,10 +30,10 @@ test_that("brgee_naive-brglm_firth - probit", {
                           method = brglmFit,
                           type = "AS_mean")
 
-  expect_equal(coef(fit_brgee_naive),
+  expect_equal(coef(fit_brgee_naive, cov_type = "naive"),
                coef(fit_glm_firth),
                tolerance = 1e-5)
-  expect_equal(vcov(fit_brgee_naive, type = "naive"),
+  expect_equal(vcov(fit_brgee_naive, cov_type = "naive"),
                vcov(fit_glm_firth),
                tolerance = 1e-5)
 })
@@ -48,10 +48,10 @@ test_that("brgee_naive-brglm_firth - logit", {
                           method = brglmFit,
                           type = "AS_mean")
 
-  expect_equal(coef(fit_brgee_naive),
+  expect_equal(coef(fit_brgee_naive, cov_type = "naive"),
                coef(fit_glm_firth),
                tolerance = 1e-5)
-  expect_equal(vcov(fit_brgee_naive, type = "naive"),
+  expect_equal(vcov(fit_brgee_naive, cov_type = "naive"),
                vcov(fit_glm_firth),
                tolerance = 1e-5)
 })

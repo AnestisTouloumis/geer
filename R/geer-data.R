@@ -8,7 +8,7 @@
 #'   \item{period}{Period identifier.}
 #'   \item{ecg}{Response indicating whether an electrocardiogram was
 #'   abnormal or normal.}
-#'   \item{treatment}{Treatment group varaible with two levels: placebo and active.}
+#'   \item{treatment}{Treatment group variable with two levels: placebo and active.}
 #'   }
 #' @details
 #' The response variable is not a trial endpoint but rather a potential side
@@ -131,6 +131,7 @@
 #' \describe{
 #'   \item{id}{Patient identifier.}
 #'   \item{period}{Period identifier.}
+#'   \item{time}{Indicator of the post-treatment measurement.}
 #'   \item{bacilli}{The number of leprosy bacilli at six sites of the body.}
 #'   \item{treatment}{Treatment group variable with three levels: A, B and C.}
 #'   }

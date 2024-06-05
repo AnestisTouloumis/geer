@@ -112,6 +112,27 @@
 #'
 #' @author Anestis Touloumis
 #'
+#' @examples
+#' data("leprosy")
+#' fitted_model_gee <- geewa(
+#'    formula = bacilli ~ time+time:I(treatment == "C"),
+#'    data = leprosy,
+#'    id = id,
+#'    family = poisson(link = "log"),
+#'    correlation_structure = "exchangeable",
+#'    method = "gee")
+#' summary(fitted_model_gee, type = "bias-corrected")
+#' fitted_model_brgee_robust <-
+#'  update(fitted_model_gee, method = "brgee_robust")
+#' summary(fitted_model_brgee_robust, type = "bias-corrected")
+#' fitted_model_brgee_naive <-
+#'  update(fitted_model_gee, method = "brgee_naive")
+#' summary(fitted_model_brgee_naive, type = "bias-corrected")
+#' fitted_model_brgee_empirical <-
+#'   update(fitted_model_gee, method = "brgee_robust")
+#' summary(fitted_model_brgee_empirical, type = "bias-corrected")#'
+#'
+#'
 #' @export
 geewa <-
   function(formula = formula(data),
@@ -119,7 +140,7 @@ geewa <-
            id = id,
            repeated = NULL,
            family = gaussian(link = "identity"),
-           maxiter = 25,
+           maxiter = 200,
            tolerance = 1e-6,
            beta_start = NULL,
            correlation_structure = "independence",
@@ -279,7 +300,7 @@ geewa <-
     method <- as.character(method)
     icheck <- as.integer(match(method, methods, -1))
     if (icheck < 1)
-      stop("`type` must be one of `gee`, `brgee_naive`, `brgee_robust`,
+      stop("`method` must be one of `gee`, `brgee_naive`, `brgee_robust`,
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
 

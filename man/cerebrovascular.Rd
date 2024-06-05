@@ -11,7 +11,7 @@ A data frame with 134 rows and 4 columns:
   \item{period}{Period identifier.}
   \item{ecg}{Response indicating whether an electrocardiogram was
   abnormal or normal.}
-  \item{treatment}{Treatment group varaible with two levels: placebo and active.}
+  \item{treatment}{Treatment group variable with two levels: placebo and active.}
   }
 }
 \usage{

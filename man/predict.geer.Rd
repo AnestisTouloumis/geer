@@ -8,7 +8,7 @@
   object,
   newdata = NULL,
   type = c("link", "response"),
-  vartype = c("robust", "bias-corrected", "naive"),
+  covtype = c("robust", "bias-corrected", "naive"),
   se.fit = FALSE,
   ...
 )
@@ -16,18 +16,22 @@
 \arguments{
 \item{object}{a fitted object of class inheriting from \code{geewa} or \code{geewa_binary}.}
 
-\item{newdata}{optionally, a \code{data frame} in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.}
+\item{newdata}{optionally, a data frame in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.}
 
 \item{type}{the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.}
 
-\item{vartype}{an (optional) character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust sandwich-type estimator ("robust"), degrees-of-freedom-adjusted estimator ("df-adjusted"), bias-corrected estimator ("bias-corrected"), and the model-based or naive estimator ("model"). As default, \code{varest} is set to "robust".}
+\item{covtype}{an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator ("robust"), bias-corrected estimator ("bias-corrected"), and the model-based or naive estimator ("model"). As default, \code{covtype = "robust"}.}
 
-\item{se.fit}{logical switch indicating if standard errors are required. Default is set to \code{FALSE}.}
+\item{se.fit}{logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A matrix with so many rows as \code{newdata} and one column with the predictions. If \code{se.fit=}TRUE then a second column with estimates standard errors is included.
+If \code{se.fit = FALSE}, a vector or matrix of predictions.
+
+If \code{se.fit = TRUE}, a list with components
+\item{fit}{Predictions, as for \code{se.fit = FALSE}.}
+\item{se.fit}{Estimated standard errors.}
 }
 \description{
 Obtains predictions and optionally estimates standard errors of those predictions from a fitted generalized estimating equations object.

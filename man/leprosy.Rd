@@ -9,6 +9,7 @@ A data frame with 80 rows and 4 columns:
 \describe{
   \item{id}{Patient identifier.}
   \item{period}{Period identifier.}
+  \item{time}{Indicator of the post-treatment measurement.}
   \item{bacilli}{The number of leprosy bacilli at six sites of the body.}
   \item{treatment}{Treatment group variable with three levels: A, B and C.}
   }

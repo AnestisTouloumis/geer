@@ -11,11 +11,11 @@ geewa_binary(
   id = id,
   repeated = NULL,
   or_structure = "exchangeable",
-  maxiter = 25,
+  maxiter = 200,
   tolerance = 1e-06,
   beta_start = NULL,
   alpha_vector = NULL,
-  method = "type",
+  method = "gee",
   ...
 )
 }
@@ -127,6 +127,37 @@ bias-reducing estimators, respectively. If \code{method = "bcgee_naive"},
 GEE will be adjusted to produce naive, robust or emprical bias-corrected
 estimators. If \code{method = "pgee_jeffreys"}, then penalized GEE will be
 solved.
+}
+\examples{
+data("respiratory")
+fitted_model <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
+                             id = id,
+                             repeated = visit,
+                             link = "probit",
+                             data = respiratory[respiratory$center==2, ],
+                             or_structure = "independence",
+                             method = "pgee_jeffreys")
+summary(fitted_model, type = "bias-corrected")
+
+data("obesity")
+fitted_model_gee <- geewa_binary(
+  formula = I(obesity == "Obese") ~ age + zygosity + ancestry + bacteroides,
+  id = fid,
+  data = obesity,
+  link = "logit",
+  or_structure = "independence",
+  method = "gee")
+summary(fitted_model_gee, type = "bias-corrected")
+fitted_model_brgee_robust <-
+  update(fitted_model_gee, method = "brgee_robust")
+summary(fitted_model_brgee_robust, type = "bias-corrected")
+fitted_model_brgee_naive <-
+  update(fitted_model_gee, method = "brgee_naive")
+summary(fitted_model_brgee_naive, type = "bias-corrected")
+fitted_model_brgee_empirical <-
+  update(fitted_model_gee, method = "brgee_robust")
+summary(fitted_model_brgee_empirical, type = "bias-corrected")
+
 }
 \author{
 Anestis Touloumis
