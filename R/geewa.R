@@ -312,7 +312,7 @@ geewa <-
                           "bcgee_naive", "bcgee_robust", "bcgee_empirical",
                           "brgee_robust", "brgee_empirical")) {
           type <- "ML"
-        } else if (method == "pgee_jeffreys") {
+        } else if (method  == "pgee_jeffreys") {
           type <- "MPL_Jeffreys"
         } else {
           type <- "AS_mean"

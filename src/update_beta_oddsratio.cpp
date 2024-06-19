@@ -388,18 +388,18 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
       get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i)) *
       d_matrix_i;
   }
-  arma::vec gamma_vector = arma::zeros(params_no);
-  for(int r = 1; r < params_no + 1; r++) {
-    gamma_vector(r - 1) = 0.5 *
-      trace(solve(naive_matrix_inverse,
-                  gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
-  }
+  //arma::vec gamma_vector = arma::zeros(params_no);
+  //for(int r = 1; r < params_no + 1; r++) {
+  //  gamma_vector(r - 1) = 0.5 *
+  //    trace(solve(naive_matrix_inverse,
+  //                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+  //}
+  arma::vec gamma_vector = 0.5 * trans(gamma_matrix) * vectorise(inv(naive_matrix_inverse));
   arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + gamma_vector);
   return ans;
 }
+
 //==============================================================================
-
-
 //============================ update beta - or ================================
 // [[Rcpp::export]]
 arma::vec update_beta_or(const arma::vec & y_vector,

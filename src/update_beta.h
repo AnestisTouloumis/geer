@@ -66,6 +66,7 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
                                const arma::vec & alpha_vector,
                                const double & phi);
 
+
 arma::vec update_beta(const arma::vec & y_vector,
                       const arma::mat & model_matrix,
                       const arma::vec & id_vector,
