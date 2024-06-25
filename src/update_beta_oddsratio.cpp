@@ -87,23 +87,35 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
     arma::mat identity_matrix_i = arma::eye(cluster_size_i, cluster_size_i);
     arma::mat weight_matrix_inverse_delta_star_matrix_i =
       weight_matrix_inverse_i * delta_star_matrix_i;
-    gamma_matrix -=
-      trans(kron(d_matrix_i, d_matrix_i)) * 0.5 *
-      ((kappa_right(delta_star_matrix_i) +
-      arma::vectorise(weight_matrix_inverse_i) * trans(mu_vector_i) +
-      kronecker_vector_identity(weight_matrix_inverse_i * mu_vector_i) -
-      2 * kronecker_left_identity_kappa(weight_matrix_inverse_i) *
-      (g_matrix_i + identity_matrix_i) -
-      kronecker_left_identity_kappa(weight_matrix_inverse_i * trans(g_matrix_i)) +
-      kronecker_identity_right_kappa(weight_matrix_inverse_i) * g_matrix_i +
-      kronecker_left_identity_kappa(weight_matrix_inverse_i)) *
-      weight_matrix_inverse_i -
-      (
-          kronecker_identity_right_kappa(weight_matrix_inverse_delta_star_matrix_i) +
-            kronecker_left_identity_kappa(weight_matrix_inverse_delta_star_matrix_i) -
-            kron(weight_matrix_inverse_i, weight_matrix_inverse_i) *
-            get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i))) *
-            d_matrix_i;
+    arma::mat weight_matrix_inverse_trans_g_matrix_i =
+      weight_matrix_inverse_i * trans(g_matrix_i);
+    arma::mat kappa_matrix_delta_matrix_i = kappa_right(delta_star_matrix_i);
+    arma::mat vectorised_weight_matrix_inverse_trans_mu_vector_i =
+      arma::vectorise(weight_matrix_inverse_i) * trans(mu_vector_i);
+    arma::vec weight_matrix_inverse_mu_vector_i =
+      weight_matrix_inverse_i * mu_vector_i;
+    arma::mat gamma_matrix_two =
+      (kronecker_left_identity_kappa(weight_matrix_inverse_delta_star_matrix_i) +
+      kronecker_identity_right_kappa(weight_matrix_inverse_delta_star_matrix_i)) -
+      (kronecker_identity_right_kappa(weight_matrix_inverse_i) * g_matrix_i +
+      kronecker_left_identity_kappa(weight_matrix_inverse_trans_g_matrix_i +
+      weight_matrix_inverse_i) -
+      kappa_matrix_delta_matrix_i -
+      vectorised_weight_matrix_inverse_trans_mu_vector_i) * weight_matrix_inverse_i -
+      (kron(weight_matrix_inverse_i, weight_matrix_inverse_i)) *
+      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i) +
+      kronecker_vector_matrix(weight_matrix_inverse_mu_vector_i, weight_matrix_inverse_i);
+    arma::mat gamma_matrix_one =
+      (kappa_matrix_delta_matrix_i -
+      kronecker_left_identity_kappa(weight_matrix_inverse_i) *
+      (g_matrix_i + arma::eye(cluster_size_i, cluster_size_i)) -
+      kronecker_left_identity_kappa(weight_matrix_inverse_trans_g_matrix_i) +
+      vectorised_weight_matrix_inverse_trans_mu_vector_i +
+      kronecker_vector_identity(weight_matrix_inverse_mu_vector_i)) *
+      weight_matrix_inverse_i;
+    gamma_matrix -= trans(kron(d_matrix_i, d_matrix_i)) *
+      (gamma_matrix_one - 0.5 * gamma_matrix_two) *
+      d_matrix_i;
   }
   arma::vec gamma_vector = arma::zeros(params_no);
   for(int r = 1; r < params_no + 1; r++) {
@@ -117,7 +129,7 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
 //==============================================================================
 
 
-//============================ update beta - naive OR ==========================
+//============================ update beta - robust OR =========================
 // [[Rcpp::export]]
 arma::vec update_beta_robust_or(const arma::vec & y_vector,
                                 const arma::mat & model_matrix,
@@ -316,14 +328,12 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
       transpose_epsilon_matrix_deriv_i4;
     arma::mat h_matrix_i1 =
       kronecker_left_identity_kappa(epsilon_matrix_i * delta_star_matrix_i) +
-      kronecker_identity_right_kappa(delta_star_matrix_i * trans(epsilon_matrix_i));
-    arma::mat kronecker_tdmatrix_tdmatrix = trans(kron(d_matrix_i, d_matrix_i));
-    gamma_matrix_one +=
-      kronecker_tdmatrix_tdmatrix * arma::vectorise(trans(epsilon_matrix_i)) *
-      trans(u_vector_i);
+      kronecker_identity_right_kappa(trans(epsilon_matrix_i) * delta_star_matrix_i);
+    arma::mat tdmatrix_epsilon_dmatrix = trans(d_matrix_i) * epsilon_matrix_i * d_matrix_i;
+    gamma_matrix_one += arma::vectorise(trans(tdmatrix_epsilon_dmatrix)) * trans(u_vector_i);
     gamma_matrix_two +=
-      kronecker_tdmatrix_tdmatrix * (h_matrix_i1 + transpose_epsilon_matrix_deriv_i) * d_matrix_i;
-    gamma_matrix_three -= trans(d_matrix_i) * epsilon_matrix_i * d_matrix_i;
+      trans(kron(d_matrix_i, d_matrix_i)) * (h_matrix_i1 + transpose_epsilon_matrix_deriv_i) * d_matrix_i;
+    gamma_matrix_three -= tdmatrix_epsilon_dmatrix;
   }
   arma::mat gamma_three_matrix_inv = arma::inv(gamma_matrix_three,
                                                arma::inv_opts::allow_approx);
@@ -382,18 +392,18 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
       weight_matrix_inverse_i * arma::diagmat(delta_star_vector(id_vector_i));
     gamma_matrix +=
       trans(kron(d_matrix_i, d_matrix_i)) *
-      (kronecker_left_identity_kappa(weight_matrix_inverse_delta_star_matrix_i) +
-      kronecker_identity_right_kappa(weight_matrix_inverse_delta_star_matrix_i) -
+      (kronecker_sum_same(weight_matrix_inverse_delta_star_matrix_i) * kappa_matrix(mu_vector_i.n_elem) - //+
+      //kronecker_identity_right_kappa(weight_matrix_inverse_delta_star_matrix_i) -
       kron(weight_matrix_inverse_i, weight_matrix_inverse_i) *
       get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i)) *
       d_matrix_i;
   }
-  //arma::vec gamma_vector = arma::zeros(params_no);
-  //for(int r = 1; r < params_no + 1; r++) {
-  //  gamma_vector(r - 1) = 0.5 *
-  //    trace(solve(naive_matrix_inverse,
-  //                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
-  //}
+//  arma::vec gamma_vector = arma::zeros(params_no);
+//  for(int r = 1; r < params_no + 1; r++) {
+//    gamma_vector(r - 1) = 0.5 *
+//      trace(solve(naive_matrix_inverse,
+//                  gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+//  }
   arma::vec gamma_vector = 0.5 * trans(gamma_matrix) * vectorise(inv(naive_matrix_inverse));
   arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + gamma_vector);
   return ans;

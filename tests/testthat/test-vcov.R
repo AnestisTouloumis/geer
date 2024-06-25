@@ -1,19 +1,25 @@
+link <- sample(c("logit", "probit", "cloglog", "cauchit"), 1)
+association <- sample(c("independence", "exchangeable", "unstructured"), 1)
+method_gee <-  sample(c("gee", "brgee_naive", "brgee_robust", "brgee_empirical",
+                        "bcgee_naive", "bcgee_robust", "bcgee_empirical",
+                        "pgee_jeffreys"), 1)
+
+print(c(link, association, method_gee))
+
 data("cerebrovascular")
 fit_geewa <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
                    id = id,
-                   family = binomial(link = "logit"),
-                   phi_fixed = TRUE,
-                   phi_value = 1,
+                   family = binomial(link = link),
                    data = cerebrovascular,
-                   correlation_structure = "independence",
-                   method = "gee")
+                   correlation_structure = association,
+                   method = method_gee)
 fit_geewa_binary <-
   geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
                id = id,
-               link = "logit",
+               link = link,
                data = cerebrovascular,
-               or_structure = "independence",
-               method = "gee")
+               or_structure = association,
+               method = method_gee)
 
 
 test_that("vcov-robust", {

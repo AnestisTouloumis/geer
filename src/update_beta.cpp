@@ -101,14 +101,12 @@ arma::vec update_beta_naive(const arma::vec & y_vector,
         arma::diagmat(alpha_star_vector_i + delta_star_vector_i);
       gamma_matrix +=
         trans(kron(d_matrix_i, d_matrix_i)) *
-        (kappa_right(trans(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) +
-        + kronecker_identity_right_kappa(
-            weight_matrix_inverse_i *
-            arma::diagmat(alpha_star_vector_i - delta_star_vector_i)
+        (kappa_right(trans(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) -
+         kronecker_identity_right_kappa(
+            weight_matrix_inverse_alpha_plus_delta_star_matrix_i
         ) -
           kronecker_left_identity_kappa(
-            weight_matrix_inverse_alpha_plus_delta_star_matrix_i +
-              weight_matrix_inverse_i * arma::diagmat(alpha_star_vector_i)
+            weight_matrix_inverse_i * arma::diagmat(delta_star_vector_i)
           )
         ) *
           d_matrix_i;
@@ -192,7 +190,7 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
       gamma_matrix_one +=
         kronecker_tdmatrix_tdmatrix *
         (h_matrix_i1 +
-        kronecker_identity_right_kappa(weight_matrix_inverse_alpha_star_matrix_i)) *
+        kronecker_left_identity_kappa(weight_matrix_inverse_alpha_star_matrix_i)) *
         s_vector_i * trans(u_vector_i);
     }
     arma::mat robust_matrix =
