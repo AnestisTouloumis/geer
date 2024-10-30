@@ -225,6 +225,14 @@ update_beta_jeffreys <- function(y_vector, model_matrix, id_vector, repeated_vec
     .Call(`_geer_update_beta_jeffreys`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
 
+update_beta_jeffreys2 <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_update_beta_jeffreys2`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
+update_beta_jeffreys3 <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_update_beta_jeffreys3`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
 update_beta <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type) {
     .Call(`_geer_update_beta`, y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type)
 }

@@ -380,6 +380,163 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
 //==============================================================================
 
 
+//============================ update beta - jeffreys2 ==========================
+// [[Rcpp::export]]
+arma::vec update_beta_jeffreys2(const arma::vec & y_vector,
+                               const arma::mat & model_matrix,
+                               const arma::vec & id_vector,
+                               const arma::vec & repeated_vector,
+                               const char* link,
+                               const char* family,
+                               const arma::vec & beta_vector,
+                               const arma::vec & mu_vector,
+                               const arma::vec & eta_vector,
+                               const char * correlation_structure,
+                               const arma::vec & alpha_vector,
+                               const double & phi) {
+  int params_no = model_matrix.n_cols;
+  int sample_size = max(id_vector);
+  arma::mat u_vector = arma::zeros(params_no);
+  arma::mat gamma_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat gamma_vector = arma::zeros(params_no);
+  arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
+  arma::mat meat_matrix = arma::zeros(params_no, params_no);
+  arma::vec delta_vector = mueta(link, eta_vector);
+  arma::vec alpha_plus_delta_star_vector = mueta2(link, eta_vector)/pow(delta_vector, 2) -
+    0.5 * variancemu(family, mu_vector) / variance(family, mu_vector);
+  arma::vec s_vector = y_vector - mu_vector;
+  arma::mat correlation_matrix_inverse =
+    get_correlation_matrix_inverse(correlation_structure,
+                                   alpha_vector,
+                                   max(repeated_vector));
+  for(int i=1; i < sample_size + 1; i++){
+    arma::uvec id_vector_i = find(id_vector == i);
+    arma::mat x_matrix_i = model_matrix.rows(id_vector_i);
+    arma::mat delta_matrix_i =  arma::diagmat(delta_vector(id_vector_i));
+    arma::mat d_matrix_i =
+      delta_matrix_i * x_matrix_i;
+    arma::mat weight_matrix_inverse_i =
+      get_weight_matrix(family,
+                        mu_vector(id_vector_i),
+                        repeated_vector(id_vector_i),
+                        phi,
+                        correlation_matrix_inverse);
+    arma::mat t_d_matrix_weight_matrix_inverse_i =
+      trans(d_matrix_i) * weight_matrix_inverse_i;
+    naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
+    u_vector += t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
+    arma::mat weight_matrix_inverse_alpha_plus_delta_star_matrix_i =
+      weight_matrix_inverse_i * arma::diagmat(alpha_plus_delta_star_vector(id_vector_i));
+    for(int r = 1; r < params_no + 1; r++) {
+      arma::mat q_i = arma::diagmat(x_matrix_i.col(r - 1) % (0.5 - mu_vector(id_vector_i)));
+      arma::mat derivmat = 2 * trans(x_matrix_i) * sqrt(delta_matrix_i) *
+        correlation_matrix_inverse * sqrt(delta_matrix_i) * q_i * x_matrix_i;
+      gamma_matrix.rows((r - 1) * params_no, r * params_no - 1) += derivmat;
+      }
+    }
+  gamma_matrix = gamma_matrix/phi;
+   // gamma_matrix +=
+  //    trans(kron(d_matrix_i, d_matrix_i)) *
+  //    (kronecker_left_identity_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i) //+
+  //    kronecker_identity_right_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) //*
+  //    d_matrix_i;
+  //}
+  //  arma::vec gamma_vector = arma::zeros(params_no);
+  //  for(int r = 1; r < params_no + 1; r++) {
+  //    gamma_vector(r - 1) = 0.5 *
+  //    trace(solve(naive_matrix_inverse,
+  //                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+  //}
+  //arma::vec gamma_vector = 0.5 * trans(gamma_matrix) * vectorise(inv(naive_matrix_inverse));
+  for(int r = 1; r < params_no + 1; r++) {
+    gamma_vector(r - 1) = trace(solve(naive_matrix_inverse,
+                                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+  }
+  arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + 0.5 * gamma_vector);
+  return ans;
+}
+//==============================================================================
+
+
+//============================ update beta - jeffreys3 ==========================
+// [[Rcpp::export]]
+arma::vec update_beta_jeffreys3(const arma::vec & y_vector,
+                               const arma::mat & model_matrix,
+                               const arma::vec & id_vector,
+                               const arma::vec & repeated_vector,
+                               const char* link,
+                               const char* family,
+                               const arma::vec & beta_vector,
+                               const arma::vec & mu_vector,
+                               const arma::vec & eta_vector,
+                               const char * correlation_structure,
+                               const arma::vec & alpha_vector,
+                               const double & phi) {
+  int params_no = model_matrix.n_cols;
+  int sample_size = max(id_vector);
+  arma::mat u_vector = arma::zeros(params_no);
+  arma::mat gamma_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat gamma_vector = arma::zeros(params_no);
+  arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
+  arma::mat meat_matrix = arma::zeros(params_no, params_no);
+  arma::vec delta_vector = mueta(link, eta_vector);
+  arma::vec alpha_plus_delta_star_vector = mueta2(link, eta_vector)/pow(delta_vector, 2) -
+    0.5 * variancemu(family, mu_vector) / variance(family, mu_vector);
+  arma::vec s_vector = y_vector - mu_vector;
+  arma::mat correlation_matrix_inverse =
+    get_correlation_matrix_inverse(correlation_structure,
+                                   alpha_vector,
+                                   max(repeated_vector));
+  for(int i=1; i < sample_size + 1; i++){
+    arma::uvec id_vector_i = find(id_vector == i);
+    arma::mat x_matrix_i = model_matrix.rows(id_vector_i);
+    arma::mat delta_matrix_i =  arma::diagmat(delta_vector(id_vector_i));
+    arma::mat d_matrix_i =
+      delta_matrix_i * x_matrix_i;
+    arma::mat weight_matrix_inverse_i =
+      get_weight_matrix(family,
+                        mu_vector(id_vector_i),
+                        repeated_vector(id_vector_i),
+                        phi,
+                        correlation_matrix_inverse);
+    arma::mat t_d_matrix_weight_matrix_inverse_i =
+      trans(d_matrix_i) * weight_matrix_inverse_i;
+    naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
+    u_vector += t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
+    arma::mat weight_matrix_inverse_alpha_plus_delta_star_matrix_i =
+      weight_matrix_inverse_i * arma::diagmat(alpha_plus_delta_star_vector(id_vector_i));
+    for(int r = 1; r < params_no + 1; r++) {
+      arma::mat q_i = arma::diagmat(x_matrix_i.col(r - 1) % (0.5 - mu_vector(id_vector_i)));
+      arma::mat derivmat = trans(d_matrix_i) * q_i * weight_matrix_inverse_i * d_matrix_i +
+        trans(d_matrix_i) * weight_matrix_inverse_i * q_i * d_matrix_i;
+      gamma_matrix.rows((r - 1) * params_no, r * params_no - 1) += derivmat;
+    }
+  }
+  gamma_matrix = gamma_matrix/phi;
+  // gamma_matrix +=
+  //    trans(kron(d_matrix_i, d_matrix_i)) *
+  //    (kronecker_left_identity_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i) //+
+  //    kronecker_identity_right_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) //*
+  //    d_matrix_i;
+  //}
+  //  arma::vec gamma_vector = arma::zeros(params_no);
+  //  for(int r = 1; r < params_no + 1; r++) {
+  //    gamma_vector(r - 1) = 0.5 *
+  //    trace(solve(naive_matrix_inverse,
+  //                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+  //}
+  //arma::vec gamma_vector = 0.5 * trans(gamma_matrix) * vectorise(inv(naive_matrix_inverse));
+  for(int r = 1; r < params_no + 1; r++) {
+    gamma_vector(r - 1) = trace(solve(naive_matrix_inverse,
+                                gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
+  }
+  arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + 0.5 * gamma_vector);
+  return ans;
+}
+//==============================================================================
+
+
+
 //============================ update beta =====================================
 // [[Rcpp::export]]
 arma::vec update_beta(const arma::vec & y_vector,

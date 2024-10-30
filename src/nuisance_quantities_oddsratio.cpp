@@ -98,6 +98,14 @@ double get_bivariate_distribution(const double & row_prob,
       pow(f_value, 2) - 4 * odds_ratio * (odds_ratio - 1) * ans;
     ans = (f_value - sqrt(root_value)) / (2 * (odds_ratio - 1));
   }
+  double upper_bound = std::min(row_prob, col_prob);
+  if(ans > upper_bound) {
+    ans = upper_bound - DBL_EPSILON;
+  }
+  double lower_bound = -std::min(1 - row_prob - col_prob, 0.0);
+  if(ans < lower_bound) {
+    ans = lower_bound + DBL_EPSILON;
+  }
   return ans;
 }
 //==============================================================================
