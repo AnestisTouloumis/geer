@@ -52,3 +52,13 @@ test_that("vcov-bias-corrected", {
                     cov_type = "bias-corrected"),
                fit_geewa_binary$bias_corrected_covariance)
 })
+
+
+test_that("vcov-df-adjusted", {
+  expect_equal(vcov(fit_geewa,
+                    cov_type = "df-adjusted"),
+               67/64 * fit_geewa$robust_covariance)
+  expect_equal(vcov(fit_geewa_binary,
+                    cov_type = "df-adjusted"),
+               67/64 * fit_geewa_binary$robust_covariance)
+})

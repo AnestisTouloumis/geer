@@ -16,9 +16,10 @@
 #' @param object a fitted model geer object.
 #' @param cov_type character indicating whether the sandwich (robust) covariance
 #' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-#' matrix (\code{cov_type = "naive"}) or the bias-corrected covariance
-#' matrix (\code{cov_type = "bias-corrected"}) should be returned. By default,
-#' the robust covariance matrix is returned.
+#' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#' covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
+#' default, the robust covariance matrix is returned.
 #' @param ... additional argument(s) for methods.
 #'
 #' @return A matrix of the estimated covariances between the parameter estimates
@@ -34,20 +35,24 @@
 #'                              or_structure = "exchangeable")
 #' vcov(fitted_model)
 #' vcov(fitted_model, cov_type = "bias-corrected")
-#'
 #' @export
 
 vcov.geer <- function(object, cov_type = "robust", ...) {
   icheck <- pmatch(cov_type,
-                   c("robust", "naive", "bias-corrected"),
+                   c("robust", "naive", "df-adjusted", "bias-corrected"),
                    nomatch = 0,
                    duplicates.ok = FALSE)
   if (icheck == 0) stop("unknown method for the covariance matrix")
   if (cov_type == "robust") {
-    object$robust_covariance
+    ans <- object$robust_covariance
     } else if (cov_type == "bias-corrected") {
-      object$bias_corrected_covariance
+      ans <- object$bias_corrected_covariance
+    } else if (cov_type == "df-adjusted") {
+      sample_size <- object$clusters_no
+      parameters_no <- length(object$coefficients)
+      ans <- (sample_size / (sample_size - parameters_no)) * object$robust_covariance
     } else {
-      object$naive_covariance
+      ans <- object$naive_covariance
     }
+  ans
 }
