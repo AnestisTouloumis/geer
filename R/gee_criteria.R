@@ -19,6 +19,14 @@
 #'
 #' @param object an object of the class \code{geer}.
 #' @param ... optionally more objects of the class \code{geer}.
+#' @param cov_type character indicating whether the sandwich (robust)
+#' covariance
+#' matrix (\code{cov_type = "robust"}), the bias-corrected covariance
+#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#' covariance matrix (\code{cov_type = "df-adjusted"}) should be used in computing
+#' the estimated covariance matrix. By default, the robust covariance matrix is
+#' used.
+#'
 #' @author Anestis Touloumis
 #' @references Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure
 #' identification in generalized estimating equations. \emph{Statistics in
@@ -31,7 +39,16 @@
 #' parameters in semiparametric generalized linear models for cluster correlated
 #' data. \emph{Biometrika} \bold{77}, 485--497.
 #'
-
+#' @examples
+#' data("cerebrovascular")
+#' fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
+#'                              id = id,
+#'                              data = cerebrovascular,
+#'                              link = "logit",
+#'                              or_structure = "exchangeable",
+#'                              method = "gee")
+#' gee_criteria(fitted_model)
+#'
 #' @export
 gee_criteria <- function(object, ...) {
   UseMethod("gee_criteria")
@@ -41,12 +58,11 @@ gee_criteria <- function(object, ...) {
 #'
 #' @method gee_criteria geer
 #' @export
-gee_criteria.geer <- function(object, ...) {
 
+gee_criteria.geer <- function(object, cov_type = "robust", ...) {
   if (!("geer" %in% class(object)) ) {
     stop("gee_criteria requires a geer object as input")
   }
-
   compute_criteria <- function(object) {
     mu <- object$fitted_values
     y  <- object$y
@@ -68,9 +84,9 @@ gee_criteria.geer <- function(object, ...) {
     independence_naive_covariance <- vcov(independence_model,
                                           type = "naive")
     naive_covariance <- vcov(object,
-                             type = "naive")
+                             cov_type = "naive")
     robust_covariance <- vcov(object,
-                              type = "robust")
+                              cov_type = cov_type)
 
     p <- length(object$coeff)
     qic_u <- round(-2 * quasi_likelihood + 2 * p,

@@ -11,7 +11,13 @@ wald_test(object0, object1, cov_type = "robust")
 
 \item{object1}{A fitted model of the class \code{geer}.}
 
-\item{cov_type}{character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.}
+\item{cov_type}{cov_type character indicating whether the sandwich (robust)
+covariance
+matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
+default, the robust covariance matrix is returned.}
 }
 \description{
 Comparing two nested GEE models by carrying out a Wald test.
@@ -19,6 +25,18 @@ Comparing two nested GEE models by carrying out a Wald test.
 \details{
 The two GEE models implied by \code{object0} and \code{object1} must be
 nested.
+}
+\examples{
+data("cerebrovascular")
+fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
+                             id = id,
+                             data = cerebrovascular,
+                             link = "logit",
+                             or_structure = "exchangeable",
+                             method = "gee")
+reduced_model <- update(fitted_model, formula = ecg ~ period)
+wald_test(fitted_model, reduced_model)
+
 }
 \author{
 Anestis Touloumis

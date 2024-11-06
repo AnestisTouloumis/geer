@@ -7,13 +7,13 @@
 #'
 #' @param object0 A fitted model of the class \code{geer}.
 #' @param object1 A fitted model of the class \code{geer}.
-#' @param cov_type  cov_type character indicating whether the sandwich (robust)
+#' @param cov_type character indicating whether the sandwich (robust)
 #' covariance
 #' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
 #' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
 #' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-#' covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
-#' default, the robust covariance matrix is returned.
+#' covariance matrix (\code{cov_type = "df-adjusted"}) should be used. By
+#' default, the robust covariance matrix is used.
 #'
 #' @author Anestis Touloumis
 #'
