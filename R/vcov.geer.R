@@ -4,8 +4,9 @@
 #'
 #' Default is to obtain the estimated sandwich (robust) covariance matrix. Setting
 #' \code{type = "naive"} obtains the estimated model-based (naive) covariance
-#' matrix and \code{type = "bias_corrected"} obtains the estimated bias-corrected
-#' covariance matrix.
+#' matrix, \code{type = "bias-corrected"} obtains the estimated bias-corrected
+#' covariance matrix and \code{type = "df-adjusted"} obtains the estimated degrees
+#' of freedom adjusted robust covariance matrix.
 #'
 #' @title Calculate Variance-Covariance Matrix for a Fitted \code{geer} Object.
 #'
