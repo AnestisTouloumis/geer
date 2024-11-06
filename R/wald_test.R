@@ -34,7 +34,7 @@
 wald_test <- function(object0, object1, cov_type = "robust"){
 
   if ( !("geer" %in% class(object0)) | !("geer" %in% class(object1)) ) {
-    stop("Both objects must be of 'geer' class ")
+    stop("Both objects must be of 'geer' class")
   }
   if (!all(object0$y == object1$y)) {
     stop("The response variable differs in the two models")

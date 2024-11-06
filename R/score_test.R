@@ -7,16 +7,32 @@
 #'
 #' @param object0 A fitted model of the class \code{geer}.
 #' @param object1 A fitted model of the class \code{geer}.
-#' @param type 	character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.
+#' @param cov_type  cov_type character indicating whether the sandwich (robust)
+#' covariance
+#' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+#' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#' covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
+#' default, the robust covariance matrix is returned.
 #'
 #' @author Anestis Touloumis
 #'
 #' @export
 #'
-score_test <- function(object0, object1, type = "robust"){
+#' @examples
+#' data("cerebrovascular")
+#' fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
+#'                              id = id,
+#'                              data = cerebrovascular,
+#'                              link = "logit",
+#'                              or_structure = "exchangeable",
+#'                              method = "gee")
+#' reduced_model <- update(fitted_model, formula = ecg ~ period)
+#' score_test(fitted_model, reduced_model)
+score_test <- function(object0, object1, cov_type = "robust"){
 
   if ( !("geer" %in% class(object0)) | !("geer" %in% class(object1)) ) {
-    stop("Both arguments must be objects of 'geer' class ")
+    stop("Both objects must be of 'geer' class")
   }
   if (!all(object0$y == object1$y)) {
     stop("The response variable differs in the two models")
@@ -29,8 +45,7 @@ score_test <- function(object0, object1, type = "robust"){
   if (n0 < n1) {
     obj0 <- object0
     obj1 <- object1
-  }
-  else {
+  } else {
     obj0 <- object1
     obj1 <- object0
   }
@@ -76,6 +91,10 @@ score_test <- function(object0, object1, type = "robust"){
                                           obj1$alpha,
                                           obj1$phi)
   } else {
+    if (length(obj1$alpha) == 1) {
+      association_alpha <- rep(obj1$alpha,
+                               choose(max(obj1$repeated), 2))
+    }
     uvector <- estimating_equations_gee_or(obj1$y,
                                            obj1$model_matrix,
                                            obj1$id,
@@ -84,7 +103,7 @@ score_test <- function(object0, object1, type = "robust"){
                                            coeffs_test,
                                            obj0$fitted.values,
                                            obj0$linear.predictors,
-                                           obj1$alpha)
+                                           association_alpha)
     covariance <- get_covariance_matrices_or(obj1$y,
                                              obj1$model_matrix,
                                              obj1$id,
@@ -92,19 +111,24 @@ score_test <- function(object0, object1, type = "robust"){
                                              obj1$family$link,
                                              obj0$fitted.values,
                                              obj0$linear.predictors,
-                                             obj1$alpha)
+                                             association_alpha)
   }
-  icheck <- pmatch(type,
-                   c("robust", "naive", "bias_corrected"),
+  icheck <- pmatch(cov_type,
+                   c("robust", "naive", "bias-corrected", "df-adjusted"),
                    nomatch = 0,
                    duplicates.ok = FALSE)
   if (icheck == 0) stop("unknown method for the covariance matrix")
-  if (type == "robust") {
+  if (cov_type == "robust") {
     covariance_test <- covariance$robust_covariance
-  } else if (type == "naive") {
+  } else if (cov_type == "naive") {
     covariance_test <- covariance$naive_covariance
-  } else {
+  } else if (cov_type == "bias-corrected") {
     covariance_test <- covariance$bc_covariance
+  } else {
+    sample_size <- obj1$clusters_no
+    parameters_no <- length(coef(obj1))
+    covariance_test <-
+      (sample_size / (sample_size - parameters_no)) * covariance$robust_covariance
   }
   score_stat <- t(uvector) %*% covariance$naive_covariance[, index] %*%
     solve(covariance_test[index, index]) %*%
@@ -119,9 +143,8 @@ score_test <- function(object0, object1, type = "robust"){
   table  <- data.frame(Df = length(names_test),
                        X2 = score_stat,
                        p = pvalue)
-  dimnames(table) <- list("1", c("Df", "X2", "P(>|Chi|)"))
+  dimnames(table) <- list("1", c("Df", "X2", "P(>Chi)"))
   ans <- structure(table, heading = c(title, topnote),
                    class = c("anova", "data.frame"))
   ans
 }
-
