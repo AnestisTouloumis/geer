@@ -1,6 +1,6 @@
 #' GEE Solver in R
 #'
-#' Solving generalized estimating equation while implementing bias-reducing,
+#' Solving generalized estimating equations while implementing bias-reducing,
 #' bias-corrected and penalized estimators.
 #'
 #' @name geer-package
@@ -16,7 +16,8 @@
 #' @importFrom stats gaussian glm model.extract model.matrix model.response
 #' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients
 #' @importFrom stats update pchisq formula family .getXlevels delete.response
-#' @importFrom stats model.frame model.offset
+#' @importFrom stats model.frame model.offset as.formula update.formula
+#' @importFrom stats drop1 add1 add.scope drop.scope terms formula
 #' @importFrom utils combn
 #' @keywords internal
 "_PACKAGE"

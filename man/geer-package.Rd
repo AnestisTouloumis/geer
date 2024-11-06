@@ -6,7 +6,7 @@
 \alias{geer}
 \title{GEE Solver in R}
 \description{
-Solving generalized estimating equation while implementing bias-reducing,
+Solving generalized estimating equations while implementing bias-reducing,
 bias-corrected and penalized estimators.
 }
 \author{
