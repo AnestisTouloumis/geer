@@ -7,16 +7,34 @@
 #'
 #' @param object0 A fitted model of the class \code{geer}.
 #' @param object1 A fitted model of the class \code{geer}.
-#' @param type 	character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.
+#' @param cov_type  cov_type character indicating whether the sandwich (robust)
+#' covariance
+#' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+#' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#' covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
+#' default, the robust covariance matrix is returned.
 #'
 #' @author Anestis Touloumis
 #'
 #' @export
 #'
-wald_test <- function(object0, object1, type = "robust"){
+#' @examples
+#' data("cerebrovascular")
+#' fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
+#'                              id = id,
+#'                              data = cerebrovascular,
+#'                              link = "logit",
+#'                              or_structure = "exchangeable",
+#'                              method = "gee")
+#' reduced_model <- update(fitted_model, formula = ecg ~ period)
+#' wald_test(fitted_model, reduced_model)
+#'
+
+wald_test <- function(object0, object1, cov_type = "robust"){
 
   if ( !("geer" %in% class(object0)) | !("geer" %in% class(object1)) ) {
-    stop("Both arguments must be objects of 'geer' class ")
+    stop("Both objects must be of 'geer' class ")
   }
   if (!all(object0$y == object1$y)) {
     stop("The response variable differs in the two models")
@@ -48,7 +66,7 @@ wald_test <- function(object0, object1, type = "robust"){
     index[i] <- which(names_test[i] == names1)
   }
   coeffs_test <- obj1$coefficients[index]
-  var_test <- vcov(obj1, type = type)[index, index]
+  var_test <- vcov(obj1, cov_type = cov_type)[index, index]
   wald_stat <- t(coeffs_test) %*% solve(var_test) %*% coeffs_test
   pvalue <- 1 - pchisq(wald_stat, length(names_test))
   topnote <- paste("Model under H_0:",
@@ -59,7 +77,7 @@ wald_test <- function(object0, object1, type = "robust"){
   table  <- data.frame(Df = length(names_test),
                        X2 = wald_stat,
                        p = pvalue)
-  dimnames(table) <- list("1", c("Df", "X2", "P(>|Chi|)"))
+  dimnames(table) <- list("1", c("Df", "X2", "P(>Chi)"))
   ans <- structure(table, heading = c(title, topnote),
                    class = c("anova", "data.frame"))
   ans

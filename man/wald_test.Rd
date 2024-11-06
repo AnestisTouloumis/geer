@@ -4,14 +4,14 @@
 \alias{wald_test}
 \title{Wald Test of Nested GEE Models}
 \usage{
-wald_test(object0, object1, type = "robust")
+wald_test(object0, object1, cov_type = "robust")
 }
 \arguments{
 \item{object0}{A fitted model of the class \code{geer}.}
 
 \item{object1}{A fitted model of the class \code{geer}.}
 
-\item{type}{character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.}
+\item{cov_type}{character indicating whether the sandwich (robust) covariance matrix (\code{type = "robust"}), the model-based (naive) covariance matrix (\code{type = "naive"}) or the bias-corrected covariance matrix (\code{type = "bias_corrected"}) should be employed in the calculation of the test statistic.}
 }
 \description{
 Comparing two nested GEE models by carrying out a Wald test.
