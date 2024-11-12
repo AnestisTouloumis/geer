@@ -92,7 +92,6 @@ print.summary.geer <- function(x, ...) {
   cat("Link Function:", x$family$link, "\n")
   cat("\nCoefficients:\n")
   printCoefmat(x$coefficients)
-  if (x$cov_type == "bias_corrected") x$cov_type <- "bias-corrected"
   cat("Std.Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
   cat("\nDispersion Parameter:", round(x$phi, digits = 4), "\n")
   cat("\nAssociation Structure:", x$association_structure, "\n")
@@ -161,7 +160,7 @@ residuals.geer <- function(object, type = c("working", "pearson"), ...) {
 #' @param newdata	optionally, a data frame in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.
 #' @param type the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.
 #' @param se.fit logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.
-#' @param covtype an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator ("robust"), bias-corrected estimator ("bias-corrected"), and the model-based or naive estimator ("model"). As default, \code{covtype = "robust"}.
+#' @param cov_type an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator (\code{"robust"}), bias-corrected estimator (\code{"bias-corrected"}), degrees of freedom adjusted bias-corrected estimator (\code{"bias-corrected"}) and the model-based or naive estimator (\code{"naive"}). As default, \code{cov_type = "robust"}.
 #' @param ... further arguments passed to or from other methods.
 #' @return If \code{se.fit = FALSE}, a vector or matrix of predictions.
 #'
@@ -171,10 +170,11 @@ residuals.geer <- function(object, type = c("working", "pearson"), ...) {
 #' @method predict geer
 #' @export
 predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
-                         covtype = c("robust", "bias-corrected", "naive"),
+                         cov_type = c("robust", "bias-corrected", "naive",
+                                     "df-adjusted"),
                          se.fit = FALSE, ...){
   type <- match.arg(type)
-  covtype <- match.arg(covtype)
+  cov_type <- match.arg(cov_type)
   if (missing(newdata)) {
     if (type == "link") {
       predicts <- object$linear.predictors
@@ -182,7 +182,7 @@ predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
       predicts <- object$fitted.values
     }
     if (se.fit) {
-      covariance_matrix <- vcov(object, type = covtype)
+      covariance_matrix <- vcov(object, type = cov_type)
       model_matrix <- object$model_matrix
       se.fit <-
         sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
@@ -201,7 +201,7 @@ predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
     offset_term <- model.offset(model_frame)
     if (!is.null(offset_term)) predicts <- predicts + c(offset_term)
     if (se.fit) {
-      covariance_matrix <- vcov(object, covtype)
+      covariance_matrix <- vcov(object, cov_type)
       se.fit <-
         sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
       if (type == "response") {

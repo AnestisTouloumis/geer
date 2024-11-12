@@ -4,10 +4,18 @@
 \alias{gee_criteria}
 \title{Variable and Covariance Selection Criteria}
 \usage{
-gee_criteria(object, ...)
+gee_criteria(object, cov_type = "robust", ...)
 }
 \arguments{
 \item{object}{an object of the class \code{geer}.}
+
+\item{cov_type}{character indicating whether the sandwich (robust)
+covariance
+matrix (\code{cov_type = "robust"}), the bias-corrected covariance
+matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+covariance matrix (\code{cov_type = "df-adjusted"}) should be used in computing
+the estimated covariance matrix. By default, the robust covariance matrix is
+used.}
 
 \item{...}{optionally more objects of the class \code{geer}.}
 }
@@ -29,6 +37,17 @@ structures but with the same subset of covariates, the model with the smallest
 value of QIC, CIC or RJC should be preffered. When choosing between GEE models
 with different number of covariates, the model with the smallest QICu value
 should be preferred.
+}
+\examples{
+data("cerebrovascular")
+fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
+                             id = id,
+                             data = cerebrovascular,
+                             link = "logit",
+                             or_structure = "exchangeable",
+                             method = "gee")
+gee_criteria(fitted_model)
+
 }
 \references{
 Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure

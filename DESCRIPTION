@@ -1,6 +1,6 @@
 Package: geer
 Type: Package
-Title: A Generalized Estimating Equations In R
+Title: Generalized Estimating Equations In R
 Version: 0.0.0.9999
 Authors@R:
     person(given = "Anestis",

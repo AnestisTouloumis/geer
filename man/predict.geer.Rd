@@ -8,7 +8,7 @@
   object,
   newdata = NULL,
   type = c("link", "response"),
-  covtype = c("robust", "bias-corrected", "naive"),
+  cov_type = c("robust", "bias-corrected", "naive", "df-adjusted"),
   se.fit = FALSE,
   ...
 )
@@ -20,7 +20,7 @@
 
 \item{type}{the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.}
 
-\item{covtype}{an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator ("robust"), bias-corrected estimator ("bias-corrected"), and the model-based or naive estimator ("model"). As default, \code{covtype = "robust"}.}
+\item{cov_type}{an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator (\code{"robust"}), bias-corrected estimator (\code{"bias-corrected"}), degrees of freedom adjusted bias-corrected estimator (\code{"bias-corrected"}) and the model-based or naive estimator (\code{"naive"}). As default, \code{cov_type = "robust"}.}
 
 \item{se.fit}{logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.}
 

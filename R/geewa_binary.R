@@ -352,7 +352,9 @@ geewa_binary <- function(formula = formula(data),
 
     fit$association_structure <- or_structure
     if (or_structure == "independence") {
-      fit$alpha <- 0
+      fit$alpha <- 1
+    } else if (or_structure == "exchangeable") {
+      fit$alpha <- c(geesolver_fit$alpha)[1]
     } else {
       fit$alpha <- c(geesolver_fit$alpha)
     }
@@ -361,12 +363,10 @@ geewa_binary <- function(formula = formula(data),
       alpha_names <- paste0("alpha_",
                             paste(pairs_matrix[1, ], pairs_matrix[2, ], sep = ".")
       )
-
-    } else {
+      } else {
       alpha_names <- NULL
     }
     names(fit$alpha) <- alpha_names
-
 
     fit$phi <- 1
 
@@ -409,8 +409,6 @@ geewa_binary <- function(formula = formula(data),
     if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps))
         warning("geewa_binary: fitted probabilities numerically 0 or 1 occurred",
                 call. = FALSE)
-
-
 
     fit
   }

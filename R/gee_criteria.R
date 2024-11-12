@@ -50,7 +50,7 @@
 #' gee_criteria(fitted_model)
 #'
 #' @export
-gee_criteria <- function(object, ...) {
+gee_criteria <- function(object, cov_type = "robust", ...) {
   UseMethod("gee_criteria")
 }
 
@@ -67,13 +67,14 @@ gee_criteria.geer <- function(object, cov_type = "robust", ...) {
     mu <- object$fitted_values
     y  <- object$y
     marginal_distribution <- object$family$family
-    quasi_likelihood <- switch(marginal_distribution,
-                               gaussian = sum(((y - mu)^2)/-2),
-                               binomial = sum(y * log(mu / (1 - mu)) + log(1 - mu)),
-                               poisson  = sum((y * log(mu)) - mu),
-                               Gamma    = sum(-y/(mu - log(mu))),
-                               stop("Error: distribution not recognized"))
-
+    quasi_likelihood <-
+      switch(marginal_distribution,
+             gaussian = sum(((y - mu)^2)/-2),
+             binomial = sum(y * log(mu / (1 - mu)) + log(1 - mu)),
+             poisson  = sum((y * log(mu)) - mu),
+             Gamma    = sum(-y/(mu - log(mu))),
+             stop("Error: distribution not recognized")
+             )
     if (any(names(object$call) == "correlation_structure")) {
       independence_model <- update(object,
                                    correlation_structure = "independence")
@@ -82,12 +83,11 @@ gee_criteria.geer <- function(object, cov_type = "robust", ...) {
                                    or_structure = "independence")
     }
     independence_naive_covariance <- vcov(independence_model,
-                                          type = "naive")
+                                          cov_type = "naive")
     naive_covariance <- vcov(object,
                              cov_type = "naive")
     robust_covariance <- vcov(object,
                               cov_type = cov_type)
-
     p <- length(object$coeff)
     qic_u <- round(-2 * quasi_likelihood + 2 * p,
                    digits = 4)

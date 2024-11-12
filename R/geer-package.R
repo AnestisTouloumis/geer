@@ -17,7 +17,7 @@
 #' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients
 #' @importFrom stats update pchisq formula family .getXlevels delete.response
 #' @importFrom stats model.frame model.offset as.formula update.formula
-#' @importFrom stats drop1 add1 add.scope drop.scope terms formula
+#' @importFrom stats drop1 add1 add.scope drop.scope terms formula factor.scope
 #' @importFrom utils combn
 #' @keywords internal
 "_PACKAGE"
