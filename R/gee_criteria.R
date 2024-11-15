@@ -50,7 +50,7 @@
 #' gee_criteria(fitted_model)
 #'
 #' @export
-gee_criteria <- function(object, cov_type = "robust", ...) {
+gee_criteria <- function(object, ..., cov_type = "robust") {
   UseMethod("gee_criteria")
 }
 
@@ -59,64 +59,60 @@ gee_criteria <- function(object, cov_type = "robust", ...) {
 #' @method gee_criteria geer
 #' @export
 
-gee_criteria.geer <- function(object, cov_type = "robust", ...) {
-  if (!("geer" %in% class(object)) ) {
-    stop("gee_criteria requires a geer object as input")
-  }
-  compute_criteria <- function(object) {
-    mu <- object$fitted_values
-    y  <- object$y
-    marginal_distribution <- object$family$family
-    quasi_likelihood <-
-      switch(marginal_distribution,
-             gaussian = sum(((y - mu)^2)/-2),
-             binomial = sum(y * log(mu / (1 - mu)) + log(1 - mu)),
-             poisson  = sum((y * log(mu)) - mu),
-             Gamma    = sum(-y/(mu - log(mu))),
-             stop("Error: distribution not recognized")
-             )
-    if (any(names(object$call) == "correlation_structure")) {
-      independence_model <- update(object,
-                                   correlation_structure = "independence")
-    } else {
-      independence_model <- update(object,
-                                   or_structure = "independence")
-    }
-    independence_naive_covariance <- vcov(independence_model,
-                                          cov_type = "naive")
-    naive_covariance <- vcov(object,
-                             cov_type = "naive")
-    robust_covariance <- vcov(object,
-                              cov_type = cov_type)
-    p <- length(object$coeff)
-    qic_u <- round(-2 * quasi_likelihood + 2 * p,
-                   digits = 4)
-    cic <- round(sum(solve(independence_naive_covariance) * robust_covariance),
-                 digits = 4)
-    qic <- round(-2 * quasi_likelihood + 2 * cic,
-                 digits = 4)
-    q_matrix <- naive_covariance %*% robust_covariance
-    c1 <- sum(diag(q_matrix)) / p
-    c2 <- sum(q_matrix ^ 2) / p
-    rjc <- round(sqrt(((1 - c1) ^ 2) + ((1 - c2) ^ 2)),
-                 digits = 4)
-    ans <- c(qic, qic_u, cic, rjc, p)
-    names(ans) <- c("QIC", "CIC", "RJC", "QICu", "Parameters")
-    ans
-  }
+gee_criteria.geer <- function(object, ..., cov_type = "robust") {
   if (length(list(...))) {
-    results <- lapply(list(object, ...), compute_criteria)
-    check <- sapply(list(object, ...), function(x) {
-      length(x$y)
-    })
-    if (any(check != check[1]))
-      warning("models are not all fitted to the same number of observations")
+    results <- lapply(list(object, ...), compute_criteria, cov_type)
+    #check <- sapply(list(object, ...), function(x) {
+     # length(x$y)
+    #})
+   # if (any(check != check[1]))
+     # warning("models are not all fitted to the same number of observations")
     res <- do.call("rbind", results)
     Call <- match.call()
-    Call$k <- NULL
-    row.names(res) <- as.character(Call[-1L])
-    res
+    if("cov_type" %in% names(col))
+    #row.names(res) <- as.character(Call[-(length(list(...)))])
+    Call
   } else {
-    compute_criteria(object)
+    compute_criteria(object, cov_type)
   }
+}
+
+
+compute_criteria <- function(object, cov_type = "robust") {
+  mu <- object$fitted.values
+  y  <- object$y
+  marginal_distribution <- object$family$family
+  quasi_likelihood <-
+    switch(marginal_distribution,
+           gaussian = sum(((y - mu)^2)/-2),
+           binomial = sum(y * log(mu) + (1 - y) * log(1 - mu)),
+           poisson  = sum((y * log(mu)) - mu),
+           Gamma    = sum(-y/(mu - log(mu))),
+           stop("Error: distribution not recognized")
+    )/object$phi
+  s_vector <- y - mu
+  if (any(names(object$call) == "correlation_structure")) {
+    independence_model <- update(object,
+                                 correlation_structure = "independence")
+  } else {
+    independence_model <- update(object,
+                                 or_structure = "independence")
+  }
+  independence_naive_covariance <- vcov(independence_model,
+                                        cov_type = "naive")
+  naive_covariance <- vcov(object,
+                           cov_type = "naive")
+  robust_covariance <- vcov(object,
+                            cov_type = cov_type)
+  p <- length(object$coeff)
+  qic_u <- 2 * (p - quasi_likelihood)
+  cic <- sum(solve(independence_naive_covariance) * robust_covariance)
+  qic <- 2 * (cic - quasi_likelihood)
+  q_matrix <- robust_covariance %*% solve(naive_covariance)
+  c1 <- sum(diag(q_matrix)) / p
+  c2 <- sum(q_matrix * t(q_matrix)) / p
+  rjc <- sqrt(((1 - c1) ^ 2) + ((1 - c2) ^ 2))
+  ans <- c(qic, cic, rjc, qic_u, p)
+  names(ans) <- c("QIC", "CIC", "RJC", "QICu", "Parameters")
+  ans
 }
