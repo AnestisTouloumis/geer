@@ -4,29 +4,30 @@
 \alias{gee_criteria}
 \title{Variable and Covariance Selection Criteria}
 \usage{
-gee_criteria(object, cov_type = "robust", ...)
+gee_criteria(object, ..., cov_type = "robust", digits = 4)
 }
 \arguments{
 \item{object}{an object of the class \code{geer}.}
 
-\item{cov_type}{character indicating whether the sandwich (robust)
-covariance
-matrix (\code{cov_type = "robust"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}) should be used in computing
-the estimated covariance matrix. By default, the robust covariance matrix is
-used.}
-
 \item{...}{optionally more objects of the class \code{geer}.}
+
+\item{cov_type}{character indicating whether the sandwich (robust) covariance
+matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
+the GEE criteria. By default, the robust covariance matrix is used.}
+
+\item{digits}{integer indicating the number of decimal places to be used in the
+GEE criteria.}
 }
 \value{
-A vector or matrix with the QIC, QICu, CIC, RJC and the number of
+A data frame with the QIC, QICu, CIC, RJC and the number of
 regression parameters (including intercepts).
 }
 \description{
-Reports commonly used criteria for variable selection
-and for selecting the "working" association structure for one or several
-fitted models from the \code{geer} package.
+Reports commonly used criteria for variable selection and association structure
+selection for one or several fitted models from the \code{geer} package.
 }
 \details{
 The Quasi Information Criterion (QIC), the Correlation Information Criterion

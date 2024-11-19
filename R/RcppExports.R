@@ -17,6 +17,18 @@ fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, li
     .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, link, beta_vector, maxiter, tolerance, offset, alpha_vector, type)
 }
 
+get_naive_matrix_inverse_independence <- function(y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi) {
+    .Call(`_geer_get_naive_matrix_inverse_independence`, y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi)
+}
+
+get_gee_criteria_sc_cw <- function(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_get_gee_criteria_sc_cw`, y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi)
+}
+
+get_gee_criteria_sc_cw_or <- function(y_vector, id_vector, repeated_vector, mu_vector, alpha_vector) {
+    .Call(`_geer_get_gee_criteria_sc_cw_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector)
+}
+
 arma2vec <- function(x) {
     .Call(`_geer_arma2vec`, x)
 }

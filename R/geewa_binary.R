@@ -205,7 +205,7 @@ geewa_binary <- function(formula = formula(data),
     repeated <- repeated[ordered_index]
     offset <- offset[ordered_index]
 
-    ## convert model matrix to a matrix when p = 0
+    ## convert model matrix to a matrix when p = 1
     if (length(xnames) == 1)
       model_matrix <- matrix(model_matrix, ncol = 1)
 
