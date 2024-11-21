@@ -18,12 +18,12 @@ matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
 covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
 the GEE criteria. By default, the robust covariance matrix is used.}
 
-\item{digits}{integer indicating the number of decimal places to be used in the
-GEE criteria.}
+\item{digits}{integer indicating the number of decimal places for the GEE
+criteria to be rounded at.}
 }
 \value{
-A data frame with the QIC, QICu, CIC, RJC and the number of
-regression parameters (including intercepts).
+A data frame with the QIC, CIC, RJC, QICu, GESSC, GPC and the number
+of regression parameters (including intercepts).
 }
 \description{
 Reports commonly used criteria for variable selection and association structure
@@ -31,26 +31,39 @@ selection for one or several fitted models from the \code{geer} package.
 }
 \details{
 The Quasi Information Criterion (QIC), the Correlation Information Criterion
-(CIC) and the Rotnitzky and Jewell Criterion (RJC) are used for selecting the
-best association structure. The QICu criterion is used for selecting the best
-subset of covariates. When choosing among GEE models with different association
-structures but with the same subset of covariates, the model with the smallest
-value of QIC, CIC or RJC should be preffered. When choosing between GEE models
-with different number of covariates, the model with the smallest QICu value
-should be preferred.
+(CIC), the Rotnitzky and Jewell Criterion (RJC), the Generalized Error Sum of
+Squares (GESSC) and the Gaussian Peudolikelihood Criterion (GPC) are used for
+selecting the best association structure.
+The QICu criterion is used for selecting the best subset of covariates.
+
+When choosing between ordinary, bias-reducing and penalized GEE models with
+the same subset of covariates, the model with the smallest value of QIC, CIC,
+RJC or GESSC or the model with the higher GPC should be preferred. When
+choosing between ordinary, bias-reducing and penalized models with different
+number of covariates, the model with the smallest QICu value should be
+preferred.
 }
 \examples{
 data("cerebrovascular")
-fitted_model <- geewa_binary(formula = ecg ~ period * treatment,
-                             id = id,
-                             data = cerebrovascular,
-                             link = "logit",
-                             or_structure = "exchangeable",
-                             method = "gee")
-gee_criteria(fitted_model)
+fitted_gee <- geewa_binary(formula = ecg ~ period * treatment,
+                           id = id,
+                           data = cerebrovascular,
+                           link = "logit",
+                           or_structure = "exchangeable",
+                           method = "gee")
+fitted_brgee <- update(fitted_gee, method = "brgee_robust")
+gee_criteria(fitted_gee, fitted_brgee)
 
 }
 \references{
+Carey, V.J. and Wang, Y.G. (2011) Working covariance model selection for
+generalized estimating equations. \emph{Statistics in Medicine}, \bold{30},
+3117--3124.
+
+Chaganty, N.R. and Shults, J. (1999) On eliminating the asymptotic bias in
+the quasi-least squares estimate of the correlation parameter.
+\emph{Journal of Statistical Planning and Inference}, \bold{76}, 145--161.
+
 Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure
 identification in generalized estimating equations. \emph{Statistics in
 Medicine} \bold{28}, 642--658.
