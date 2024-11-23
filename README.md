@@ -1,3 +1,11 @@
+<!-- badges: start -->
+  [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
+  <!-- badges: end -->
+  <!-- badges: start -->
+  [![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
+  <!-- badges: end -->  
+  
+
 ## Installation
 
 You can install the development version of `geer`:
