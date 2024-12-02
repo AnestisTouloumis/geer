@@ -82,7 +82,7 @@ vcov.geer <- function(object, cov_type = "robust", ...) {
             0.5)
       robust_covariance <- object$robust_covariance
       naive_covariance <- object$naive_covariance
-      trace_matrix <- sum(diag(robust_covariance %*% solve(naive_covariance)))
+      trace_matrix <- sum(robust_covariance * t(solve(naive_covariance)))
       ksi <-
         max(1,
             trace_matrix/parameters_no)
