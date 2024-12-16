@@ -20,7 +20,8 @@ arma::vec update_beta_gee(const arma::vec & y_vector,
                           const arma::vec & eta_vector,
                           const char * correlation_structure,
                           const arma::vec & alpha_vector,
-                          const double & phi) {
+                          const double & phi,
+                          const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -41,7 +42,8 @@ arma::vec update_beta_gee(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse);
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     u_vector +=
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
@@ -65,7 +67,8 @@ arma::vec update_beta_naive(const arma::vec & y_vector,
                             const arma::vec & eta_vector,
                             const char * correlation_structure,
                             const arma::vec & alpha_vector,
-                            const double & phi) {
+                            const double & phi,
+                            const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -91,7 +94,8 @@ arma::vec update_beta_naive(const arma::vec & y_vector,
                           mu_vector(id_vector_i),
                           repeated_vector(id_vector_i),
                           phi,
-                          correlation_matrix_inverse);
+                          correlation_matrix_inverse,
+                          weights_vector(id_vector_i));
       arma::mat t_d_matrix_weight_matrix_inverse_i =
         trans(d_matrix_i) * weight_matrix_inverse_i;
       naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -136,7 +140,8 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
                              const arma::vec & eta_vector,
                              const char * correlation_structure,
                              const arma::vec & alpha_vector,
-                             const double & phi) {
+                             const double & phi,
+                             const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -164,7 +169,8 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
                           mu_vector(id_vector_i),
                           repeated_vector(id_vector_i),
                           phi,
-                          correlation_matrix_inverse);
+                          correlation_matrix_inverse,
+                          weights_vector(id_vector_i));
       arma::mat t_d_matrix_weight_matrix_inverse_i =
         trans(d_matrix_i) * weight_matrix_inverse_i;
       naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -222,7 +228,8 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
                                 const arma::vec & eta_vector,
                                 const char * correlation_structure,
                                 const arma::vec & alpha_vector,
-                                const double & phi){
+                                const double & phi,
+                                const arma::vec & weights_vector){
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::vec u_vector = arma::zeros(params_no);
@@ -262,7 +269,9 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
       get_weight_matrix(family,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
-                        phi, correlation_matrix_inverse);
+                        phi,
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -330,7 +339,8 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
                                const arma::vec & eta_vector,
                                const char * correlation_structure,
                                const arma::vec & alpha_vector,
-                               const double & phi) {
+                               const double & phi,
+                               const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -354,7 +364,8 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse);
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -393,7 +404,8 @@ arma::vec update_beta_jeffreys2(const arma::vec & y_vector,
                                const arma::vec & eta_vector,
                                const char * correlation_structure,
                                const arma::vec & alpha_vector,
-                               const double & phi) {
+                               const double & phi,
+                               const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -420,7 +432,8 @@ arma::vec update_beta_jeffreys2(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse);
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -471,7 +484,8 @@ arma::vec update_beta_jeffreys3(const arma::vec & y_vector,
                                const arma::vec & eta_vector,
                                const char * correlation_structure,
                                const arma::vec & alpha_vector,
-                               const double & phi) {
+                               const double & phi,
+                               const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
@@ -498,7 +512,8 @@ arma::vec update_beta_jeffreys3(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse);
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -551,7 +566,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                       const char * correlation_structure,
                       const arma::vec & alpha_vector,
                       const double & phi,
-                      const char* type) {
+                      const char* type,
+                      const arma::vec & weights_vector) {
   arma::vec ans(beta_vector.n_elem);
   if(std::strcmp(type, "gee") == 0){
     ans = update_beta_gee(y_vector,
@@ -565,7 +581,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                           eta_vector,
                           correlation_structure,
                           alpha_vector,
-                          phi);
+                          phi,
+                          weights_vector);
   }else if(std::strcmp(type, "brgee_naive") == 0){
     ans = update_beta_naive(y_vector,
                             model_matrix,
@@ -578,7 +595,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                             eta_vector,
                             correlation_structure,
                             alpha_vector,
-                            phi);
+                            phi,
+                            weights_vector);
   }else if(std::strcmp(type, "brgee_robust") == 0){
     ans = update_beta_robust(y_vector,
                              model_matrix,
@@ -591,7 +609,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                              eta_vector,
                              correlation_structure,
                              alpha_vector,
-                             phi);
+                             phi,
+                             weights_vector);
   }else if(std::strcmp(type, "brgee_empirical") == 0){
     ans = update_beta_empirical(y_vector,
                                 model_matrix,
@@ -604,7 +623,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                                 eta_vector,
                                 correlation_structure,
                                 alpha_vector,
-                                phi);
+                                phi,
+                                weights_vector);
   }else if(std::strcmp(type, "pgee_jeffreys") == 0){
     ans = update_beta_jeffreys(y_vector,
                                model_matrix,
@@ -617,7 +637,8 @@ arma::vec update_beta(const arma::vec & y_vector,
                                eta_vector,
                                correlation_structure,
                                alpha_vector,
-                               phi);
+                               phi,
+                               weights_vector);
   }
   return(ans);
 }

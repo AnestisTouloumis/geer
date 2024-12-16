@@ -50,6 +50,8 @@
 #' @param id a vector that identifies the clusters.
 #' @param repeated an optional vector that identifies the order of observations
 #' within each cluster.
+#' @param weights an optional vector of ‘prior weights’ to be used in the
+#' fitting process. Should be NULL or a numeric vector.
 #' @param family a character, a family function of the results of a call to a
 #' family function describing the marginal distribution and the link function to
 #' be used in the marginal model.
@@ -140,6 +142,7 @@ geewa <-
            id = id,
            repeated = NULL,
            family = gaussian(link = "identity"),
+           weights,
            maxiter = 200,
            tolerance = 1e-6,
            beta_start = NULL,
@@ -152,23 +155,21 @@ geewa <-
            method = "gee",
            ...) {
     ## call
+    if (missingArg(data))
+      data <- environment(eval(formula))
     call <- match.call(expand.dots = TRUE)
     if (missing(data))
       data <- environment(formula)
     mcall <- match.call(expand.dots = FALSE)
-    mcall$drop.unused.levels <- TRUE
-    mcall$correlation_structure <- mcall$Mv <- mcall$alpha_vector <-
-      mcall$family <- mcall$link <-
-      mcall$b <- mcall$tol <- mcall$maxiter <-
-      mcall$silent <- mcall$contrasts <- mcall$scale.fix <-
-      mcall$scale.value <- NULL
-    mnames <- c("formula", "data", "id", "repeated")
+    mnames <- c("formula", "data", "id", "repeated", "weights")
     mf <- match(mnames, names(mcall), 0L)
     m <- mcall[c(1L, mf)]
+    mcall$drop.unused.levels <- TRUE
+    m[[1L]] <- as.name("model.frame")
+    model_frame <- eval(m, envir = parent.frame())
+
     if (is.null(m$id))
       m$id <- as.name("id")
-    m[[1]] <- as.name("model.frame")
-    model_frame <- eval(m, envir = parent.frame())
 
     ## get explanatory variables
     model_terms <- attr(model_frame, "terms")
@@ -178,6 +179,18 @@ geewa <-
     if (is.null(y))
       stop("response variable not found")
     y <- as.numeric(y)
+
+    ## weights
+    weights <- as.vector(model.weights(model_frame))
+    if (is.null(weights)) {
+      weights <- rep(1, length(y))
+    } else {
+      if (!is.numeric(weights))
+        stop("'weights' must be a numeric vector")
+      if (any(weights < 0))
+        stop("negative weights not allowed")
+    }
+
 
     ## extract id and map values to 1,.., N
     id <- model.extract(model_frame, "id")
@@ -210,6 +223,8 @@ geewa <-
     ## check duplicated values in repeated for each subject
     if (any(unlist(lapply(split(repeated, id), duplicated))))
       stop("'repeated' does not have unique values per 'id'")
+
+
 
     ## offset term
     offset <- model.extract(model_frame, "offset")
@@ -317,10 +332,18 @@ geewa <-
         } else {
           type <- "AS_mean"
         }
-        beta_zero <- glm(formula = formula, family = family, data = data,
-                         method = brglmFit, type = type)$coef
+        beta_zero <- brglmFit(x = model_matrix,
+                              y = y,
+                              family = family,
+                              weights = weights,
+                              offset = offset,
+                              control = list(type = type))$coefficients
       } else {
-        beta_zero <- glm(formula = formula, family = family, data = data)$coef
+        beta_zero <- glm.fit(x = model_matrix,
+                             y = y,
+                             family = family,
+                             weights = weights,
+                             offset = offset)$coef
         }
       } else {
         beta_start <- as.numeric(beta_start)
@@ -378,7 +401,8 @@ geewa <-
                                   phi_fixed,
                                   alpha_vector,
                                   alpha_fixed,
-                                  method)
+                                  method,
+                                  weights)
 
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
       method <- sub("bcgee", "brgee", method_original)
@@ -399,7 +423,8 @@ geewa <-
                                      phi_fixed,
                                      alpha_vector,
                                      alpha_fixed,
-                                     method)
+                                     method,
+                                     weights)
       method <- method_original
     }
 
@@ -468,6 +493,7 @@ geewa <-
     fit$max_cluster_size <- max(unique(clusters_sizes))
 
     fit$method <- method
+    fit$weights <- weights
 
 
     class(fit) <- "geer"

@@ -67,6 +67,7 @@ arma::mat get_weight_matrix(const char * family,
                             const arma::vec & mu_vector,
                             const arma::vec & repeated_vector,
                             const double & phi,
-                            const arma::mat & cor_matrix_inverse);
+                            const arma::mat & cor_matrix_inverse,
+                            const arma::vec & weights_vector);
 
 #endif

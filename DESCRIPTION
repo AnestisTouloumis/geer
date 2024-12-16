@@ -12,6 +12,7 @@ Description: Generalized Estimating Equations (GEE) solver for estimating the re
 License: GPL-2 | GPL-3
 Imports:
     brglm2,
+    methods,
     Rcpp (>= 1.0.9)
 LinkingTo: 
     Rcpp,

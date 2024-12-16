@@ -32,7 +32,8 @@ compute_criteria <- function(object, cov_type, digits) {
                              object$fitted.values,
                              object$association_structure,
                              object$alpha,
-                             object$phi)
+                             object$phi,
+                             object$weights)
   } else {
     if (length(object$alpha) == 1) {
       object$alpha <- rep(object$alpha, choose(max(object$repeated), 2))

@@ -10,6 +10,7 @@ geewa(
   id = id,
   repeated = NULL,
   family = gaussian(link = "identity"),
+  weights,
   maxiter = 200,
   tolerance = 1e-06,
   beta_start = NULL,
@@ -39,6 +40,9 @@ within each cluster.}
 \item{family}{a character, a family function of the results of a call to a
 family function describing the marginal distribution and the link function to
 be used in the marginal model.}
+
+\item{weights}{an optional vector of ‘prior weights’ to be used in the
+fitting process. Should be NULL or a numeric vector.}
 
 \item{maxiter}{the maximum number of iterations.}
 

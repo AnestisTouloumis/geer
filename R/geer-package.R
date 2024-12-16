@@ -18,6 +18,8 @@
 #' @importFrom stats update pchisq formula family .getXlevels delete.response
 #' @importFrom stats model.frame model.offset as.formula update.formula
 #' @importFrom stats drop1 add1 add.scope drop.scope terms formula factor.scope
+#' @importFrom stats glm.fit model.weights
+#' @importFrom methods missingArg
 #' @importFrom utils combn
 #' @keywords internal
 "_PACKAGE"

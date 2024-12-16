@@ -21,7 +21,8 @@ arma::vec estimating_equations_gee(const arma::vec & y_vector,
                                    const arma::vec & eta_vector,
                                    const char * correlation_structure,
                                    const arma::vec & alpha_vector,
-                                   const double & phi) {
+                                   const double & phi,
+                                   const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat ans = arma::zeros(params_no);
@@ -40,7 +41,8 @@ arma::vec estimating_equations_gee(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse);
+                        correlation_matrix_inverse,
+                        weights_vector(id_vector_i));
     ans +=
       t_d_matrix_i * v_matrix_i_inverse * s_vector(id_vector_i);
   }

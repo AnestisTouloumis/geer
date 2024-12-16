@@ -12,8 +12,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // get_covariance_matrices
-Rcpp::List get_covariance_matrices(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const char * family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_get_covariance_matrices(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+Rcpp::List get_covariance_matrices(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const char * family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_covariance_matrices(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,7 +28,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_covariance_matrices(y_vector, model_matrix, id_vector, repeated_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_covariance_matrices(y_vector, model_matrix, id_vector, repeated_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -51,8 +52,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_geesolver
-Rcpp::List fit_geesolver(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const char * family, arma::vec beta_vector, const char * correlation_structure, const int& mdependence, int use_params, const int& maxiter, const double& tolerance, const arma::vec& offset, double phi, const int& phi_fixed, arma::vec alpha_vector, const int& alpha_fixed, const char * type);
-RcppExport SEXP _geer_fit_geesolver(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP correlation_structureSEXP, SEXP mdependenceSEXP, SEXP use_paramsSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP offsetSEXP, SEXP phiSEXP, SEXP phi_fixedSEXP, SEXP alpha_vectorSEXP, SEXP alpha_fixedSEXP, SEXP typeSEXP) {
+Rcpp::List fit_geesolver(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * link, const char * family, arma::vec beta_vector, const char * correlation_structure, const int& mdependence, int use_params, const int& maxiter, const double& tolerance, const arma::vec& offset, double phi, const int& phi_fixed, arma::vec alpha_vector, const int& alpha_fixed, const char * type, const arma::vec& weights_vector);
+RcppExport SEXP _geer_fit_geesolver(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP correlation_structureSEXP, SEXP mdependenceSEXP, SEXP use_paramsSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP offsetSEXP, SEXP phiSEXP, SEXP phi_fixedSEXP, SEXP alpha_vectorSEXP, SEXP alpha_fixedSEXP, SEXP typeSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -74,7 +75,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const int& >::type alpha_fixed(alpha_fixedSEXP);
     Rcpp::traits::input_parameter< const char * >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_geesolver(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, correlation_structure, mdependence, use_params, maxiter, tolerance, offset, phi, phi_fixed, alpha_vector, alpha_fixed, type));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_geesolver(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, correlation_structure, mdependence, use_params, maxiter, tolerance, offset, phi, phi_fixed, alpha_vector, alpha_fixed, type, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -118,8 +120,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_gee_criteria_sc_cw
-Rcpp::List get_gee_criteria_sc_cw(const arma::vec& y_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * family, const arma::vec& mu_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_get_gee_criteria_sc_cw(SEXP y_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+Rcpp::List get_gee_criteria_sc_cw(const arma::vec& y_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const char * family, const arma::vec& mu_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_gee_criteria_sc_cw(SEXP y_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -131,7 +133,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_gee_criteria_sc_cw(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_gee_criteria_sc_cw(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -554,8 +557,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_weight_matrix
-arma::mat get_weight_matrix(const char * family, const arma::vec& mu_vector, const arma::vec& repeated_vector, const double& phi, const arma::mat& cor_matrix_inverse);
-RcppExport SEXP _geer_get_weight_matrix(SEXP familySEXP, SEXP mu_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP cor_matrix_inverseSEXP) {
+arma::mat get_weight_matrix(const char * family, const arma::vec& mu_vector, const arma::vec& repeated_vector, const double& phi, const arma::mat& cor_matrix_inverse, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_weight_matrix(SEXP familySEXP, SEXP mu_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP cor_matrix_inverseSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -564,7 +567,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type cor_matrix_inverse(cor_matrix_inverseSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix(family, mu_vector, repeated_vector, phi, cor_matrix_inverse));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_weight_matrix(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -721,8 +725,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // estimating_equations_gee
-arma::vec estimating_equations_gee(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_estimating_equations_gee(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec estimating_equations_gee(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_estimating_equations_gee(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -738,7 +742,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(estimating_equations_gee(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(estimating_equations_gee(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -762,8 +767,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_gee
-arma::vec update_beta_gee(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_gee(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_gee(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_gee(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -779,13 +784,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_gee(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_gee(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_naive
-arma::vec update_beta_naive(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_naive(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_naive(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_naive(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -801,13 +807,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_naive(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_naive(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_robust
-arma::vec update_beta_robust(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_robust(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_robust(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_robust(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -823,13 +830,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_robust(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_robust(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_empirical
-arma::vec update_beta_empirical(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_empirical(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_empirical(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_empirical(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -845,13 +853,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_empirical(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_empirical(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_jeffreys
-arma::vec update_beta_jeffreys(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_jeffreys(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_jeffreys(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_jeffreys(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -867,13 +876,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_jeffreys2
-arma::vec update_beta_jeffreys2(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_jeffreys2(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_jeffreys2(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_jeffreys2(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -889,13 +899,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys2(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys2(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta_jeffreys3
-arma::vec update_beta_jeffreys3(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
-RcppExport SEXP _geer_update_beta_jeffreys3(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+arma::vec update_beta_jeffreys3(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta_jeffreys3(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -911,13 +922,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys3(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta_jeffreys3(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // update_beta
-arma::vec update_beta(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const char* type);
-RcppExport SEXP _geer_update_beta(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP typeSEXP) {
+arma::vec update_beta(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const char* type, const arma::vec& weights_vector);
+RcppExport SEXP _geer_update_beta(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP typeSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -934,7 +946,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const char* >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type));
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(update_beta(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, type, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1181,12 +1194,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_geer_get_covariance_matrices", (DL_FUNC) &_geer_get_covariance_matrices, 11},
+    {"_geer_get_covariance_matrices", (DL_FUNC) &_geer_get_covariance_matrices, 12},
     {"_geer_get_covariance_matrices_or", (DL_FUNC) &_geer_get_covariance_matrices_or, 8},
-    {"_geer_fit_geesolver", (DL_FUNC) &_geer_fit_geesolver, 18},
+    {"_geer_fit_geesolver", (DL_FUNC) &_geer_fit_geesolver, 19},
     {"_geer_fit_bingee_or", (DL_FUNC) &_geer_fit_bingee_or, 11},
     {"_geer_get_naive_matrix_inverse_independence", (DL_FUNC) &_geer_get_naive_matrix_inverse_independence, 8},
-    {"_geer_get_gee_criteria_sc_cw", (DL_FUNC) &_geer_get_gee_criteria_sc_cw, 8},
+    {"_geer_get_gee_criteria_sc_cw", (DL_FUNC) &_geer_get_gee_criteria_sc_cw, 9},
     {"_geer_get_gee_criteria_sc_cw_or", (DL_FUNC) &_geer_get_gee_criteria_sc_cw_or, 5},
     {"_geer_arma2vec", (DL_FUNC) &_geer_arma2vec, 1},
     {"_geer_vec2arma", (DL_FUNC) &_geer_vec2arma, 1},
@@ -1220,7 +1233,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_correlation_matrix", (DL_FUNC) &_geer_get_correlation_matrix, 3},
     {"_geer_get_correlation_matrix_inverse", (DL_FUNC) &_geer_get_correlation_matrix_inverse, 3},
     {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 3},
-    {"_geer_get_weight_matrix", (DL_FUNC) &_geer_get_weight_matrix, 5},
+    {"_geer_get_weight_matrix", (DL_FUNC) &_geer_get_weight_matrix, 6},
     {"_geer_get_marginalized_odds_ratios", (DL_FUNC) &_geer_get_marginalized_odds_ratios, 5},
     {"_geer_get_subject_specific_odds_ratios", (DL_FUNC) &_geer_get_subject_specific_odds_ratios, 3},
     {"_geer_get_bivariate_distribution", (DL_FUNC) &_geer_get_bivariate_distribution, 3},
@@ -1233,16 +1246,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_bivariate_distribution_mu", (DL_FUNC) &_geer_get_bivariate_distribution_mu, 2},
     {"_geer_get_g_matrix_mu", (DL_FUNC) &_geer_get_g_matrix_mu, 2},
     {"_geer_get_weight_matrix_mu_or", (DL_FUNC) &_geer_get_weight_matrix_mu_or, 2},
-    {"_geer_estimating_equations_gee", (DL_FUNC) &_geer_estimating_equations_gee, 12},
+    {"_geer_estimating_equations_gee", (DL_FUNC) &_geer_estimating_equations_gee, 13},
     {"_geer_estimating_equations_gee_or", (DL_FUNC) &_geer_estimating_equations_gee_or, 9},
-    {"_geer_update_beta_gee", (DL_FUNC) &_geer_update_beta_gee, 12},
-    {"_geer_update_beta_naive", (DL_FUNC) &_geer_update_beta_naive, 12},
-    {"_geer_update_beta_robust", (DL_FUNC) &_geer_update_beta_robust, 12},
-    {"_geer_update_beta_empirical", (DL_FUNC) &_geer_update_beta_empirical, 12},
-    {"_geer_update_beta_jeffreys", (DL_FUNC) &_geer_update_beta_jeffreys, 12},
-    {"_geer_update_beta_jeffreys2", (DL_FUNC) &_geer_update_beta_jeffreys2, 12},
-    {"_geer_update_beta_jeffreys3", (DL_FUNC) &_geer_update_beta_jeffreys3, 12},
-    {"_geer_update_beta", (DL_FUNC) &_geer_update_beta, 13},
+    {"_geer_update_beta_gee", (DL_FUNC) &_geer_update_beta_gee, 13},
+    {"_geer_update_beta_naive", (DL_FUNC) &_geer_update_beta_naive, 13},
+    {"_geer_update_beta_robust", (DL_FUNC) &_geer_update_beta_robust, 13},
+    {"_geer_update_beta_empirical", (DL_FUNC) &_geer_update_beta_empirical, 13},
+    {"_geer_update_beta_jeffreys", (DL_FUNC) &_geer_update_beta_jeffreys, 13},
+    {"_geer_update_beta_jeffreys2", (DL_FUNC) &_geer_update_beta_jeffreys2, 13},
+    {"_geer_update_beta_jeffreys3", (DL_FUNC) &_geer_update_beta_jeffreys3, 13},
+    {"_geer_update_beta", (DL_FUNC) &_geer_update_beta, 14},
     {"_geer_update_beta_gee_or", (DL_FUNC) &_geer_update_beta_gee_or, 9},
     {"_geer_update_beta_naive_or", (DL_FUNC) &_geer_update_beta_naive_or, 9},
     {"_geer_update_beta_robust_or", (DL_FUNC) &_geer_update_beta_robust_or, 9},

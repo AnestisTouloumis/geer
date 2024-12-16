@@ -22,7 +22,7 @@ default, the robust covariance matrix is returned.}
 \value{
 A matrix of the estimated covariances between the parameter estimates
 in the linear predictor of the GEE model. This should have row and column
-names corresponding to the parameter names given by the coef method.
+names corresponding to the parameter names given by the \code{coef} method.
 }
 \description{
 Returns the variance-covariance matrix of the main parameters of a fitted
@@ -34,6 +34,18 @@ Default is to obtain the estimated sandwich (robust) covariance matrix. Setting
 matrix, \code{type = "bias-corrected"} obtains the estimated bias-corrected
 covariance matrix and \code{type = "df-adjusted"} obtains the estimated degrees
 of freedom adjusted robust covariance matrix.
+
+If \code{cov_type = "robust"}, then the so-called sandwich or
+robust covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
+
+If \code{cov_type = "naive"}, then the so-called naive or
+model-based covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
+
+If \code{cov_type = "df-adjusted"}, then the adjusted covariance matrix proposed
+by \cite{MacKinnon (1985)} is returned.
+
+If \code{cov_type = "bias-corrected"}, then the bias-corrected covariance matrix
+proposed by \cite{Morel, Bokossa and Neerchal (2003)} is returned.
 }
 \examples{
 data("cerebrovascular")
@@ -44,4 +56,17 @@ fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
                              or_structure = "exchangeable")
 vcov(fitted_model)
 vcov(fitted_model, cov_type = "bias-corrected")
+}
+\references{
+Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
+estimators for generalized estimating equations. \emph{Biometrika} \bold{73},
+13-–22.
+
+MacKinnon, J.G. (1985) Some heteroskedasticity-consistent
+covariance matrix estimators with improved finite sample properties.
+\emph{Journal of Econometrics} \bold{29}, 305–-325.
+
+Morel J.G., Bokossa M.C. and Neerchal N.K, (2003) Small sample correction
+for the variance of GEE estimators. \emph{Biometrical Journal 2003} \bold{45},
+395–-409.
 }

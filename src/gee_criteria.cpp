@@ -45,7 +45,8 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
                                   const arma::vec & mu_vector,
                                   const char * correlation_structure,
                                   const arma::vec & alpha_vector,
-                                  const double & phi) {
+                                  const double & phi,
+                                  const arma::vec & weights_vector) {
   double sample_size = max(id_vector);
   arma::vec sc_criterion = arma::zeros(1, 1);
   double sum_log_det_working_covariance_matrices = 0;
@@ -62,7 +63,8 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,
-                        correlation_matrix_inverse_full);
+                        correlation_matrix_inverse_full,
+                        weights_vector(id_vector_i));
     sc_criterion += trans(s_vector_i) * working_covariance_matrix_i * s_vector_i;
     sum_log_det_working_covariance_matrices += log(det(working_covariance_matrix_i));
   }

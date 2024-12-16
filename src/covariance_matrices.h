@@ -11,6 +11,7 @@ Rcpp::List get_covariance_matrices(const arma::vec & y_vector,
                                    const arma::vec & eta_vector,
                                    const char * correlation_structure,
                                    const arma::vec & alpha_vector,
-                                   const double & phi);
+                                   const double & phi,
+                                   const arma::vec & weights_vector);
 
 #endif

@@ -280,7 +280,7 @@ geewa_binary <- function(formula = formula(data),
           type <- "AS_mean"
         }
         beta_zero <- glm(formula = formula, family = binomial(link = link), data = data,
-                         method = brglmFit, type = type)$coef
+                         method = brglmFit, type = type, control = list(maxiter = 1000))$coef
       } else {
         beta_zero <- glm(formula = formula, family = binomial(link = link), data = data)$coef
       }

@@ -89,23 +89,36 @@ arma::vec get_subject_specific_odds_ratios(arma::vec repeated_vector_i,
 double get_bivariate_distribution(const double & row_prob,
                                   const double & col_prob,
                                   const double & odds_ratio) {
-  // ans if odds_ratios == 1.0
   double ans = row_prob * col_prob;
-  // ans if odds_ratios != 1.0
-  if (odds_ratio != 1.0) {
-    double f_value = 1 - (1 - odds_ratio) * (row_prob + col_prob);
-    double root_value =
-      pow(f_value, 2) - 4 * odds_ratio * (odds_ratio - 1) * ans;
-    ans = (f_value - sqrt(root_value)) / (2 * (odds_ratio - 1));
+
+  double tol = 0.0001;
+
+  double odds_ratio_new = odds_ratio;
+
+  if (row_prob > (1 - tol) && col_prob > (1.0 - tol)) {
+    odds_ratio_new = 1;
   }
-  double upper_bound = std::min(row_prob, col_prob);
-  if(ans > upper_bound) {
-    ans = upper_bound - DBL_EPSILON;
+
+  if (row_prob < (tol) && col_prob < (tol)) {
+    odds_ratio_new = 1;
   }
-  double lower_bound = -std::min(1 - row_prob - col_prob, 0.0);
-  if(ans < lower_bound) {
-    ans = lower_bound + DBL_EPSILON;
+
+  if (odds_ratio_new == 1.0) {
+    return ans;
   }
+
+  double f_value = 1 - (1 - odds_ratio_new) * (row_prob + col_prob);
+  double root_value =
+    pow(f_value, 2) - 4 * odds_ratio_new * (odds_ratio_new - 1) * ans;
+  ans = (f_value - sqrt(root_value)) / (2 * (odds_ratio_new - 1));
+ // double lower_bound = -std::min(1 - row_prob - col_prob, 0.0);
+//  if(ans < lower_bound) {
+//    ans = lower_bound;
+//  }
+//  double upper_bound = std::min(row_prob, col_prob);
+//  if(ans > upper_bound) {
+//    ans = upper_bound;
+//  }
   return ans;
 }
 //==============================================================================
@@ -148,6 +161,7 @@ arma::mat get_weight_matrix_inverse_or(const arma::vec & mu_vector,
   arma::mat weight_matrix = get_weight_matrix_or(mu_vector,
                                                  odds_ratios_vector);
   arma::mat ans = arma::inv(weight_matrix, arma::inv_opts::allow_approx);
+  //arma::mat ans = arma::pinv(weight_matrix);
   return ans;
 }
 //==============================================================================

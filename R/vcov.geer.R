@@ -82,10 +82,10 @@ vcov.geer <- function(object, cov_type = "robust", ...) {
             0.5)
       robust_covariance <- object$robust_covariance
       naive_covariance <- object$naive_covariance
-      trace_matrix <- sum(robust_covariance * t(solve(naive_covariance)))
+      trace_robust_naive_inverse <- sum(robust_covariance * t(solve(naive_covariance)))
       ksi <-
         max(1,
-            trace_matrix/parameters_no)
+            trace_robust_naive_inverse/parameters_no)
       ans <- kappa * robust_covariance + delta * ksi * naive_covariance
     } else if (cov_type == "df-adjusted") {
       sample_size <- object$clusters_no

@@ -25,7 +25,8 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
                          const int & phi_fixed,
                          arma::vec alpha_vector,
                          const int & alpha_fixed,
-                         const char * type) {
+                         const char * type,
+                         const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   use_params = use_params * params_no;
   arma::vec criterion_vector = arma::zeros(maxiter);
@@ -64,7 +65,8 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
                                   correlation_structure,
                                   alpha_vector,
                                   phi,
-                                  type);
+                                  type,
+                                  weights_vector);
     criterion_vector(i-1) =
       max(abs(beta_vector - beta_vector_new));
     beta_vector = beta_vector_new;
@@ -92,7 +94,8 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
                                                     eta_vector,
                                                     correlation_structure,
                                                     alpha_vector,
-                                                    phi);
+                                                    phi,
+                                                    weights_vector);
   Rcpp::List ans;
   ans["beta_hat"] = beta_vector;
   ans["beta_mat"] = beta_hat_matrix;

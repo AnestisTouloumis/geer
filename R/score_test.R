@@ -77,7 +77,8 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                         obj0$linear.predictors,
                                         obj1$association_structure,
                                         obj1$alpha,
-                                        obj1$phi)
+                                        obj1$phi,
+                                        obj1$weights)
 
     covariance <- get_covariance_matrices(obj1$y,
                                           obj1$model_matrix,
@@ -89,7 +90,8 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                           obj0$linear.predictors,
                                           obj1$association_structure,
                                           obj1$alpha,
-                                          obj1$phi)
+                                          obj1$phi,
+                                          obj1$weights)
   } else {
     if (length(obj1$alpha) == 1) {
       association_alpha <- rep(obj1$alpha,
