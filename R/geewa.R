@@ -43,38 +43,39 @@
 #'
 #'
 #' @param formula a formula expression of the form \code{response ~ predictors}
-#' as for other regression models. See the documentation of \link{glm} and
-#' \link{formula}.
+#'        as for other regression models. See the documentation of \link{glm} and
+#'        \link{formula}.
 #' @param data an optional data frame containing the variables provided in
-#' \code{formula}, \code{id} and \code{repeated}.
+#'        \code{formula}, \code{id} and \code{repeated}.
 #' @param id a vector that identifies the clusters.
 #' @param repeated an optional vector that identifies the order of observations
-#' within each cluster.
+#'        within each cluster.
 #' @param weights an optional vector of ‘prior weights’ to be used in the
-#' fitting process. Should be NULL or a numeric vector.
+#'        fitting process. Should be NULL or a numeric vector.
 #' @param family a character, a family function of the results of a call to a
-#' family function describing the marginal distribution and the link function to
-#' be used in the marginal model.
-#' @param maxiter the maximum number of iterations.
-#' @param tolerance the tolerance used in the fitting algorithm.
+#'        family function describing the marginal distribution and the link function to
+#'        be used in the marginal model.
+#' @param control list that specifies the control variables for the GEE solver.
 #' @param beta_start numerical vector indicating the initial values of the
-#' regression parameter vector.
+#'        regression parameter vector.
 #' @param correlation_structure a character indicating the working correlation
-#' structure. Options include \code{"independence"}, \code{"exchangeable"},
-#' \code{"ar1"}, \code{"m-dependent"} or \code{"unstructured"}.
+#'        structure. Options include \code{"independence"}, \code{"exchangeable"},
+#'        \code{"ar1"}, \code{"m-dependent"} or \code{"unstructured"}.
 #' @param use_p if set to \code{FALSE} then do not subtract the number of
-#' parameters when you are estimating phi or alpha.
+#'        parameters when you are estimating phi or alpha.
 #' @param Mv a positive integer which must be specified whenever
-#'  \code{correlation_structure = "m-dependent"}.
+#'        \code{correlation_structure = "m-dependent"}.
 #' @param alpha_vector numerical vector indicating the correlation structure for
-#' when \code{correlation_structure == "fixed"}. Otherwise, it is ignored.
+#'        when \code{correlation_structure == "fixed"}. Otherwise, it is ignored.
 #' @param phi_fixed logical indicating whether the phi value is fixed or not.
 #' @param phi_value positive number indicating the value of phi when
-#' \code{phi_fixed == TRUE}.
+#'        \code{phi_fixed == TRUE}.
 #' @param method a character indicating the form of estimating equations.
-#' Options include \code{"gee"}, \code{"brgee_naive"},
-#' \code{"brgee_robust"}, \code{"brgee_empirical"}, \code{"bcgee_naive"},
-#' \code{"bcgee_robust"}, \code{"bcgee_empirical"} or \code{"pgee_jeffreys"}.
+#'        Options include \code{"gee"}, \code{"brgee_naive"},
+#'        \code{"brgee_robust"}, \code{"brgee_empirical"}, \code{"bcgee_naive"},
+#'        \code{"bcgee_robust"}, \code{"bcgee_empirical"} or \code{"pgee_jeffreys"}.
+#' @param control_glm list of parameters for controlling the fitting process for the
+#'        initial parameter vector values when these are not provided.
 #' @param ... further arguments passed to/or from other methods.
 #'
 #'
@@ -143,8 +144,7 @@ geewa <-
            repeated = NULL,
            family = gaussian(link = "identity"),
            weights,
-           maxiter = 200,
-           tolerance = 1e-6,
+           control = list(...),
            beta_start = NULL,
            correlation_structure = "independence",
            use_p = TRUE,
@@ -153,6 +153,7 @@ geewa <-
            phi_fixed = FALSE,
            phi_value = 1,
            method = "gee",
+           control_glm = list(...),
            ...) {
     ## call
     if (missingArg(data))
@@ -191,7 +192,6 @@ geewa <-
         stop("negative weights not allowed")
     }
 
-
     ## extract id and map values to 1,.., N
     id <- model.extract(model_frame, "id")
     if (is.null(id))
@@ -223,8 +223,6 @@ geewa <-
     ## check duplicated values in repeated for each subject
     if (any(unlist(lapply(split(repeated, id), duplicated))))
       stop("'repeated' does not have unique values per 'id'")
-
-
 
     ## offset term
     offset <- model.extract(model_frame, "offset")
@@ -288,15 +286,32 @@ geewa <-
       }
 
     ## family
-    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian")
+    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian",
+                 "quasi", "quasibinomial", "quasipoisson")
     if (is.character(family))
       family <- get(family, mode = "function", envir = parent.frame())
     if (is.function(family))
       family <- family()
     icheck <- as.integer(match(family$family, familys, -1))
     if (icheck < 1)
-      stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma` or
-           `inverse.gaussian`")
+      stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma`,
+           `inverse.gaussian`, `quasi`, `quasibinomial` or `quasipoisson`")
+
+    if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
+      if (family$family == "quasi") {
+        family$family <- switch(family$varfun,
+                                constant = "gaussian",
+                                `mu(1-mu)` = "binomial",
+                                mu = "poisson",
+                                `mu^2` = "Gamma",
+                                `mu^3` = "inverse.gaussian")
+      } else {
+        family$family <- switch(family$family,
+                                quasibinomial = "binomial",
+                                quasipoisson = "poisson")
+      }
+      family <- do.call(family$family, list(link = family$link))
+    }
 
     ## link function
     links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
@@ -320,8 +335,18 @@ geewa <-
            or `pgee_jeffreys`")
 
 
+    ## control variable
+    control <- do.call("geer_control", control)
+
+    ## maxiter
+    maxiter <- control$maxiter
+
+    ## tolerance
+    tolerance <- control$tolerance
+
     ## initial beta
     if (is.null(beta_start)) {
+      control_glm <- do.call("brglm_control", control_glm)
       if (link != "identity") {
         if (method %in% c("gee",
                           "bcgee_naive", "bcgee_robust", "bcgee_empirical",
@@ -337,13 +362,22 @@ geewa <-
                               family = family,
                               weights = weights,
                               offset = offset,
-                              control = list(type = type))$coefficients
+                              control = list(epsilon = control$tolerance,
+                                             maxit = control_glm$maxit,
+                                             type = type,
+                                             trace = FALSE,
+                                             slowit = control_glm$slowit,
+                                             max_step_factor = control_glm$max_step_factor,
+                                             a = control$jeffreys_power))$coefficients
       } else {
         beta_zero <- glm.fit(x = model_matrix,
                              y = y,
                              family = family,
                              weights = weights,
-                             offset = offset)$coef
+                             offset = offset,
+                             control = list(epsilon = control$tolerance,
+                                            maxit = control_glm$maxit,
+                                            trace = FALSE))$coef
         }
       } else {
         beta_start <- as.numeric(beta_start)
@@ -363,16 +397,6 @@ geewa <-
       phi_value <- 1
     }
 
-    ## maxiter
-    maxiter <- round(as.numeric(maxiter), 0)
-    if (maxiter <= 0)
-      stop("`maxiter` must be a positive integer")
-
-
-    ## tolerance
-    tolerance <- as.numeric(tolerance)
-    if (tolerance <= 0)
-      stop("`tolerance` must be a positive")
 
 
     ## use or not p when updating phi and alpha
@@ -402,7 +426,10 @@ geewa <-
                                   alpha_vector,
                                   alpha_fixed,
                                   method,
-                                  weights)
+                                  weights,
+                                  control$step_maxiter,
+                                  control$step_multiplier,
+                                  control$jeffreys_power)
 
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
       method <- sub("bcgee", "brgee", method_original)
@@ -424,7 +451,10 @@ geewa <-
                                      alpha_vector,
                                      alpha_fixed,
                                      method,
-                                     weights)
+                                     weights,
+                                     1,
+                                     1,
+                                     control$jeffreys_power)
       method <- method_original
     }
 

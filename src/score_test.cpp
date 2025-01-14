@@ -61,7 +61,8 @@ arma::vec estimating_equations_gee_or(const arma::vec & y_vector,
                                       const arma::vec & beta_vector,
                                       const arma::vec & mu_vector,
                                       const arma::vec & eta_vector,
-                                      const arma::vec & alpha_vector) {
+                                      const arma::vec & alpha_vector,
+                                      const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -79,7 +80,9 @@ arma::vec estimating_equations_gee_or(const arma::vec & y_vector,
                                        alpha_vector);
     ans +=
       t_d_matrix_i *
-      get_weight_matrix_inverse_or(mu_vector(id_vector_i), odds_ratios_vector_i) *
+      get_weight_matrix_inverse_or(mu_vector(id_vector_i),
+                                   odds_ratios_vector_i,
+                                   weights_vector(id_vector_i)) *
       s_vector(id_vector_i);
   }
   return ans;

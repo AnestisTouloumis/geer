@@ -12,6 +12,7 @@
 #' @useDynLib geer, .registration = TRUE
 #' @import Rcpp
 #' @importFrom brglm2 brglmFit
+#' @importFrom brglm2 brglm_control
 #'
 #' @importFrom stats gaussian glm model.extract model.matrix model.response
 #' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients

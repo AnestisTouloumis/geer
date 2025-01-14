@@ -2,7 +2,7 @@
 using namespace Rcpp;
 
 
-//============================ subject matrix x[1:y, 1:y] ======================
+//============================ subset matrix x[1:y, 1:y] =======================
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::mat subset_matrix(arma::mat x, arma::vec y) {
@@ -24,7 +24,7 @@ arma::mat kappa_matrix(int dimension) {
 //==============================================================================
 
 
-//============================ kronecker sum of the same matrix ================
+//============================ kronecker direct sum of the same matrix =========
 // [[Rcpp::export]]
 arma::mat kronecker_sum_same(arma::mat x) {
   arma::mat identity_matrix = arma::eye(x.n_rows, x.n_rows);

@@ -11,8 +11,7 @@ geewa(
   repeated = NULL,
   family = gaussian(link = "identity"),
   weights,
-  maxiter = 200,
-  tolerance = 1e-06,
+  control = list(...),
   beta_start = NULL,
   correlation_structure = "independence",
   use_p = TRUE,
@@ -21,6 +20,7 @@ geewa(
   phi_fixed = FALSE,
   phi_value = 1,
   method = "gee",
+  control_glm = list(...),
   ...
 )
 }
@@ -44,9 +44,7 @@ be used in the marginal model.}
 \item{weights}{an optional vector of ‘prior weights’ to be used in the
 fitting process. Should be NULL or a numeric vector.}
 
-\item{maxiter}{the maximum number of iterations.}
-
-\item{tolerance}{the tolerance used in the fitting algorithm.}
+\item{control}{list that specifies the control variables for the GEE solver.}
 
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameter vector.}
@@ -73,6 +71,9 @@ when \code{correlation_structure == "fixed"}. Otherwise, it is ignored.}
 Options include \code{"gee"}, \code{"brgee_naive"},
 \code{"brgee_robust"}, \code{"brgee_empirical"}, \code{"bcgee_naive"},
 \code{"bcgee_robust"}, \code{"bcgee_empirical"} or \code{"pgee_jeffreys"}.}
+
+\item{control_glm}{list of parameters for controlling the fitting process for the
+initial parameter vector values when these are not provided.}
 
 \item{...}{further arguments passed to/or from other methods.}
 }

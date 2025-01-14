@@ -7,7 +7,7 @@
 #' @details
 #' A term of the form \code{offset(expression)} is allowed in the right hand
 #' side of \code{formula}.
-#'#'
+#'
 #' The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 #' \eqn{N} is the sample size. If otherwise, the function recodes the given
 #' labels onto this set.
@@ -37,14 +37,14 @@
 #'
 #' @inheritParams geewa
 #' @param link a character indicating the link function. Options include
-#' \code{logit}, \code{probit}, \code{cauchit}, \code{cloglog}, \code{identity},
-#' \code{log}, \code{sqrt}, \code{1/mu^2} or \code{inverse}.
-#' @param or_structure a character indicating the working correlation
-#' structure. Options include \code{"independence"}, \code{"exchangeable"},
-#' \code{"unstructured"} or \code{"fixed"}.
-#' @param alpha_vector numerical vector indicating the correlation structure for
-#' when \code{or_structure == "fixed"}. It is ignored for all other
-#' possible values of \code{or_structure}.
+#'        \code{logit}, \code{probit}, \code{cauchit}, \code{cloglog}, \code{identity},
+#'        \code{log}, \code{sqrt}, \code{1/mu^2} or \code{inverse}.
+#' @param or_structure a character indicating the working association
+#'        structure. Options include \code{"independence"}, \code{"exchangeable"},
+#'        \code{"unstructured"} or \code{"fixed"}.
+#' @param alpha_vector numerical vector indicating the association structure for
+#'        when \code{or_structure == "fixed"}. It is ignored for all other
+#'        possible values of \code{or_structure}.
 #'
 #'
 #' @return \code{geewa_binary} return an object from the class "geer". The function
@@ -120,11 +120,12 @@ geewa_binary <- function(formula = formula(data),
                          id = id,
                          repeated = NULL,
                          or_structure = "exchangeable",
-                         maxiter = 200,
-                         tolerance = 1e-6,
+                         control = geer_control(),
                          beta_start = NULL,
                          alpha_vector = NULL,
                          method = "gee",
+                         control_glm = list(...),
+                         weights = NULL,
                          ...) {
     ## call
     call <- match.call()
@@ -214,7 +215,10 @@ geewa_binary <- function(formula = formula(data),
     if (qr_model_matrix$rank < ncol(model_matrix))
       stop("rank-deficient model matrix")
 
-
+    ## control variables
+    control <- do.call("geer_control", control)
+    maxiter <- control$maxiter
+    tolerance <- control$tolerance
 
     ## estimating marginalized odds ratios
     or_structures <- c("independence", "exchangeable", "unstructured",
@@ -236,7 +240,7 @@ geewa_binary <- function(formula = formula(data),
     } else {
       #if (!is.numeric(adding_constant) | adding_constant < 0)
       #  stop("'adding_constant' must be a nonnegative constant")
-      adding_constant <- 0.5
+      adding_constant <- control$or_adding_constant
       alpha_vector <- get_marginalized_odds_ratios(y,
                                                    id,
                                                    repeated,
@@ -253,7 +257,6 @@ geewa_binary <- function(formula = formula(data),
       stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
            `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
 
-
     ## run fit
     methods <- c("gee",
                  "brgee_naive", "brgee_robust", "brgee_empirical",
@@ -266,23 +269,52 @@ geewa_binary <- function(formula = formula(data),
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
 
+    ## weights
+    weights <- as.vector(model.weights(model_frame))
+    if (is.null(weights)) {
+      weights <- rep(1, length(y))
+    } else {
+      if (!is.numeric(weights))
+        stop("'weights' must be a numeric vector")
+      if (any(weights < 0))
+        stop("negative weights not allowed")
+    }
+
 
     ## initial beta
     if (is.null(beta_start)) {
+      control_glm <- do.call("brglm_control", control_glm)
       if (link != "identity") {
         if (method %in% c("gee",
                           "bcgee_naive", "bcgee_robust", "bcgee_empirical",
                           "brgee_robust", "brgee_empirical")) {
           type <- "ML"
-        } else if (method == "pgee_jeffreys") {
+        } else if (method  == "pgee_jeffreys") {
           type <- "MPL_Jeffreys"
         } else {
           type <- "AS_mean"
         }
-        beta_zero <- glm(formula = formula, family = binomial(link = link), data = data,
-                         method = brglmFit, type = type, control = list(maxiter = 1000))$coef
+        beta_zero <- brglmFit(x = model_matrix,
+                              y = y,
+                              family = binomial(link = link),
+                              weights = weights,
+                              offset = offset,
+                              control = list(epsilon = control$tolerance,
+                                             maxit = control_glm$maxit,
+                                             type = type,
+                                             trace = FALSE,
+                                             slowit = control_glm$slowit,
+                                             max_step_factor = control_glm$max_step_factor,
+                                             a = control$jeffreys_power))$coefficients
       } else {
-        beta_zero <- glm(formula = formula, family = binomial(link = link), data = data)$coef
+        beta_zero <- glm.fit(x = model_matrix,
+                             y = y,
+                             family = binomial(link = link),
+                             weights = weights,
+                             offset = offset,
+                             control = list(epsilon = control$tolerance,
+                                            maxit = control_glm$maxit,
+                                            trace = FALSE))$coef
       }
     } else {
       beta_start <- as.numeric(beta_start)
@@ -291,16 +323,6 @@ geewa_binary <- function(formula = formula(data),
         stop("`beta_start` must be of a vector of length ", p)
       beta_zero <- beta_start
     }
-
-    ## maxiter
-    maxiter <- round(as.numeric(maxiter), 0)
-    if (maxiter <= 0)
-      stop("`maxiter` must be a positive integer")
-
-    ## tolerance
-    tolerance <- as.numeric(tolerance)
-    if (tolerance <= 0)
-      stop("`tolerance` must be a positive")
 
     method_original <- method
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
@@ -316,7 +338,11 @@ geewa_binary <- function(formula = formula(data),
                                    tolerance,
                                    offset,
                                    alpha_vector,
-                                   method)
+                                   method,
+                                   weights,
+                                   control$step_maxiter,
+                                   control$step_multiplier,
+                                   control$jeffreys_power)
 
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
       method <- sub("bcgee", "brgee", method_original)
@@ -330,7 +356,11 @@ geewa_binary <- function(formula = formula(data),
                                      tolerance,
                                      offset,
                                      alpha_vector,
-                                     method)
+                                     method,
+                                     weights,
+                                     1,
+                                     1,
+                                     control$jeffreys_power)
       method <- method_original
     }
 
@@ -372,6 +402,7 @@ geewa_binary <- function(formula = formula(data),
 
     fit$niter <- ncol(geesolver_fit$beta_mat) - 1
     fit$criterion <- geesolver_fit$criterion[fit$niter]
+    fit$criterion_beta <- geesolver_fit$criterion
     fit$converged <- fit$criterion <= tolerance
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
       fit$converged = TRUE
@@ -397,6 +428,12 @@ geewa_binary <- function(formula = formula(data),
     fit$max_cluster_size <- max(unique(clusters_sizes))
 
     fit$method <- method
+
+    fit$beta_mat <- geesolver_fit$beta_mat
+
+    fit$criterion_ee <- as.numeric(c(geesolver_fit$criterion_ee[1:fit$niter]))
+
+    fit$weights <- weights
 
 
     class(fit) <- "geer"

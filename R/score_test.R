@@ -105,7 +105,8 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                            coeffs_test,
                                            obj0$fitted.values,
                                            obj0$linear.predictors,
-                                           association_alpha)
+                                           association_alpha,
+                                           obj1$weights)
     covariance <- get_covariance_matrices_or(obj1$y,
                                              obj1$model_matrix,
                                              obj1$id,
@@ -113,7 +114,8 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                              obj1$family$link,
                                              obj0$fitted.values,
                                              obj0$linear.predictors,
-                                             association_alpha)
+                                             association_alpha,
+                                             obj0$weights)
   }
   icheck <- pmatch(cov_type,
                    c("robust", "naive", "bias-corrected", "df-adjusted"),

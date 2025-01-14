@@ -11,11 +11,12 @@ geewa_binary(
   id = id,
   repeated = NULL,
   or_structure = "exchangeable",
-  maxiter = 200,
-  tolerance = 1e-06,
+  control = geer_control(),
   beta_start = NULL,
   alpha_vector = NULL,
   method = "gee",
+  control_glm = list(...),
+  weights = NULL,
   ...
 )
 }
@@ -36,18 +37,16 @@ as for other regression models. See the documentation of \link{glm} and
 \item{repeated}{an optional vector that identifies the order of observations
 within each cluster.}
 
-\item{or_structure}{a character indicating the working correlation
+\item{or_structure}{a character indicating the working association
 structure. Options include \code{"independence"}, \code{"exchangeable"},
 \code{"unstructured"} or \code{"fixed"}.}
 
-\item{maxiter}{the maximum number of iterations.}
-
-\item{tolerance}{the tolerance used in the fitting algorithm.}
+\item{control}{list that specifies the control variables for the GEE solver.}
 
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameter vector.}
 
-\item{alpha_vector}{numerical vector indicating the correlation structure for
+\item{alpha_vector}{numerical vector indicating the association structure for
 when \code{or_structure == "fixed"}. It is ignored for all other
 possible values of \code{or_structure}.}
 
@@ -55,6 +54,12 @@ possible values of \code{or_structure}.}
 Options include \code{"gee"}, \code{"brgee_naive"},
 \code{"brgee_robust"}, \code{"brgee_empirical"}, \code{"bcgee_naive"},
 \code{"bcgee_robust"}, \code{"bcgee_empirical"} or \code{"pgee_jeffreys"}.}
+
+\item{control_glm}{list of parameters for controlling the fitting process for the
+initial parameter vector values when these are not provided.}
+
+\item{weights}{an optional vector of ‘prior weights’ to be used in the
+fitting process. Should be NULL or a numeric vector.}
 
 \item{...}{further arguments passed to/or from other methods.}
 }
@@ -100,7 +105,7 @@ format. See details about the `long' format in the function \link{reshape}.
 \details{
 A term of the form \code{offset(expression)} is allowed in the right hand
 side of \code{formula}.
-#'
+
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 \eqn{N} is the sample size. If otherwise, the function recodes the given
 labels onto this set.

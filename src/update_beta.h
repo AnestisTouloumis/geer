@@ -69,7 +69,8 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
                                const char * correlation_structure,
                                const arma::vec & alpha_vector,
                                const double & phi,
-                               const arma::vec & weights_vector);
+                               const arma::vec & weights_vector,
+                               const double & jeffreys_power);
 
 
 arma::vec update_beta(const arma::vec & y_vector,
@@ -85,6 +86,7 @@ arma::vec update_beta(const arma::vec & y_vector,
                       const arma::vec & alpha_vector,
                       const double & phi,
                       const char* type,
-                      const arma::vec & weights_vector);
+                      const arma::vec & weights_vector,
+                      const double & jeffreys_power);
 
 #endif

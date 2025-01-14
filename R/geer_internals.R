@@ -43,7 +43,8 @@ compute_criteria <- function(object, cov_type, digits) {
                                 object$id,
                                 object$repeated,
                                 object$fitted.values,
-                                object$alpha)
+                                object$alpha,
+                                object$weights)
   }
   if (object$association == "indepedence") {
     association_params_no <- 0

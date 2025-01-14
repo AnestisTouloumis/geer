@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 
+
 //============================ arma to vec =====================================
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]

@@ -4,18 +4,19 @@
 #include "utils.h"
 #include "nuisance_quantities_oddsratio.h"
 
+
 //============================ update beta - gee OR ============================
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec update_beta_gee_or(const arma::vec & y_vector,
-                             const arma::mat & model_matrix,
-                             const arma::vec & id_vector,
-                             const arma::vec & repeated_vector,
-                             const char * link,
-                             const arma::vec & beta_vector,
-                             const arma::vec & mu_vector,
-                             const arma::vec & eta_vector,
-                             const arma::vec & alpha_vector) {
+                              const arma::mat & model_matrix,
+                              const arma::vec & id_vector,
+                              const arma::vec & repeated_vector,
+                              const char * link,
+                              const arma::vec & beta_vector,
+                              const arma::vec & mu_vector,
+                              const arma::vec & eta_vector,
+                              const arma::vec & alpha_vector,
+                              const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -34,7 +35,8 @@ arma::vec update_beta_gee_or(const arma::vec & y_vector,
                                        alpha_vector);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) *
-      get_weight_matrix_inverse_or(mu_vector(id_vector_i), odds_ratios_vector_i);
+      get_weight_matrix_inverse_or(mu_vector(id_vector_i), odds_ratios_vector_i,
+                                   weights_vector(id_vector_i));
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     u_vector +=
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
@@ -55,7 +57,8 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
                                const arma::vec & beta_vector,
                                const arma::vec & mu_vector,
                                const arma::vec & eta_vector,
-                               const arma::vec & alpha_vector) {
+                               const arma::vec & alpha_vector,
+                               const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -69,6 +72,7 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
     arma::uvec id_vector_i = find(id_vector == i);
     double cluster_size_i = id_vector_i.n_elem;
     arma::vec mu_vector_i = mu_vector(id_vector_i);
+    arma::vec weights_vector_i = weights_vector(id_vector_i);
     arma::mat d_matrix_i =
       diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::vec odds_ratios_vector_i =
@@ -76,7 +80,7 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
                                        repeated_max,
                                        alpha_vector);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i);
+      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -103,7 +107,7 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
       kappa_matrix_delta_matrix_i -
       vectorised_weight_matrix_inverse_trans_mu_vector_i) * weight_matrix_inverse_i -
       (kron(weight_matrix_inverse_i, weight_matrix_inverse_i)) *
-      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i) +
+      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i) +
       kronecker_vector_matrix(weight_matrix_inverse_mu_vector_i, weight_matrix_inverse_i);
     arma::mat gamma_matrix_one =
       (kappa_matrix_delta_matrix_i -
@@ -123,7 +127,8 @@ arma::vec update_beta_naive_or(const arma::vec & y_vector,
       trace(solve(naive_matrix_inverse,
                   gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
   }
-  arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + gamma_vector);
+  arma::vec ans = beta_vector +
+    solve(naive_matrix_inverse, u_vector + gamma_vector);
   return ans;
 }
 //==============================================================================
@@ -139,7 +144,8 @@ arma::vec update_beta_robust_or(const arma::vec & y_vector,
                                 const arma::vec & beta_vector,
                                 const arma::vec & mu_vector,
                                 const arma::vec & eta_vector,
-                                const arma::vec & alpha_vector) {
+                                const arma::vec & alpha_vector,
+                                const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -155,6 +161,7 @@ arma::vec update_beta_robust_or(const arma::vec & y_vector,
     arma::uvec id_vector_i = find(id_vector == i);
     double cluster_size_i = id_vector_i.n_elem;
     arma::vec mu_vector_i = mu_vector(id_vector_i);
+    arma::vec weights_vector_i = weights_vector(id_vector_i);
     arma::mat d_matrix_i =
       diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::vec odds_ratios_vector_i =
@@ -162,7 +169,7 @@ arma::vec update_beta_robust_or(const arma::vec & y_vector,
                                        repeated_max,
                                        alpha_vector);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix_inverse_or(mu_vector_i,odds_ratios_vector_i);
+      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -193,7 +200,7 @@ arma::vec update_beta_robust_or(const arma::vec & y_vector,
             kappa_matrix_delta_matrix_i -
             vectorised_weight_matrix_inverse_trans_mu_vector_i) * weight_matrix_inverse_i -
             (kron(weight_matrix_inverse_i, weight_matrix_inverse_i)) *
-            get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i) +
+            get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i) +
             kronecker_vector_matrix(weight_matrix_inverse_mu_vector_i, weight_matrix_inverse_i)) *
             d_matrix_i;
     gamma_matrix_one +=
@@ -233,7 +240,8 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
                                    const arma::vec & beta_vector,
                                    const arma::vec & mu_vector,
                                    const arma::vec & eta_vector,
-                                   const arma::vec & alpha_vector) {
+                                   const arma::vec & alpha_vector,
+                                   const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -254,6 +262,7 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
     arma::vec mu_vector_i = mu_vector(id_vector_i);
     arma::vec eta_vector_i = eta_vector(id_vector_i);
     arma::vec mueta_vector_i = mueta(link, eta_vector_i);
+    arma::vec weights_vector_i = weights_vector(id_vector_i);
     arma::mat d_matrix_i =
       arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::vec odds_ratios_vector_i =
@@ -261,7 +270,7 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
                                        repeated_max,
                                        alpha_vector);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i);
+      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     arma::vec s_vector_i = s_vector(id_vector_i);
@@ -304,7 +313,7 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
     // derivative of v_matrix inverse
     arma::mat weight_matrix_inverse_deriv_i =
       - kron(weight_matrix_inverse_i, weight_matrix_inverse_i) *
-      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i);
+      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
     // third row
     arma::mat transpose_epsilon_matrix_deriv_i3 =
       kron(weight_matrix_inverse_mu_vector_i * trans(s_vector_i) - identity_matrix_i,
@@ -335,8 +344,7 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
       trans(kron(d_matrix_i, d_matrix_i)) * (h_matrix_i1 + transpose_epsilon_matrix_deriv_i) * d_matrix_i;
     gamma_matrix_three -= tdmatrix_epsilon_dmatrix;
   }
-  arma::mat gamma_three_matrix_inv = arma::inv(gamma_matrix_three,
-                                               arma::inv_opts::allow_approx);
+  arma::mat gamma_three_matrix_inv = arma::pinv(gamma_matrix_three);
   arma::mat robust_matrix = gamma_three_matrix_inv * meat_matrix *
     trans(gamma_three_matrix_inv);
   arma::vec gamma_vector = arma::zeros(params_no);
@@ -348,7 +356,7 @@ arma::vec update_beta_empirical_or(const arma::vec & y_vector,
   }
   arma::vec ans = beta_vector + gamma_three_matrix_inv * (u_vector + gamma_vector);
   return ans;
-}
+  }
 //==============================================================================
 
 
@@ -362,7 +370,9 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
                                   const arma::vec & beta_vector,
                                   const arma::vec & mu_vector,
                                   const arma::vec & eta_vector,
-                                  const arma::vec & alpha_vector) {
+                                  const arma::vec & alpha_vector,
+                                  const arma::vec & weights_vector,
+                                  const double & jeffreys_power){
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   int repeated_max = max(repeated_vector);
@@ -376,13 +386,14 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
   for(int i=1; i < sample_size + 1; i++){
     arma::uvec id_vector_i = find(id_vector == i);
     arma::vec mu_vector_i = mu_vector(id_vector_i);
+    arma::vec weights_vector_i = weights_vector(id_vector_i);
     arma::mat d_matrix_i =
       arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::vec odds_ratios_vector_i =
       get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
                                        repeated_max, alpha_vector);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i);
+      get_weight_matrix_inverse_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -392,10 +403,9 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
       weight_matrix_inverse_i * arma::diagmat(delta_star_vector(id_vector_i));
     gamma_matrix +=
       trans(kron(d_matrix_i, d_matrix_i)) *
-      (kronecker_sum_same(weight_matrix_inverse_delta_star_matrix_i) * kappa_matrix(mu_vector_i.n_elem) - //+
-      //kronecker_identity_right_kappa(weight_matrix_inverse_delta_star_matrix_i) -
+      (kronecker_sum_same(weight_matrix_inverse_delta_star_matrix_i) * kappa_matrix(mu_vector_i.n_elem) -
       kron(weight_matrix_inverse_i, weight_matrix_inverse_i) *
-      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i)) *
+      get_weight_matrix_mu_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i)) *
       d_matrix_i;
   }
 //  arma::vec gamma_vector = arma::zeros(params_no);
@@ -404,10 +414,11 @@ arma::vec update_beta_jeffreys_or(const arma::vec & y_vector,
 //      trace(solve(naive_matrix_inverse,
 //                  gamma_matrix.rows((r - 1) * params_no, r * params_no - 1)));
 //  }
-  arma::vec gamma_vector = 0.5 * trans(gamma_matrix) * vectorise(inv(naive_matrix_inverse));
+  arma::vec gamma_vector = jeffreys_power * trans(gamma_matrix) * vectorise(pinv(naive_matrix_inverse));
   arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + gamma_vector);
   return ans;
 }
+
 
 //==============================================================================
 //============================ update beta - or ================================
@@ -421,8 +432,10 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                          const arma::vec & mu_vector,
                          const arma::vec & eta_vector,
                          const arma::vec & alpha_vector,
-                         const char* type) {
-  arma::vec ans(beta_vector.n_elem);
+                         const char* type,
+                         const arma::vec & weights_vector,
+                         const double & jeffreys_power) {
+  arma::vec ans;
   if(std::strcmp(type, "gee") == 0){
     ans = update_beta_gee_or(y_vector,
                              model_matrix,
@@ -432,7 +445,8 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                              beta_vector,
                              mu_vector,
                              eta_vector,
-                             alpha_vector);
+                             alpha_vector,
+                             weights_vector);
   }else if(std::strcmp(type, "brgee_naive") == 0){
     ans = update_beta_naive_or(y_vector,
                                model_matrix,
@@ -442,7 +456,8 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                beta_vector,
                                mu_vector,
                                eta_vector,
-                               alpha_vector);
+                               alpha_vector,
+                               weights_vector);
   }else if(std::strcmp(type, "brgee_robust") == 0){
     ans = update_beta_robust_or(y_vector,
                                 model_matrix,
@@ -452,7 +467,8 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                 beta_vector,
                                 mu_vector,
                                 eta_vector,
-                                alpha_vector);
+                                alpha_vector,
+                                weights_vector);
   }else if(std::strcmp(type, "brgee_empirical") == 0){
     ans = update_beta_empirical_or(y_vector,
                                    model_matrix,
@@ -462,7 +478,8 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                    beta_vector,
                                    mu_vector,
                                    eta_vector,
-                                   alpha_vector);
+                                   alpha_vector,
+                                   weights_vector);
   }else if(std::strcmp(type, "pgee_jeffreys") == 0){
     ans = update_beta_jeffreys_or(y_vector,
                                   model_matrix,
@@ -472,7 +489,9 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                   beta_vector,
                                   mu_vector,
                                   eta_vector,
-                                  alpha_vector);
+                                  alpha_vector,
+                                  weights_vector,
+                                  jeffreys_power);
   }
   return(ans);
 }

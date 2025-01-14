@@ -15,7 +15,8 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
                                       const char * link,
                                       const arma::vec & mu_vector,
                                       const arma::vec & eta_vector,
-                                      const arma::vec & alpha_vector) {
+                                      const arma::vec & alpha_vector,
+                                      const arma::vec & weights_vector) {
   double sample_size = max(id_vector);
   double params_no = model_matrix.n_cols;
   int repeated_max = max(repeated_vector);
@@ -32,9 +33,10 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
       model_matrix.rows(id_vector_i);
     arma::mat weight_matrix_i =
       get_weight_matrix_inverse_or(mu_vector_i,
-                           get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
-                                                            repeated_max,
-                                                            alpha_vector));
+                                   get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
+                                                                    repeated_max,
+                                                                    alpha_vector),
+                                                                    weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_i;
     arma::vec u_vector_i =

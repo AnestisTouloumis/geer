@@ -90,44 +90,30 @@ double get_bivariate_distribution(const double & row_prob,
                                   const double & col_prob,
                                   const double & odds_ratio) {
   double ans = row_prob * col_prob;
-
-  double tol = 0.0001;
-
+  double tol = 0.000001;
   double odds_ratio_new = odds_ratio;
-
-  if (row_prob > (1 - tol) && col_prob > (1.0 - tol)) {
+  if (row_prob > (1 - tol) || col_prob > (1.0 - tol)) {
     odds_ratio_new = 1;
   }
-
-  if (row_prob < (tol) && col_prob < (tol)) {
+  if (row_prob < (tol) || col_prob < (tol)) {
     odds_ratio_new = 1;
   }
-
-  if (odds_ratio_new == 1.0) {
+  if (odds_ratio_new == 1) {
     return ans;
   }
-
   double f_value = 1 - (1 - odds_ratio_new) * (row_prob + col_prob);
   double root_value =
     pow(f_value, 2) - 4 * odds_ratio_new * (odds_ratio_new - 1) * ans;
   ans = (f_value - sqrt(root_value)) / (2 * (odds_ratio_new - 1));
- // double lower_bound = -std::min(1 - row_prob - col_prob, 0.0);
-//  if(ans < lower_bound) {
-//    ans = lower_bound;
-//  }
-//  double upper_bound = std::min(row_prob, col_prob);
-//  if(ans > upper_bound) {
-//    ans = upper_bound;
-//  }
   return ans;
 }
 //==============================================================================
 
-
 //============================ weight matrix ===================================
 // [[Rcpp::export]]
 arma::mat get_weight_matrix_or(const arma::vec & mu_vector,
-                               const arma::vec & odds_ratios_vector) {
+                               const arma::vec & odds_ratios_vector,
+                               const arma::vec & weights_vector) {
   // size of the probability vector
   int cluster_size = mu_vector.n_elem;
   // initializing the weight matrix V_i
@@ -147,21 +133,23 @@ arma::mat get_weight_matrix_or(const arma::vec & mu_vector,
     }
     ans = arma::symmatu(ans);
   }
+  arma::mat weight_matrix = arma::diagmat(1/sqrt(weights_vector));
+  ans = weight_matrix * ans * weight_matrix;
   return ans;
 }
 //==============================================================================
 
 
-
 //============================ inverse weight matrix ===========================
 // [[Rcpp::export]]
 arma::mat get_weight_matrix_inverse_or(const arma::vec & mu_vector,
-                                       const arma::vec & odds_ratios_vector) {
-  // weight matrix
+                                       const arma::vec & odds_ratios_vector,
+                                       const arma::vec & weights_vector) {
   arma::mat weight_matrix = get_weight_matrix_or(mu_vector,
-                                                 odds_ratios_vector);
-  arma::mat ans = arma::inv(weight_matrix, arma::inv_opts::allow_approx);
-  //arma::mat ans = arma::pinv(weight_matrix);
+                                                 odds_ratios_vector,
+                                                 weights_vector);
+  arma::mat ans = arma::inv(weight_matrix,
+                            arma::inv_opts::allow_approx);
   return ans;
 }
 //==============================================================================
@@ -307,7 +295,8 @@ arma::mat get_g_matrix_mu(const arma::vec & mu_vector,
 //============================ derivative of weight matrix =====================
 // [[Rcpp::export]]
 arma::mat get_weight_matrix_mu_or(const arma::vec & mu_vector,
-                                  const arma::vec & odds_ratios_vector) {
+                                  const arma::vec & odds_ratios_vector,
+                                  const arma::vec & weights_vector) {
   int cluster_size = mu_vector.n_elem;
   arma::mat ans = arma::zeros(pow(cluster_size, 2), cluster_size);
   if(cluster_size > 1) {
@@ -334,6 +323,8 @@ arma::mat get_weight_matrix_mu_or(const arma::vec & mu_vector,
       ans((j - 1) * cluster_size + j - 1, j - 1) += 1;
     }
   }
+  arma::mat weight_matrix = arma::diagmat(1/sqrt(weights_vector));
+  ans = kron(weight_matrix, weight_matrix) * ans;
   return ans;
 }
 //==============================================================================

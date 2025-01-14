@@ -8,6 +8,7 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
                                       const char * link,
                                       const arma::vec & mu_vector,
                                       const arma::vec & eta_vector,
-                                      const arma::vec & alpha_vector);
+                                      const arma::vec & alpha_vector,
+                                      const arma::vec & weights_vector);
 
 #endif

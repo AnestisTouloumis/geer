@@ -82,7 +82,8 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
                                      const arma::vec & id_vector,
                                      const arma::vec & repeated_vector,
                                      const arma::vec & mu_vector,
-                                     const arma::vec & alpha_vector) {
+                                     const arma::vec & alpha_vector,
+                                     const arma::vec & weights_vector) {
   double sample_size = max(id_vector);
   arma::vec sc_criterion = arma::zeros(1, 1);
   double sum_log_det_working_covariance_matrices = 0;
@@ -95,7 +96,8 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
       get_weight_matrix_inverse_or(mu_vector_i,
                                    get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
                                                                     max(repeated_vector),
-                                                                    alpha_vector));
+                                                                    alpha_vector),
+                                   weights_vector(id_vector_i));
     sc_criterion += trans(s_vector_i) * working_covariance_matrix_i * s_vector_i;
     sum_log_det_working_covariance_matrices += log(det(working_covariance_matrix_i));
   }

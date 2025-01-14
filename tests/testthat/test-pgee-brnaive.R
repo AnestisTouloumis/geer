@@ -1,5 +1,6 @@
 data("respiratory")
-fitted_pgee_corr <- geewa(formula = y ~ baseline + treatment*gender + visit*age + center,
+formula <- y ~ baseline + treatment + gender + visit + age + center
+fitted_pgee_corr <- geewa(formula = formula,
                           id = id,
                           repeated = visit,
                           family = binomial(link = "logit"),
@@ -18,7 +19,7 @@ test_that("jeffreys = naive - independence - correlation", {
 })
 
 
-fitted_pgee_or <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*age + center,
+fitted_pgee_or <- geewa_binary(formula = formula,
                                  id = id,
                                  repeated = visit,
                                  link = "logit",
