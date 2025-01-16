@@ -2,6 +2,7 @@ link <- sample(c("logit", "probit", "cloglog", "cauchit"), 1)
 jeffreys_power <- sample(seq(0.1, 0.6, 0.1), 1)
 print(c(link, jeffreys_power))
 data("respiratory")
+library("brglm2")
 
 fmla <- y ~  visit + age + baseline + center + treatment + gender
 
@@ -71,8 +72,8 @@ test_that("brgee_naive - firth", {
   fit_model_or <- update(fit_model_or,
                          method = "brgee_naive")
   fit_model_glm <- update(fit_model_glm,
-                          control = brglmControl(type = "AS_mean",
-                                                 epsilon = 1e-12))
+                          control = list(type = "AS_mean",
+                                         epsilon = 1e-12))
   expect_equal(coef(fit_model_or),
                coef(fit_model_glm))
 })
