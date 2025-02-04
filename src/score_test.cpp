@@ -37,12 +37,12 @@ arma::vec estimating_equations_gee(const arma::vec & y_vector,
     arma::mat t_d_matrix_i = trans(model_matrix.rows(id_vector_i)) *
       arma::diagmat(delta_vector(id_vector_i));
     arma::mat v_matrix_i_inverse =
-      get_weight_matrix(family,
-                        mu_vector(id_vector_i),
-                        repeated_vector(id_vector_i),
-                        phi,
-                        correlation_matrix_inverse,
-                        weights_vector(id_vector_i));
+      get_weight_matrix_inverse(family,
+                                mu_vector(id_vector_i),
+                                repeated_vector(id_vector_i),
+                                phi,
+                                correlation_matrix_inverse,
+                                weights_vector(id_vector_i));
     ans +=
       t_d_matrix_i * v_matrix_i_inverse * s_vector(id_vector_i);
   }

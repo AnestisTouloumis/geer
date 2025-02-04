@@ -157,8 +157,8 @@ get_pearson_residuals <- function(family, y_vector, mu_vector) {
     .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector)
 }
 
-get_weight_matrix <- function(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector) {
-    .Call(`_geer_get_weight_matrix`, family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector)
+get_weight_matrix_inverse <- function(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector) {
+    .Call(`_geer_get_weight_matrix_inverse`, family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector)
 }
 
 get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_vector, adding_constant, or_structure) {

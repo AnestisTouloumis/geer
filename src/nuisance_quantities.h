@@ -63,11 +63,11 @@ arma::vec get_pearson_residuals(const char * family,
                                 const arma::vec & y_vector,
                                 const arma::vec & mu_vector);
 
-arma::mat get_weight_matrix(const char * family,
-                            const arma::vec & mu_vector,
-                            const arma::vec & repeated_vector,
-                            const double & phi,
-                            const arma::mat & cor_matrix_inverse,
-                            const arma::vec & weights_vector);
+arma::mat get_weight_matrix_inverse(const char * family,
+                                    const arma::vec & mu_vector,
+                                    const arma::vec & repeated_vector,
+                                    const double & phi,
+                                    const arma::mat & cor_matrix_inverse,
+                                    const arma::vec & weights_vector);
 
 #endif

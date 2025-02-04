@@ -109,6 +109,7 @@ double get_bivariate_distribution(const double & row_prob,
 }
 //==============================================================================
 
+
 //============================ weight matrix ===================================
 // [[Rcpp::export]]
 arma::mat get_weight_matrix_or(const arma::vec & mu_vector,

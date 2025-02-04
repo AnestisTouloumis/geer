@@ -38,12 +38,12 @@ arma::vec update_beta_gee(const arma::vec & y_vector,
       model_matrix.rows(id_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) *
-      get_weight_matrix(family,
-                        mu_vector(id_vector_i),
-                        repeated_vector(id_vector_i),
-                        phi,
-                        correlation_matrix_inverse,
-                        weights_vector(id_vector_i));
+      get_weight_matrix_inverse(family,
+                                mu_vector(id_vector_i),
+                                repeated_vector(id_vector_i),
+                                phi,
+                                correlation_matrix_inverse,
+                                weights_vector(id_vector_i));
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     u_vector +=
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
@@ -90,12 +90,12 @@ arma::vec update_beta_naive(const arma::vec & y_vector,
       arma::mat d_matrix_i =
         arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
       arma::mat weight_matrix_inverse_i =
-        get_weight_matrix(family,
-                          mu_vector(id_vector_i),
-                          repeated_vector(id_vector_i),
-                          phi,
-                          correlation_matrix_inverse,
-                          weights_vector(id_vector_i));
+        get_weight_matrix_inverse(family,
+                                  mu_vector(id_vector_i),
+                                  repeated_vector(id_vector_i),
+                                  phi,
+                                  correlation_matrix_inverse,
+                                  weights_vector(id_vector_i));
       arma::mat t_d_matrix_weight_matrix_inverse_i =
         trans(d_matrix_i) * weight_matrix_inverse_i;
       naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -165,12 +165,12 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
       arma::mat d_matrix_i =
         arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
       arma::mat weight_matrix_inverse_i =
-        get_weight_matrix(family,
-                          mu_vector(id_vector_i),
-                          repeated_vector(id_vector_i),
-                          phi,
-                          correlation_matrix_inverse,
-                          weights_vector(id_vector_i));
+        get_weight_matrix_inverse(family,
+                                  mu_vector(id_vector_i),
+                                  repeated_vector(id_vector_i),
+                                  phi,
+                                  correlation_matrix_inverse,
+                                  weights_vector(id_vector_i));
       arma::mat t_d_matrix_weight_matrix_inverse_i =
         trans(d_matrix_i) * weight_matrix_inverse_i;
       naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -266,12 +266,12 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
     arma::mat d_matrix_i =
       diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix(family,
-                        mu_vector(id_vector_i),
-                        repeated_vector(id_vector_i),
-                        phi,
-                        correlation_matrix_inverse,
-                        weights_vector(id_vector_i));
+      get_weight_matrix_inverse(family,
+                                mu_vector(id_vector_i),
+                                repeated_vector(id_vector_i),
+                                phi,
+                                correlation_matrix_inverse,
+                                weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
@@ -347,7 +347,6 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
   arma::mat u_vector = arma::zeros(params_no);
   arma::mat gamma_matrix = arma::zeros(pow(params_no, 2), params_no);
   arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
-  arma::mat meat_matrix = arma::zeros(params_no, params_no);
   arma::vec delta_vector = mueta(link, eta_vector);
   arma::vec alpha_plus_delta_star_vector = mueta2(link, eta_vector)/pow(delta_vector, 2) -
     0.5 * variancemu(family, mu_vector) / variance(family, mu_vector);
@@ -361,12 +360,12 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
     arma::mat d_matrix_i =
       arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
     arma::mat weight_matrix_inverse_i =
-      get_weight_matrix(family,
-                        mu_vector(id_vector_i),
-                        repeated_vector(id_vector_i),
-                        phi,
-                        correlation_matrix_inverse,
-                        weights_vector(id_vector_i));
+      get_weight_matrix_inverse(family,
+                                mu_vector(id_vector_i),
+                                repeated_vector(id_vector_i),
+                                phi,
+                                correlation_matrix_inverse,
+                                weights_vector(id_vector_i));
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) * weight_matrix_inverse_i;
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;

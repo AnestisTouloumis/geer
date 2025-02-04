@@ -59,7 +59,7 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
     arma::uvec id_vector_i = find(id_vector == i);
     arma::vec s_vector_i = s_vector(id_vector_i);
     arma::mat working_covariance_matrix_i =
-      get_weight_matrix(family,
+      get_weight_matrix_inverse(family,
                         mu_vector(id_vector_i),
                         repeated_vector(id_vector_i),
                         phi,

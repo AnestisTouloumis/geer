@@ -39,9 +39,12 @@ Rcpp::List get_covariance_matrices(const arma::vec & y_vector,
       model_matrix.rows(id_vector_i);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
       trans(d_matrix_i) *
-      get_weight_matrix(family, mu_vector(id_vector_i), repeated_vector(id_vector_i),
-                              phi, correlation_matrix_inverse_full,
-                              weights_vector(id_vector_i));
+      get_weight_matrix_inverse(family,
+                                mu_vector(id_vector_i),
+                                repeated_vector(id_vector_i),
+                                phi,
+                                correlation_matrix_inverse_full,
+                                weights_vector(id_vector_i));
     arma::vec u_vector_i =
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;

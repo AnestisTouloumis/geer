@@ -565,9 +565,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_weight_matrix
-arma::mat get_weight_matrix(const char * family, const arma::vec& mu_vector, const arma::vec& repeated_vector, const double& phi, const arma::mat& cor_matrix_inverse, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_weight_matrix(SEXP familySEXP, SEXP mu_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP cor_matrix_inverseSEXP, SEXP weights_vectorSEXP) {
+// get_weight_matrix_inverse
+arma::mat get_weight_matrix_inverse(const char * family, const arma::vec& mu_vector, const arma::vec& repeated_vector, const double& phi, const arma::mat& cor_matrix_inverse, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_weight_matrix_inverse(SEXP familySEXP, SEXP mu_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP cor_matrix_inverseSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -577,7 +577,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type cor_matrix_inverse(cor_matrix_inverseSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector));
+    rcpp_result_gen = Rcpp::wrap(get_weight_matrix_inverse(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1210,7 +1210,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_correlation_matrix", (DL_FUNC) &_geer_get_correlation_matrix, 3},
     {"_geer_get_correlation_matrix_inverse", (DL_FUNC) &_geer_get_correlation_matrix_inverse, 3},
     {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 3},
-    {"_geer_get_weight_matrix", (DL_FUNC) &_geer_get_weight_matrix, 6},
+    {"_geer_get_weight_matrix_inverse", (DL_FUNC) &_geer_get_weight_matrix_inverse, 6},
     {"_geer_get_marginalized_odds_ratios", (DL_FUNC) &_geer_get_marginalized_odds_ratios, 5},
     {"_geer_get_subject_specific_odds_ratios", (DL_FUNC) &_geer_get_subject_specific_odds_ratios, 3},
     {"_geer_get_bivariate_distribution", (DL_FUNC) &_geer_get_bivariate_distribution, 3},
