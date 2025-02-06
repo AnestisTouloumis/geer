@@ -145,8 +145,8 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat u_vector = arma::zeros(params_no);
-  arma::mat lambda_matrix_one = arma::zeros(pow(params_no, 2), params_no);
-  arma::mat lambda_matrix_two = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat partial_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat second_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
   arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
   arma::mat meat_matrix = arma::zeros(params_no, params_no);
   arma::vec delta_vector = mueta(link, eta_vector);
@@ -180,22 +180,22 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
       arma::mat weight_matrix_inverse_alpha_plus_delta_star_matrix_i =
         weight_matrix_inverse_i *
         arma::diagmat(alpha_star_vector_i + delta_star_vector(id_vector_i));
-      arma::mat h_matrix_i1 =
+      arma::mat kappa_delta_star_plus_alpha_star_weight_matrix_inverse =
         kappa_right(trans(weight_matrix_inverse_alpha_plus_delta_star_matrix_i));
       arma::mat weight_matrix_inverse_alpha_star_matrix_i =
         weight_matrix_inverse_i * arma::diagmat(alpha_star_vector_i);
       arma::mat kronecker_tdmatrix_tdmatrix = trans(kron(d_matrix_i, d_matrix_i));
-      lambda_matrix_two -=
+      second_derivatives_matrix -=
         kronecker_tdmatrix_tdmatrix *
-        (h_matrix_i1 +
+        (kappa_delta_star_plus_alpha_star_weight_matrix_inverse +
         kronecker_left_identity_kappa(
           weight_matrix_inverse_alpha_plus_delta_star_matrix_i +
             weight_matrix_inverse_alpha_star_matrix_i) +
             kronecker_identity_right_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) *
             d_matrix_i;
-      lambda_matrix_one +=
+      partial_derivatives_matrix +=
         kronecker_tdmatrix_tdmatrix *
-        (h_matrix_i1 +
+        (kappa_delta_star_plus_alpha_star_weight_matrix_inverse +
         kronecker_left_identity_kappa(weight_matrix_inverse_alpha_star_matrix_i)) *
         s_vector_i * trans(u_vector_i);
     }
@@ -205,8 +205,8 @@ arma::vec update_beta_robust(const arma::vec & y_vector,
     for(int r = 1; r < params_no + 1; r++) {
       lambda_vector(r - 1) = -
         (trace(solve(naive_matrix_inverse,
-                     lambda_matrix_one.rows((r - 1) * params_no, r * params_no - 1))) +
-        0.5 * trace(robust_matrix * lambda_matrix_two.rows((r - 1) * params_no, r * params_no - 1))
+                     partial_derivatives_matrix.rows((r - 1) * params_no, r * params_no - 1))) +
+        0.5 * trace(robust_matrix * second_derivatives_matrix.rows((r - 1) * params_no, r * params_no - 1))
         );
     }
     arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + lambda_vector);
@@ -233,8 +233,8 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::vec u_vector = arma::zeros(params_no);
-  arma::mat lambda_matrix_one = arma::zeros(pow(params_no, 2), params_no);
-  arma::mat lambda_matrix_two = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat partial_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat second_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
   arma::mat observed_fisher_info_matrix = arma::zeros(params_no, params_no);
   arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
   arma::mat meat_matrix = arma::zeros(params_no, params_no);
@@ -285,10 +285,10 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
       arma::diagmat(s_vector_i % alpha_star_vector_i - 1);
     arma::mat observed_fisher_info_matrix_i = trans(d_matrix_i) * epsilon_matrix_i * d_matrix_i;
     observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
-    lambda_matrix_one +=
+    partial_derivatives_matrix +=
       arma::vectorise(trans(observed_fisher_info_matrix_i)) * trans(u_vector_i);
     arma::mat kronecker_tdmatrix_tdmatrix_i = trans(kron(d_matrix_i, d_matrix_i));
-    lambda_matrix_two +=
+    second_derivatives_matrix +=
       kronecker_tdmatrix_tdmatrix_i *
       (kappa_right(
           arma::diagmat(alpha_star_plus_delta_star_vector_i) * epsilon_matrix_i -
@@ -310,17 +310,17 @@ arma::vec update_beta_empirical(const arma::vec & y_vector,
       ) *
         d_matrix_i;
   }
-  arma::mat observed_fisher_info_matrix_inv = arma::inv(observed_fisher_info_matrix, arma::inv_opts::allow_approx);
-  arma::mat robust_matrix = observed_fisher_info_matrix_inv * meat_matrix *
-    trans(observed_fisher_info_matrix_inv);
+  arma::mat robust_matrix =
+    solve(observed_fisher_info_matrix, trans(solve(observed_fisher_info_matrix, meat_matrix)));
   arma::vec lambda_vector = arma::zeros(params_no);
   for(int r = 1; r < params_no + 1; r++) {
     lambda_vector(r - 1) = -
-      (trace(observed_fisher_info_matrix_inv * lambda_matrix_one.rows((r - 1) * params_no, r * params_no - 1)) +
-      0.5 * trace(robust_matrix * lambda_matrix_two.rows((r - 1) * params_no, r * params_no - 1))
+      (trace(solve(observed_fisher_info_matrix,
+                   partial_derivatives_matrix.rows((r - 1) * params_no, r * params_no - 1))) +
+      0.5 * trace(robust_matrix * second_derivatives_matrix.rows((r - 1) * params_no, r * params_no - 1))
       );
   }
-  arma::vec ans = beta_vector + observed_fisher_info_matrix_inv * (u_vector + lambda_vector);
+  arma::vec ans = beta_vector + solve(observed_fisher_info_matrix, u_vector + lambda_vector);
   return ans;
 }
 //==============================================================================
@@ -378,16 +378,16 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
       kronecker_identity_right_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) *
       d_matrix_i;
   }
-  //  arma::vec lambda_vector = arma::zeros(params_no);
-  //  for(int r = 1; r < params_no + 1; r++) {
-  //    lambda_vector(r - 1) = 0.5 *
+ // arma::vec lambda_vector = arma::zeros(params_no);
+ // for(int r = 1; r < params_no + 1; r++) {
+ //   lambda_vector(r - 1) = jeffreys_power *
   //    trace(solve(naive_matrix_inverse,
   //                lambda_matrix.rows((r - 1) * params_no, r * params_no - 1)));
   //}
-  arma::vec lambda_vector =
+    arma::vec lambda_vector =
     jeffreys_power *
     trans(lambda_matrix) *
-    vectorise(arma::inv(naive_matrix_inverse, arma::inv_opts::allow_approx));
+    vectorise(arma::pinv(naive_matrix_inverse));
   arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + lambda_vector);
   return ans;
 }

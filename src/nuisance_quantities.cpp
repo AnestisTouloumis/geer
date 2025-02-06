@@ -11,7 +11,7 @@ double get_phi_hat(const arma::vec & pearson_residuals_vector,
                    const int & params_no) {
   int obs_no = pearson_residuals_vector.n_elem;
   double ans = arma::accu(pow(pearson_residuals_vector, 2))/(obs_no - params_no);
-  if(ans < DBL_EPSILON) ans = DBL_EPSILON;
+  if(ans < DBL_EPSILON) ans = 10 * DBL_EPSILON;
   return(ans);
 }
 //==============================================================================
@@ -217,8 +217,8 @@ arma::vec get_alpha_hat(const char * correlation_structure,
                              phi,
                              params_no);
   }
-  double upper_bound = 1 - DBL_EPSILON;
-  double lower_bound = DBL_EPSILON - 1;
+  double upper_bound = 1 - 10 * DBL_EPSILON;
+  double lower_bound = 10 * DBL_EPSILON - 1;
   int ans_length = ans.n_elem;
   for(int i = 0; i < ans_length; i++){
     if(ans[i] >= upper_bound) ans[i] = upper_bound;
@@ -256,8 +256,8 @@ arma::mat correlation_exchangeable_inverse(const arma::vec & alpha_vector,
                                            const int & dimension) {
   arma::mat ans = arma::eye(dimension, dimension);
   double rho = alpha_vector(0);
-  double upper_bound = 1 - DBL_EPSILON;
-  double lower_bound = DBL_EPSILON - 1/(dimension - 1);
+  double upper_bound = 1 - 10 * DBL_EPSILON;
+  double lower_bound = 10 * DBL_EPSILON - 1/(dimension - 1);
   if (rho > upper_bound) rho = upper_bound;
   if (rho < lower_bound) rho = lower_bound;
   double adding_constant = -rho / (1 + (dimension - 1) * rho);
@@ -383,16 +383,16 @@ arma::mat get_correlation_matrix_inverse(const char * correlation_structure,
     ans = correlation_ar1_inverse(alpha_vector, dimension);
   }else if(std::strcmp(correlation_structure, "m-dependent") == 0){
     ans = correlation_mdependent(alpha_vector, dimension);
-    ans = arma::inv(ans, arma::inv_opts::allow_approx);
+    ans = arma::pinv(ans);
   }else if(std::strcmp(correlation_structure, "unstructured") == 0){
     ans = correlation_unstructured(alpha_vector, dimension);
-    ans = arma::inv(ans, arma::inv_opts::allow_approx);
+    ans = arma::pinv(ans);
   }else if(std::strcmp(correlation_structure, "toeplitz") == 0){
     ans = correlation_toeplitz(alpha_vector);
-    ans = arma::inv(ans, arma::inv_opts::allow_approx);
+    ans = arma::pinv(ans);
   }else if(std::strcmp(correlation_structure, "fixed") == 0){
     ans = correlation_unstructured(alpha_vector, dimension);
-    ans = arma::inv(ans, arma::inv_opts::allow_approx);
+    ans = arma::pinv(ans);
   }
   return(ans);
 }

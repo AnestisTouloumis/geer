@@ -50,15 +50,18 @@ Rcpp::List get_covariance_matrices(const arma::vec & y_vector,
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     meat_matrix += u_vector_i * trans(u_vector_i);
   }
-  arma::mat naive_matrix =
-    arma::inv(naive_matrix_inverse, arma::inv_opts::allow_approx);
-  arma::mat robust_matrix = naive_matrix * meat_matrix * naive_matrix;
+  //arma::mat naive_matrix =
+    //arma::inv(naive_matrix_inverse, arma::inv_opts::allow_approx);
+  arma::mat naive_matrix = arma::pinv(naive_matrix_inverse);
+  arma::mat naive_matrix_meat_matrix = solve(naive_matrix_inverse, meat_matrix);
+  arma::mat robust_matrix = solve(naive_matrix_inverse,
+                                  trans(naive_matrix_meat_matrix));
   double obs_no_total = model_matrix.n_rows;
   double kappa_const =
     ((obs_no_total - 1)/(obs_no_total - params_no)) * (sample_size / (sample_size - 1));
   double delta_const = params_no / (sample_size - params_no);
   if (delta_const > 0.5) delta_const = 0.5;
-  double phi_const = arma::trace(naive_matrix * meat_matrix)/ params_no;
+  double phi_const = arma::trace(naive_matrix_meat_matrix)/ params_no;
   if (phi_const < 1.0) phi_const = 1.0;
   arma::mat bc_matrix =
     kappa_const * robust_matrix + delta_const * phi_const * naive_matrix;
