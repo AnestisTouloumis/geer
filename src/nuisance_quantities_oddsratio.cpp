@@ -134,8 +134,8 @@ arma::mat get_weight_matrix_or(const arma::vec & mu_vector,
     }
     ans = arma::symmatu(ans);
   }
-  arma::mat weight_matrix = arma::diagmat(1/sqrt(weights_vector));
-  ans = weight_matrix * ans * weight_matrix;
+  arma::vec weights_sq_inv_vector = 1/sqrt(weights_vector);
+  ans = ans % (weights_sq_inv_vector * trans(weights_sq_inv_vector));
   return ans;
 }
 //==============================================================================
@@ -149,8 +149,7 @@ arma::mat get_weight_matrix_inverse_or(const arma::vec & mu_vector,
   arma::mat weight_matrix = get_weight_matrix_or(mu_vector,
                                                  odds_ratios_vector,
                                                  weights_vector);
-  arma::mat ans = arma::inv(weight_matrix,
-                            arma::inv_opts::allow_approx);
+  arma::mat ans = arma::pinv(weight_matrix);
   return ans;
 }
 //==============================================================================
@@ -324,8 +323,8 @@ arma::mat get_weight_matrix_mu_or(const arma::vec & mu_vector,
       ans((j - 1) * cluster_size + j - 1, j - 1) += 1;
     }
   }
-  arma::mat weight_matrix = arma::diagmat(1/sqrt(weights_vector));
-  ans = kron(weight_matrix, weight_matrix) * ans;
+  arma::mat weights_sq_inverse_matrix = arma::diagmat(1/sqrt(weights_vector));
+  ans = kron(weights_sq_inverse_matrix, weights_sq_inverse_matrix) * ans;
   return ans;
 }
 //==============================================================================

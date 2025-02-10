@@ -29,6 +29,7 @@ Rcpp::List fit_bingee_or(const arma::vec & y_vector,
 
   arma::vec beta_vector_inner = arma::zeros(params_no);
   arma::vec beta_vector_new_inner = arma::zeros(params_no);
+
   arma::vec stepsize_vector_inner = arma::zeros(params_no);
   arma::vec criterion_vector_inner = arma::zeros(maxiter);
 
@@ -36,8 +37,7 @@ Rcpp::List fit_bingee_or(const arma::vec & y_vector,
   if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
     Rcpp::Rcerr << "invalid linear predictor\n";
   arma::vec mu_vector = linkinv(link, arma2vec(eta_vector));
-  if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-     (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+  if(Rcpp::is_false(all(validmu("binomial", arma2vec(mu_vector)))))
     Rcpp::Rcerr << "invalid fitted values\n";
   for (int i = 1; i < maxiter + 1; i++){
     stepsize_vector = update_beta_or(y_vector,
@@ -62,8 +62,7 @@ Rcpp::List fit_bingee_or(const arma::vec & y_vector,
       if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
         Rcpp::Rcerr << "invalid linear predictor\n";
       mu_vector = linkinv(link, arma2vec(eta_vector));
-      if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-         (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+      if(Rcpp::is_false(all(validmu("binomial", arma2vec(mu_vector)))))
         Rcpp::Rcerr << "invalid fitted values\n";
       stepsize_vector_inner = update_beta_or(y_vector,
                                              model_matrix,
@@ -87,8 +86,7 @@ Rcpp::List fit_bingee_or(const arma::vec & y_vector,
     if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
       Rcpp::Rcerr << "invalid linear predictor\n";
     mu_vector = linkinv(link, arma2vec(eta_vector));
-    if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-       (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+    if(Rcpp::is_false(all(validmu("binomial", arma2vec(mu_vector)))))
       Rcpp::Rcerr << "invalid fitted values\n";
     beta_hat_matrix = join_rows(beta_hat_matrix, beta_vector_new);
     if(criterion_vector(i-1) <= tolerance) break;

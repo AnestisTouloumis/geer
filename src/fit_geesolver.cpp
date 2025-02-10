@@ -44,8 +44,7 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
   if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
     Rcpp::Rcerr << "invalid linear predictor\n";
   arma::vec mu_vector = linkinv(link, arma2vec(eta_vector));
-  if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-     (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+  if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
     Rcpp::Rcerr << "invalid fitted values\n";
   arma::vec pearson_residuals_vector =
     get_pearson_residuals(family,
@@ -87,8 +86,7 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
       if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
         Rcpp::Rcerr << "invalid linear predictor\n";
       mu_vector = linkinv(link, arma2vec(eta_vector));
-      if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-         (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+      if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
         Rcpp::Rcerr << "invalid fitted values\n";
       pearson_residuals_vector = get_pearson_residuals(family,
                                                        y_vector,
@@ -128,8 +126,7 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
     if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
       Rcpp::Rcerr << "invalid linear predictor\n";
     mu_vector = linkinv(link, arma2vec(eta_vector));
-    if(Rcpp::is_false(all(Rcpp::is_finite(arma2vec(mu_vector)) &
-       (arma2vec(mu_vector) > 0) & (arma2vec(mu_vector) < 1))))
+    if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
       Rcpp::Rcerr << "invalid fitted values\n";
     beta_hat_matrix = join_rows(beta_hat_matrix, beta_vector_new);
     pearson_residuals_vector = get_pearson_residuals(family,

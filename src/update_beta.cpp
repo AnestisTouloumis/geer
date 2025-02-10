@@ -378,12 +378,6 @@ arma::vec update_beta_jeffreys(const arma::vec & y_vector,
       kronecker_identity_right_kappa(weight_matrix_inverse_alpha_plus_delta_star_matrix_i)) *
       d_matrix_i;
   }
- // arma::vec lambda_vector = arma::zeros(params_no);
- // for(int r = 1; r < params_no + 1; r++) {
- //   lambda_vector(r - 1) = jeffreys_power *
-  //    trace(solve(naive_matrix_inverse,
-  //                lambda_matrix.rows((r - 1) * params_no, r * params_no - 1)));
-  //}
     arma::vec lambda_vector =
     jeffreys_power *
     trans(lambda_matrix) *

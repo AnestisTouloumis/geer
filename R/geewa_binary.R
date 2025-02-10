@@ -125,7 +125,7 @@ geewa_binary <- function(formula = formula(data),
                          alpha_vector = NULL,
                          method = "gee",
                          control_glm = list(...),
-                         weights = NULL,
+                         weights,
                          ...) {
     ## call
     call <- match.call()
@@ -134,7 +134,7 @@ geewa_binary <- function(formula = formula(data),
     mcall$or_structure <- mcall$Mv <- mcall$alpha_vector <-
       mcall$link <- mcall$b <- mcall$tol <- mcall$maxiter <-
       mcall$silent <- mcall$contrasts <- NULL
-    mnames <- c("formula", "data", "id", "repeated")
+    mnames <- c("formula", "data", "id", "repeated", "weights")
     mf <- match(mnames, names(mcall), 0L)
     m <- mcall[c(1L, mf)]
     if (is.null(m$id))
@@ -150,6 +150,17 @@ geewa_binary <- function(formula = formula(data),
     if (is.null(y))
       stop("response variable not found")
     y <- as.numeric(factor(y)) - 1
+
+    ## weights
+    weights <- as.vector(model.weights(model_frame))
+    if (is.null(weights)) {
+      weights <- rep(1, length(y))
+    } else {
+      if (!is.numeric(weights))
+        stop("'weights' must be a numeric vector")
+      if (any(weights <= 0))
+        stop("negative weights not allowed")
+    }
 
     ## extract id and map values to 1,.., N
     id <- model.extract(model_frame, "id")
@@ -268,17 +279,6 @@ geewa_binary <- function(formula = formula(data),
       stop("`method` must be one of `gee`, `brgee_naive`, `brgee_robust`,
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
-
-    ## weights
-    weights <- as.vector(model.weights(model_frame))
-    if (is.null(weights)) {
-      weights <- rep(1, length(y))
-    } else {
-      if (!is.numeric(weights))
-        stop("'weights' must be a numeric vector")
-      if (any(weights < 0))
-        stop("negative weights not allowed")
-    }
 
 
     ## initial beta

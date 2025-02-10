@@ -188,7 +188,7 @@ geewa <-
     } else {
       if (!is.numeric(weights))
         stop("'weights' must be a numeric vector")
-      if (any(weights < 0))
+      if (any(weights <= 0))
         stop("negative weights not allowed")
     }
 

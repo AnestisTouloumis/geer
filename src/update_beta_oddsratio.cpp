@@ -34,10 +34,11 @@ arma::vec update_beta_gee_or(const arma::vec & y_vector,
                                        repeated_max,
                                        alpha_vector);
     arma::mat t_d_matrix_weight_matrix_inverse_i =
-      trans(d_matrix_i) *
-      get_weight_matrix_inverse_or(mu_vector(id_vector_i),
+      trans(
+        solve(get_weight_matrix_or(mu_vector(id_vector_i),
                                    odds_ratios_vector_i,
-                                   weights_vector(id_vector_i));
+                                   weights_vector(id_vector_i)),
+                                   d_matrix_i));
     naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
     u_vector +=
       t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
