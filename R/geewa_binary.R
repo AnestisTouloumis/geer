@@ -134,7 +134,7 @@ geewa_binary <- function(formula = formula(data),
     mcall$or_structure <- mcall$Mv <- mcall$alpha_vector <-
       mcall$link <- mcall$b <- mcall$tol <- mcall$maxiter <-
       mcall$silent <- mcall$contrasts <- NULL
-    mnames <- c("formula", "data", "id", "repeated", "weights")
+    mnames <- c("formula", "data", "id", "repeated", "weights", "offset")
     mf <- match(mnames, names(mcall), 0L)
     m <- mcall[c(1L, mf)]
     if (is.null(m$id))
@@ -195,7 +195,7 @@ geewa_binary <- function(formula = formula(data),
       stop("'repeated' does not have unique values per 'id'")
 
     ## offset term
-    offset <- model.extract(model_frame, "offset")
+    offset <- model.offset(model_frame)
     if (length(offset) <= 1) offset <- rep(0, length(y))
     offset <- as.double(offset)
 

@@ -160,6 +160,7 @@ Rcpp::List fit_geesolver(const arma::vec & y_vector,
   ans["eta"] = eta_vector;
   ans["residuals"] = y_vector - mu_vector;
   ans["fitted"] = mu_vector;
+  ans["offset"] = offset;
   return ans;
 }
 //==============================================================================

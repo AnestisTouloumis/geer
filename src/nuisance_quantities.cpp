@@ -420,9 +420,13 @@ arma::mat get_weight_matrix_inverse(const char * family,
                                     const arma::vec & weights_vector) {
   arma::vec sd_reciprocal_vector =
     sqrt(weights_vector)/sqrt(phi * variance(family, mu_vector));
-  arma::mat ans =
-    subset_matrix(cor_matrix_inverse, repeated_vector) %
-    (sd_reciprocal_vector * trans(sd_reciprocal_vector));
-  return(ans);
+  if(repeated_vector.n_elem == 1) {
+    return(1/(sd_reciprocal_vector * trans(sd_reciprocal_vector)));
+  } else {
+    arma::mat ans =
+      subset_matrix(cor_matrix_inverse, repeated_vector) %
+      (sd_reciprocal_vector * trans(sd_reciprocal_vector));
+    return(ans);
+  }
 }
 //==============================================================================

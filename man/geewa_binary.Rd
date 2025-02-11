@@ -16,7 +16,7 @@ geewa_binary(
   alpha_vector = NULL,
   method = "gee",
   control_glm = list(...),
-  weights = NULL,
+  weights,
   ...
 )
 }
