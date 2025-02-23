@@ -80,7 +80,7 @@ arma::vec estimating_equations_gee_or(const arma::vec & y_vector,
                                        alpha_vector);
     ans +=
       t_d_matrix_i *
-      get_weight_matrix_inverse_or(mu_vector(id_vector_i),
+      get_v_matrix_inverse_or(mu_vector(id_vector_i),
                                    odds_ratios_vector_i,
                                    weights_vector(id_vector_i)) *
       s_vector(id_vector_i);

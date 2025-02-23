@@ -35,15 +35,15 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
       get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
                                        repeated_max,
                                        alpha_vector);
-    arma::mat t_d_matrix_weight_matrix_inverse_i =
+    arma::mat d_matrix_trans_v_matrix_inverse_i =
       trans(
-        solve(get_weight_matrix_or(mu_vector(id_vector_i),
-                                   odds_ratios_vector_i,
-                                   weights_vector(id_vector_i)),
-                                   d_matrix_i));
+        solve(get_v_matrix_or(mu_vector(id_vector_i),
+                              odds_ratios_vector_i,
+                              weights_vector(id_vector_i)),
+                              d_matrix_i));
     arma::vec u_vector_i =
-      t_d_matrix_weight_matrix_inverse_i * s_vector(id_vector_i);
-    naive_matrix_inverse += t_d_matrix_weight_matrix_inverse_i * d_matrix_i;
+      d_matrix_trans_v_matrix_inverse_i * s_vector(id_vector_i);
+    naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
     meat_matrix += u_vector_i * trans(u_vector_i);
   }
   arma::mat naive_matrix = arma::pinv(naive_matrix_inverse);
@@ -55,7 +55,7 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
     (sample_size / (sample_size - 1));
   double lambda = params_no / (sample_size - params_no);
   if (lambda > 0.5) lambda = 0.5;
-  double ksi = arma::trace(naive_matrix * meat_matrix)/ params_no;
+  double ksi = arma::trace(naive_matrix_meat_matrix)/ params_no;
   if (ksi < 1.0) ksi = 1.0;
   arma::mat bc_matrix =
     kappa * robust_matrix + lambda * ksi * naive_matrix;

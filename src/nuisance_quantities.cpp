@@ -426,6 +426,11 @@ arma::mat get_weight_matrix_inverse(const char * family,
     arma::mat ans =
       subset_matrix(cor_matrix_inverse, repeated_vector) %
       (sd_reciprocal_vector * trans(sd_reciprocal_vector));
+   // arma::mat ans =
+    //  (cor_matrix_inverse.submat(0, 0,
+    //                             repeated_vector.n_elem - 1,
+    //                             repeated_vector.n_elem - 1)) %
+    //                              (sd_reciprocal_vector * trans(sd_reciprocal_vector));
     return(ans);
   }
 }

@@ -110,11 +110,11 @@ double get_bivariate_distribution(const double & row_prob,
 //==============================================================================
 
 
-//============================ weight matrix ===================================
+//============================ v matrix ========================================
 // [[Rcpp::export]]
-arma::mat get_weight_matrix_or(const arma::vec & mu_vector,
-                               const arma::vec & odds_ratios_vector,
-                               const arma::vec & weights_vector) {
+arma::mat get_v_matrix_or(const arma::vec & mu_vector,
+                          const arma::vec & odds_ratios_vector,
+                          const arma::vec & weights_vector) {
   // size of the probability vector
   int cluster_size = mu_vector.n_elem;
   // initializing the weight matrix V_i
@@ -143,13 +143,13 @@ arma::mat get_weight_matrix_or(const arma::vec & mu_vector,
 
 //============================ inverse weight matrix ===========================
 // [[Rcpp::export]]
-arma::mat get_weight_matrix_inverse_or(const arma::vec & mu_vector,
-                                       const arma::vec & odds_ratios_vector,
-                                       const arma::vec & weights_vector) {
-  arma::mat weight_matrix = get_weight_matrix_or(mu_vector,
-                                                 odds_ratios_vector,
-                                                 weights_vector);
-  arma::mat ans = arma::pinv(weight_matrix);
+arma::mat get_v_matrix_inverse_or(const arma::vec & mu_vector,
+                                  const arma::vec & odds_ratios_vector,
+                                  const arma::vec & weights_vector) {
+  arma::mat v_matrix = get_v_matrix_or(mu_vector,
+                                       odds_ratios_vector,
+                                       weights_vector);
+  arma::mat ans = arma::pinv(v_matrix);
   return ans;
 }
 //==============================================================================
@@ -294,9 +294,9 @@ arma::mat get_g_matrix_mu(const arma::vec & mu_vector,
 
 //============================ derivative of weight matrix =====================
 // [[Rcpp::export]]
-arma::mat get_weight_matrix_mu_or(const arma::vec & mu_vector,
-                                  const arma::vec & odds_ratios_vector,
-                                  const arma::vec & weights_vector) {
+arma::mat get_v_matrix_mu_or(const arma::vec & mu_vector,
+                             const arma::vec & odds_ratios_vector,
+                             const arma::vec & weights_vector) {
   int cluster_size = mu_vector.n_elem;
   arma::mat ans = arma::zeros(pow(cluster_size, 2), cluster_size);
   if(cluster_size > 1) {

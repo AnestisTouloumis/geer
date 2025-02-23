@@ -622,29 +622,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_weight_matrix_or
-arma::mat get_weight_matrix_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_weight_matrix_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
+// get_v_matrix_or
+arma::mat get_v_matrix_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_v_matrix_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type odds_ratios_vector(odds_ratios_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix_or(mu_vector, odds_ratios_vector, weights_vector));
+    rcpp_result_gen = Rcpp::wrap(get_v_matrix_or(mu_vector, odds_ratios_vector, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
-// get_weight_matrix_inverse_or
-arma::mat get_weight_matrix_inverse_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_weight_matrix_inverse_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
+// get_v_matrix_inverse_or
+arma::mat get_v_matrix_inverse_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_v_matrix_inverse_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type odds_ratios_vector(odds_ratios_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix_inverse_or(mu_vector, odds_ratios_vector, weights_vector));
+    rcpp_result_gen = Rcpp::wrap(get_v_matrix_inverse_or(mu_vector, odds_ratios_vector, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -723,16 +723,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_weight_matrix_mu_or
-arma::mat get_weight_matrix_mu_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_weight_matrix_mu_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
+// get_v_matrix_mu_or
+arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector, const arma::vec& odds_ratios_vector, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_v_matrix_mu_or(SEXP mu_vectorSEXP, SEXP odds_ratios_vectorSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type odds_ratios_vector(odds_ratios_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix_mu_or(mu_vector, odds_ratios_vector, weights_vector));
+    rcpp_result_gen = Rcpp::wrap(get_v_matrix_mu_or(mu_vector, odds_ratios_vector, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1133,6 +1133,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kronecker_rcpp
+arma::mat kronecker_rcpp(arma::mat x, arma::mat y);
+RcppExport SEXP _geer_kronecker_rcpp(SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(kronecker_rcpp(x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // variance
 arma::vec variance(const char * family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variance(SEXP familySEXP, SEXP mu_vectorSEXP) {
@@ -1214,15 +1226,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_marginalized_odds_ratios", (DL_FUNC) &_geer_get_marginalized_odds_ratios, 5},
     {"_geer_get_subject_specific_odds_ratios", (DL_FUNC) &_geer_get_subject_specific_odds_ratios, 3},
     {"_geer_get_bivariate_distribution", (DL_FUNC) &_geer_get_bivariate_distribution, 3},
-    {"_geer_get_weight_matrix_or", (DL_FUNC) &_geer_get_weight_matrix_or, 3},
-    {"_geer_get_weight_matrix_inverse_or", (DL_FUNC) &_geer_get_weight_matrix_inverse_or, 3},
+    {"_geer_get_v_matrix_or", (DL_FUNC) &_geer_get_v_matrix_or, 3},
+    {"_geer_get_v_matrix_inverse_or", (DL_FUNC) &_geer_get_v_matrix_inverse_or, 3},
     {"_geer_get_bivariate_distribution_murow", (DL_FUNC) &_geer_get_bivariate_distribution_murow, 3},
     {"_geer_get_bivariate_distribution_murow2", (DL_FUNC) &_geer_get_bivariate_distribution_murow2, 3},
     {"_geer_get_bivariate_distribution_murowcol", (DL_FUNC) &_geer_get_bivariate_distribution_murowcol, 3},
     {"_geer_get_g_matrix", (DL_FUNC) &_geer_get_g_matrix, 2},
     {"_geer_get_bivariate_distribution_mu", (DL_FUNC) &_geer_get_bivariate_distribution_mu, 2},
     {"_geer_get_g_matrix_mu", (DL_FUNC) &_geer_get_g_matrix_mu, 2},
-    {"_geer_get_weight_matrix_mu_or", (DL_FUNC) &_geer_get_weight_matrix_mu_or, 3},
+    {"_geer_get_v_matrix_mu_or", (DL_FUNC) &_geer_get_v_matrix_mu_or, 3},
     {"_geer_estimating_equations_gee", (DL_FUNC) &_geer_estimating_equations_gee, 13},
     {"_geer_estimating_equations_gee_or", (DL_FUNC) &_geer_estimating_equations_gee_or, 10},
     {"_geer_update_beta_gee", (DL_FUNC) &_geer_update_beta_gee, 13},
@@ -1245,6 +1257,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_kappa_right", (DL_FUNC) &_geer_kappa_right, 1},
     {"_geer_kronecker_vector_identity", (DL_FUNC) &_geer_kronecker_vector_identity, 1},
     {"_geer_kronecker_vector_matrix", (DL_FUNC) &_geer_kronecker_vector_matrix, 2},
+    {"_geer_kronecker_rcpp", (DL_FUNC) &_geer_kronecker_rcpp, 2},
     {"_geer_variance", (DL_FUNC) &_geer_variance, 2},
     {"_geer_variancemu", (DL_FUNC) &_geer_variancemu, 2},
     {"_geer_variancemu2", (DL_FUNC) &_geer_variancemu2, 2},

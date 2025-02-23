@@ -99,3 +99,12 @@ arma::mat kronecker_vector_matrix(arma::vec x, arma::mat y) {
   return(ans);
 }
 //==============================================================================
+
+
+//============================ kronecker    ===============================
+// [[Rcpp::export]]
+arma::mat kronecker_rcpp(arma::mat x, arma::mat y) {
+  arma::mat ans = kron(x, y);
+  return(ans);
+}
+//==============================================================================

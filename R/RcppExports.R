@@ -173,12 +173,12 @@ get_bivariate_distribution <- function(row_prob, col_prob, odds_ratio) {
     .Call(`_geer_get_bivariate_distribution`, row_prob, col_prob, odds_ratio)
 }
 
-get_weight_matrix_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_weight_matrix_or`, mu_vector, odds_ratios_vector, weights_vector)
+get_v_matrix_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
+    .Call(`_geer_get_v_matrix_or`, mu_vector, odds_ratios_vector, weights_vector)
 }
 
-get_weight_matrix_inverse_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_weight_matrix_inverse_or`, mu_vector, odds_ratios_vector, weights_vector)
+get_v_matrix_inverse_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
+    .Call(`_geer_get_v_matrix_inverse_or`, mu_vector, odds_ratios_vector, weights_vector)
 }
 
 get_bivariate_distribution_murow <- function(row_prob, col_prob, odds_ratio) {
@@ -205,8 +205,8 @@ get_g_matrix_mu <- function(mu_vector, odds_ratios_vector) {
     .Call(`_geer_get_g_matrix_mu`, mu_vector, odds_ratios_vector)
 }
 
-get_weight_matrix_mu_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_weight_matrix_mu_or`, mu_vector, odds_ratios_vector, weights_vector)
+get_v_matrix_mu_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
+    .Call(`_geer_get_v_matrix_mu_or`, mu_vector, odds_ratios_vector, weights_vector)
 }
 
 estimating_equations_gee <- function(y_vector, model_matrix, id_vector, repeated_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, weights_vector) {
@@ -295,6 +295,10 @@ kronecker_vector_identity <- function(x) {
 
 kronecker_vector_matrix <- function(x, y) {
     .Call(`_geer_kronecker_vector_matrix`, x, y)
+}
+
+kronecker_rcpp <- function(x, y) {
+    .Call(`_geer_kronecker_rcpp`, x, y)
 }
 
 variance <- function(family, mu_vector) {

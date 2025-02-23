@@ -93,7 +93,7 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
     arma::vec mu_vector_i = mu_vector(id_vector_i);
     arma::vec s_vector_i = s_vector(id_vector_i);
     arma::mat working_covariance_matrix_i =
-      get_weight_matrix_inverse_or(mu_vector_i,
+      get_v_matrix_inverse_or(mu_vector_i,
                                    get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
                                                                     max(repeated_vector),
                                                                     alpha_vector),

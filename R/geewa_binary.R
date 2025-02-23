@@ -267,6 +267,7 @@ geewa_binary <- function(formula = formula(data),
     if (icheck < 1)
       stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
            `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
+    family <- binomial(link = link)
 
     ## run fit
     methods <- c("gee",
@@ -296,7 +297,7 @@ geewa_binary <- function(formula = formula(data),
         }
         beta_zero <- brglmFit(x = model_matrix,
                               y = y,
-                              family = binomial(link = link),
+                              family = family,
                               weights = weights,
                               offset = offset,
                               control = list(epsilon = control$tolerance,
@@ -309,7 +310,7 @@ geewa_binary <- function(formula = formula(data),
       } else {
         beta_zero <- glm.fit(x = model_matrix,
                              y = y,
-                             family = binomial(link = link),
+                             family = family,
                              weights = weights,
                              offset = offset,
                              control = list(epsilon = control$tolerance,
