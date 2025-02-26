@@ -286,8 +286,7 @@ geewa <-
       }
 
     ## family
-    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian",
-                 "quasi", "quasibinomial", "quasipoisson")
+    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian")
     if (is.character(family))
       family <- get(family, mode = "function", envir = parent.frame())
     if (is.function(family))
@@ -297,21 +296,23 @@ geewa <-
       stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma`,
            `inverse.gaussian`, `quasi`, `quasibinomial` or `quasipoisson`")
 
-    if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
-      if (family$family == "quasi") {
-        family$family <- switch(family$varfun,
-                                constant = "gaussian",
-                                `mu(1-mu)` = "binomial",
-                                mu = "poisson",
-                                `mu^2` = "Gamma",
-                                `mu^3` = "inverse.gaussian")
-      } else {
-        family$family <- switch(family$family,
-                                quasibinomial = "binomial",
-                                quasipoisson = "poisson")
-      }
-      family <- do.call(family$family, list(link = family$link))
-    }
+  ##  if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
+  ##    if (family$family == "quasi") {
+  ##      family$family <- switch(family$varfun,
+  ##                              constant = "gaussian",
+  ##                              `mu(1-mu)` = "binomial",
+  ##                              mu = "poisson",
+  ##                              `mu^2` = "Gamma",
+  ##                              `mu^3` = "inverse.gaussian")
+  ##    } else {
+  ##      family$family <- switch(family$family,
+  ##                              quasibinomial = "binomial",
+  ##                              quasipoisson = "poisson")
+  ##    }
+  ##    family <- do.call(family$family, list(link = family$link))
+  ##  }
+
+    family <- do.call(family$family, list(link = family$link))
 
     ## link function
     links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
@@ -408,7 +409,7 @@ geewa <-
       method <- "gee"
     }
 
-    geesolver_fit <- fit_geesolver(y,
+    geesolver_fit <- fit_geesolver_cc(y,
                                   model_matrix,
                                   id,
                                   repeated,
@@ -433,7 +434,7 @@ geewa <-
 
     if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
       method <- sub("bcgee", "brgee", method_original)
-      geesolver_fit <- fit_geesolver(y,
+      geesolver_fit <- fit_geesolver_cc(y,
                                      model_matrix,
                                      id,
                                      repeated,

@@ -2,8 +2,8 @@
 #include <RcppArmadillo.h>
 #include "link_functions.h"
 #include "variance_functions.h"
-#include "nuisance_quantities.h"
-#include "nuisance_quantities_oddsratio.h"
+#include "nuisance_quantities_cc.h"
+#include "nuisance_quantities_or.h"
 #include "utils.h"
 using namespace Rcpp;
 
@@ -94,10 +94,10 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
     arma::vec s_vector_i = s_vector(id_vector_i);
     arma::mat working_covariance_matrix_i =
       get_v_matrix_inverse_or(mu_vector_i,
-                                   get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
-                                                                    max(repeated_vector),
-                                                                    alpha_vector),
-                                   weights_vector(id_vector_i));
+                              get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
+                                                               max(repeated_vector),
+                                                               alpha_vector),
+                              weights_vector(id_vector_i));
     sc_criterion += trans(s_vector_i) * working_covariance_matrix_i * s_vector_i;
     sum_log_det_working_covariance_matrices += log(det(working_covariance_matrix_i));
   }

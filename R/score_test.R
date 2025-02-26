@@ -80,7 +80,7 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                         obj1$phi,
                                         obj1$weights)
 
-    covariance <- get_covariance_matrices(obj1$y,
+    covariance <- get_covariance_matrices_cc(obj1$y,
                                           obj1$model_matrix,
                                           obj1$id,
                                           obj1$repeated,

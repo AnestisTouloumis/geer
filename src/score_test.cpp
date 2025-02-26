@@ -2,10 +2,10 @@
 #include <RcppArmadillo.h>
 #include "link_functions.h"
 #include "variance_functions.h"
-#include "nuisance_quantities.h"
+#include "nuisance_quantities_cc.h"
 #include "utils.h"
-#include "covariance_matrices.h"
-#include "nuisance_quantities_oddsratio.h"
+#include "covariance_matrices_cc.h"
+#include "nuisance_quantities_or.h"
 
 //============================ estimating equations ============================
 // [[Rcpp::depends(RcppArmadillo)]]
