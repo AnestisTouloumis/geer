@@ -24,16 +24,6 @@ arma::mat kappa_matrix(int dimension) {
 //==============================================================================
 
 
-//============================ kronecker direct sum of the same matrix =========
-// [[Rcpp::export]]
-arma::mat kronecker_sum_same(arma::mat x) {
-  arma::mat identity_matrix = arma::eye(x.n_rows, x.n_rows);
-  arma::mat ans = kron(x, identity_matrix) + kron(identity_matrix, x);
-  return(ans);
-}
-//==============================================================================
-
-
 //============================ kronecker(X, I) * kappa =========================
 // [[Rcpp::export]]
 arma::mat kronecker_left_identity_kappa(arma::mat x) {
@@ -75,6 +65,16 @@ arma::mat kappa_right(arma::mat x) {
 //==============================================================================
 
 
+//============================ kronecker direct sum of the same matrix =========
+// [[Rcpp::export]]
+arma::mat kronecker_sum_same(arma::mat x) {
+  arma::mat identity_matrix = arma::eye(x.n_rows, x.n_rows);
+  arma::mat ans = kron(x, identity_matrix) + kron(identity_matrix, x);
+  return(ans);
+}
+//==============================================================================
+
+
 //============================ kronecker(x, I)  ================================
 // [[Rcpp::export]]
 arma::mat kronecker_vector_identity(arma::vec x) {
@@ -96,15 +96,6 @@ arma::mat kronecker_vector_matrix(arma::vec x, arma::mat y) {
   for(int  j = 1; j < dimension + 1; j++) {
     ans.rows((j - 1) * dimension, j * dimension - 1) *= x(j - 1);
   }
-  return(ans);
-}
-//==============================================================================
-
-
-//============================ kronecker    ===============================
-// [[Rcpp::export]]
-arma::mat kronecker_rcpp(arma::mat x, arma::mat y) {
-  arma::mat ans = kron(x, y);
   return(ans);
 }
 //==============================================================================
