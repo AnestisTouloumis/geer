@@ -12,7 +12,7 @@ Rcpp::NumericVector arma2vec(const arma::vec & x) {
 //==============================================================================
 
 
-//============================ vec 2 arma ======================================
+//============================ vec to arma =====================================
 // [[Rcpp::export]]
 arma::vec vec2arma(const Rcpp::NumericVector & x) {
   arma::vec ans = Rcpp::as<arma::vec>(x);
@@ -252,8 +252,8 @@ Rcpp::NumericVector mueta3_rcpp(const char * link,
 // [[Rcpp::export]]
 arma::vec mueta3(const char * link,
                  const arma::vec & eta_vector) {
-  arma::vec result = vec2arma(mueta3_rcpp(link, arma2vec(eta_vector)));
-  return(result);
+  arma::vec ans = vec2arma(mueta3_rcpp(link, arma2vec(eta_vector)));
+  return(ans);
 }
 //==============================================================================
 
