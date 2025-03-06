@@ -328,6 +328,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_pearson_residuals
+arma::vec get_pearson_residuals(const char * family, const arma::vec& y_vector, const arma::vec& mu_vector, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_pearson_residuals(SEXP familySEXP, SEXP y_vectorSEXP, SEXP mu_vectorSEXP, SEXP weights_vectorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_pearson_residuals(family, y_vector, mu_vector, weights_vector));
+    return rcpp_result_gen;
+END_RCPP
+}
 // get_phi_hat
 double get_phi_hat(const arma::vec& pearson_residuals_vector, const int& params_no);
 RcppExport SEXP _geer_get_phi_hat(SEXP pearson_residuals_vectorSEXP, SEXP params_noSEXP) {
@@ -455,18 +469,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// correlation_exchangeable_inverse
-arma::mat correlation_exchangeable_inverse(const arma::vec& alpha_vector, const int& dimension);
-RcppExport SEXP _geer_correlation_exchangeable_inverse(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
-    rcpp_result_gen = Rcpp::wrap(correlation_exchangeable_inverse(alpha_vector, dimension));
-    return rcpp_result_gen;
-END_RCPP
-}
 // correlation_ar1
 arma::mat correlation_ar1(const arma::vec& alpha_vector, const int& dimension);
 RcppExport SEXP _geer_correlation_ar1(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
@@ -476,18 +478,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_ar1(alpha_vector, dimension));
-    return rcpp_result_gen;
-END_RCPP
-}
-// correlation_ar1_inverse
-arma::mat correlation_ar1_inverse(const arma::vec& alpha_vector, const int& dimension);
-RcppExport SEXP _geer_correlation_ar1_inverse(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
-    rcpp_result_gen = Rcpp::wrap(correlation_ar1_inverse(alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -536,49 +526,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(get_correlation_matrix(correlation_structure, alpha_vector, dimension));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_correlation_matrix_inverse
-arma::mat get_correlation_matrix_inverse(const char * correlation_structure, const arma::vec& alpha_vector, const int& dimension);
-RcppExport SEXP _geer_get_correlation_matrix_inverse(SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_correlation_matrix_inverse(correlation_structure, alpha_vector, dimension));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_pearson_residuals
-arma::vec get_pearson_residuals(const char * family, const arma::vec& y_vector, const arma::vec& mu_vector, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_pearson_residuals(SEXP familySEXP, SEXP y_vectorSEXP, SEXP mu_vectorSEXP, SEXP weights_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_pearson_residuals(family, y_vector, mu_vector, weights_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_weight_matrix_inverse
-arma::mat get_weight_matrix_inverse(const char * family, const arma::vec& mu_vector, const arma::vec& repeated_vector, const double& phi, const arma::mat& cor_matrix_inverse, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_weight_matrix_inverse(SEXP familySEXP, SEXP mu_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP cor_matrix_inverseSEXP, SEXP weights_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type cor_matrix_inverse(cor_matrix_inverseSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_weight_matrix_inverse(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1083,17 +1030,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// kronecker_sum_same
-arma::mat kronecker_sum_same(arma::mat x);
-RcppExport SEXP _geer_kronecker_sum_same(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(kronecker_sum_same(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // kronecker_left_identity_kappa
 arma::mat kronecker_left_identity_kappa(arma::mat x);
 RcppExport SEXP _geer_kronecker_left_identity_kappa(SEXP xSEXP) {
@@ -1127,6 +1063,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kronecker_sum_same
+arma::mat kronecker_sum_same(arma::mat x);
+RcppExport SEXP _geer_kronecker_sum_same(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(kronecker_sum_same(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // kronecker_vector_identity
 arma::mat kronecker_vector_identity(arma::vec x);
 RcppExport SEXP _geer_kronecker_vector_identity(SEXP xSEXP) {
@@ -1147,18 +1094,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
     rcpp_result_gen = Rcpp::wrap(kronecker_vector_matrix(x, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// kronecker_rcpp
-arma::mat kronecker_rcpp(arma::mat x, arma::mat y);
-RcppExport SEXP _geer_kronecker_rcpp(SEXP xSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(kronecker_rcpp(x, y));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -1221,6 +1156,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_mueta3", (DL_FUNC) &_geer_mueta3, 2},
     {"_geer_valideta", (DL_FUNC) &_geer_valideta, 2},
     {"_geer_validmu", (DL_FUNC) &_geer_validmu, 2},
+    {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 4},
     {"_geer_get_phi_hat", (DL_FUNC) &_geer_get_phi_hat, 2},
     {"_geer_alpha_hat_exchangeable", (DL_FUNC) &_geer_alpha_hat_exchangeable, 4},
     {"_geer_alpha_hat_ar1", (DL_FUNC) &_geer_alpha_hat_ar1, 5},
@@ -1230,16 +1166,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_alpha_hat", (DL_FUNC) &_geer_get_alpha_hat, 7},
     {"_geer_correlation_independence", (DL_FUNC) &_geer_correlation_independence, 1},
     {"_geer_correlation_exchangeable", (DL_FUNC) &_geer_correlation_exchangeable, 2},
-    {"_geer_correlation_exchangeable_inverse", (DL_FUNC) &_geer_correlation_exchangeable_inverse, 2},
     {"_geer_correlation_ar1", (DL_FUNC) &_geer_correlation_ar1, 2},
-    {"_geer_correlation_ar1_inverse", (DL_FUNC) &_geer_correlation_ar1_inverse, 2},
     {"_geer_correlation_mdependent", (DL_FUNC) &_geer_correlation_mdependent, 2},
     {"_geer_correlation_toeplitz", (DL_FUNC) &_geer_correlation_toeplitz, 1},
     {"_geer_correlation_unstructured", (DL_FUNC) &_geer_correlation_unstructured, 2},
     {"_geer_get_correlation_matrix", (DL_FUNC) &_geer_get_correlation_matrix, 3},
-    {"_geer_get_correlation_matrix_inverse", (DL_FUNC) &_geer_get_correlation_matrix_inverse, 3},
-    {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 4},
-    {"_geer_get_weight_matrix_inverse", (DL_FUNC) &_geer_get_weight_matrix_inverse, 6},
     {"_geer_get_v_matrix_cc", (DL_FUNC) &_geer_get_v_matrix_cc, 6},
     {"_geer_get_marginalized_odds_ratios", (DL_FUNC) &_geer_get_marginalized_odds_ratios, 5},
     {"_geer_get_subject_specific_odds_ratios", (DL_FUNC) &_geer_get_subject_specific_odds_ratios, 3},
@@ -1269,13 +1200,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_update_beta_or", (DL_FUNC) &_geer_update_beta_or, 12},
     {"_geer_subset_matrix", (DL_FUNC) &_geer_subset_matrix, 2},
     {"_geer_kappa_matrix", (DL_FUNC) &_geer_kappa_matrix, 1},
-    {"_geer_kronecker_sum_same", (DL_FUNC) &_geer_kronecker_sum_same, 1},
     {"_geer_kronecker_left_identity_kappa", (DL_FUNC) &_geer_kronecker_left_identity_kappa, 1},
     {"_geer_kronecker_identity_right_kappa", (DL_FUNC) &_geer_kronecker_identity_right_kappa, 1},
     {"_geer_kappa_right", (DL_FUNC) &_geer_kappa_right, 1},
+    {"_geer_kronecker_sum_same", (DL_FUNC) &_geer_kronecker_sum_same, 1},
     {"_geer_kronecker_vector_identity", (DL_FUNC) &_geer_kronecker_vector_identity, 1},
     {"_geer_kronecker_vector_matrix", (DL_FUNC) &_geer_kronecker_vector_matrix, 2},
-    {"_geer_kronecker_rcpp", (DL_FUNC) &_geer_kronecker_rcpp, 2},
     {"_geer_variance", (DL_FUNC) &_geer_variance, 2},
     {"_geer_variancemu", (DL_FUNC) &_geer_variancemu, 2},
     {"_geer_variancemu2", (DL_FUNC) &_geer_variancemu2, 2},

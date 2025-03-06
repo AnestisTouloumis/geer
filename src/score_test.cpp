@@ -4,7 +4,7 @@
 #include "variance_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "utils.h"
-#include "covariance_matrices_cc.h"
+#include "covariance_matrices.h"
 #include "nuisance_quantities_or.h"
 
 //============================ estimating equations ============================
@@ -26,10 +26,10 @@ arma::vec estimating_equations_gee(const arma::vec & y_vector,
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat ans = arma::zeros(params_no);
-  arma::mat correlation_matrix_inverse =
-    get_correlation_matrix_inverse(correlation_structure,
-                                   alpha_vector,
-                                   max(repeated_vector));
+  arma::mat correlation_matrix =
+    get_correlation_matrix(correlation_structure,
+                           alpha_vector,
+                           max(repeated_vector));
   arma::vec delta_vector = mueta(link, eta_vector);
   arma::vec s_vector = y_vector - mu_vector;
   for(int i=1; i < sample_size + 1; i++){
@@ -37,12 +37,12 @@ arma::vec estimating_equations_gee(const arma::vec & y_vector,
     arma::mat t_d_matrix_i = trans(model_matrix.rows(id_vector_i)) *
       arma::diagmat(delta_vector(id_vector_i));
     arma::mat v_matrix_i_inverse =
-      get_weight_matrix_inverse(family,
-                                mu_vector(id_vector_i),
-                                repeated_vector(id_vector_i),
-                                phi,
-                                correlation_matrix_inverse,
-                                weights_vector(id_vector_i));
+      arma::pinv(get_v_matrix_cc(family,
+                                 mu_vector(id_vector_i),
+                                 repeated_vector(id_vector_i),
+                                 phi,
+                                 correlation_matrix,
+                                 weights_vector(id_vector_i)));
     ans +=
       t_d_matrix_i * v_matrix_i_inverse * s_vector(id_vector_i);
   }

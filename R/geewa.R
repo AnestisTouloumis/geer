@@ -205,10 +205,10 @@ geewa <-
     ## extract or create repeated and map values to 1,..., T
     repeated <- model.extract(model_frame, "repeated")
     if (is.null(repeated)) {
-      id_list <- split(id, id)
-      order_id_index <- order(unlist(id_list))
+      id_list <- split(id, id)[unique(id)]
+      #order_id_index <- order(id)
       repeated <- unlist(lapply(id_list, function(x) seq.int(length(x))))
-      repeated <- repeated[order_id_index]
+      #repeated <- repeated[order_id_index]
     }
     repeated <- as.numeric(factor(repeated))
 
@@ -216,13 +216,6 @@ geewa <-
     if (length(repeated) != length(y))
       stop("response variable and 'repeated' are not of same length")
 
-    ## check if id and repeated are identical
-    if (all(id == repeated))
-      stop("'repeated' and 'id' must be different")
-
-    ## check duplicated values in repeated for each subject
-    if (any(unlist(lapply(split(repeated, id), duplicated))))
-      stop("'repeated' does not have unique values per 'id'")
 
     ## offset term
     offset <- model.offset(model_frame)
@@ -247,6 +240,15 @@ geewa <-
     repeated <- repeated[ordered_index]
     offset <- offset[ordered_index]
 
+    ## check duplicated values in repeated for each subject
+    if (any(unlist(lapply(split(repeated, id), duplicated))))
+      stop("'repeated' does not have unique values per 'id'")
+
+    ## check if id and repeated are identical
+    if (all(id == repeated))
+      stop("'repeated' and 'id' must be different")
+
+
     ## convert model matrix to a matrix when p = 0
     if (length(xnames) == 1)
       model_matrix <- matrix(model_matrix, ncol = 1)
@@ -265,9 +267,9 @@ geewa <-
     if (icheck < 1)
       stop("`correlation_structure` must be one of `independence`,
            `exchangeable`, `ar1`, `m-dependent`, `unstructured` or `fixed`")
+    if (correlation_structure !=  "m-dependent") Mv <- 1
     if (correlation_structure == "m-dependent" & ((Mv <= 0) | Mv %% 1 != 0))
       stop("Mv must be a positive integer number")
-    if (correlation_structure !=  "m-dependent") Mv <- 1
     if (correlation_structure != "fixed") {
       alpha_vector <- 0
       alpha_fixed <- 0

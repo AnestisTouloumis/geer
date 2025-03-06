@@ -85,6 +85,10 @@ validmu <- function(family, mu_vector) {
     .Call(`_geer_validmu`, family, mu_vector)
 }
 
+get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
+    .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
+}
+
 get_phi_hat <- function(pearson_residuals_vector, params_no) {
     .Call(`_geer_get_phi_hat`, pearson_residuals_vector, params_no)
 }
@@ -121,16 +125,8 @@ correlation_exchangeable <- function(alpha_vector, dimension) {
     .Call(`_geer_correlation_exchangeable`, alpha_vector, dimension)
 }
 
-correlation_exchangeable_inverse <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_exchangeable_inverse`, alpha_vector, dimension)
-}
-
 correlation_ar1 <- function(alpha_vector, dimension) {
     .Call(`_geer_correlation_ar1`, alpha_vector, dimension)
-}
-
-correlation_ar1_inverse <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_ar1_inverse`, alpha_vector, dimension)
 }
 
 correlation_mdependent <- function(alpha_vector, dimension) {
@@ -147,18 +143,6 @@ correlation_unstructured <- function(alpha_vector, dimension) {
 
 get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
     .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
-}
-
-get_correlation_matrix_inverse <- function(correlation_structure, alpha_vector, dimension) {
-    .Call(`_geer_get_correlation_matrix_inverse`, correlation_structure, alpha_vector, dimension)
-}
-
-get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
-    .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
-}
-
-get_weight_matrix_inverse <- function(family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector) {
-    .Call(`_geer_get_weight_matrix_inverse`, family, mu_vector, repeated_vector, phi, cor_matrix_inverse, weights_vector)
 }
 
 get_v_matrix_cc <- function(family, mu_vector, repeated_vector, phi, cor_matrix, weights_vector) {
@@ -277,10 +261,6 @@ kappa_matrix <- function(dimension) {
     .Call(`_geer_kappa_matrix`, dimension)
 }
 
-kronecker_sum_same <- function(x) {
-    .Call(`_geer_kronecker_sum_same`, x)
-}
-
 kronecker_left_identity_kappa <- function(x) {
     .Call(`_geer_kronecker_left_identity_kappa`, x)
 }
@@ -293,16 +273,16 @@ kappa_right <- function(x) {
     .Call(`_geer_kappa_right`, x)
 }
 
+kronecker_sum_same <- function(x) {
+    .Call(`_geer_kronecker_sum_same`, x)
+}
+
 kronecker_vector_identity <- function(x) {
     .Call(`_geer_kronecker_vector_identity`, x)
 }
 
 kronecker_vector_matrix <- function(x, y) {
     .Call(`_geer_kronecker_vector_matrix`, x, y)
-}
-
-kronecker_rcpp <- function(x, y) {
-    .Call(`_geer_kronecker_rcpp`, x, y)
 }
 
 variance <- function(family, mu_vector) {
