@@ -1,7 +1,7 @@
 #include <RcppArmadillo.h>
 #include "nuisance_quantities_cc.h"
 #include "link_functions.h"
-#include "covariance_matrices_cc.h"
+#include "covariance_matrices.h"
 #include "variance_functions.h"
 #include "update_beta_cc.h"
 

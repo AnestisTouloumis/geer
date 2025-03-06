@@ -1,6 +1,6 @@
 #include <RcppArmadillo.h>
 #include "link_functions.h"
-#include "covariance_matrices_or.h"
+#include "covariance_matrices.h"
 #include "update_beta_or.h"
 
 
