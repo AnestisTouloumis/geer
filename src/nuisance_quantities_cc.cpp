@@ -4,8 +4,21 @@
 using namespace Rcpp;
 
 
-//============================ phi hat =========================================
+//============================ pearson residuals ===============================
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+arma::vec get_pearson_residuals(const char * family,
+                                const arma::vec & y_vector,
+                                const arma::vec & mu_vector,
+                                const arma::vec & weights_vector) {
+  arma::vec ans =
+    (y_vector - mu_vector) % sqrt(weights_vector/variance(family, mu_vector));
+  return(ans);
+}
+//==============================================================================
+
+
+//============================ phi hat =========================================
 // [[Rcpp::export]]
 double get_phi_hat(const arma::vec & pearson_residuals_vector,
                    const int & params_no) {
@@ -17,7 +30,7 @@ double get_phi_hat(const arma::vec & pearson_residuals_vector,
 //==============================================================================
 
 
-//============================ exchangeable hat ================================
+//============================ exchangeable alpha hat ==========================
 // [[Rcpp::export]]
 double alpha_hat_exchangeable(const arma::vec & pearson_residuals_vector,
                               const arma::vec & id_vector,
@@ -250,23 +263,6 @@ arma::mat correlation_exchangeable(const arma::vec & alpha_vector,
 //==============================================================================
 
 
-//============================ exchangeable - inverse ==========================
-// [[Rcpp::export]]
-arma::mat correlation_exchangeable_inverse(const arma::vec & alpha_vector,
-                                           const int & dimension) {
-  arma::mat ans = arma::eye(dimension, dimension);
-  double rho = alpha_vector(0);
-  double upper_bound = 1 - 10 * DBL_EPSILON;
-  double lower_bound = 10 * DBL_EPSILON - 1/(dimension - 1);
-  if (rho > upper_bound) rho = upper_bound;
-  if (rho < lower_bound) rho = lower_bound;
-  double adding_constant = -rho / (1 + (dimension - 1) * rho);
-  ans = ans + adding_constant;
-  ans = ans/(1 - rho) ;
-  return(ans);
-}
-//==============================================================================
-
 //============================ ar1 =============================================
 // [[Rcpp::export]]
 arma::mat correlation_ar1(const arma::vec & alpha_vector,
@@ -280,26 +276,6 @@ arma::mat correlation_ar1(const arma::vec & alpha_vector,
 }
 //==============================================================================
 
-
-//============================ ar1 - inverse ===================================
-// [[Rcpp::export]]
-arma::mat correlation_ar1_inverse(const arma::vec & alpha_vector,
-                                  const int & dimension) {
-  arma::mat ans = arma::eye(dimension, dimension);
-  double rho = alpha_vector(0);
-  double threshold = 1 - DBL_EPSILON;
-  if (rho > threshold) rho = threshold;
-  if (rho < -threshold) rho = - threshold;
-  double rho_squared = pow(rho, 2);
-  ans.diag(1) -= rho;
-  ans.diag(-1) -= rho;
-  ans.diag() += rho_squared;
-  ans(0, 0) -= rho_squared;
-  ans(dimension - 1, dimension - 1) -= rho_squared;
-  ans = ans / (1 - rho_squared);
-  return(ans);
-}
-//==============================================================================
 
 //============================ m-dependent =====================================
 // [[Rcpp::export]]
@@ -369,75 +345,6 @@ arma::mat get_correlation_matrix(const char * correlation_structure,
 //==============================================================================
 
 
-//============================ inverse correlation matrix given rho vector =====
-// [[Rcpp::export]]
-arma::mat get_correlation_matrix_inverse(const char * correlation_structure,
-                                         const arma::vec & alpha_vector,
-                                         const int & dimension) {
-  arma::mat ans(dimension, dimension);
-  if(std::strcmp(correlation_structure, "independence") == 0){
-    ans = correlation_independence(dimension);
-  }else if(std::strcmp(correlation_structure, "exchangeable") == 0){
-    ans = correlation_exchangeable_inverse(alpha_vector, dimension);
-  }else if(std::strcmp(correlation_structure, "ar1") == 0){
-    ans = correlation_ar1_inverse(alpha_vector, dimension);
-  }else if(std::strcmp(correlation_structure, "m-dependent") == 0){
-    ans = correlation_mdependent(alpha_vector, dimension);
-    ans = arma::pinv(ans);
-  }else if(std::strcmp(correlation_structure, "unstructured") == 0){
-    ans = correlation_unstructured(alpha_vector, dimension);
-    ans = arma::pinv(ans);
-  }else if(std::strcmp(correlation_structure, "toeplitz") == 0){
-    ans = correlation_toeplitz(alpha_vector);
-    ans = arma::pinv(ans);
-  }else if(std::strcmp(correlation_structure, "fixed") == 0){
-    ans = correlation_unstructured(alpha_vector, dimension);
-    ans = arma::pinv(ans);
-  }
-  return(ans);
-}
-//==============================================================================
-
-
-//============================ pearson residuals ===============================
-// [[Rcpp::export]]
-arma::vec get_pearson_residuals(const char * family,
-                                const arma::vec & y_vector,
-                                const arma::vec & mu_vector,
-                                const arma::vec & weights_vector) {
-  arma::vec ans = (y_vector - mu_vector) % sqrt(weights_vector)/sqrt(variance(family, mu_vector));
-  return(ans);
-}
-//==============================================================================
-
-
-// =========================== subject-specific weight matrix ==================
-// [[Rcpp::export]]
-arma::mat get_weight_matrix_inverse(const char * family,
-                                    const arma::vec & mu_vector,
-                                    const arma::vec & repeated_vector,
-                                    const double & phi,
-                                    const arma::mat & cor_matrix_inverse,
-                                    const arma::vec & weights_vector) {
-  arma::vec sd_reciprocal_vector =
-    sqrt(weights_vector)/sqrt(phi * variance(family, mu_vector));
-  if(repeated_vector.n_elem == 1) {
-    return(1/(sd_reciprocal_vector * trans(sd_reciprocal_vector)));
-  } else {
-    arma::mat ans =
-      subset_matrix(cor_matrix_inverse, repeated_vector) %
-      (sd_reciprocal_vector * trans(sd_reciprocal_vector));
-   // arma::mat ans =
-    //  (cor_matrix_inverse.submat(0, 0,
-    //                             repeated_vector.n_elem - 1,
-    //                             repeated_vector.n_elem - 1)) %
-    //                              (sd_reciprocal_vector * trans(sd_reciprocal_vector));
-    return(ans);
-  }
-}
-//==============================================================================
-
-
 // =========================== subject-specific weight matrix ==================
 // [[Rcpp::export]]
 arma::mat get_v_matrix_cc(const char * family,
@@ -447,9 +354,9 @@ arma::mat get_v_matrix_cc(const char * family,
                           const arma::mat & cor_matrix,
                           const arma::vec & weights_vector) {
   arma::vec sd_vector =
-    sqrt(variance(family, mu_vector))/sqrt(weights_vector);
+    sqrt(variance(family, mu_vector)/weights_vector);
   if(repeated_vector.n_elem == 1) {
-    return(1/(sd_vector * trans(sd_vector)));
+    return(phi * (sd_vector * trans(sd_vector)));
   } else {
     arma::mat ans =
       phi *
