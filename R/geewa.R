@@ -169,17 +169,53 @@ geewa <-
     m[[1L]] <- as.name("model.frame")
     model_frame <- eval(m, envir = parent.frame())
 
-    if (is.null(m$id))
-      m$id <- as.name("id")
-
     ## get explanatory variables
     model_terms <- attr(model_frame, "terms")
 
+    ## family
+    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian")
+    if (is.character(family))
+      family <- get(family, mode = "function", envir = parent.frame())
+    if (is.function(family))
+      family <- family()
+    icheck <- as.integer(match(family$family, familys, -1))
+    if (icheck < 1)
+      stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma`,
+           `inverse.gaussian`, `quasi`, `quasibinomial` or `quasipoisson`")
+
+    ##  if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
+    ##    if (family$family == "quasi") {
+    ##      family$family <- switch(family$varfun,
+    ##                              constant = "gaussian",
+    ##                              `mu(1-mu)` = "binomial",
+    ##                              mu = "poisson",
+    ##                              `mu^2` = "Gamma",
+    ##                              `mu^3` = "inverse.gaussian")
+    ##    } else {
+    ##      family$family <- switch(family$family,
+    ##                              quasibinomial = "binomial",
+    ##                              quasipoisson = "poisson")
+    ##    }
+    ##    family <- do.call(family$family, list(link = family$link))
+    ##  }
+
+    family <- do.call(family$family, list(link = family$link))
+
+    ## link function
+    links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
+               "sqrt", "1/mu^2", "inverse")
+    link <- as.character(family$link)
+    icheck <- as.integer(match(link, links, -1))
+    if (icheck < 1)
+      stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
+           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
+
+
     ## extract response
-    y <- model.response(model_frame)
+    y <- model.response(model_frame, "numeric")
     if (is.null(y))
       stop("response variable not found")
-    y <- as.numeric(y)
+
 
     ## weights
     weights <- as.vector(model.weights(model_frame))
@@ -190,6 +226,12 @@ geewa <-
         stop("'weights' must be a numeric vector")
       if (any(weights <= 0))
         stop("negative weights not allowed")
+    }
+    if (family$family == "binomial") {
+      if (is.matrix(y) && ncol(y) == 2) {
+        weights <- apply(y, 1, sum)
+        y <- y[, 1]/weights
+      }
     }
 
     ## extract id and map values to 1,.., N
@@ -287,43 +329,6 @@ geewa <-
       alpha_fixed <- 1
       }
 
-    ## family
-    familys <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian")
-    if (is.character(family))
-      family <- get(family, mode = "function", envir = parent.frame())
-    if (is.function(family))
-      family <- family()
-    icheck <- as.integer(match(family$family, familys, -1))
-    if (icheck < 1)
-      stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma`,
-           `inverse.gaussian`, `quasi`, `quasibinomial` or `quasipoisson`")
-
-  ##  if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
-  ##    if (family$family == "quasi") {
-  ##      family$family <- switch(family$varfun,
-  ##                              constant = "gaussian",
-  ##                              `mu(1-mu)` = "binomial",
-  ##                              mu = "poisson",
-  ##                              `mu^2` = "Gamma",
-  ##                              `mu^3` = "inverse.gaussian")
-  ##    } else {
-  ##      family$family <- switch(family$family,
-  ##                              quasibinomial = "binomial",
-  ##                              quasipoisson = "poisson")
-  ##    }
-  ##    family <- do.call(family$family, list(link = family$link))
-  ##  }
-
-    family <- do.call(family$family, list(link = family$link))
-
-    ## link function
-    links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
-               "sqrt", "1/mu^2", "inverse")
-    link <- as.character(family$link)
-    icheck <- as.integer(match(link, links, -1))
-    if (icheck < 1)
-      stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
-           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
 
     ## run fit
     methods <- c("gee",

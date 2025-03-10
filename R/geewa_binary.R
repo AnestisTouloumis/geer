@@ -145,11 +145,20 @@ geewa_binary <- function(formula = formula(data),
     ## get explanatory variables
     model_terms <- attr(model_frame, "terms")
 
+    ## link function
+    links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
+               "sqrt", "1/mu^2", "inverse")
+    link <- as.character(link)
+    icheck <- as.integer(match(link, links, -1))
+    if (icheck < 1)
+      stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
+           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
+    family <- binomial(link = link)
+
     ## extract response
-    y <- model.response(model_frame)
+    y <- model.response(model_frame, "numeric")
     if (is.null(y))
       stop("response variable not found")
-    y <- as.numeric(factor(y)) - 1
 
     ## weights
     weights <- as.vector(model.weights(model_frame))
@@ -161,6 +170,13 @@ geewa_binary <- function(formula = formula(data),
       if (any(weights <= 0))
         stop("negative weights not allowed")
     }
+    if (is.matrix(y) && ncol(y) == 2) {
+        weights <- apply(y, 1, sum)
+        y <- y[, 1]/weights
+        }
+
+
+
 
     ## extract id and map values to 1,.., N
     id <- model.extract(model_frame, "id")
@@ -259,15 +275,7 @@ geewa_binary <- function(formula = formula(data),
                                                    or_structure)
     }
 
-    ## link function
-    links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
-               "sqrt", "1/mu^2", "inverse")
-    link <- as.character(link)
-    icheck <- as.integer(match(link, links, -1))
-    if (icheck < 1)
-      stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
-           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
-    family <- binomial(link = link)
+
 
     ## run fit
     methods <- c("gee",
