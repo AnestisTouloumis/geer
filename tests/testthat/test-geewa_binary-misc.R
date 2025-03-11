@@ -2,6 +2,7 @@ data("cerebrovascular")
 fit_gee <- geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
                         link =  "probit",
                         data = cerebrovascular,
+                        id = id,
                         or_structure = "independence",
                         method = "gee")
 fit_glm <- glm(formula = I(ecg == "normal") ~ treatment + factor(period),
