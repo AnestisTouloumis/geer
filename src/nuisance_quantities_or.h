@@ -5,6 +5,7 @@
 Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec & response_vector,
                                                  const arma::vec & id_vector,
                                                  const arma::vec & repeated_vector,
+                                                 const arma::vec & weights_vector,
                                                  const double &  adding_constant,
                                                  Rcpp::String or_structure);
 

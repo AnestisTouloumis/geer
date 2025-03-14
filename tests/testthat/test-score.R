@@ -31,7 +31,7 @@ fit_model <-
         id = id,
         family = binomial(link = link),
         data = cerebrovascular,
-        correlation_structure = association,
+        corstr = association,
         method = method_gee)
 reduced_model <-
   update(fit_model, formula = I(ecg == "normal") ~ factor(period))

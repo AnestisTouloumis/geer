@@ -31,7 +31,7 @@
 #' then the GEE will be adjusted to produce naive, robust or empirical
 #' bias-reducing estimators, respectively. If \code{method = "bcgee_naive"},
 #' \code{method = "bcgee_robust"} or \code{method = "bcgee_empirical"}, then the
-#' GEE will be adjusted to produce naive, robust or emprical bias-corrected
+#' GEE will be adjusted to produce naive, robust or empirical bias-corrected
 #' estimators. If \code{method = "pgee_jeffreys"}, then penalized GEE will be
 #' solved.
 #'
@@ -39,12 +39,12 @@
 #' @param link a character indicating the link function. Options include
 #'        \code{logit}, \code{probit}, \code{cauchit}, \code{cloglog}, \code{identity},
 #'        \code{log}, \code{sqrt}, \code{1/mu^2} or \code{inverse}.
-#' @param or_structure a character indicating the working association
+#' @param orstr a character indicating the working association
 #'        structure. Options include \code{"independence"}, \code{"exchangeable"},
 #'        \code{"unstructured"} or \code{"fixed"}.
 #' @param alpha_vector numerical vector indicating the association structure for
-#'        when \code{or_structure == "fixed"}. It is ignored for all other
-#'        possible values of \code{or_structure}.
+#'        when \code{orstr == "fixed"}. It is ignored for all other
+#'        possible values of \code{orstr}.
 #'
 #'
 #' @return \code{geewa_binary} return an object from the class "geer". The function
@@ -90,7 +90,7 @@
 #'                              repeated = visit,
 #'                              link = "probit",
 #'                              data = respiratory[respiratory$center==2, ],
-#'                              or_structure = "independence",
+#'                              orstr = "independence",
 #'                              method = "pgee_jeffreys")
 #' summary(fitted_model, type = "bias-corrected")
 #'
@@ -100,7 +100,7 @@
 #'   id = fid,
 #'   data = obesity,
 #'   link = "logit",
-#'   or_structure = "independence",
+#'   orstr = "independence",
 #'   method = "gee")
 #' summary(fitted_model_gee, type = "bias-corrected")
 #' fitted_model_brgee_robust <-
@@ -119,7 +119,7 @@ geewa_binary <- function(formula = formula(data),
                          link = "logit",
                          id = id,
                          repeated = NULL,
-                         or_structure = "exchangeable",
+                         orstr = "exchangeable",
                          control = geer_control(),
                          beta_start = NULL,
                          alpha_vector = NULL,
@@ -145,8 +145,8 @@ geewa_binary <- function(formula = formula(data),
   link <- as.character(link)
   icheck <- as.integer(match(link, links, -1))
   if (icheck < 1)
-    stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
-           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
+    stop("'link' must be one of 'logit', 'probit', 'cauchit', 'cloglog',
+           'identity', 'log', 'sqrt', '1/mu^2' or 'inverse'")
   family <- binomial(link = link)
 
   ## extract response
@@ -165,7 +165,7 @@ geewa_binary <- function(formula = formula(data),
     if (!is.numeric(weights))
       stop("'weights' must be a numeric vector")
     if (any(weights <= 0))
-      stop("negative weights not allowed")
+      stop("non-positive weights not allowed")
   }
   if (is.matrix(y) && ncol(y) == 2) {
     weights <- apply(y, 1, sum)
@@ -196,13 +196,6 @@ geewa_binary <- function(formula = formula(data),
   if (length(repeated) != length(y))
     stop("response variable and 'repeated' are not of same length")
 
-
-
-
-
-
-
-
   ## check if id and repeated are identical
   if (all(id == repeated))
     stop("'repeated' and 'id' must be different")
@@ -223,20 +216,11 @@ geewa_binary <- function(formula = formula(data),
   ## get model terms
   model_terms <- attr(model_frame, "terms")
 
-
   ## extract model matrix
   model_matrix <- model.matrix(model_terms, model_frame)
 
   ## extract explanatory variable names
   xnames <- colnames(model_matrix)
-
-  ## order response, model matrix, id and repeated
-  ordered_index <- order(id, repeated)
-  y <- y[ordered_index]
-  model_matrix <- model_matrix[ordered_index, ]
-  id <- id[ordered_index]
-  repeated <- repeated[ordered_index]
-  offset <- offset[ordered_index]
 
   ## convert model matrix to a matrix when p = 1
   if (length(xnames) == 1)
@@ -252,37 +236,7 @@ geewa_binary <- function(formula = formula(data),
   maxiter <- control$maxiter
   tolerance <- control$tolerance
 
-  ## estimating marginalized odds ratios
-  or_structures <- c("independence", "exchangeable", "unstructured",
-                     "fixed")
-  icheck <- as.integer(match(or_structure, or_structures, -1))
-  if (icheck < 1)
-    stop("`or_structure` must be one of `independence`, `exchangeable`,
-           `unstructured` or `fixed`")
-  if (or_structure == "independence") {
-    adding_constant <- NULL
-    alpha_vector <- rep.int(1, choose(max(repeated), 2))
-  } else if (or_structure == "fixed") {
-    adding_constant <- NULL
-    pairs_no <- choose(max(repeated), 2)
-    if (!is.numeric(alpha_vector))
-      stop("'alpha_vector' must be as a numeric vector")
-    if (length(alpha_vector) != pairs_no)
-      stop("'alpha_vector' must be of length ", pairs_no)
-  } else {
-    #if (!is.numeric(adding_constant) | adding_constant < 0)
-    #  stop("'adding_constant' must be a nonnegative constant")
-    adding_constant <- control$or_adding_constant
-    alpha_vector <- get_marginalized_odds_ratios(y,
-                                                 id,
-                                                 repeated,
-                                                 adding_constant,
-                                                 or_structure)
-  }
-
-
-
-  ## run fit
+  ## estimation method
   methods <- c("gee",
                "brgee_naive", "brgee_robust", "brgee_empirical",
                "bcgee_naive", "bcgee_robust", "bcgee_empirical",
@@ -293,7 +247,6 @@ geewa_binary <- function(formula = formula(data),
     stop("`method` must be one of `gee`, `brgee_naive`, `brgee_robust`,
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
-
 
   ## initial beta
   if (is.null(beta_start)) {
@@ -308,27 +261,35 @@ geewa_binary <- function(formula = formula(data),
       } else {
         type <- "AS_mean"
       }
-      beta_zero <- brglmFit(x = model_matrix,
+      glmfit <- try(brglmFit(x = model_matrix,
+                             y = y,
+                             family = family,
+                             weights = weights,
+                             offset = offset,
+                             control = list(epsilon = control$tolerance,
+                                            maxit = control_glm$maxit,
+                                            type = type,
+                                            trace = FALSE,
+                                            slowit = control_glm$slowit,
+                                            max_step_factor = control_glm$max_step_factor,
+                                            a = control$jeffreys_power)),
+                    silent = TRUE)
+    } else {
+      glmfit <- try(glm.fit(x = model_matrix,
                             y = y,
                             family = family,
                             weights = weights,
                             offset = offset,
                             control = list(epsilon = control$tolerance,
                                            maxit = control_glm$maxit,
-                                           type = type,
-                                           trace = FALSE,
-                                           slowit = control_glm$slowit,
-                                           max_step_factor = control_glm$max_step_factor,
-                                           a = control$jeffreys_power))$coefficients
+                                           trace = FALSE)),
+                    silent = TRUE)
+    }
+    if (!inherits(glmfit, "try-error")) {
+      beta_zero <- glmfit$coefficients
     } else {
-      beta_zero <- glm.fit(x = model_matrix,
-                           y = y,
-                           family = family,
-                           weights = weights,
-                           offset = offset,
-                           control = list(epsilon = control$tolerance,
-                                          maxit = control_glm$maxit,
-                                          trace = FALSE))$coef
+      stop("cannot find valid starting values: please specify some!!",
+           call. = FALSE)
     }
   } else {
     beta_start <- as.numeric(beta_start)
@@ -338,44 +299,56 @@ geewa_binary <- function(formula = formula(data),
     beta_zero <- beta_start
   }
 
+  ## estimating marginalized odds ratios
+  orstrs <- c("independence", "exchangeable", "unstructured", "fixed")
+  icheck <- as.integer(match(orstr, orstrs, -1))
+  if (icheck < 1)
+    stop("'orstr' must be one of 'independence', 'exchangeable',
+           'unstructured' or 'fixed'")
+  if (orstr == "independence") {
+    adding_constant <- NULL
+    alpha_vector <- rep.int(1, choose(max(repeated), 2))
+  } else if (orstr == "fixed") {
+    adding_constant <- NULL
+    pairs_no <- choose(max(repeated), 2)
+    if (!is.numeric(alpha_vector))
+      stop("'alpha_vector' must be as a numeric vector")
+    if (length(alpha_vector) != pairs_no)
+      stop("'alpha_vector' must be of length ", pairs_no)
+  } else {
+    adding_constant <- control$or_adding_constant
+    alpha_vector <- get_marginalized_odds_ratios(round(y),
+                                                 id,
+                                                 repeated,
+                                                 weights,
+                                                 adding_constant,
+                                                 orstr)
+  }
+
+  ## change the estimation method to gee for bias corrected estimators
   method_original <- method
   if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
     method <- "gee"
   }
-  geesolver_fit <- fit_bingee_or(y,
-                                 model_matrix,
-                                 id,
-                                 repeated,
-                                 link,
-                                 beta_zero,
-                                 maxiter,
-                                 tolerance,
-                                 offset,
-                                 alpha_vector,
-                                 method,
-                                 weights,
-                                 control$step_maxiter,
-                                 control$step_multiplier,
-                                 control$jeffreys_power)
 
+  ## gee with or without adjustments
+  geesolver_fit <- fit_bingee_or(y, model_matrix, id, repeated, weights, link,
+                                 beta_zero, offset, maxiter, tolerance,
+                                 control$step_maxiter, control$step_multiplier,
+                                 control$jeffreys_power, method, alpha_vector)
+
+  ## only for bias-corrected estimators
   if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
-    method <- sub("bcgee", "brgee", method_original)
-    geesolver_fit <- fit_bingee_or(y,
-                                   model_matrix,
-                                   id,
-                                   repeated,
-                                   link,
-                                   as.numeric(c(geesolver_fit$beta_hat)),
-                                   1,
-                                   tolerance,
-                                   offset,
-                                   alpha_vector,
-                                   method,
-                                   weights,
-                                   1,
-                                   1,
-                                   control$jeffreys_power)
-    method <- method_original
+    if (geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1] <= tolerance) {
+      method <- sub("bcgee", "brgee", method_original)
+      geesolver_fit <- fit_bingee_or(y, model_matrix, id, repeated, weights,
+                                     link, as.numeric(c(geesolver_fit$beta_hat)),
+                                     offset, 1, tolerance, 1, 1,
+                                     control$jeffreys_power, method, alpha_vector)
+      method <- method_original
+    } else {
+      stop("bias-corrected estimator is NA due to non-convergence of the gee model")
+    }
   }
 
 
@@ -394,15 +367,15 @@ geewa_binary <- function(formula = formula(data),
   fit$bias_corrected_covariance <- geesolver_fit$bc_covariance
   dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
 
-  fit$association_structure <- or_structure
-  if (or_structure == "independence") {
+  fit$association_structure <- orstr
+  if (orstr == "independence") {
     fit$alpha <- 1
-  } else if (or_structure == "exchangeable") {
+  } else if (orstr == "exchangeable") {
     fit$alpha <- c(geesolver_fit$alpha)[1]
   } else {
     fit$alpha <- c(geesolver_fit$alpha)
   }
-  if (or_structure == "unstructured" | or_structure == "fixed") {
+  if (orstr == "unstructured" | orstr == "fixed") {
     pairs_matrix <- combn(max(repeated), 2)
     alpha_names <- paste0("alpha_",
                           paste(pairs_matrix[1, ], pairs_matrix[2, ], sep = ".")

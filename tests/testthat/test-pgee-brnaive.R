@@ -7,7 +7,7 @@ fitted_pgee_corr <- geewa(formula = formula,
                           data = respiratory,
                           phi_fixed = TRUE,
                           phi_value = 1,
-                          correlation_structure = "independence",
+                          corstr = "independence",
                           method = "pgee_jeffreys")
 
 fitted_brnaive_corr <- update(fitted_pgee_corr, method = "brgee_naive")
@@ -24,7 +24,7 @@ fitted_pgee_or <- geewa_binary(formula = formula,
                                  repeated = visit,
                                  link = "logit",
                                  data = respiratory,
-                                 or_structure = "independence",
+                                 orstr = "independence",
                                  method = "pgee_jeffreys")
 
 

@@ -13,14 +13,14 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec & y_vector,
                                       const arma::mat & model_matrix,
                                       const arma::vec & id_vector,
                                       const arma::vec & repeated_vector,
+                                      const arma::vec & weights_vector,
                                       const char * link,
                                       const char * family,
                                       const arma::vec & mu_vector,
                                       const arma::vec & eta_vector,
                                       const char * correlation_structure,
                                       const arma::vec & alpha_vector,
-                                      const double & phi,
-                                      const arma::vec & weights_vector) {
+                                      const double & phi) {
   double sample_size = max(id_vector);
   double params_no = model_matrix.n_cols;
   arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
@@ -79,11 +79,11 @@ Rcpp::List get_covariance_matrices_or(const arma::vec & y_vector,
                                       const arma::mat & model_matrix,
                                       const arma::vec & id_vector,
                                       const arma::vec & repeated_vector,
+                                      const arma::vec & weights_vector,
                                       const char * link,
                                       const arma::vec & mu_vector,
                                       const arma::vec & eta_vector,
-                                      const arma::vec & alpha_vector,
-                                      const arma::vec & weights_vector) {
+                                      const arma::vec & alpha_vector) {
   double sample_size = max(id_vector);
   double params_no = model_matrix.n_cols;
   int repeated_max = max(repeated_vector);

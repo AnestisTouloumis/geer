@@ -3,7 +3,7 @@ fit_gee <- geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period
                         link =  "logit",
                         id = id,
                         data = cerebrovascular,
-                        or_structure = "independence",
+                        orstr = "independence",
                         method = "gee")
 
 test_that("bcgee_naive", {

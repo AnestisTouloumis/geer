@@ -20,7 +20,7 @@
 #' The argument \code{repeated} can be safely ignored only if the \code{data} is
 #' written in such a way that the \eqn{t}-th observation in each cluster is
 #' recorded at the \eqn{t}-th measurement occasion or when
-#' \code{correlation_structure = "independence"}. Otherwise, the user
+#' \code{corstr = "independence"}. Otherwise, the user
 #' must provide \code{repeated}. The suggested set for the labels of
 #' \code{repeated} is \eqn{\{1,\ldots,T\}}, where \eqn{T} is the number of
 #' observed labels. If otherwise, the function recodes the given labels of
@@ -58,15 +58,15 @@
 #' @param control list that specifies the control variables for the GEE solver.
 #' @param beta_start numerical vector indicating the initial values of the
 #'        regression parameter vector.
-#' @param correlation_structure a character indicating the working correlation
+#' @param corstr a character indicating the working correlation
 #'        structure. Options include \code{"independence"}, \code{"exchangeable"},
 #'        \code{"ar1"}, \code{"m-dependent"} or \code{"unstructured"}.
 #' @param use_p if set to \code{FALSE} then do not subtract the number of
 #'        parameters when you are estimating phi or alpha.
 #' @param Mv a positive integer which must be specified whenever
-#'        \code{correlation_structure = "m-dependent"}.
+#'        \code{corstr = "m-dependent"}.
 #' @param alpha_vector numerical vector indicating the correlation structure for
-#'        when \code{correlation_structure == "fixed"}. Otherwise, it is ignored.
+#'        when \code{corstr == "fixed"}. Otherwise, it is ignored.
 #' @param phi_fixed logical indicating whether the phi value is fixed or not.
 #' @param phi_value positive number indicating the value of phi when
 #'        \code{phi_fixed == TRUE}.
@@ -122,7 +122,7 @@
 #'    data = leprosy,
 #'    id = id,
 #'    family = poisson(link = "log"),
-#'    correlation_structure = "exchangeable",
+#'    corstr = "exchangeable",
 #'    method = "gee")
 #' summary(fitted_model_gee, type = "bias-corrected")
 #' fitted_model_brgee_robust <-
@@ -145,7 +145,7 @@ geewa <- function(formula = formula(data),
                   weights,
                   control = list(...),
                   beta_start = NULL,
-                  correlation_structure = "independence",
+                  corstr = "independence",
                   use_p = TRUE,
                   Mv = 1,
                   alpha_vector = NULL,
@@ -176,8 +176,8 @@ geewa <- function(formula = formula(data),
     family <- family()
   icheck <- as.integer(match(family$family, familys, -1))
   if (icheck < 1)
-    stop("`family` must be one of `gaussian`, `poisson`, `binomial`, `Gamma`,
-           `inverse.gaussian`, `quasi`, `quasibinomial` or `quasipoisson`")
+    stop("'family' must be one of 'gaussian', 'poisson', 'binomial', 'Gamma',
+           'inverse.gaussian', 'quasi', 'quasibinomial' or 'quasipoisson'")
   if (family$family %in% c("quasi", "quasibinomial", "quasipoisson")) {
     if (family$family == "quasi") {
       family$family <- switch(family$varfun,
@@ -201,8 +201,8 @@ geewa <- function(formula = formula(data),
   link <- as.character(family$link)
   icheck <- as.integer(match(link, links, -1))
   if (icheck < 1)
-    stop("`link` must be one of `logit`, `probit`, `cauchit`, `cloglog`,
-           `identity, `log`, `sqrt``, `1/mu^2` or `inverse`")
+    stop("'link' must be one of 'logit', 'probit', 'cauchit', 'cloglog',
+           'identity', 'log', 'sqrt', '1/mu^2' or 'inverse'")
 
   ## extract response
   y <- model.response(model_frame, "any")
@@ -220,7 +220,8 @@ geewa <- function(formula = formula(data),
     if (!is.numeric(weights))
       stop("'weights' must be a numeric vector")
     if (any(weights <= 0))
-      stop("negative weights not allowed")
+      stop("non-positive
+           weights not allowed")
   }
   if (family$family == "binomial") {
     if (is.matrix(y) && ncol(y) == 2) {
@@ -253,18 +254,13 @@ geewa <- function(formula = formula(data),
   if (length(repeated) != length(y))
     stop("response variable and 'repeated' are not of same length")
 
+  ## check if id and repeated are identical
+  if (all(id == repeated))
+    stop("'repeated' and 'id' must be different")
 
-
-
-
-
-
-
-
-
-
-
-
+  ## check duplicated values in repeated for each subject
+  if (any(unlist(lapply(split(repeated, id), duplicated))))
+    stop("'repeated' does not have unique values per 'id'")
 
   ## offset term
   offset <- model.offset(model_frame)
@@ -284,23 +280,6 @@ geewa <- function(formula = formula(data),
   ## extract explanatory variable names
   xnames <- colnames(model_matrix)
 
-  ## order response, model matrix, id and repeated
-  ordered_index <- order(id, repeated)
-  y <- y[ordered_index]
-  model_matrix <- model_matrix[ordered_index, ]
-  id <- id[ordered_index]
-  repeated <- repeated[ordered_index]
-  offset <- offset[ordered_index]
-
-  ## check duplicated values in repeated for each subject
-  if (any(unlist(lapply(split(repeated, id), duplicated))))
-    stop("'repeated' does not have unique values per 'id'")
-
-  ## check if id and repeated are identical
-  if (all(id == repeated))
-    stop("'repeated' and 'id' must be different")
-
-
   ## convert model matrix to a matrix when p = 0
   if (length(xnames) == 1)
     model_matrix <- matrix(model_matrix, ncol = 1)
@@ -310,37 +289,12 @@ geewa <- function(formula = formula(data),
   if (qr_model_matrix$rank < ncol(model_matrix))
     stop("rank-deficient model matrix")
 
+  ## control variables
+  control <- do.call("geer_control", control)
+  maxiter <- control$maxiter
+  tolerance <- control$tolerance
 
-  ## check correlation structure
-  correlation_structures <- c("independence", "exchangeable", "ar1",
-                              "m-dependent", "unstructured", "fixed")
-  icheck <- as.integer(match(correlation_structure, correlation_structures,
-                             -1))
-  if (icheck < 1)
-    stop("`correlation_structure` must be one of `independence`,
-           `exchangeable`, `ar1`, `m-dependent`, `unstructured` or `fixed`")
-  if (correlation_structure !=  "m-dependent") Mv <- 1
-  if (correlation_structure == "m-dependent" & ((Mv <= 0) | Mv %% 1 != 0))
-    stop("Mv must be a positive integer number")
-  if (correlation_structure != "fixed") {
-    alpha_vector <- 0
-    alpha_fixed <- 0
-  } else {
-    if (is.null(alpha_vector))
-      stop("`alpha_vector` must be provided when `correlation_structure == fixed`")
-    alpha_vector <- as.numeric(alpha_vector)
-    repeated_max <- max(repeated)
-    if (length(alpha_vector) != choose(repeated_max, 2))
-      stop("`alpha_vector` must be of a vector of size ",
-           choose(repeated_max, 2))
-    corr_matrix <- get_correlation_matrix(correlation_structure,
-                                          alpha_vector,
-                                          repeated_max)
-    alpha_fixed <- 1
-  }
-
-
-  ## run fit
+  ## estimation method
   methods <- c("gee",
                "brgee_naive", "brgee_robust", "brgee_empirical",
                "bcgee_naive", "bcgee_robust", "bcgee_empirical",
@@ -351,16 +305,6 @@ geewa <- function(formula = formula(data),
     stop("`method` must be one of `gee`, `brgee_naive`, `brgee_robust`,
            `brgee_empirical`, `bcgee_naive`, `bcgee_robust`, `bcgee_empirical`
            or `pgee_jeffreys`")
-
-
-  ## control variable
-  control <- do.call("geer_control", control)
-
-  ## maxiter
-  maxiter <- control$maxiter
-
-  ## tolerance
-  tolerance <- control$tolerance
 
   ## initial beta
   if (is.null(beta_start)) {
@@ -375,27 +319,35 @@ geewa <- function(formula = formula(data),
       } else {
         type <- "AS_mean"
       }
-      beta_zero <- brglmFit(x = model_matrix,
+      glmfit <- try(brglmFit(x = model_matrix,
+                             y = y,
+                             family = family,
+                             weights = weights,
+                             offset = offset,
+                             control = list(epsilon = control$tolerance,
+                                            maxit = control_glm$maxit,
+                                            type = type,
+                                            trace = FALSE,
+                                            slowit = control_glm$slowit,
+                                            max_step_factor = control_glm$max_step_factor,
+                                            a = control$jeffreys_power)),
+                    silent = TRUE)
+    } else {
+      glmfit <- try(glm.fit(x = model_matrix,
                             y = y,
                             family = family,
                             weights = weights,
                             offset = offset,
                             control = list(epsilon = control$tolerance,
                                            maxit = control_glm$maxit,
-                                           type = type,
-                                           trace = FALSE,
-                                           slowit = control_glm$slowit,
-                                           max_step_factor = control_glm$max_step_factor,
-                                           a = control$jeffreys_power))$coefficients
+                                           trace = FALSE)),
+                    silent = TRUE)
+    }
+    if (!inherits(glmfit, "try-error")) {
+      beta_zero <- glmfit$coefficients
     } else {
-      beta_zero <- glm.fit(x = model_matrix,
-                           y = y,
-                           family = family,
-                           weights = weights,
-                           offset = offset,
-                           control = list(epsilon = control$tolerance,
-                                          maxit = control_glm$maxit,
-                                          trace = FALSE))$coef
+      stop("cannot find valid starting values: please specify some!!",
+           call. = FALSE)
     }
   } else {
     beta_start <- as.numeric(beta_start)
@@ -405,7 +357,7 @@ geewa <- function(formula = formula(data),
     beta_zero <- beta_start
   }
 
-  ## phi
+  ## check phi
   phi_fixed <- ifelse(phi_fixed, 1, 0)
   if (phi_fixed == 1) {
     phi_value <- as.numeric(phi_value)
@@ -415,66 +367,68 @@ geewa <- function(formula = formula(data),
     phi_value <- 1
   }
 
+  ## check correlation structure
+  corstrs <- c("independence", "exchangeable", "ar1",
+               "m-dependent", "unstructured", "fixed")
+  icheck <- as.integer(match(corstr, corstrs, -1))
+  if (icheck < 1)
+    stop("'corstr' must be one of 'independence',
+           'exchangeable', 'ar1', 'm-dependent', 'unstructured' or 'fixed'")
+  if (corstr !=  "m-dependent") Mv <- 1
+  if (corstr == "m-dependent" & ((Mv <= 0) | Mv %% 1 != 0))
+    stop("Mv must be a positive integer number")
+  if (corstr != "fixed") {
+    alpha_vector <- 0
+    alpha_fixed <- 0
+  } else {
+    if (is.null(alpha_vector))
+      stop("'alpha_vector' must be provided when 'corstr == fixed'")
+    alpha_vector <- as.numeric(alpha_vector)
+    repeated_max <- max(repeated)
+    if (length(alpha_vector) != choose(repeated_max, 2))
+      stop("'alpha_vector' must be of a vector of size ", choose(repeated_max, 2))
+    corr_matrix <- get_correlation_matrix(corstr,
+                                          alpha_vector,
+                                          repeated_max)
+    alpha_fixed <- 1
+  }
 
-
-  ## use or not p when updating phi and alpha
+  ## use p in the denominator when updating phi and alpha
   use_p <- as.logical(use_p)
   subtract_p <- ifelse(use_p, ncol(model_matrix), 0)
 
+  ## change the estimation method to gee for bias corrected estimators
   method_original <- method
   if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
     method <- "gee"
   }
 
-  geesolver_fit <- fit_geesolver_cc(y,
-                                    model_matrix,
-                                    id,
-                                    repeated,
-                                    link,
-                                    family$family,
-                                    beta_zero,
-                                    correlation_structure,
-                                    Mv,
-                                    subtract_p,
-                                    maxiter,
-                                    tolerance,
-                                    offset,
-                                    phi_value,
-                                    phi_fixed,
-                                    alpha_vector,
-                                    alpha_fixed,
-                                    method,
-                                    weights,
-                                    control$step_maxiter,
-                                    control$step_multiplier,
-                                    control$jeffreys_power)
+  ## gee with or without adjustments
+  geesolver_fit <- fit_geesolver_cc(y, model_matrix, id, repeated, weights,
+                                    link, family$family, beta_zero, offset,
+                                    maxiter, tolerance, control$step_maxiter,
+                                    control$step_multiplier, control$jeffreys_power,
+                                    method, subtract_p, alpha_vector, alpha_fixed,
+                                    corstr, Mv, phi_value, phi_fixed)
 
+  ## only for bias-corrected estimators
   if (method_original %in% c("bcgee_naive", "bcgee_robust", "bcgee_empirical")) {
-    method <- sub("bcgee", "brgee", method_original)
-    geesolver_fit <- fit_geesolver_cc(y,
-                                      model_matrix,
-                                      id,
-                                      repeated,
-                                      link,
-                                      family$family,
-                                      as.numeric(c(geesolver_fit$beta_hat)),
-                                      correlation_structure,
-                                      Mv,
-                                      subtract_p,
-                                      1,
-                                      tolerance,
-                                      offset,
-                                      phi_value,
-                                      phi_fixed,
-                                      alpha_vector,
-                                      alpha_fixed,
-                                      method,
-                                      weights,
-                                      1,
-                                      1,
-                                      control$jeffreys_power)
-    method <- method_original
+    if (geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1] <= tolerance) {
+      method <- sub("bcgee", "brgee", method_original)
+      geesolver_fit <- fit_geesolver_cc(y, model_matrix, id, repeated, weights,
+                                        link, family$family,
+                                        as.numeric(c(geesolver_fit$beta_hat)),
+                                        offset, 1, tolerance, 1, 1,
+                                        control$jeffreys_power, method,
+                                        subtract_p, geesolver_fit$alpha, 1,
+                                        corstr, Mv, geesolver_fit$phi, 1)
+      method <- method_original
+    } else {
+      stop("bias-corrected estimator is NA due to non-convergence of the gee model")
+    }
   }
+
+
 
 
   ## output
@@ -492,13 +446,13 @@ geewa <- function(formula = formula(data),
   fit$bias_corrected_covariance <- geesolver_fit$bc_covariance
   dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
 
-  fit$association_structure <- correlation_structure
-  if (correlation_structure == "independence") {
+  fit$association_structure <- corstr
+  if (corstr == "independence") {
     fit$alpha <- 0
   } else {
     fit$alpha <- c(geesolver_fit$alpha)
   }
-  if (correlation_structure == "unstructured" | correlation_structure == "fixed") {
+  if (corstr == "unstructured" | corstr == "fixed") {
     pairs_matrix <- combn(max(repeated), 2)
     alpha_names <- paste0("alpha_",
                           paste(pairs_matrix[1, ], pairs_matrix[2, ], sep = ".")

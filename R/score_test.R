@@ -25,7 +25,7 @@
 #'                              id = id,
 #'                              data = cerebrovascular,
 #'                              link = "logit",
-#'                              or_structure = "exchangeable",
+#'                              orstr = "exchangeable",
 #'                              method = "gee")
 #' reduced_model <- update(fitted_model, formula = ecg ~ period)
 #' score_test(fitted_model, reduced_model)
@@ -81,17 +81,17 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                         obj1$weights)
 
     covariance <- get_covariance_matrices_cc(obj1$y,
-                                          obj1$model_matrix,
-                                          obj1$id,
-                                          obj1$repeated,
-                                          obj1$family$link,
-                                          obj1$family$family,
-                                          obj0$fitted.values,
-                                          obj0$linear.predictors,
-                                          obj1$association_structure,
-                                          obj1$alpha,
-                                          obj1$phi,
-                                          obj1$weights)
+                                             obj1$model_matrix,
+                                             obj1$id,
+                                             obj1$repeated,
+                                             obj1$weights,
+                                             obj1$family$link,
+                                             obj1$family$family,
+                                             obj0$fitted.values,
+                                             obj0$linear.predictors,
+                                             obj1$association_structure,
+                                             obj1$alpha,
+                                             obj1$phi)
   } else {
     if (length(obj1$alpha) == 1) {
       association_alpha <- rep(obj1$alpha,
@@ -111,11 +111,11 @@ score_test <- function(object0, object1, cov_type = "robust"){
                                              obj1$model_matrix,
                                              obj1$id,
                                              obj1$repeated,
+                                             obj0$weights,
                                              obj1$family$link,
                                              obj0$fitted.values,
                                              obj0$linear.predictors,
-                                             association_alpha,
-                                             obj0$weights)
+                                             association_alpha)
   }
   icheck <- pmatch(cov_type,
                    c("robust", "naive", "bias-corrected", "df-adjusted"),

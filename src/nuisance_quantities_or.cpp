@@ -7,6 +7,7 @@
 Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec & response_vector,
                                                  const arma::vec & id_vector,
                                                  const arma::vec & repeated_vector,
+                                                 const arma::vec & weights_vector,
                                                  const double & adding_constant,
                                                  Rcpp::String or_structure){
   int sample_size = max(id_vector);
@@ -25,6 +26,7 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec & response_vect
   double pairs_no = cluster_size_max * (cluster_size_max - 1.0) / 2.0;
   arma::vec counts = arma::zeros(4.0 * pairs_no);
   for(int l=1; l<sample_size+1; l++) {
+    arma::vec weights_vector_i = weights_vector(find(id_vector == l));
     int k = 1;
     for(int categ_one = 1; categ_one < 3; categ_one++) {
       for(int categ_two = 1; categ_two < 3; categ_two++) {
@@ -32,7 +34,8 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec & response_vect
           if(wide_responses_matrix(l - 1, i - 1) == categ_one) {
             for(int j = i + 1; j < cluster_size_max + 1; j++) {
               if(wide_responses_matrix(l - 1, j - 1) == categ_two) {
-                counts(k - 1) += 1;
+                counts(k - 1) += std::min(weights_vector_i(i - 1),
+                                          weights_vector_i(j - 1));
               }
               k += 1;
             }
@@ -94,9 +97,11 @@ double get_bivariate_distribution(const double & row_prob,
   double odds_ratio_new = odds_ratio;
   if (row_prob > (1 - tol) || col_prob > (1.0 - tol)) {
     odds_ratio_new = 1;
+    return ans;
   }
   if (row_prob < (tol) || col_prob < (tol)) {
     odds_ratio_new = 1;
+    return ans;
   }
   if (odds_ratio_new == 1) {
     return ans;
@@ -149,7 +154,7 @@ arma::mat get_v_matrix_inverse_or(const arma::vec & mu_vector,
   arma::mat v_matrix = get_v_matrix_or(mu_vector,
                                        odds_ratios_vector,
                                        weights_vector);
-  arma::mat ans = arma::pinv(v_matrix);
+  arma::mat ans = arma::inv(v_matrix, arma::inv_opts::allow_approx);
   return ans;
 }
 //==============================================================================

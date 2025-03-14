@@ -57,7 +57,7 @@
 #'                              id = id,
 #'                              data = cerebrovascular,
 #'                              link = "logit",
-#'                              or_structure = "exchangeable")
+#'                              orstr = "exchangeable")
 #' vcov(fitted_model)
 #' vcov(fitted_model, cov_type = "bias-corrected")
 #' @export

@@ -11,14 +11,14 @@ fit_geewa <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
                    id = id,
                    family = binomial(link = link),
                    data = cerebrovascular,
-                   correlation_structure = association,
+                   corstr = association,
                    method = method_gee)
 fit_geewa_binary <-
   geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
                id = id,
                link = link,
                data = cerebrovascular,
-               or_structure = association,
+               orstr = association,
                method = method_gee)
 
 

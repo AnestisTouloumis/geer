@@ -25,7 +25,7 @@
 #'                              id = id,
 #'                              data = cerebrovascular,
 #'                              link = "logit",
-#'                              or_structure = "exchangeable",
+#'                              orstr = "exchangeable",
 #'                              method = "gee")
 #' reduced_model <- update(fitted_model, formula = ecg ~ period)
 #' wald_test(fitted_model, reduced_model)

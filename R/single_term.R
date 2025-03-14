@@ -41,7 +41,7 @@
 #'       repeated = visit,
 #'       family = binomial(link = "probit"),
 #'       data = respiratory[respiratory$center==2, ],
-#'       correlation_structure = "ar1",
+#'       corstr = "ar1",
 #'       method = "gee")
 #' add1(fitted_model,
 #'      scope = .~. + baseline:age + age:visit + treatment:age + age:gender,

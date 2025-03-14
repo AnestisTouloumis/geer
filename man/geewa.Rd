@@ -13,7 +13,7 @@ geewa(
   weights,
   control = list(...),
   beta_start = NULL,
-  correlation_structure = "independence",
+  corstr = "independence",
   use_p = TRUE,
   Mv = 1,
   alpha_vector = NULL,
@@ -49,7 +49,7 @@ fitting process. Should be NULL or a numeric vector.}
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameter vector.}
 
-\item{correlation_structure}{a character indicating the working correlation
+\item{corstr}{a character indicating the working correlation
 structure. Options include \code{"independence"}, \code{"exchangeable"},
 \code{"ar1"}, \code{"m-dependent"} or \code{"unstructured"}.}
 
@@ -57,10 +57,10 @@ structure. Options include \code{"independence"}, \code{"exchangeable"},
 parameters when you are estimating phi or alpha.}
 
 \item{Mv}{a positive integer which must be specified whenever
-\code{correlation_structure = "m-dependent"}.}
+\code{corstr = "m-dependent"}.}
 
 \item{alpha_vector}{numerical vector indicating the correlation structure for
-when \code{correlation_structure == "fixed"}. Otherwise, it is ignored.}
+when \code{corstr == "fixed"}. Otherwise, it is ignored.}
 
 \item{phi_fixed}{logical indicating whether the phi value is fixed or not.}
 
@@ -130,7 +130,7 @@ labels of \code{id} onto this set.
 The argument \code{repeated} can be safely ignored only if the \code{data} is
 written in such a way that the \eqn{t}-th observation in each cluster is
 recorded at the \eqn{t}-th measurement occasion or when
-\code{correlation_structure = "independence"}. Otherwise, the user
+\code{corstr = "independence"}. Otherwise, the user
 must provide \code{repeated}. The suggested set for the labels of
 \code{repeated} is \eqn{\{1,\ldots,T\}}, where \eqn{T} is the number of
 observed labels. If otherwise, the function recodes the given labels of
@@ -158,7 +158,7 @@ fitted_model_gee <- geewa(
    data = leprosy,
    id = id,
    family = poisson(link = "log"),
-   correlation_structure = "exchangeable",
+   corstr = "exchangeable",
    method = "gee")
 summary(fitted_model_gee, type = "bias-corrected")
 fitted_model_brgee_robust <-

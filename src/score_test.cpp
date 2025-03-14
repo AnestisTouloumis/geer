@@ -4,7 +4,6 @@
 #include "variance_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "utils.h"
-#include "covariance_matrices.h"
 #include "nuisance_quantities_or.h"
 
 //============================ estimating equations ============================

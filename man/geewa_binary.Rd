@@ -10,7 +10,7 @@ geewa_binary(
   link = "logit",
   id = id,
   repeated = NULL,
-  or_structure = "exchangeable",
+  orstr = "exchangeable",
   control = geer_control(),
   beta_start = NULL,
   alpha_vector = NULL,
@@ -37,7 +37,7 @@ as for other regression models. See the documentation of \link{glm} and
 \item{repeated}{an optional vector that identifies the order of observations
 within each cluster.}
 
-\item{or_structure}{a character indicating the working association
+\item{orstr}{a character indicating the working association
 structure. Options include \code{"independence"}, \code{"exchangeable"},
 \code{"unstructured"} or \code{"fixed"}.}
 
@@ -47,8 +47,8 @@ structure. Options include \code{"independence"}, \code{"exchangeable"},
 regression parameter vector.}
 
 \item{alpha_vector}{numerical vector indicating the association structure for
-when \code{or_structure == "fixed"}. It is ignored for all other
-possible values of \code{or_structure}.}
+when \code{orstr == "fixed"}. It is ignored for all other
+possible values of \code{orstr}.}
 
 \item{method}{a character indicating the form of estimating equations.
 Options include \code{"gee"}, \code{"brgee_naive"},
@@ -129,7 +129,7 @@ solved, i.e. no adjustment vector is added. If \code{method = "brgee_naive"},
 then the GEE will be adjusted to produce naive, robust or empirical
 bias-reducing estimators, respectively. If \code{method = "bcgee_naive"},
 \code{method = "bcgee_robust"} or \code{method = "bcgee_empirical"}, then the
-GEE will be adjusted to produce naive, robust or emprical bias-corrected
+GEE will be adjusted to produce naive, robust or empirical bias-corrected
 estimators. If \code{method = "pgee_jeffreys"}, then penalized GEE will be
 solved.
 }
@@ -140,7 +140,7 @@ fitted_model <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*a
                              repeated = visit,
                              link = "probit",
                              data = respiratory[respiratory$center==2, ],
-                             or_structure = "independence",
+                             orstr = "independence",
                              method = "pgee_jeffreys")
 summary(fitted_model, type = "bias-corrected")
 
@@ -150,7 +150,7 @@ fitted_model_gee <- geewa_binary(
   id = fid,
   data = obesity,
   link = "logit",
-  or_structure = "independence",
+  orstr = "independence",
   method = "gee")
 summary(fitted_model_gee, type = "bias-corrected")
 fitted_model_brgee_robust <-

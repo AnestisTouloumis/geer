@@ -59,7 +59,7 @@
 #'                            id = id,
 #'                            data = cerebrovascular,
 #'                            link = "logit",
-#'                            or_structure = "exchangeable",
+#'                            orstr = "exchangeable",
 #'                            method = "gee")
 #' fitted_brgee <- update(fitted_gee, method = "brgee_robust")
 #' gee_criteria(fitted_gee, fitted_brgee)

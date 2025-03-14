@@ -5,7 +5,7 @@ fit_gee <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
                  phi_fixed = TRUE,
                  phi_value = 1,
                  data = cerebrovascular,
-                 correlation_structure = "independence",
+                 corstr = "independence",
                  method = "gee")
 
 test_that("bcgee_naive", {

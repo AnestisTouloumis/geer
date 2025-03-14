@@ -13,7 +13,7 @@ fit_model <-
                id = id,
                link = link,
                data = cerebrovascular,
-               or_structure = association,
+               orstr = association,
                method = method_gee)
 reduced_model <-
   update(fit_model, formula = I(ecg == "normal") ~ factor(period))
