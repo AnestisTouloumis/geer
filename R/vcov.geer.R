@@ -1,33 +1,26 @@
-#' Returns the variance-covariance matrix of the main parameters of a fitted
-#' model geer object.
-#'
-#' Default is to obtain the estimated sandwich (robust) covariance matrix. Setting
-#' \code{type = "naive"} obtains the estimated model-based (naive) covariance
-#' matrix, \code{type = "bias-corrected"} obtains the estimated bias-corrected
-#' covariance matrix and \code{type = "df-adjusted"} obtains the estimated degrees
-#' of freedom adjusted robust covariance matrix.
-#'
-#' @title Calculate Variance-Covariance Matrix for a Fitted \code{geer} Object.
+#' @title
+#' Calculate variance-covariance matrix from \code{geer} objects
 #'
 #' @aliases vcov vcov.geer
 #'
 #' @method vcov geer
 #'
-#' @param object a fitted model geer object.
-#' @param cov_type character indicating whether the sandwich (robust) covariance
-#' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-#' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-#' covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
-#' default, the robust covariance matrix is returned.
+#' @description
+#' Returns the variance-covariance matrix of the main parameters of a fitted
+#' model geer object. The "main" parameters of model correspond to those returned
+#' by [stats::coef()].
 #'
+#' @param object a fitted model \code{geer} object.
+#' @param cov_type character indicating whether the sandwich (robust) covariance
+#'        matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+#'        matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+#'        matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#'        covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
+#'        default, the robust covariance matrix is returned.
 #' @param ... additional argument(s) for methods.
 #'
-#' @return A matrix of the estimated covariances between the parameter estimates
-#' in the linear predictor of the GEE model. This should have row and column
-#' names corresponding to the parameter names given by the \code{coef} method.
-#'
-#' @details If \code{cov_type = "robust"}, then the so-called sandwich or
+#' @details
+#' If \code{cov_type = "robust"}, then the so-called sandwich or
 #' robust covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
 #'
 #' If \code{cov_type = "naive"}, then the so-called naive or
@@ -39,7 +32,13 @@
 #' If \code{cov_type = "bias-corrected"}, then the bias-corrected covariance matrix
 #' proposed by \cite{Morel, Bokossa and Neerchal (2003)} is returned.
 #'
-#' @references Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
+#' @return
+#' A matrix of the estimated covariances between the parameter estimates
+#' in the linear predictor of the model. This should have row and column
+#' names corresponding to the parameter names given by the [stats::coef()] method.
+#'
+#' @references
+#' Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
 #' estimators for generalized estimating equations. \emph{Biometrika} \bold{73},
 #' 13-–22.
 #'
@@ -48,7 +47,7 @@
 #' \emph{Journal of Econometrics} \bold{29}, 305–-325.
 #'
 #' Morel J.G., Bokossa M.C. and Neerchal N.K, (2003) Small sample correction
-#' for the variance of GEE estimators. \emph{Biometrical Journal 2003} \bold{45},
+#' for the variance of GEE estimators. \emph{Biometrical Journal} \bold{45},
 #' 395–-409.
 #'
 #' @examples
@@ -60,6 +59,7 @@
 #'                              orstr = "exchangeable")
 #' vcov(fitted_model)
 #' vcov(fitted_model, cov_type = "bias-corrected")
+#'
 #' @export
 
 vcov.geer <- function(object, cov_type = "robust", ...) {
@@ -82,7 +82,7 @@ vcov.geer <- function(object, cov_type = "robust", ...) {
             0.5)
       robust_covariance <- object$robust_covariance
       naive_covariance <- object$naive_covariance
-      trace_robust_naive_inverse <- sum(robust_covariance * t(solve(naive_covariance)))
+      trace_robust_naive_inverse <- sum(diag(solve(naive_covariance, robust_covariance)))
       ksi <-
         max(1,
             trace_robust_naive_inverse/parameters_no)

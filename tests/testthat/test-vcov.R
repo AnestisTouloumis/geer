@@ -1,9 +1,12 @@
-link <- sample(c("logit", "probit", "cloglog", "cauchit"), 1)
-association <- sample(c("independence", "exchangeable", "unstructured"), 1)
-method_gee <-  sample(c("gee", "brgee_naive", "brgee_robust", "brgee_empirical",
+link <- sample(c("logit", "probit", "cloglog", "cauchit"),
+               1)
+association <- sample(c("independence", "exchangeable", "unstructured"),
+                      1)
+method_gee <-  sample(c("gee",
+                        "brgee_naive", "brgee_robust", "brgee_empirical",
                         "bcgee_naive", "bcgee_robust", "bcgee_empirical",
-                        "pgee_jeffreys"), 1)
-
+                        "pgee_jeffreys"),
+                      1)
 print(c(link, association, method_gee))
 
 data("cerebrovascular")
@@ -20,7 +23,6 @@ fit_geewa_binary <-
                data = cerebrovascular,
                orstr = association,
                method = method_gee)
-
 
 test_that("vcov-robust", {
   expect_equal(vcov(fit_geewa,
@@ -52,7 +54,6 @@ test_that("vcov-bias-corrected", {
                     cov_type = "bias-corrected"),
                fit_geewa_binary$bias_corrected_covariance)
 })
-
 
 test_that("vcov-df-adjusted", {
   expect_equal(vcov(fit_geewa,

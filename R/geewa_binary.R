@@ -403,6 +403,8 @@ geewa_binary <- function(formula = formula(data),
   fit$obs_no <- nrow(model_matrix)
   fit$family <- binomial(link = link)
 
+
+  fit$data <- data
   fit$fitted.values <- c(geesolver_fit$fitted)
   fit$residuals <- c(geesolver_fit$residuals)
   fit$linear.predictors <- c(geesolver_fit$eta)

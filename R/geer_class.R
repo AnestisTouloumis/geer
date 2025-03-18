@@ -104,7 +104,6 @@ print.summary.geer <- function(x, ...) {
   }
 }
 
-
 #' @aliases coefficients
 #' @method coef geer
 #' @export
@@ -120,9 +119,94 @@ fitted.geer <- function(object, ...){
   object$fitted.values
 }
 
-#' @method confint geer
+
+#' @method model.matrix geer
 #' @export
-confint.geer <- function(object, parm, level = 0.95, type = "robust", ...) {
+model.matrix.geer <-	function(object,...){
+  model.matrix(object = object$terms, data = object$data, contrasts = object$contrasts)
+  }
+
+
+#' @title
+#' Extract model residuals from \code{geer} objects
+#'
+#' @aliases resid
+#'
+#' @method residuals geer
+#'
+#' @description
+#' Extract model residuals from \code{geer} objects.
+#'
+#' @param object a `geer` object.
+#' @param type the type of residuals which should be returned. The alternatives are:
+#' "working", "deviance" and "pearson". Can be abbreviated.
+#' @param ... other arguments.
+#'
+#' @details
+#' If \code{type = "working"}, then the raw residuals will be returned.
+#'
+#' If \code{type = "pearson"}, then the pearson residuals will be returned. The
+#' marginal distribution of the responses will be defined by the `object`.
+#'
+#' If \code{type = "deviance"}, then the deviance residuals will be returned. The
+#' marginal distribution of the responses will be defined by the `object`.
+#'
+#' @return
+#' A vector with the observed residuals type `type`.
+#'
+#' @export
+residuals.geer <- function(object,
+                           type = c("working", "pearson", "deviance"),
+                           ...) {
+  type <- match.arg(type)
+  y <- object$y
+  r <- object$residuals
+  mu <- object$fitted.values
+  wts <- object$weights
+  res <- switch(type,
+                deviance = if (object$df.residual > 0) {
+                  d.res <- sqrt(pmax((object$family$dev.resids)(y, mu, wts), 0))
+                  ifelse(y > mu, d.res, -d.res)
+                  } else rep.int(0, length(mu)),
+                pearson = (y - mu) * sqrt(wts)/sqrt(object$family$variance(mu)),
+                working = r,
+                response = y - mu,
+                partial = r
+                )
+  res
+}
+
+#' @title
+#' Confidence intervals for model parameters from a \code{geer} object
+#'
+#' @method confint geer
+#'
+#' @description
+#' Computes confidence intervals for one or more parameters from a \code{geer} object.
+#'
+#' @param object a fitted model \code{geer} object.
+#' @param parm a specification of which parameters are to be given confidence intervals,
+#'        either a vector of numbers or a vector of names. If missing, all parameters
+#'        are considered.
+#' @param level the confidence level required.
+#' @param cov_type character indicating whether the sandwich (robust) covariance
+#'        matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
+#'        matrix (\code{cov_type = "naive"}), the bias-corrected covariance
+#'        matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
+#'        covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
+#'        the standard errors of the parameter(s). By default, the robust
+#'        covariance matrix is used.
+#' @param ... additional argument(s) for methods.
+#'
+#' @return
+#' A matrix (or vector) with columns giving lower and upper confidence limits for
+#' each parameter. These will be labelled as (1-level)/2 and 1 - (1-level)/2 in
+#' % (by default 2.5% and 97.5%).
+#'
+#' @seealso [stats::confint()] and [stats::confint.default()].
+#'
+#' @export
+confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
   cf <- coef(object)
   pnames <- names(cf)
   if (missing(parm)) {
@@ -135,39 +219,32 @@ confint.geer <- function(object, parm, level = 0.95, type = "robust", ...) {
   pct <- format_perc(a, 3)
   fac <- qnorm(a)
   ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
-  ses <- sqrt(diag(vcov(object, type = type)))[parm]
+  ses <- sqrt(diag(vcov(object, cov_type = cov_type)))[parm]
   ci[] <- cf[parm] + ses %o% fac
   ci
 }
 
 
-#' @method residuals geer
-#' @export
-residuals.geer <- function(object, type = c("working", "pearson"), ...) {
-  type <- match.arg(type)
-  r   <- object$residuals
-  mu  <- object$fitted.values
-  res <- switch(type,
-                pearson = r/sqrt(object$family$variance(mu)),
-                working = r)
-  res
-}
-
 
 #' @title Predict Method for Generalized Estimating Equations Fits
+#'
 #' @description Obtains predictions and optionally estimates standard errors of those predictions from a fitted generalized estimating equations object.
+#'
 #' @param object a fitted object of class inheriting from \code{geewa} or \code{geewa_binary}.
 #' @param newdata	optionally, a data frame in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.
 #' @param type the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.
 #' @param se.fit logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.
 #' @param cov_type an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator (\code{"robust"}), bias-corrected estimator (\code{"bias-corrected"}), degrees of freedom adjusted bias-corrected estimator (\code{"bias-corrected"}) and the model-based or naive estimator (\code{"naive"}). As default, \code{cov_type = "robust"}.
 #' @param ... further arguments passed to or from other methods.
+#'
 #' @return If \code{se.fit = FALSE}, a vector or matrix of predictions.
 #'
 #' If \code{se.fit = TRUE}, a list with components
 #' \item{fit}{Predictions, as for \code{se.fit = FALSE}.}
 #' \item{se.fit}{Estimated standard errors.}
+#'
 #' @method predict geer
+#'
 #' @export
 predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
                          cov_type = c("robust", "bias-corrected", "naive",

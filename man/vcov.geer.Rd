@@ -3,12 +3,12 @@
 \name{vcov.geer}
 \alias{vcov.geer}
 \alias{vcov}
-\title{Calculate Variance-Covariance Matrix for a Fitted \code{geer} Object.}
+\title{Calculate variance-covariance matrix from \code{geer} objects}
 \usage{
 \method{vcov}{geer}(object, cov_type = "robust", ...)
 }
 \arguments{
-\item{object}{a fitted model geer object.}
+\item{object}{a fitted model \code{geer} object.}
 
 \item{cov_type}{character indicating whether the sandwich (robust) covariance
 matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
@@ -21,20 +21,15 @@ default, the robust covariance matrix is returned.}
 }
 \value{
 A matrix of the estimated covariances between the parameter estimates
-in the linear predictor of the GEE model. This should have row and column
-names corresponding to the parameter names given by the \code{coef} method.
+in the linear predictor of the model. This should have row and column
+names corresponding to the parameter names given by the [stats::coef()] method.
 }
 \description{
 Returns the variance-covariance matrix of the main parameters of a fitted
-model geer object.
+model geer object. The "main" parameters of model correspond to those returned
+by [stats::coef()].
 }
 \details{
-Default is to obtain the estimated sandwich (robust) covariance matrix. Setting
-\code{type = "naive"} obtains the estimated model-based (naive) covariance
-matrix, \code{type = "bias-corrected"} obtains the estimated bias-corrected
-covariance matrix and \code{type = "df-adjusted"} obtains the estimated degrees
-of freedom adjusted robust covariance matrix.
-
 If \code{cov_type = "robust"}, then the so-called sandwich or
 robust covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
 
@@ -56,6 +51,7 @@ fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
                              orstr = "exchangeable")
 vcov(fitted_model)
 vcov(fitted_model, cov_type = "bias-corrected")
+
 }
 \references{
 Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
@@ -67,6 +63,6 @@ covariance matrix estimators with improved finite sample properties.
 \emph{Journal of Econometrics} \bold{29}, 305–-325.
 
 Morel J.G., Bokossa M.C. and Neerchal N.K, (2003) Small sample correction
-for the variance of GEE estimators. \emph{Biometrical Journal 2003} \bold{45},
+for the variance of GEE estimators. \emph{Biometrical Journal} \bold{45},
 395–-409.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer.control.R
 \name{geer_control}
 \alias{geer_control}
-\title{Auxiliary for Controlling GEE fitting}
+\title{Auxiliary for controlling fitting of \code{geer} objects}
 \usage{
 geer_control(
   tolerance = 1e-06,
@@ -31,7 +31,13 @@ Default is `1`.}
 \item{jeffreys_power}{positive real indicating the power of the Jeffreys-prior
 penalty. Default is `0.5`.}
 }
+\value{
+A list with components named as the arguments.
+}
 \description{
-Auxiliary function for GEE fitting via the functions \link{geewa} and
-\link{geewa_binary}. It may be used to construct the \code{control} argument.
+Auxiliary function for GEE fitting via [geewa()] and [geewa_binary()].
+It may be used to construct a \code{control} argument to either function.
+}
+\seealso{
+[stats::glm.control()] and [brglm2::brglmControl()].
 }

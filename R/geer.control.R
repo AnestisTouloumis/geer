@@ -1,7 +1,9 @@
-#' Auxiliary for Controlling GEE fitting
+#' @title
+#' Auxiliary for controlling fitting of \code{geer} objects
 #'
-#' Auxiliary function for GEE fitting via the functions \link{geewa} and
-#' \link{geewa_binary}. It may be used to construct the \code{control} argument.
+#' @description
+#' Auxiliary function for GEE fitting via [geewa()] and [geewa_binary()].
+#' It may be used to construct a \code{control} argument to either function.
 #'
 #' @param tolerance positive convergence tolerance. Default is `1e-06`.
 #' @param maxiter positive integer giving the maximal number of iterations
@@ -14,6 +16,12 @@
 #'        Default is `1`.
 #' @param jeffreys_power positive real indicating the power of the Jeffreys-prior
 #'        penalty. Default is `0.5`.
+#'
+#' @returns
+#' A list with components named as the arguments.
+#'
+#' @seealso [stats::glm.control()] and [brglm2::brglmControl()].
+#'
 #' @export
 geer_control <- function(tolerance = 1e-06,
                          maxiter = 500,
