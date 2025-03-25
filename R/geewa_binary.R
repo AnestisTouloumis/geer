@@ -409,6 +409,9 @@ geewa_binary <- function(formula = formula(data),
   fit$residuals <- c(geesolver_fit$residuals)
   fit$linear.predictors <- c(geesolver_fit$eta)
 
+  fit$df.residuals <- nrow(model_matrix) - ncol(model_matrix)
+
+
   fit$id <- as.numeric(id)
   fit$repeated <- as.numeric(repeated)
   fit$clusters_no <- max(id)

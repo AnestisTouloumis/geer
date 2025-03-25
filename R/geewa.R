@@ -498,7 +498,7 @@ geewa <- function(formula = formula(data),
   fit$method <- method
   fit$weights <- weights
   fit$offset <- geesolver_fit$offset
-
+  fit$df.residuals <- nrow(model_matrix) - ncol(model_matrix)
 
   class(fit) <- "geer"
 

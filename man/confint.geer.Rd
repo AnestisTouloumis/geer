@@ -9,29 +9,34 @@
 \arguments{
 \item{object}{a fitted model \code{geer} object.}
 
-\item{parm}{a specification of which parameters are to be given confidence intervals,
-either a vector of numbers or a vector of names. If missing, all parameters
-are considered.}
+\item{parm}{a specification of which parameters are to be given
+    confidence intervals, either a vector of numbers or a vector of
+    names.  If missing, all parameters are considered.}
 
 \item{level}{the confidence level required.}
 
-\item{cov_type}{character indicating whether the sandwich (robust) covariance
-matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
-the standard errors of the parameter(s). By default, the robust
+\item{cov_type}{character indicating the type of the covariance matrix used to
+calculate the standard errors of the parameter(s). Option include the
+sandwich (robust) covariance matrix (\code{cov_type = "robust"}),
+the model-based (naive) covariance matrix (\code{cov_type = "naive"}),
+the bias-corrected covariance matrix (\code{cov_type = "bias-corrected"})
+and the degrees of freedom adjusted covariance matrix
+(\code{cov_type = "df-adjusted"}). By default, the robust
 covariance matrix is used.}
 
 \item{...}{additional argument(s) for methods.}
 }
 \value{
 A matrix (or vector) with columns giving lower and upper confidence limits for
-each parameter. These will be labelled as (1-level)/2 and 1 - (1-level)/2 in
-% (by default 2.5% and 97.5%).
+each parameter. These will be labelled as \code{(1-level)/2} and
+\code{1 - (1-level)/2} in \code{\%} (by default \code{2.5\%} and \code{97.5\%}).
 }
 \description{
 Computes confidence intervals for one or more parameters from a \code{geer} object.
+}
+\details{
+The references in [vcov.geer()] include the formulae for the covariance
+type implied by \code{cov_type}.
 }
 \seealso{
 [stats::confint()] and [stats::confint.default()].

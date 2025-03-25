@@ -11,12 +11,13 @@
 #' by [stats::coef()].
 #'
 #' @param object a fitted model \code{geer} object.
-#' @param cov_type character indicating whether the sandwich (robust) covariance
+#' @param cov_type character indicating the type of the covariance matrix to be
+#'        returned. Options include the sandwich (robust) covariance
 #'        matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
 #'        matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-#'        matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-#'        covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
-#'        default, the robust covariance matrix is returned.
+#'        matrix (\code{cov_type = "bias-corrected"}) and the degrees of freedom adjusted
+#'        covariance matrix (\code{cov_type = "df-adjusted"}). By default, the
+#'        robust covariance matrix is returned.
 #' @param ... additional argument(s) for methods.
 #'
 #' @details
@@ -74,9 +75,9 @@ vcov.geer <- function(object, cov_type = "robust", ...) {
       total_obs <- object$obs_no
       sample_size <- object$clusters_no
       parameters_no <- length(object$coefficients)
+      df_residuals <- object$df.residuals
       kappa <-
-        ((total_obs - 1)/(total_obs - parameters_no)) *
-        (sample_size / (sample_size - 1))
+        ((total_obs - 1)/df_residuals) * (sample_size / (sample_size - 1))
       delta <-
         min(parameters_no / (sample_size - parameters_no),
             0.5)

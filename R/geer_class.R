@@ -33,6 +33,7 @@ geer.default <- function(x, ...) {
   object$method <- x$method
   object$levels <- x$levels
   object$contrasts <- x$contrasts
+  object$df.residuals <- x$df.residuals
   class(object) <- "geer"
   object
 }
@@ -119,7 +120,6 @@ fitted.geer <- function(object, ...){
   object$fitted.values
 }
 
-
 #' @method model.matrix geer
 #' @export
 model.matrix.geer <-	function(object,...){
@@ -137,43 +137,50 @@ model.matrix.geer <-	function(object,...){
 #' @description
 #' Extract model residuals from \code{geer} objects.
 #'
-#' @param object a `geer` object.
-#' @param type the type of residuals which should be returned. The alternatives are:
-#' "working", "deviance" and "pearson". Can be abbreviated.
+#' @param object a fitted model \code{geer} object.
+#' @param type character indicating whether the type of the residuals to be
+#'             returned. Options include the working residuals (\code{type =
+#'             "working"}), the pearson residuals (\code{type = "pearson"}) and
+#'             the deviance residuals (\code{type = "deviance"}). By default, the
+#'             \code{"working"} residuals are returned.
 #' @param ... other arguments.
 #'
 #' @details
-#' If \code{type = "working"}, then the raw residuals will be returned.
+#' If \code{type = "working"}, then the raw residuals (\code{observed - fitted})
+#' are returned.
 #'
-#' If \code{type = "pearson"}, then the pearson residuals will be returned. The
-#' marginal distribution of the responses will be defined by the `object`.
+#' If \code{type = "pearson"}, then the pearson residuals are returned. The
+#' marginal distribution of the responses is defined by \code{object$family}.
 #'
-#' If \code{type = "deviance"}, then the deviance residuals will be returned. The
-#' marginal distribution of the responses will be defined by the `object`.
+#' If \code{type = "deviance"}, then the deviance residuals are returned. The
+#' marginal distribution of the responses is defined by \code{object$family}.
 #'
 #' @return
-#' A vector with the observed residuals type `type`.
+#' A vector with the observed residuals type \code{type}.
 #'
 #' @export
 residuals.geer <- function(object,
-                           type = c("working", "pearson", "deviance"),
+                           type = "working",
                            ...) {
-  type <- match.arg(type)
-  y <- object$y
-  r <- object$residuals
-  mu <- object$fitted.values
-  wts <- object$weights
-  res <- switch(type,
+  icheck <- pmatch(type,
+                   c("working", "pearson", "deviance"),
+                   nomatch = 0,
+                   duplicates.ok = FALSE)
+  if (icheck == 0) stop("unknown type for the residuals")
+  response_vector <- object$y
+  raw_residuals <- object$residuals
+  mu_vector <- object$fitted.values
+  weight_vector <- object$weights
+  ans <- switch(type,
                 deviance = if (object$df.residual > 0) {
-                  d.res <- sqrt(pmax((object$family$dev.resids)(y, mu, wts), 0))
-                  ifelse(y > mu, d.res, -d.res)
-                  } else rep.int(0, length(mu)),
-                pearson = (y - mu) * sqrt(wts)/sqrt(object$family$variance(mu)),
-                working = r,
-                response = y - mu,
-                partial = r
+                  deviance_res <-
+                    sqrt(pmax((object$family$dev.resids)(response_vector, mu_vector, weight_vector), 0))
+                  ifelse(response_vector > mu_vector, deviance_res, -deviance_res)
+                  } else rep.int(0, length(mu_vector)),
+                pearson = (response_vector - mu_vector) * sqrt(weight_vector)/sqrt(object$family$variance(mu_vector)),
+                working = raw_residuals
                 )
-  res
+  ans
 }
 
 #' @title
@@ -184,44 +191,45 @@ residuals.geer <- function(object,
 #' @description
 #' Computes confidence intervals for one or more parameters from a \code{geer} object.
 #'
+#' @inheritParams stats::confint
 #' @param object a fitted model \code{geer} object.
-#' @param parm a specification of which parameters are to be given confidence intervals,
-#'        either a vector of numbers or a vector of names. If missing, all parameters
-#'        are considered.
-#' @param level the confidence level required.
-#' @param cov_type character indicating whether the sandwich (robust) covariance
-#'        matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-#'        matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-#'        matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-#'        covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
-#'        the standard errors of the parameter(s). By default, the robust
+#' @param cov_type character indicating the type of the covariance matrix used to
+#'        calculate the standard errors of the parameter(s). Option include the
+#'        sandwich (robust) covariance matrix (\code{cov_type = "robust"}),
+#'        the model-based (naive) covariance matrix (\code{cov_type = "naive"}),
+#'        the bias-corrected covariance matrix (\code{cov_type = "bias-corrected"})
+#'        and the degrees of freedom adjusted covariance matrix
+#'        (\code{cov_type = "df-adjusted"}). By default, the robust
 #'        covariance matrix is used.
-#' @param ... additional argument(s) for methods.
+#'
+#' @details
+#' The references in [vcov.geer()] include the formulae for the covariance
+#' type implied by \code{cov_type}.
 #'
 #' @return
 #' A matrix (or vector) with columns giving lower and upper confidence limits for
-#' each parameter. These will be labelled as (1-level)/2 and 1 - (1-level)/2 in
-#' % (by default 2.5% and 97.5%).
+#' each parameter. These will be labelled as \code{(1-level)/2} and
+#' \code{1 - (1-level)/2} in \code{\%} (by default \code{2.5\%} and \code{97.5\%}).
 #'
 #' @seealso [stats::confint()] and [stats::confint.default()].
 #'
 #' @export
 confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
-  cf <- coef(object)
-  pnames <- names(cf)
+  coefficients <- coef(object)
+  coefficients_names <- names(coefficients)
   if (missing(parm)) {
-    parm <- pnames
+    parm <- coefficients_names
   } else if (is.numeric(parm)) {
-    parm <- pnames[parm]
+    parm <- coefficients_names[parm]
   }
-  a <- (1 - level) / 2
-  a <- c(a, 1 - a)
-  pct <- format_perc(a, 3)
-  fac <- qnorm(a)
-  ci <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
-  ses <- sqrt(diag(vcov(object, cov_type = cov_type)))[parm]
-  ci[] <- cf[parm] + ses %o% fac
-  ci
+  alpha <- (1 - level) / 2
+  alpha <- c(alpha, 1 - alpha)
+  pct <- format_perc(alpha, 3)
+  percentiles <- qnorm(alpha)
+  ans <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
+  standard_errors <- sqrt(diag(vcov(object, cov_type = cov_type)))[parm]
+  ans[] <- coefficients[parm] + standard_errors %o% percentiles
+  ans
 }
 
 
