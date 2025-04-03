@@ -10,12 +10,13 @@
 \arguments{
 \item{object}{a fitted model \code{geer} object.}
 
-\item{cov_type}{character indicating whether the sandwich (robust) covariance
+\item{cov_type}{character indicating the type of the covariance matrix to be
+returned. Options include the sandwich (robust) covariance
 matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
 matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}) should be returned. By
-default, the robust covariance matrix is returned.}
+matrix (\code{cov_type = "bias-corrected"}) and the degrees of freedom adjusted
+covariance matrix (\code{cov_type = "df-adjusted"}). By default, the
+robust covariance matrix is returned.}
 
 \item{...}{additional argument(s) for methods.}
 }
