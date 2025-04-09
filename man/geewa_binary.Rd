@@ -11,7 +11,7 @@ geewa_binary(
   id = id,
   repeated = NULL,
   orstr = "exchangeable",
-  control = geer_control(),
+  control = geer.control(),
   beta_start = NULL,
   alpha_vector = NULL,
   method = "gee",

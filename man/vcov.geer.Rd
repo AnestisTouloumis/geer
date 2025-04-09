@@ -3,7 +3,7 @@
 \name{vcov.geer}
 \alias{vcov.geer}
 \alias{vcov}
-\title{Calculate variance-covariance matrix from \code{geer} objects}
+\title{Calculate Variance-Covariance Matrix for a \code{geer} Object}
 \usage{
 \method{vcov}{geer}(object, cov_type = "robust", ...)
 }
@@ -11,24 +11,25 @@
 \item{object}{a fitted model \code{geer} object.}
 
 \item{cov_type}{character indicating the type of the covariance matrix to be
-returned. Options include the sandwich (robust) covariance
-matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) and the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}). By default, the
-robust covariance matrix is returned.}
+returned. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance
+matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
+covariance matrix (\code{"df-adjusted"}) and the model-based or naive
+covariance matrix (\code{"naive"}). By default, the robust covariance
+matrix is returned.}
 
 \item{...}{additional argument(s) for methods.}
 }
 \value{
 A matrix of the estimated covariances between the parameter estimates
 in the linear predictor of the model. This should have row and column
-names corresponding to the parameter names given by the [stats::coef()] method.
+names corresponding to the parameter names given by the \code{\link[stats]{coef}}
+method.
 }
 \description{
 Returns the variance-covariance matrix of the main parameters of a fitted
-model geer object. The "main" parameters of model correspond to those returned
-by [stats::coef()].
+model \code{geer} object. The "main" parameters of model correspond to those returned
+by \code{\link[stats]{coef}}.
 }
 \details{
 If \code{cov_type = "robust"}, then the so-called sandwich or
@@ -52,6 +53,7 @@ fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
                              orstr = "exchangeable")
 vcov(fitted_model)
 vcov(fitted_model, cov_type = "bias-corrected")
+
 
 }
 \references{

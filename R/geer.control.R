@@ -1,29 +1,40 @@
 #' @title
-#' Auxiliary for controlling fitting of \code{geer} objects
+#' Auxiliary for Controlling Fitting of \code{geer} Objects
 #'
 #' @description
-#' Auxiliary function for GEE fitting via [geewa()] and [geewa_binary()].
-#' It may be used to construct a \code{control} argument to either function.
+#' Auxiliary function for \code{\link{geewa}} and \code{\link{geewa_binary}}.
+#' Typically used internally but may be used to construct a \code{control} argument
+#' to either function.
 #'
-#' @param tolerance positive convergence tolerance. Default is `1e-06`.
+#'
+#' @param tolerance positive convergence tolerance. By default,
+#'        \code{tolerance = 1e-06}.
 #' @param maxiter positive integer giving the maximal number of iterations
-#'        allowed. Default is `500`.
+#'        allowed. By default, \code{default = 500}.
 #' @param or_adding_constant positive constant to be added at each cell of
-#'        the full marginalized contingency table. Default is `0.5`.
+#'        the full marginalized contingency table. By default,
+#'        \code{or_adding_constant = `0.5`}.
 #' @param step_maxiter positive integer giving the maximal number of step halving
-#'        steps allowed. Default is `10`.
-#' @param step_multiplier positive integer used as a multiplier for the step.
-#'        Default is `1`.
+#'        steps allowed. By default, \code{step_maxiter = 10}.
+#' @param step_multiplier positive integer used as a multiplier for the step. By
+#'        default, \code{steo_multiplier = 1}.
 #' @param jeffreys_power positive real indicating the power of the Jeffreys-prior
-#'        penalty. Default is `0.5`.
+#'        penalty. By default, \code{jeffreys_power = 0.5}.
+#'
+#' @details
+#' The \code{or_adding_constant} is ignored in the function \code{\link{geewa}}.
+#'
+#' The \code{jeffreys_power} is ignored unless \code{method = "pgee_jeffreys"} in
+#' functions \code{\link{geewa}} or \code{\link{geewa_binary}}.
+#'
 #'
 #' @returns
 #' A list with components named as the arguments.
 #'
-#' @seealso [stats::glm.control()] and [brglm2::brglmControl()].
 #'
-#' @export
-geer_control <- function(tolerance = 1e-06,
+#' @rdname geer.control
+#' @export geer.control
+geer.control <- function(tolerance = 1e-06,
                          maxiter = 500,
                          or_adding_constant = 0.5,
                          step_maxiter = 10,

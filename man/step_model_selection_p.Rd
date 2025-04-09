@@ -7,35 +7,56 @@
 step_model_selection_p(
   object,
   scope,
+  direction = "forward",
   test = "score",
   cov_type = "robust",
+  pmethod = "rao-scott",
   p_enter = 0.2,
   p_remove = 0.2,
-  direction = "forward",
   steps = 1000,
   ...
 )
 }
 \arguments{
-\item{object}{an object representing a model of the appropriate class
-\code{geer}. This is used as the initial model in the stepwise search.}
+\item{object}{an object representing a model of the class \code{geer}. This is
+used as the initial model in the stepwise search.}
 
-\item{scope}{defines the range of models examined in the stepwise search. This
-should be either a single formula, or a list containing components upper and
-lower, both formulae. See the details for how to specify the formulae and how
-they are used.}
+\item{scope}{
+    defines the range of models examined in the stepwise search.
+    This should be either a single formula, or a list containing
+    components \code{upper} and \code{lower}, both formulae.  See the
+    details for how to specify the formulae and how they are used.
+  }
 
-\item{test}{character indicating the hypothesis testing procedure applied.
-Options include \code{wald} or \code{score} test.  By
-default, the wald test is used.}
+\item{direction}{
+    the mode of stepwise search, can be one of \code{"both"},
+    \code{"backward"}, or \code{"forward"}, with a default of \code{"both"}.
+    If the \code{scope} argument is missing the default for
+    \code{direction} is \code{"backward"}.  Values can be abbreviated.
+  }
 
-\item{cov_type}{character indicating whether the sandwich (robust)
-covariance
-matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}) should be used. By
-default, the robust covariance matrix is used.}
+\item{test}{character indicating the desired test. Options include the
+Wald test (\code{"wald"}), the generalized score test
+(\code{"score"}), the modified working Wald test
+(\code{"working-wald"}), the modified working score test
+(\code{"working-score"}) and the modified working likelihood
+ratio test (\code{"working-lrt"}). By default, the
+Wald test is performed.}
+
+\item{cov_type}{character indicating the type of the covariance matrix to be
+used. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance
+matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
+covariance matrix (\code{"df-adjusted"}) and the model-based or naive
+covariance matrix (\code{"naive"}). By default, the robust covariance
+matrix is used.}
+
+\item{pmethod}{character indicating the method used to approximate the p-value
+when the modified working Wald test, the modified working score test or
+the modified working likelihood ratio test is used. Options include the
+Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
+approximation (\code{"Satterthwaite"}). By default, the Rao-Scott
+approximation is used.}
 
 \item{p_enter}{numeric between 0 and 1 indicating the p-value threshold for
 adding variables in the stepwise search.}
@@ -43,13 +64,11 @@ adding variables in the stepwise search.}
 \item{p_remove}{numeric between 0 and 1 indicating the p-value threshold for
 removing variables in the stepwise search.}
 
-\item{direction}{the mode of stepwise search, can be one of \code{"both"},
-\code{"backward"}, or \code{"forward"}, with a default of \code{"forward"}. If
-the scope argument is missing the default for direction is \code{"backward"}.}
-
-\item{steps}{the maximum number of steps to be considered. The default is 1000
-(essentially as many as required). It is typically used to stop the process
-early.}
+\item{steps}{
+    the maximum number of steps to be considered.  The default is 1000
+    (essentially as many as required).  It is typically used to stop the
+    process early.
+  }
 
 \item{...}{further arguments passed to or from other methods.}
 }

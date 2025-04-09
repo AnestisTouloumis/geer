@@ -2,27 +2,38 @@
 % Please edit documentation in R/geer_class.R
 \name{predict.geer}
 \alias{predict.geer}
-\title{Predict Method for Generalized Estimating Equations Fits}
+\alias{predict}
+\title{Model Predictions for a \code{geer} Object}
 \usage{
 \method{predict}{geer}(
   object,
   newdata = NULL,
-  type = c("link", "response"),
-  cov_type = c("robust", "bias-corrected", "naive", "df-adjusted"),
+  type = "link",
+  cov_type = "robust",
   se.fit = FALSE,
   ...
 )
 }
 \arguments{
-\item{object}{a fitted object of class inheriting from \code{geewa} or \code{geewa_binary}.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
-\item{newdata}{optionally, a data frame in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.}
+\item{newdata}{optionally, a data frame in which to look for variables with
+which to predict. If omitted, the fitted linear predictors are used.}
 
-\item{type}{the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.}
+\item{type}{the type of prediction required. The default
+\code{"link"} is on the scale of the linear predictors;
+the alternative \code{"response"} is on the scale of the response variable.}
 
-\item{cov_type}{an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator (\code{"robust"}), bias-corrected estimator (\code{"bias-corrected"}), degrees of freedom adjusted bias-corrected estimator (\code{"bias-corrected"}) and the model-based or naive estimator (\code{"naive"}). As default, \code{cov_type = "robust"}.}
+\item{cov_type}{an optional character string indicating the type of estimator
+which should be used to the variance-covariance matrix of the interest
+parameters. Options include the sandwich or robust estimator
+(\code{"robust"}), the bias-corrected estimator (\code{"bias-corrected"}),
+the degrees of freedom adjusted estimator (\code{"bias-corrected"})
+and the model-based or naive estimator (\code{"naive"}). By default,
+the robust covariance estimator is used.}
 
-\item{se.fit}{logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.}
+\item{se.fit}{logical switch indicating if standard errors are required.
+By default, the standard errors are not required.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -34,5 +45,11 @@ If \code{se.fit = TRUE}, a list with components
 \item{se.fit}{Estimated standard errors.}
 }
 \description{
-Obtains predictions and optionally estimates standard errors of those predictions from a fitted generalized estimating equations object.
+Obtains predictions and optionally estimates standard errors of those
+predictions from a fitted generalized estimating equations object of the class
+\code{geer}.
+}
+\details{
+If \code{newdata} is omitted the predictions are based on the data used for
+the fit.
 }

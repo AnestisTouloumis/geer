@@ -88,3 +88,18 @@ compute_criteria <- function(object, cov_type, digits) {
   ans[, 7] <- round(ans[, 7], digits = 0)
   ans
 }
+
+extract_cic <- function(object, cov_type) {
+  cov_mat_independence_inverse <-
+    get_naive_matrix_inverse_independence(object$y,
+                                          object$model_matrix,
+                                          object$id,
+                                          object$family$link,
+                                          object$family$family,
+                                          object$fitted.values,
+                                          object$linear.predictors,
+                                          object$phi)
+  cov_mat <- vcov(object, cov_type = cov_type)
+  ans <- sum(cov_mat_independence_inverse * cov_mat)
+  ans
+}

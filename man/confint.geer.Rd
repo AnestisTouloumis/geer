@@ -2,12 +2,13 @@
 % Please edit documentation in R/geer_class.R
 \name{confint.geer}
 \alias{confint.geer}
-\title{Confidence intervals for model parameters from a \code{geer} object}
+\alias{confint}
+\title{Confidence Intervals for Model Parameters from a \code{geer} Object}
 \usage{
 \method{confint}{geer}(object, parm, level = 0.95, cov_type = "robust", ...)
 }
 \arguments{
-\item{object}{a fitted model \code{geer} object.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
 \item{parm}{a specification of which parameters are to be given
     confidence intervals, either a vector of numbers or a vector of
@@ -15,29 +16,25 @@
 
 \item{level}{the confidence level required.}
 
-\item{cov_type}{character indicating the type of the covariance matrix used to
-calculate the standard errors of the parameter(s). Option include the
-sandwich (robust) covariance matrix (\code{cov_type = "robust"}),
-the model-based (naive) covariance matrix (\code{cov_type = "naive"}),
-the bias-corrected covariance matrix (\code{cov_type = "bias-corrected"})
-and the degrees of freedom adjusted covariance matrix
-(\code{cov_type = "df-adjusted"}). By default, the robust
-covariance matrix is used.}
+\item{cov_type}{character indicating the type of the covariance matrix to be
+used. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance
+matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
+covariance matrix (\code{"df-adjusted"}) and the model-based or naive
+covariance matrix (\code{"naive"}). By default, the robust covariance
+matrix is used.}
 
 \item{...}{additional argument(s) for methods.}
 }
 \value{
-A matrix (or vector) with columns giving lower and upper confidence limits for
-each parameter. These will be labelled as \code{(1-level)/2} and
-\code{1 - (1-level)/2} in \code{\%} (by default \code{2.5\%} and \code{97.5\%}).
+A matrix (or vector) with columns giving lower and upper confidence
+  limits for each parameter. These will be labelled as (1-level)/2 and
+  1 - (1-level)/2 in \% (by default 2.5\% and 97.5\%).
 }
 \description{
-Computes confidence intervals for one or more parameters from a \code{geer} object.
+Confidence intervals for one or more parameters in a fitted model.
 }
 \details{
-The references in [vcov.geer()] include the formulae for the covariance
-type implied by \code{cov_type}.
-}
-\seealso{
-[stats::confint()] and [stats::confint.default()].
+The references in \code{\link{vcov}} include the formulae for the covariance type
+implied by \code{cov_type}.
 }

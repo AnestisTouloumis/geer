@@ -5,36 +5,64 @@
 \alias{add1}
 \alias{drop1.geer}
 \alias{drop1}
-\title{Add or Drop All Possible Single Terms to a Model}
+\title{Add or Drop All Possible Single Terms to a Model from a \code{geer} Object}
 \usage{
-\method{add1}{geer}(object, scope, test = "wald", cov_type = "robust", ...)
+\method{add1}{geer}(
+  object,
+  scope,
+  test = "wald",
+  cov_type = "robust",
+  pmethod = "rao-scott",
+  ...
+)
 
-\method{drop1}{geer}(object, scope, test = "wald", cov_type = "robust", ...)
+\method{drop1}{geer}(
+  object,
+  scope,
+  test = "wald",
+  cov_type = "robust",
+  pmethod = "rao-scott",
+  ...
+)
 }
 \arguments{
-\item{object}{a model fit of class \code{"geer"}.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
 \item{scope}{a formula giving the terms to be considered for adding or
-dropping.}
+    dropping.}
 
-\item{test}{character indicating the hypothesis testing procedure applied.
-Options include \code{wald} or \code{score} test.  By
-default, the wald test is used.}
+\item{test}{character indicating the desired test. Options include the
+Wald test (\code{"wald"}), the generalized score test
+(\code{"score"}), the modified working Wald test
+(\code{"working-wald"}), the modified working score test
+(\code{"working-score"}) and the modified working likelihood
+ratio test (\code{"working-lrt"}). By default, the
+Wald test is performed.}
 
-\item{cov_type}{character indicating whether the sandwich (robust)
-covariance
-matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}) should be used. By
-default, the robust covariance matrix is used.}
+\item{cov_type}{character indicating the type of the covariance matrix to be
+used. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance
+matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
+covariance matrix (\code{"df-adjusted"}) and the model-based or naive
+covariance matrix (\code{"naive"}). By default, the robust covariance
+matrix is used.}
 
-\item{...}{further arguments passed to or from other methods.}
+\item{pmethod}{character indicating the method used to approximate the p-value
+when the modified working Wald test, the modified working score test or
+the modified working likelihood ratio test is used. Options include the
+Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
+approximation (\code{"Satterthwaite"}). By default, the Rao-Scott
+approximation is used.}
+
+\item{...}{additional objects representing models of the same class \code{geer}.}
+}
+\value{
+An object of class \code{anova} summarizing the differences in fit between the models.
 }
 \description{
-Compute all the single terms in the scope argument that can be added to or
-dropped from the model, fit those models and compute a table of the changes
-in fit.
+Compute all the single terms in the \code{scope} argument that can be added
+to or dropped from the model, fit those models and compute a table of the
+changes in fit.
 }
 \details{
 For \code{drop1}, a missing scope is taken to be all terms in the model. The
@@ -42,22 +70,25 @@ hierarchy is respected when considering terms to be added or dropped:
 all main effects contained in a second-order interaction must remain, and so on.
 
 In a scope formula . means ‘what is already there’.
+
+The output table also gives CIC.
 }
 \examples{
 fitted_model <-
 geewa(formula = y ~ baseline + treatment + gender + visit + age,
-      id = id,
-      repeated = visit,
-      family = binomial(link = "probit"),
-      data = respiratory[respiratory$center==2, ],
-      corstr = "ar1",
+      id = id, repeated = visit, family = binomial(link = "probit"),
+      data = respiratory[respiratory$center==2, ], corstr = "ar1",
       method = "gee")
 add1(fitted_model,
      scope = .~. + baseline:age + age:visit + treatment:age + age:gender,
      test = "score")
-drop1(fitted_model,
-      test = "score")
 
+drop1(fitted_model, test = "score")
+
+
+}
+\seealso{
+\code{\link{anova}}
 }
 \author{
 Anestis Touloumis

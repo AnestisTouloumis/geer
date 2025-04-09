@@ -128,16 +128,16 @@ model.matrix.geer <-	function(object,...){
 
 
 #' @title
-#' Extract model residuals from \code{geer} objects
+#' Extract Model Residuals from a \code{geer} Object
 #'
-#' @aliases resid
+#' @aliases resid residuals residuals.geer
 #'
 #' @method residuals geer
 #'
 #' @description
 #' Extract model residuals from \code{geer} objects.
 #'
-#' @param object a fitted model \code{geer} object.
+#' @param object an object representing a model of the class \code{geer}.
 #' @param type character indicating whether the type of the residuals to be
 #'             returned. Options include the working residuals (\code{type =
 #'             "working"}), the pearson residuals (\code{type = "pearson"}) and
@@ -156,7 +156,7 @@ model.matrix.geer <-	function(object,...){
 #' marginal distribution of the responses is defined by \code{object$family}.
 #'
 #' @return
-#' A vector with the observed residuals type \code{type}.
+#' A vector with the observed residuals of type \code{type}.
 #'
 #' @export
 residuals.geer <- function(object,
@@ -177,41 +177,39 @@ residuals.geer <- function(object,
                     sqrt(pmax((object$family$dev.resids)(response_vector, mu_vector, weight_vector), 0))
                   ifelse(response_vector > mu_vector, deviance_res, -deviance_res)
                   } else rep.int(0, length(mu_vector)),
-                pearson = (response_vector - mu_vector) * sqrt(weight_vector)/sqrt(object$family$variance(mu_vector)),
+                pearson =
+                  c(get_pearson_residuals(object$family$family, response_vector,
+                                        mu_vector, weight_vector)),
                 working = raw_residuals
                 )
   ans
 }
 
+
+
 #' @title
-#' Confidence intervals for model parameters from a \code{geer} object
+#' Confidence Intervals for Model Parameters from a \code{geer} Object
 #'
+#' @aliases confint confint.geer
 #' @method confint geer
 #'
-#' @description
-#' Computes confidence intervals for one or more parameters from a \code{geer} object.
 #'
+#' @description
+#' Confidence intervals for one or more parameters in a fitted model.
+#'
+#'
+#' @inheritParams anova.geer
 #' @inheritParams stats::confint
-#' @param object a fitted model \code{geer} object.
-#' @param cov_type character indicating the type of the covariance matrix used to
-#'        calculate the standard errors of the parameter(s). Option include the
-#'        sandwich (robust) covariance matrix (\code{cov_type = "robust"}),
-#'        the model-based (naive) covariance matrix (\code{cov_type = "naive"}),
-#'        the bias-corrected covariance matrix (\code{cov_type = "bias-corrected"})
-#'        and the degrees of freedom adjusted covariance matrix
-#'        (\code{cov_type = "df-adjusted"}). By default, the robust
-#'        covariance matrix is used.
+#' @param ... additional argument(s) for methods.
+#'
 #'
 #' @details
-#' The references in [vcov.geer()] include the formulae for the covariance
-#' type implied by \code{cov_type}.
+#' The references in \code{\link{vcov}} include the formulae for the covariance type
+#' implied by \code{cov_type}.
 #'
-#' @return
-#' A matrix (or vector) with columns giving lower and upper confidence limits for
-#' each parameter. These will be labelled as \code{(1-level)/2} and
-#' \code{1 - (1-level)/2} in \code{\%} (by default \code{2.5\%} and \code{97.5\%}).
 #'
-#' @seealso [stats::confint()] and [stats::confint.default()].
+#' @inherit stats::confint.default return
+#'
 #'
 #' @export
 confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
@@ -234,32 +232,59 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 
 
 
-#' @title Predict Method for Generalized Estimating Equations Fits
+#' @title
+#' Model Predictions for a \code{geer} Object
 #'
-#' @description Obtains predictions and optionally estimates standard errors of those predictions from a fitted generalized estimating equations object.
+#' @aliases predict predict.geer
+#' @method predict geer
 #'
-#' @param object a fitted object of class inheriting from \code{geewa} or \code{geewa_binary}.
-#' @param newdata	optionally, a data frame in which to look for variables with which to predict. If omitted, the fitted linear predictors are used.
-#' @param type the type of prediction required. The default \code{"link"} is on the scale of the linear predictors; the alternative \code{"response"} is on the scale of the response variable.
-#' @param se.fit logical switch indicating if standard errors are required. As default, \code{se.fit = FALSE}.
-#' @param cov_type an optional character string indicating the type of estimator which should be used to the variance-covariance matrix of the interest parameters. The available options are: robust or sandwich estimator (\code{"robust"}), bias-corrected estimator (\code{"bias-corrected"}), degrees of freedom adjusted bias-corrected estimator (\code{"bias-corrected"}) and the model-based or naive estimator (\code{"naive"}). As default, \code{cov_type = "robust"}.
+#'
+#' @description
+#' Obtains predictions and optionally estimates standard errors of those
+#' predictions from a fitted generalized estimating equations object of the class
+#' \code{geer}.
+#'
+#'
+#' @param object an object representing a model of the class \code{geer}.
+#' @param newdata	optionally, a data frame in which to look for variables with
+#'        which to predict. If omitted, the fitted linear predictors are used.
+#' @param type the type of prediction required. The default
+#'        \code{"link"} is on the scale of the linear predictors;
+#'        the alternative \code{"response"} is on the scale of the response variable.
+#' @param se.fit logical switch indicating if standard errors are required.
+#'        By default, the standard errors are not required.
+#' @param cov_type an optional character string indicating the type of estimator
+#'        which should be used to the variance-covariance matrix of the interest
+#'        parameters. Options include the sandwich or robust estimator
+#'        (\code{"robust"}), the bias-corrected estimator (\code{"bias-corrected"}),
+#'        the degrees of freedom adjusted estimator (\code{"bias-corrected"})
+#'        and the model-based or naive estimator (\code{"naive"}). By default,
+#'        the robust covariance estimator is used.
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @return If \code{se.fit = FALSE}, a vector or matrix of predictions.
+#' @details
+#' If \code{newdata} is omitted the predictions are based on the data used for
+#' the fit.
+#'
+#' @return
+#' If \code{se.fit = FALSE}, a vector or matrix of predictions.
 #'
 #' If \code{se.fit = TRUE}, a list with components
 #' \item{fit}{Predictions, as for \code{se.fit = FALSE}.}
 #' \item{se.fit}{Estimated standard errors.}
 #'
-#' @method predict geer
 #'
 #' @export
-predict.geer <- function(object, newdata = NULL, type = c("link", "response"),
-                         cov_type = c("robust", "bias-corrected", "naive",
-                                     "df-adjusted"),
-                         se.fit = FALSE, ...){
-  type <- match.arg(type)
-  cov_type <- match.arg(cov_type)
+predict.geer <- function(object, newdata = NULL, type = "link",
+                         cov_type = "robust", se.fit = FALSE, ...){
+  icheck <- pmatch(type,
+                   c("link", "response"),
+                   nomatch = 0)
+  if (icheck == 0) stop("unknown type of prediction")
+  icheck <- pmatch(cov_type,
+                   c("robust", "df-adjusted", "bias-corrected", "naive"),
+                   nomatch = 0)
+  if (icheck == 0) stop("unknown covariance matrix")
   if (missing(newdata)) {
     if (type == "link") {
       predicts <- object$linear.predictors

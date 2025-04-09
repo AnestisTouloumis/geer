@@ -3,12 +3,13 @@
 \name{residuals.geer}
 \alias{residuals.geer}
 \alias{resid}
-\title{Extract model residuals from \code{geer} objects}
+\alias{residuals}
+\title{Extract Model Residuals from a \code{geer} Object}
 \usage{
 \method{residuals}{geer}(object, type = "working", ...)
 }
 \arguments{
-\item{object}{a fitted model \code{geer} object.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
 \item{type}{character indicating whether the type of the residuals to be
 returned. Options include the working residuals (\code{type =
@@ -19,7 +20,7 @@ the deviance residuals (\code{type = "deviance"}). By default, the
 \item{...}{other arguments.}
 }
 \value{
-A vector with the observed residuals type \code{type}.
+A vector with the observed residuals of type \code{type}.
 }
 \description{
 Extract model residuals from \code{geer} objects.

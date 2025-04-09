@@ -3,52 +3,55 @@
 \name{anova.geer}
 \alias{anova.geer}
 \alias{anova}
-\title{ANOVA Tables}
+\title{ANOVA Tables for \code{geer} Objects}
 \usage{
 \method{anova}{geer}(object, ..., test = "wald", cov_type = "robust", pmethod = "rao-scott")
 }
 \arguments{
-\item{object}{an object containing the results returned by a model fitting
-function the class \code{geer}.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
-\item{...}{additional objects of the same class \code{geer}.}
+\item{...}{additional objects representing models of the same class \code{geer}.}
 
 \item{test}{character indicating the desired test. Options include the
-Wald test (\code{test = "wald"}), the generalized score test
-(\code{test = "score"}), the modified working Wald test
-(\code{test = "working-wald"}), the modified working score test
-(\code{test = "working-score"}) and the modified working likelihood
-ratio test (\code{test = "working-lrt"}). By default, the
+Wald test (\code{"wald"}), the generalized score test
+(\code{"score"}), the modified working Wald test
+(\code{"working-wald"}), the modified working score test
+(\code{"working-score"}) and the modified working likelihood
+ratio test (\code{"working-lrt"}). By default, the
 Wald test is performed.}
 
 \item{cov_type}{character indicating the type of the covariance matrix to be
-used in the test statistics. Options include the sandwich (robust) covariance
-matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-matrix (\code{cov_type = "bias-corrected"}) and the degrees of freedom adjusted
-covariance matrix (\code{cov_type = "df-adjusted"}). By default, the
-robust covariance matrix is used.}
+used. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance
+matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
+covariance matrix (\code{"df-adjusted"}) and the model-based or naive
+covariance matrix (\code{"naive"}). By default, the robust covariance
+matrix is used.}
 
-\item{pmethod}{character indicating the method used to approximate the p-value when
+\item{pmethod}{character indicating the method used to approximate the p-value
 when the modified working Wald test, the modified working score test or
 the modified working likelihood ratio test is used. Options include the
-Rao-Scott approximation (\code{pmethod = "rao-scott"}) and the
-Satterthwaite approximation (\code{pmethod = "Satterthwaite"}).}
+Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
+approximation (\code{"Satterthwaite"}). By default, the Rao-Scott
+approximation is used.}
 }
 \value{
 This function returns an object of class \code{anova}. These objects represent
-analysis-of-variance and analysis-of-deviance tables in the GEE framework.
+analysis-of-variance tables within the GEE framework.
 
-When given a single argument it produces a table which tests whether the model
-terms are significant. When given a sequence of objects, anova tests the models
-against one another in the order specified.
+When given a single argument, \code{anova} produces a table which tests whether the model
+terms are significant. When given a sequence of objects, \code{anova} tests the models
+against one another in the order specified. This requires that two consecutive models
+are nested.
 }
 \description{
-Compute analysis of variance tables for one or more fitted model objects.
+Compute analysis of variance tables using hypothesis testing procedures for
+one or more fitted model.
 }
 \details{
-If \code{test = "wald"}, then the Wald test is applied. This is based on the
-asymptotic normality of the regression estimates, see \cite{Liang and Zeger (1986)}.
+If \code{test = "wald"}, then the Wald test is applied. This test statistic is
+based on the asymptotic normality of the regression estimates, see
+\cite{Liang and Zeger (1986)}.
 
 If \code{test = "score"}, then the generalized score test is applied, see
 \cite{Rotnitzky and Jewell (1990)} and \cite{Boos (1992)}.
@@ -61,29 +64,29 @@ see \cite{Rotnitzky and Jewell (1990)}.
 
 If \code{test = "working-lrt"}, then the modified working likelihood ratio test
 is applied, see \cite{Rotnitzky and Jewell (1990)}. This testing procedure is
-only available when the working assocation structure is the independence.
+only available when the working association structure is the independence.
 Otherwise, an error message is returned.
 
-For the Wald and Generalized Score tests, \code{cov_type} specifies the covariance
+For the Wald and the generalized score test, \code{cov_type} specifies the covariance
 matrix estimate of the estimated regression parameters used to calculate the
-corresponding test statistics. For the modified working Wald, score and likelihood
+corresponding test statistic. For the modified working Wald, score and likelihood
 ratio tests, \code{cov_type} specifies the covariance matrix estimate of the
-estimated regression parameters used to obtain the asymptotic distribution of
-the corresponding test statistics.
+estimated regression parameters used to calculate the coefficients of the
+independent chi-squared random variables.
 
-For the Wald and Generalized Score tests, \code{pmethod} is ignored. Both methods
-for approximating the p-value of the modified working testing procedures can be found
-in \cite{Rotnitzky and Jewell (1990)}.
+For the Wald and Generalized Score tests, \code{pmethod} is ignored. Both
+methods for approximating the p-value of the modified working testing
+procedures can be found in \cite{Rotnitzky and Jewell (1990)}.
 }
 \references{
 Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
 estimators for generalized estimating equations. \emph{Biometrika} \bold{73},
 13-–22.
 
-Rotnitzky A., Jewell P. (1990) Hypothesis Testing of Regression Parameters
-in Semiparametric Generalized Linear Models for Cluster Correlated Data.
+Rotnitzky A., Jewell P. (1990) Hypothesis testing of regression parameters
+in semiparametric generalized linear models for cluster correlated data.
 \emph{Biometrika} \bold{77}, 485--497.
 
-Boos D.D. (1992) On Generalized Score Tests. \emph{The American Statistician}
+Boos D.D. (1992) On generalized score tests. \emph{The American Statistician}
 \bold{46}, 327--333.
 }

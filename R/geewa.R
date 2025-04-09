@@ -290,7 +290,7 @@ geewa <- function(formula = formula(data),
     stop("rank-deficient model matrix")
 
   ## control variables
-  control <- do.call("geer_control", control)
+  control <- do.call("geer.control", control)
   maxiter <- control$maxiter
   tolerance <- control$tolerance
 

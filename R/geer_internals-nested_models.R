@@ -1,15 +1,15 @@
 ## checking if two models are nested
 check_nested_models <- function(object0, object1) {
   if ( !("geer" %in% class(object0)) | !("geer" %in% class(object1)) ) {
-    stop("Objects must be of 'geer' class", call. = FALSE)
+    stop("Objects must be of 'geer' class")
   }
   if (!all(object0$y == object1$y)) {
-    stop("Response variable differs in the models", call. = FALSE)
+    stop("Response variable differs in the models")
   }
   n0 <- length(object0$coefficients)
   n1 <- length(object1$coefficients)
   if (n0 == n1) {
-    stop("Models must be nested", call. = FALSE)
+    stop("Models must be nested")
   }
   if (n0 < n1) {
     obj0 <- object0
@@ -23,10 +23,10 @@ check_nested_models <- function(object0, object1) {
   names1 <- names(obj1$coefficients)
   names_test <- setdiff(names1, names0)
   if (length(names_test) == 0) {
-    stop("Models must be nested", call. = FALSE)
+    stop("Models must be nested")
   }
   if (length(setdiff(names0, names1)) != 0) {
-    stop("Models must be nested", call. = FALSE)
+    stop("Models must be nested")
   }
   index <- rep(0, length(names_test))
   for (i in seq_len(length(names_test))) {
@@ -40,76 +40,63 @@ check_nested_models <- function(object0, object1) {
 ## chi sq random variables
 lcsumchisq <- function(x, test_stat, pmethod) {
   x_bar <- mean(x)
-  df <- length(x)
+  test_df <- length(x)
   if (pmethod == "rao-scott") {
     test_stat <- test_stat/x_bar
-    pvalue <- 1 - pchisq(test_stat, df = df)
+    test_p <- 1 - pchisq(test_stat, df = test_df)
   } else if (pmethod == "satterthwaite") {
-    alpha <- sum((x - x_bar)^2)/(df * x_bar^2)
-    df <- df/(1 + alpha^2)
+    alpha <- sum((x - x_bar)^2)/(test_df * x_bar^2)
+    test_df <- test_df/(1 + alpha^2)
     test_stat <- test_stat/((1 + alpha^2) * x_bar)
-    pvalue <- 1 - pchisq(test_stat, df = df)
+    test_p <- 1 - pchisq(test_stat, df = test_df)
   }
-  list(test_stat = test_stat, df = df, pvalue = pvalue)
+  list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
 ## wald test
-wald_test <- function(object0, object1, cov_type = "robust"){
+wald_test <- function(object0, object1, cov_type){
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$obj0
   obj1 <- nested_models$obj1
   index <- nested_models$index
-  df <- length(index)
+  test_df <- length(index)
   coeffs_test <- obj1$coefficients[index]
   cov_test <- vcov(nested_models$obj1, cov_type = cov_type)[index, index]
-  wald_stat <- t(coeffs_test) %*% solve(cov_test, coeffs_test)
-  pvalue <- 1 - pchisq(wald_stat, df)
-  ans <- list(Df = df, X2 = wald_stat, `P(>X2)` = pvalue)
-  ans
+  test_stat <- c(t(coeffs_test) %*% solve(cov_test, coeffs_test))
+  test_p <- 1 - pchisq(test_stat, df = test_df)
+  list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
 ## working wald test
-working_wald_test <- function(object0,
-                              object1,
-                              cov_type = "robust",
-                              pmethod = "rao-scott"){
+working_wald_test <- function(object0, object1, cov_type, pmethod){
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$obj1
   obj0 <- nested_models$obj0
   index <- nested_models$index
   coeffs_test <- obj1$coefficients[index]
   cov_test <- vcov(obj1, cov_type = "naive")[index, index]
-  working_wald_stat <- t(coeffs_test) %*% solve(cov_test, coeffs_test)
+  stat_test <- c(t(coeffs_test) %*% solve(cov_test, coeffs_test))
   rob_test <- vcov(obj1, cov_type = cov_type)[index, index]
-  coeffs <- eigen(solve(cov_test, rob_test), only.values = TRUE)$values
-  ans_stats <- lcsumchisq(coeffs, working_wald_stat, pmethod)
-  ans <- list(Df = ans_stats$df, X2 = ans_stats$test_stat, `P(>X2)` = ans_stats$pvalue)
-  ans
+  eigen_test <- eigen(solve(cov_test, rob_test), only.values = TRUE)$values
+  lcsumchisq(eigen_test, stat_test, pmethod)
 }
 
 
 ## working likelihood ratio test
-working_lr_test <- function(object0,
-                            object1,
-                            cov_type = "robust",
-                            pmethod = "rao-scott"){
+working_lr_test <- function(object0, object1, cov_type, pmethod){
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$obj1
   obj0 <- nested_models$obj0
   index <- nested_models$index
   ll_obj0 <- compute_quasi_loglikelihood(obj0)
   ll_obj1 <- compute_quasi_loglikelihood(obj1)
-  if (!all(c(obj0$association_structure, obj1$association_structure) == "independence"))
-    stop("the working-LRT is available only for independence working models")
-  working_ll_test <- -2 * (ll_obj0 - ll_obj1)
+  stat_test <- -2 * (ll_obj0 - ll_obj1)
   cov_test <- vcov(obj1, cov_type = "naive")[index, index]
   rob_test <- vcov(obj1, cov_type = cov_type)[index, index]
-  coeffs <- eigen(solve(cov_test, rob_test), only.values = TRUE)$values
-  ans_stats <- lcsumchisq(coeffs, working_ll_test, pmethod)
-  ans <- list(Df = ans_stats$df, X2 = ans_stats$test_stat, `P(>X2)` = ans_stats$pvalue)
-  ans
+  eigen_test <- eigen(solve(cov_test, rob_test), only.values = TRUE)$values
+  lcsumchisq(eigen_test, stat_test, pmethod)
 }
 
 ## score test
@@ -118,7 +105,7 @@ score_test <- function(object0, object1, cov_type = "robust"){
   obj1 <- nested_models$obj1
   obj0 <- nested_models$obj0
   index <- nested_models$index
-  df <- length(index)
+  test_df <- length(index)
   coeffs_test <- obj1$coefficients
   coeffs_test[index] <- 0
   coeffs_test[-index] <- obj0$coefficients
@@ -188,16 +175,15 @@ score_test <- function(object0, object1, cov_type = "robust"){
       covariance$robust_covariance[index, index]
   }
   naive_cov <-  covariance$naive_covariance
-  score_stat <-
-    (t(uvector) %*% naive_cov[, index]) %*%
-    (solve(cov_test) %*% (naive_cov[index, ] %*% uvector))
-  pvalue <- 1 - pchisq(score_stat, df)
-  ans <- list(Df = df, X2 = score_stat, `P(>X2)` = pvalue)
-  ans
+  test_stat <-
+    c((t(uvector) %*% naive_cov[, index]) %*%
+    (solve(cov_test) %*% (naive_cov[index, ] %*% uvector)))
+  test_p <- 1 - pchisq(test_stat, df = test_df)
+  list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 ## working score test
-working_score_test <- function(object0, object1, cov_type = "robust", pmethod = "rao-scott"){
+working_score_test <- function(object0, object1, cov_type, pmethod){
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$obj1
   obj0 <- nested_models$obj0
@@ -270,21 +256,14 @@ working_score_test <- function(object0, object1, cov_type = "robust", pmethod = 
       (sample_size / (sample_size - parameters_no)) * covariance$robust_covariance
   }
   score_stat <-
-    (t(uvector) %*% cov_test[, index]) %*%
-    (solve(cov_test[index, index]) %*% (cov_test[index, ] %*% uvector))
-  coeffs <-
+    c((t(uvector) %*% cov_test[, index]) %*%
+    (solve(cov_test[index, index]) %*% (cov_test[index, ] %*% uvector)))
+  eigen_test <-
     eigen(solve(cov_test[index, index], rob_test[index, index]), only.values = TRUE)$values
-  ans_stats <- lcsumchisq(coeffs, score_stat, pmethod)
-  ans <- list(Df = ans_stats$df, X2 = ans_stats$test_stat, `P(>X2)` = ans_stats$pvalue)
-  ans
+  lcsumchisq(eigen_test, score_stat, pmethod)
 }
 
-anova.geerlist <-
-  function(object, ...,
-           test = "wald",
-           cov_type = "robust",
-           pmethod = "rao-scott")
-  {
+anova_geerlist <- function(object, ..., test, cov_type, pmethod){
     response_vectors <-
       as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))
     same_response <- response_vectors == response_vectors[1L]
@@ -293,6 +272,19 @@ anova.geerlist <-
       warning("Models with response ", deparse(response_vectors[!same_response]),
               " removed because response differs from Model 1")
     }
+    if (test == "working-lrt") {
+      association_vector <-
+        as.character(lapply(object, function(x) x$association_structure))
+      independence_vector <- association_vector == "independence"
+      if (all(!independence_vector))
+        stop("the modified working lr test requires independence working models")
+      if (!all(independence_vector)) {
+        object <- object[independence_vector]
+        warning("Models with association structure ",
+                deparse(association_vector[!independence_vector]),
+                " removed because association structure differs from independence")
+      }
+    }
     association_vector <-
       as.character(lapply(object, function(x) x$association_structure))
     same_association <- association_vector == association_vector[1L]
@@ -300,7 +292,7 @@ anova.geerlist <-
       object <- object[same_association]
       warning("Models with association structure ",
               deparse(association_vector[!same_association]),
-              " removed because association structure differs from ", "model 1")
+              " removed because association structure differs from model 1")
     }
     sample_size_vector <- sapply(object, function(x) length(x$residuals))
     if (any(sample_size_vector != sample_size_vector[1L]))
@@ -308,32 +300,36 @@ anova.geerlist <-
     models_no <- length(object)
     if (models_no == 1)
       return(anova.geer(object[[1L]], cov_type = cov_type, pmethod = pmethod))
-    variables <- lapply(object, function(x)
-      paste(deparse(formula(x)), collapse = "\n") )
-    table <- matrix(0, models_no - 1, 3)
+
+    resdf  <- as.numeric(lapply(object, function(x) x$df.residual))
+    table <- data.frame(resdf, c(NA, resdf[-1]), c(NA, resdf[-1]), c(NA, resdf[-1]))
+    dimnames(table) <- list(1L:models_no,
+                            c("Resid. Df", "Df", "Chi", "Pr(>Chi)"))
     test_type <- switch(test,
                         wald = "Wald",
                         score = "Score",
                         `working-wald` = "Working Wald",
                         `working-score` = "Working Score",
                         `working-lrt` = "Working LRT")
-    for (i in 1:nrow(table)) {
+    for (i in 2:models_no) {
       value <-
         switch(test,
                wald =
-                 wald_test(object[[i]], object[[i + 1]], cov_type),
+                 wald_test(object[[i - 1]], object[[i]], cov_type),
                score =
-                 score_test(object[[i]], object[[i + 1]], cov_type),
+                 score_test(object[[i - 1]], object[[i]], cov_type),
                `working-wald` =
-                 working_wald_test(object[[i]], object[[i + 1]], cov_type, pmethod),
+                 working_wald_test(object[[i - 1]], object[[i]], cov_type, pmethod),
                `working-score` =
-                 working_score_test(object[[i]], object[[i + 1]], cov_type, pmethod),
+                 working_score_test(object[[i - 1]], object[[i]], cov_type, pmethod),
                `working-lrt` =
-                 working_lr_test(object[[i]], object[[i + 1]], cov_type, pmethod)
+                 working_lr_test(object[[i - 1]], object[[i]], cov_type, pmethod)
         )
-      table[i, ] <- c(value$Df, value$X2, value$`P(>X2)`)
+      table[i, -1] <- c(value$test_df, value$test_stat, value$test_p)
     }
     title  <- paste("Analysis of", test_type, "Statistic Table\n", sep = " ")
+    variables <- lapply(object, function(x)
+      paste(deparse(formula(x)), collapse = "\n") )
     topnote <-
       paste("Model ",
             format(1L:models_no),
@@ -341,9 +337,6 @@ anova.geerlist <-
             variables,
             sep = "",
             collapse = "\n")
-    table <- data.frame(table)
-    dimnames(table) <- list(paste(1L:(models_no - 1), "vs", 2L:models_no),
-                            c("Df", "X2", "P(>X2)"))
     structure(table,
               heading = c(title, topnote),
               class = c("anova", "data.frame"))

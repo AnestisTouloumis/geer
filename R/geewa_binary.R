@@ -120,7 +120,7 @@ geewa_binary <- function(formula = formula(data),
                          id = id,
                          repeated = NULL,
                          orstr = "exchangeable",
-                         control = geer_control(),
+                         control = geer.control(),
                          beta_start = NULL,
                          alpha_vector = NULL,
                          method = "gee",
@@ -232,7 +232,7 @@ geewa_binary <- function(formula = formula(data),
     stop("rank-deficient model matrix")
 
   ## control variables
-  control <- do.call("geer_control", control)
+  control <- do.call("geer.control", control)
   maxiter <- control$maxiter
   tolerance <- control$tolerance
 
