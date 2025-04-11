@@ -99,6 +99,7 @@ working_lr_test <- function(object0, object1, cov_type, pmethod){
   lcsumchisq(eigen_test, stat_test, pmethod)
 }
 
+
 ## score test
 score_test <- function(object0, object1, cov_type = "robust"){
   nested_models <- check_nested_models(object0, object1)
@@ -182,6 +183,7 @@ score_test <- function(object0, object1, cov_type = "robust"){
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
+
 ## working score test
 working_score_test <- function(object0, object1, cov_type, pmethod){
   nested_models <- check_nested_models(object0, object1)
@@ -263,6 +265,8 @@ working_score_test <- function(object0, object1, cov_type, pmethod){
   lcsumchisq(eigen_test, score_stat, pmethod)
 }
 
+
+## anova list
 anova_geerlist <- function(object, ..., test, cov_type, pmethod){
     response_vectors <-
       as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))

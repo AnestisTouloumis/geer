@@ -6,32 +6,31 @@
 \alias{residuals}
 \title{Extract Model Residuals from a \code{geer} Object}
 \usage{
-\method{residuals}{geer}(object, type = "working", ...)
+\method{residuals}{geer}(object, type = c("working", "pearson", "deviance"), ...)
 }
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
 \item{type}{character indicating whether the type of the residuals to be
-returned. Options include the working residuals (\code{type =
-"working"}), the pearson residuals (\code{type = "pearson"}) and
-the deviance residuals (\code{type = "deviance"}). By default, the
-\code{"working"} residuals are returned.}
+returned. Options include the working residuals (\code{"working"}),
+the pearson residuals (\code{"pearson"}) and the deviance residuals
+(\code{"deviance"}). By default, the working residuals are returned.}
 
-\item{...}{other arguments.}
+\item{...}{additional argument(s) for methods.}
 }
 \value{
-A vector with the observed residuals of type \code{type}.
+A vector with the observed residuals type \code{type}.
 }
 \description{
-Extract model residuals from \code{geer} objects.
+Extract residuals from a fitted model.
 }
 \details{
 If \code{type = "working"}, then the raw residuals (\code{observed - fitted})
 are returned.
 
 If \code{type = "pearson"}, then the pearson residuals are returned. The
-marginal distribution of the responses is defined by \code{object$family}.
+marginal distribution of the responses is defined by \code{object$family$family}.
 
 If \code{type = "deviance"}, then the deviance residuals are returned. The
-marginal distribution of the responses is defined by \code{object$family}.
+marginal distribution of the responses is defined by \code{object$family$family}.
 }

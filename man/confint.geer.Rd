@@ -17,12 +17,12 @@
 \item{level}{the confidence level required.}
 
 \item{cov_type}{character indicating the type of the covariance matrix to be
-used. Options include the sandwich or robust covariance
-matrix (\code{"robust"}), the bias-corrected covariance
-matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
-covariance matrix (\code{"df-adjusted"}) and the model-based or naive
-covariance matrix (\code{"naive"}). By default, the robust covariance
-matrix is used.}
+used in the construction of the confidence interval. Options include
+the sandwich or robust covariance matrix (\code{"robust"}), the
+bias-corrected covariance matrix (\code{"bias-corrected"}), the
+degrees of freedom adjusted covariance matrix (\code{"df-adjusted"})
+and the model-based or naive covariance matrix (\code{"naive"}). By
+default, the robust covariance matrix is used.}
 
 \item{...}{additional argument(s) for methods.}
 }
@@ -35,6 +35,6 @@ A matrix (or vector) with columns giving lower and upper confidence
 Confidence intervals for one or more parameters in a fitted model.
 }
 \details{
-The references in \code{\link{vcov}} include the formulae for the covariance type
-implied by \code{cov_type}.
+The references in \code{\link{vcov}} include the formulae for the covariance
+type implied by \code{cov_type}.
 }
