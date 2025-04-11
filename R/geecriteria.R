@@ -1,11 +1,29 @@
-#' Variable and Covariance Selection Criteria
+#' @title
+#' Variable and Covariance Selection Criteria for \code{geer} Objects
 #'
+#' @description
 #' Reports commonly used criteria for variable selection and association structure
-#' selection for one or several fitted models from the \code{geer} package.
+#' selection for one or several fitted models.
 #'
+#' @return
+#' A data frame with the QIC, CIC, RJC, QICu, GESSC, GPC and the number
+#' of regression parameters (including intercepts).
+#'
+#' @inheritParams anova.geer
+#' @param cov_type character indicating the type of covariance matrix estimator
+#'        which should be used to the calculation of the criteria. Options
+#'        include the sandwich or robust estimator (\code{"robust"}), the
+#'        bias-corrected estimator (\code{"bias-corrected"}), the degrees of
+#'        freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
+#'        or naive estimator (\code{"naive"}). By default, the robust covariance
+#'        estimator is used.
+#' @param digits integer indicating the number of decimal places for the GEE
+#'        criteria to be rounded at. By default, \code{digits = 2}.
+#'
+#' @details
 #' The Quasi Information Criterion (QIC), the Correlation Information Criterion
 #' (CIC), the Rotnitzky and Jewell Criterion (RJC), the Generalized Error Sum of
-#' Squares (GESSC) and the Gaussian Peudolikelihood Criterion (GPC) are used for
+#' Squares (GESSC) and the Gaussian Pseudolikelihood Criterion (GPC) are used for
 #' selecting the best association structure.
 #' The QICu criterion is used for selecting the best subset of covariates.
 #'
@@ -16,24 +34,8 @@
 #' number of covariates, the model with the smallest QICu value should be
 #' preferred.
 #'
-#' @return A data frame with the QIC, CIC, RJC, QICu, GESSC, GPC and the number
-#' of regression parameters (including intercepts).
-#'
-#' @param object an object of the class \code{geer}.
-#' @param ... optionally more objects of the class \code{geer}.
-#' @param cov_type character indicating whether the sandwich (robust) covariance
-#' matrix (\code{cov_type = "robust"}), the model-based (naive) covariance
-#' matrix (\code{cov_type = "naive"}), the bias-corrected covariance
-#' matrix (\code{cov_type = "bias-corrected"}) or the degrees of freedom adjusted
-#' covariance matrix (\code{cov_type = "df-adjusted"}) should be used to calculate
-#' the GEE criteria. By default, the robust covariance matrix is used.
-#' @param digits integer indicating the number of decimal places for the GEE
-#' criteria to be rounded at.
-#'
-#'
-#' @author Anestis Touloumis
-#'
-#' @references Carey, V.J. and Wang, Y.G. (2011) Working covariance model selection for
+#' @references
+#' Carey, V.J. and Wang, Y.G. (2011) Working covariance model selection for
 #' generalized estimating equations. \emph{Statistics in Medicine}, \bold{30},
 #' 3117--3124.
 #'
@@ -52,7 +54,6 @@
 #' parameters in semiparametric generalized linear models for cluster correlated
 #' data. \emph{Biometrika} \bold{77}, 485--497.
 #'
-#'
 #' @examples
 #' data("cerebrovascular")
 #' fitted_gee <- geewa_binary(formula = ecg ~ period * treatment,
@@ -62,19 +63,10 @@
 #'                            orstr = "exchangeable",
 #'                            method = "gee")
 #' fitted_brgee <- update(fitted_gee, method = "brgee_robust")
-#' gee_criteria(fitted_gee, fitted_brgee)
+#' geecriteria(fitted_gee, fitted_brgee)
 #'
 #' @export
-gee_criteria <- function(object, ..., cov_type = "robust", digits = 4) {
-  UseMethod("gee_criteria")
-}
-
-#' @aliases gee_criteria gee_criteria.geer
-#'
-#' @method gee_criteria geer
-#' @export
-
-gee_criteria.geer <- function(object, ..., cov_type = "robust", digits = 2) {
+geecriteria <- function(object, ..., cov_type = "robust", digits = 2) {
   if (length(list(...))) {
     all_models <- list(object, ...)
     if (any(lapply(all_models, function(x) class(x)[1]) != "geer"))
