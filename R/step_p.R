@@ -58,7 +58,6 @@
 #'
 #' @seealso \code{\link{add1}} and \code{\link{drop1}}.
 #'
-#'
 #' @export
 step_p <-
   function(object,

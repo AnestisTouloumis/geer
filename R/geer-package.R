@@ -12,14 +12,13 @@
 #' @useDynLib geer, .registration = TRUE
 #' @import Rcpp
 #' @importFrom brglm2 brglmFit brglm_control
-#'
-#' @importFrom stats gaussian glm model.extract model.matrix model.response
-#' @importFrom stats coef pnorm printCoefmat binomial qnorm vcov coefficients
-#' @importFrom stats update pchisq formula family .getXlevels delete.response
-#' @importFrom stats model.frame model.offset as.formula update.formula
-#' @importFrom stats drop1 add1 add.scope drop.scope terms formula factor.scope
-#' @importFrom stats glm.fit model.weights
 #' @importFrom methods missingArg
+#' @importFrom stats .getXlevels add.scope add1 as.formula binomial coef
+#' @importFrom stats coefficients dbinom delete.response dnorm dpois drop.scope
+#' @importFrom stats drop1 factor.scope family formula gaussian glm glm.fit
+#' @importFrom stats model.extract model.frame model.matrix model.offset
+#' @importFrom stats model.response model.weights pchisq pnorm printCoefmat
+#' @importFrom stats qnorm terms update update.formula vcov
 #' @importFrom utils combn
 #' @keywords internal
 "_PACKAGE"

@@ -16,7 +16,7 @@ fit_model_or <-
                method = "gee",
                control = list(jeffreys_power = jeffreys_power,
                               tolerance = 1e-12,
-                              step_maxiter = 12))
+                              step_maxit = 12))
 
 fit_model_cor <- geewa(formula = fmla,
                        id = id,
@@ -29,7 +29,7 @@ fit_model_cor <- geewa(formula = fmla,
                        method = "gee",
                        control = list(jeffreys_power = jeffreys_power,
                                       tolerance = 1e-12,
-                                      step_maxiter = 12))
+                                      step_maxit = 12))
 
 fit_model_glm <- glm(formula = fmla,
                      family = binomial(link = link),
