@@ -7,9 +7,9 @@
 \method{geer}{control}(
   tolerance = 1e-06,
   maxiter = 500,
-  or_adding_constant = 0.5,
-  step_maxiter = 10,
-  step_multiplier = 1,
+  or_adding = 0.5,
+  step_maxit = 10,
+  step_multi = 1,
   jeffreys_power = 1/2
 )
 }
@@ -20,26 +20,26 @@
 \item{maxiter}{positive integer giving the maximal number of iterations
 allowed. By default, \code{default = 500}.}
 
-\item{or_adding_constant}{positive constant to be added at each cell of
+\item{or_adding}{positive constant to be added at each cell of
 the full marginalized contingency table. By default,
-\code{or_adding_constant = `0.5`}.}
+\code{or_adding = `0.5`}.}
 
-\item{step_maxiter}{positive integer giving the maximal number of step halving
-steps allowed. By default, \code{step_maxiter = 10}.}
+\item{step_maxit}{positive integer giving the maximal number of step halving
+steps allowed. By default, \code{step_maxit = 10}.}
 
-\item{step_multiplier}{positive integer used as a multiplier for the step. By
-default, \code{steo_multiplier = 1}.}
+\item{step_multi}{positive integer used as a multiplier for the step. By
+default, \code{step_multi = 1}.}
 
-\item{jeffreys_power}{positive real indicating the power of the Jeffreys-prior
-penalty. By default, \code{jeffreys_power = 0.5}.}
+\item{jeffreys_power}{positive constant indicating the power of the
+Jeffreys-prior penalty. By default, \code{jeffreys_power = 0.5}.}
 }
 \value{
 A list with components named as the arguments.
 }
 \description{
-Auxiliary function for \code{\link{geewa}} and \code{\link{geewa_binary}}.
-Typically used internally but may be used to construct a \code{control} argument
-to either function.
+Auxiliary function for \code{\link{geewa}} and \code{\link{geewa_binary}}
+fitting. Typically used internally but may be used to construct a
+\code{control} argument to either function.
 }
 \details{
 The \code{or_adding_constant} is ignored in the function \code{\link{geewa}}.

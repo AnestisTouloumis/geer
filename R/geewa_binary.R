@@ -316,7 +316,7 @@ geewa_binary <- function(formula = formula(data),
     if (length(alpha_vector) != pairs_no)
       stop("'alpha_vector' must be of length ", pairs_no)
   } else {
-    adding_constant <- control$or_adding_constant
+    adding_constant <- control$or_adding
     alpha_vector <- get_marginalized_odds_ratios(round(y),
                                                  id,
                                                  repeated,
@@ -334,7 +334,7 @@ geewa_binary <- function(formula = formula(data),
   ## gee with or without adjustments
   geesolver_fit <- fit_bingee_or(y, model_matrix, id, repeated, weights, link,
                                  beta_zero, offset, maxiter, tolerance,
-                                 control$step_maxiter, control$step_multiplier,
+                                 control$step_maxit, control$step_multi,
                                  control$jeffreys_power, method, alpha_vector)
 
   ## only for bias-corrected estimators

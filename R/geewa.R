@@ -406,8 +406,8 @@ geewa <- function(formula = formula(data),
   ## gee with or without adjustments
   geesolver_fit <- fit_geesolver_cc(y, model_matrix, id, repeated, weights,
                                     link, family$family, beta_zero, offset,
-                                    maxiter, tolerance, control$step_maxiter,
-                                    control$step_multiplier, control$jeffreys_power,
+                                    maxiter, tolerance, control$step_maxit,
+                                    control$step_multi, control$jeffreys_power,
                                     method, subtract_p, alpha_vector, alpha_fixed,
                                     corstr, Mv, phi_value, phi_fixed)
 
