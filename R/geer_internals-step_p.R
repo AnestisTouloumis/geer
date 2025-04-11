@@ -1,84 +1,11 @@
-#' Choose a model by testing-based in a Stepwise Algorithm
-#'
-#' Select a formula-based model by testing-based procedures.
-#'
-#' @inheritParams anova.geer
-#' @inheritParams stats::step
-#' @param object an object representing a model of the class \code{geer}. This is
-#'               used as the initial model in the stepwise search.
-#' @param p_enter numeric between 0 and 1 indicating the p-value threshold for
-#' adding variables in the stepwise search.
-#' @param p_remove numeric between 0 and 1 indicating the p-value threshold for
-#' removing variables in the stepwise search.
-#' @param ... further arguments passed to or from other methods.
-#'
-#' @export
-
-step_model_selection_p <- function(object,
-                                   scope,
-                                   direction = "forward",
-                                   test = "score",
-                                   cov_type = "robust",
-                                   pmethod = "rao-scott",
-                                   p_enter = 0.20,
-                                   p_remove = 0.20,
-                                   steps = 1000,
-                                   ...) {
-  if (!("geer" %in% class(object)))
-    stop("'object' must be of 'geer' class")
-  icheck <- pmatch(test,
-                   c("wald", "score", "working-wald", "working-score", "working-lrt"),
-                   nomatch = 0,
-                   duplicates.ok = FALSE)
-  if (icheck == 0)
-    stop("unknown testing procedure")
-  if (test %in% c("working-wald", "working-score", "working-lrt")) {
-    icheck <- pmatch(pmethod,
-                     c("rao-scott", "satterthwaite"),
-                     nomatch = 0,
-                     duplicates.ok = FALSE)
-    if (icheck == 0)
-      stop("unknown method for pvalue")
-  }
-  if (test == "working-lrt" & object$association_structure != "independence")
-    stop("the modified working lrt can only be applied to an independence working model")
-  icheck <- pmatch(cov_type,
-                   c("robust", "df-adjusted", "bias-corrected", "naive"),
-                   nomatch = 0,
-                   duplicates.ok = FALSE)
-  if (icheck == 0)
-    stop("unknown covariance matrix")
-  if (!(is.numeric(p_enter) & (0 < p_enter) & (p_enter < 1)))
-    stop("'p_enter' must be a numeric object between 0 and 1")
-  if (!(is.numeric(p_remove) & (0 < p_remove) & (p_remove < 1)))
-    stop("'p_enter' must be a numeric object between 0 and 1")
-  icheck <- pmatch(direction,
-                   c("forward", "backward", "both"),
-                   nomatch = 0,
-                   duplicates.ok = FALSE)
-  if (icheck == 0)
-    stop("unknown direction")
-  ans <-
-    switch(direction,
-           backward = step_backward_p(object, scope, test, cov_type, pmethod,
-                                      steps, p_remove),
-           forward = step_forward_p(object, scope, test, cov_type, pmethod,
-                                    steps, p_enter),
-           both = step_both_p(object, scope, test, cov_type, pmethod,
-                              steps, p_enter, p_remove)
-    )
-  ans
-}
-
-
-step_backward_p <- function(object,
+## backward elimination
+step_p_backward <- function(object,
                             scope,
-                            test = "score",
-                            cov_type = "robust",
-                            pmethod = "rao-scott",
-                            steps = 1000,
-                            pvalue = 0.05,
-                            ...) {
+                            test,
+                            cov_type,
+                            pmethod,
+                            pvalue,
+                            steps) {
   model_terms <- terms(object)
   object$call$formula <- object$formula <- model_terms
   if (missing(scope)) {
@@ -152,18 +79,18 @@ step_backward_p <- function(object,
            `Pr(>Chi)` = aod[pvalue_max, "Pr(>Chi)"],
            CIC = extract_cic(fitted_model, cov_type))
   }
-  step.results(models = models[seq(models_no)], fitted_model, object)
+  step_results(models = models[seq(models_no)], fitted_model, object)
 }
 
 
-step_forward_p <- function(object,
+## forward selection
+step_p_forward <- function(object,
                            scope,
-                           test = "score",
-                           cov_type = "robust",
-                           pmethod = "rao-scott",
-                           steps = 1000,
-                           pvalue = 0.05,
-                           ...) {
+                           test,
+                           cov_type,
+                           pmethod,
+                           pvalue,
+                           steps) {
 
   model_terms <- terms(object)
   object$call$formula <- object$formula <- model_terms
@@ -233,19 +160,19 @@ step_forward_p <- function(object,
            `Pr(>Chi)` = aod[pvalue_min, "Pr(>Chi)"],
            CIC = extract_cic(fitted_model, cov_type))
   }
-  step.results(models = models[seq(models_no)], fitted_model, object)
+  step_results(models = models[seq(models_no)], fitted_model, object)
 }
 
 
-step_both_p <- function(object,
+## bidirectional elimination
+step_p_both <- function(object,
                         scope,
-                        test = "wald",
-                        cov_type = "robust",
-                        pmethod = "rao-scott",
-                        steps = 1000,
-                        p_enter = 0.05,
-                        p_remove = 0.05,
-                        ...) {
+                        test,
+                        cov_type,
+                        pmethod,
+                        p_enter,
+                        p_remove,
+                        steps) {
   models <- vector("list", steps)
   models_no <- 1
   models <- vector("list", steps)
@@ -257,13 +184,13 @@ step_both_p <- function(object,
   change_variable <- ""
   while (steps > 0 & same_variable < 2) {
     steps <- steps - 1
-    fitted_model <- step_backward_p(fitted_model,
+    fitted_model <- step_p_backward(fitted_model,
                                     scope = scope,
                                     test = test,
                                     cov_type = cov_type,
                                     pmethod = pmethod,
-                                    steps = 1,
-                                    pvalue = p_remove)
+                                    pvalue = p_remove,
+                                    steps = 1)
     if (all(is.na(fitted_model$anova$`Pr(>Chi)`))) {
       same_variable <- same_variable + 1
     } else {
@@ -282,13 +209,13 @@ step_both_p <- function(object,
       }
     }
     steps <- steps - 1
-    fitted_model <- step_forward_p(fitted_model,
+    fitted_model <- step_p_forward(fitted_model,
                                    scope = scope,
                                    test = test,
                                    cov_type = cov_type,
                                    pmethod = pmethod,
-                                   steps = 1,
-                                   pvalue = p_enter)
+                                   pvalue = p_enter,
+                                   steps = 1)
     if (all(is.na(fitted_model$anova$`Pr(>Chi)`))) {
       same_variable <- same_variable + 1
     } else {
@@ -307,12 +234,12 @@ step_both_p <- function(object,
       }
     }
   }
-  step.results(models = models[seq(models_no)], fitted_model, object)
+  step_results(models = models[seq(models_no)], fitted_model, object)
 }
 
 
-
-step.results <- function(models, fit, object) {
+## printing results
+step_results <- function(models, fit, object) {
   Step <- sapply(models, `[[`, "Step")
   Df <- sapply(models, `[[`, "Df")
   Chi <- sapply(models, `[[`, "Chi")
