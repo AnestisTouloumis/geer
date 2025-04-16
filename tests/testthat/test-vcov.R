@@ -3,9 +3,9 @@ link <- sample(c("logit", "probit", "cloglog", "cauchit"),
 association <- sample(c("independence", "exchangeable", "unstructured"),
                       1)
 method_gee <-  sample(c("gee",
-                        "brgee_naive", "brgee_robust", "brgee_empirical",
-                        "bcgee_naive", "bcgee_robust", "bcgee_empirical",
-                        "pgee_jeffreys"),
+                        "brgee-naive", "brgee-robust", "brgee-empirical",
+                        "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+                        "pgee-jeffreys"),
                       1)
 print(c(link, association, method_gee))
 

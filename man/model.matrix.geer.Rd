@@ -29,9 +29,9 @@ coded by contrasts (in some terms dummy coding may be used), either as a
 character vector naming a function or as a numeric matrix.
 }
 \description{
-\code{model.matrix} creates a design (or model) matrix from a \code{geer}
-object, e.g., by expanding factors to a set of dummy variables
-(depending on the contrasts) and expanding interactions similarly.
+Creates a design or model matrix from a object, e.g., by expanding factors
+to a set of dummy variables (depending on the contrasts) and expanding
+interactions similarly.
 }
 \details{
 \code{model.matrix} creates a design matrix from the description given in

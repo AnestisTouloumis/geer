@@ -8,9 +8,9 @@ fitted_pgee_corr <- geewa(formula = formula,
                           phi_fixed = TRUE,
                           phi_value = 1,
                           corstr = "independence",
-                          method = "pgee_jeffreys")
+                          method = "pgee-jeffreys")
 
-fitted_brnaive_corr <- update(fitted_pgee_corr, method = "brgee_naive")
+fitted_brnaive_corr <- update(fitted_pgee_corr, method = "brgee-naive")
 
 
 test_that("jeffreys = naive - independence - correlation", {
@@ -25,10 +25,10 @@ fitted_pgee_or <- geewa_binary(formula = formula,
                                  link = "logit",
                                  data = respiratory,
                                  orstr = "independence",
-                                 method = "pgee_jeffreys")
+                                 method = "pgee-jeffreys")
 
 
-fitted_brnaive_or <- update(fitted_pgee_or, method = "brgee_naive")
+fitted_brnaive_or <- update(fitted_pgee_or, method = "brgee-naive")
 
 
 test_that("jeffreys = naive - independence1", {

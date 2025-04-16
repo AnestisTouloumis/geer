@@ -29,8 +29,8 @@
 #' @returns
 #' A list with components named as the arguments.
 #'
-#' @export geer.control
-geer.control <- function(tolerance = 1e-06,
+#' @export
+geer_control <- function(tolerance = 1e-06,
                          maxiter = 500,
                          or_adding = 0.5,
                          step_maxit = 10,

@@ -17,24 +17,24 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{newdata}{optionally, a data frame in which to look for variables with
+\item{newdata}{optional data frame in which to look for variables with
 which to predict. If omitted, the fitted linear predictors are used.}
 
-\item{type}{the type of prediction required. Options include the scale of the
+\item{type}{type of prediction required. Options include the scale of the
 linear predictors (\code{"link"}) and the scale of the response
 variable (\code{"response"}). By default, the scale of the linear
 predictors is used.}
 
 \item{cov_type}{character indicating the type of estimator which should be
-used to the variance-covariance matrix of the interest parameters.
-Options include the sandwich or robust estimator (\code{"robust"}),
-the bias-corrected estimator (\code{"bias-corrected"}),
-the degrees of freedom adjusted estimator (\code{"df-adjusted"}) and
-the model-based or naive estimator (\code{"naive"}). By default, the
-robust covariance estimator is used.}
+used to the covariance matrix of the interest parameters. Options
+include the sandwich or robust estimator (\code{"robust"}), the
+bias-corrected estimator (\code{"bias-corrected"}), the degrees of
+freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
+or naive estimator (\code{"naive"}). By default, the robust covariance
+estimator is used.}
 
-\item{se.fit}{logical switch indicating if standard errors are required.
-By default, the standard errors are not required.}
+\item{se.fit}{logical indicating if standard errors are required. By default,
+the standard errors are not required.}
 
 \item{...}{additional argument(s) for methods.}
 }

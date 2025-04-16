@@ -496,7 +496,7 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                              mu_vector,
                              eta_vector,
                              alpha_vector);
-  }else if(std::strcmp(method, "brgee_naive") == 0){
+  }else if(std::strcmp(method, "brgee-naive") == 0){
     ans = update_beta_naive_or(y_vector,
                                model_matrix,
                                id_vector,
@@ -507,7 +507,7 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                mu_vector,
                                eta_vector,
                                alpha_vector);
-  }else if(std::strcmp(method, "brgee_robust") == 0){
+  }else if(std::strcmp(method, "brgee-robust") == 0){
     ans = update_beta_robust_or(y_vector,
                                 model_matrix,
                                 id_vector,
@@ -518,7 +518,7 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                 mu_vector,
                                 eta_vector,
                                 alpha_vector);
-  }else if(std::strcmp(method, "brgee_empirical") == 0){
+  }else if(std::strcmp(method, "brgee-empirical") == 0){
     ans = update_beta_empirical_or(y_vector,
                                    model_matrix,
                                    id_vector,
@@ -529,7 +529,7 @@ arma::vec update_beta_or(const arma::vec & y_vector,
                                    mu_vector,
                                    eta_vector,
                                    alpha_vector);
-  }else if(std::strcmp(method, "pgee_jeffreys") == 0){
+  }else if(std::strcmp(method, "pgee-jeffreys") == 0){
     ans = update_beta_jeffreys_or(y_vector,
                                   model_matrix,
                                   id_vector,

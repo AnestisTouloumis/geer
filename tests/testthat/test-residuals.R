@@ -3,9 +3,9 @@ link <- sample(c("logit", "probit", "cloglog", "cauchit"),
 association <- sample(c("independence", "exchangeable", "unstructured"),
                       1)
 method_gee <-  sample(c("gee",
-                        "brgee_naive", "brgee_robust", "brgee_empirical",
-                        "bcgee_naive", "bcgee_robust", "bcgee_empirical",
-                        "pgee_jeffreys"),
+                        "brgee-naive", "brgee-robust", "brgee-empirical",
+                        "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+                        "pgee-jeffreys"),
                       1)
 print(c(link, association, method_gee))
 
@@ -28,8 +28,8 @@ fit_geewa_binary <-
 response_vector <- I(cerebrovascular$ecg == "normal")
 mu_vector_geewa <- fitted(fit_geewa)
 mu_vector_geewa_binary <- fitted(fit_geewa_binary)
-weights_geewa <- fit_geewa$weights
-weights_geewa_binary <- fit_geewa_binary$weights
+weights_geewa <- fit_geewa$prior.weights
+weights_geewa_binary <- fit_geewa_binary$prior.weights
 
 test_that("working residuals", {
   expect_equal(response_vector - mu_vector_geewa,

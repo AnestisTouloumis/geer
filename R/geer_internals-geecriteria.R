@@ -1,18 +1,24 @@
 ## marginal likelihood
 ## !! Need to improve this code !!
 compute_quasi_loglikelihood <- function(object) {
-  mu <- object$fitted.values
   y  <- object$y
+  n <- rep(1, length(y))
+  mu <- object$fitted.values
+  wt <- object$prior.weights
+  dev <- residuals.geer(object, type = "deviance")
+  phi <- object$phi
+  mdis <- object$family$family
   marginal_distribution <- object$family$family
   ans <-
-    switch(marginal_distribution,
-           gaussian = sum(dnorm(y, mu, log = TRUE)),
-           binomial = sum(dbinom(y, 1, mu, log = TRUE)),
-           poisson  = sum(dpois(y, mu, log = TRUE)),
-           Gamma    = sum(-y/(mu - log(mu))),
+    switch(mdis,
+           gaussian = gaussian()$aic(y, n, mu, wt, dev),
+           binomial = binomial()$aic(y, n, mu, wt, dev),
+           poisson  = poisson()$aic(y, n, mu, wt, dev),
+           Gamma = Gamma()$aic(y, n, mu, wt, dev),
+           inverse.gaussian = inverse.gaussian()$aic(y, n, mu, wt, dev),
            stop("Error: distribution not recognized")
-    )/object$phi
-  ans
+    )/phi
+  -ans/2
 }
 
 
@@ -29,7 +35,7 @@ compute_criteria <- function(object, cov_type, digits) {
                              object$association_structure,
                              object$alpha,
                              object$phi,
-                             object$weights)
+                             object$prior.weights)
   } else {
     if (length(object$alpha) == 1) {
       object$alpha <- rep(object$alpha, choose(max(object$repeated), 2))
@@ -40,7 +46,7 @@ compute_criteria <- function(object, cov_type, digits) {
                                 object$repeated,
                                 object$fitted.values,
                                 object$alpha,
-                                object$weights)
+                                object$prior.weights)
   }
   if (object$association == "indepedence") {
     association_params_no <- 0
@@ -56,7 +62,7 @@ compute_criteria <- function(object, cov_type, digits) {
   sc_wc_stats <- unlist(sc_wc_stats)
   independence_naive_covariance_inverse <-
     get_naive_matrix_inverse_independence(object$y,
-                                          object$model_matrix,
+                                          object$x,
                                           object$id,
                                           object$family$link,
                                           object$family$family,
@@ -90,7 +96,7 @@ compute_criteria <- function(object, cov_type, digits) {
 extract_cic <- function(object, cov_type) {
   cov_mat_independence_inverse <-
     get_naive_matrix_inverse_independence(object$y,
-                                          object$model_matrix,
+                                          object$x,
                                           object$id,
                                           object$family$link,
                                           object$family$family,

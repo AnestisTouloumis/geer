@@ -27,9 +27,9 @@ test_that("gee-glm", {
 
 test_that("jeffreys = naive - logit", {
   fit_brgee_naive <- update(fit_gee,
-                            method = "brgee_naive")
+                            method = "brgee-naive")
   fit_pgee_jeffreys <- update(fit_brgee_naive,
-                              method = "pgee_jeffreys")
+                              method = "pgee-jeffreys")
   expect_equal(coef(fit_brgee_naive),
                coef(fit_pgee_jeffreys))
 })
@@ -38,9 +38,9 @@ test_that("jeffreys = naive - logit", {
 test_that("jeffreys != naive - probit", {
   fit_brgee_naive_probit <- update(fit_gee,
                                    family = binomial(link = "probit"),
-                                   method = "brgee_naive")
+                                   method = "brgee-naive")
   fit_pgee_jeffreys_probit <- update(fit_brgee_naive_probit,
-                                     method = "pgee_jeffreys")
+                                     method = "pgee-jeffreys")
   expect_false(all((coef(fit_brgee_naive_probit) - coef(fit_pgee_jeffreys_probit)) == 0))
 })
 
@@ -50,7 +50,7 @@ test_that("jeffreys = glm - logit", {
                               method = brglmFit,
                               type = "MPL_Jeffreys")
   fit_pgee_jeffreys <- update(fit_gee,
-                              method = "pgee_jeffreys")
+                              method = "pgee-jeffreys")
   expect_equal(coef(fit_glm_jeffreys),
                coef(fit_pgee_jeffreys),
                tolerance = 1e-5)
@@ -66,7 +66,7 @@ test_that("jeffreys = glm - probit", {
                                      type = "MPL_Jeffreys")
   fit_pgee_jeffreys_probit <- update(fit_gee,
                                      family = binomial(link = "probit"),
-                                     method = "pgee_jeffreys")
+                                     method = "pgee-jeffreys")
   expect_equal(coef(fit_glm_jeffreys_probit),
                coef(fit_pgee_jeffreys_probit),
                tolerance = 1e-5)

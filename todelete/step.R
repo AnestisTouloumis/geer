@@ -5,7 +5,7 @@ object0 <- geewa(formula = ecg ~ 1,
                  data = cerebrovascular,
                  family = binomial(link = "logit"),
                  corstr = "independence",
-                 method = "pgee_jeffreys",
+                 method = "pgee-jeffreys",
                  phi_fixed = TRUE)
 object1 <- update(object0, formula = ecg ~ period + treatment)
 object2 <- update(object0, formula = ecg ~ period*treatment)

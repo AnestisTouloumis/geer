@@ -441,7 +441,7 @@ arma::vec update_beta_cc(const arma::vec & y_vector,
                              correlation_structure,
                              alpha_vector,
                              phi);
-  }else if(std::strcmp(method, "brgee_naive") == 0){
+  }else if(std::strcmp(method, "brgee-naive") == 0){
     ans = update_beta_naive_cc(y_vector,
                                model_matrix,
                                id_vector,
@@ -455,7 +455,7 @@ arma::vec update_beta_cc(const arma::vec & y_vector,
                                correlation_structure,
                                alpha_vector,
                                phi);
-  }else if(std::strcmp(method, "brgee_robust") == 0){
+  }else if(std::strcmp(method, "brgee-robust") == 0){
     ans = update_beta_robust_cc(y_vector,
                                 model_matrix,
                                 id_vector,
@@ -469,7 +469,7 @@ arma::vec update_beta_cc(const arma::vec & y_vector,
                                 correlation_structure,
                                 alpha_vector,
                                 phi);
-  }else if(std::strcmp(method, "brgee_empirical") == 0){
+  }else if(std::strcmp(method, "brgee-empirical") == 0){
     ans = update_beta_empirical_cc(y_vector,
                                    model_matrix,
                                    id_vector,
@@ -483,7 +483,7 @@ arma::vec update_beta_cc(const arma::vec & y_vector,
                                    correlation_structure,
                                    alpha_vector,
                                    phi);
-  }else if(std::strcmp(method, "pgee_jeffreys") == 0){
+  }else if(std::strcmp(method, "pgee-jeffreys") == 0){
     ans = update_beta_jeffreys_cc(y_vector,
                                   model_matrix,
                                   id_vector,

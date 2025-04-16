@@ -23,7 +23,7 @@ test_that("gee-glm", {
 
 test_that("brgee_naive-brglm_firth - probit", {
   fit_brgee_naive <- update(fit_gee,
-                            method = "brgee_naive")
+                            method = "brgee-naive")
   fit_glm_firth <- update(fit_glm,
                           method = brglmFit,
                           type = "AS_mean")
@@ -40,7 +40,7 @@ test_that("brgee_naive-brglm_firth - probit", {
 test_that("brgee_naive-brglm_firth - logit", {
   fit_brgee_naive <- update(fit_gee,
                             link = "logit",
-                            method = "brgee_naive")
+                            method = "brgee-naive")
   fit_glm_firth <- update(fit_glm,
                           family = binomial(link = "logit"),
                           method = brglmFit,

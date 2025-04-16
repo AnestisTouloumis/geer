@@ -62,7 +62,7 @@
 #'                            link = "logit",
 #'                            orstr = "exchangeable",
 #'                            method = "gee")
-#' fitted_brgee <- update(fitted_gee, method = "brgee_robust")
+#' fitted_brgee <- update(fitted_gee, method = "brgee-robust")
 #' geecriteria(fitted_gee, fitted_brgee)
 #'
 #' @export

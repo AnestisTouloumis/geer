@@ -54,20 +54,19 @@ Compute analysis of variance tables using hypothesis testing procedures for
 one or more fitted model.
 }
 \details{
-Details about the testing procedures implied by the \code{test} argument can
+Details about the hypothesis testing procedures implied by \code{test} can
 be found in \cite{Rotnitzky and Jewell (1990)}. Note that
 \code{test = "working-lrt"} is only available to fitted models with an
-independence association structure. Otherwise, an error message is
+independence working association structure. Otherwise, an error message is
 returned.
 
 When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-argument is ignored and the \code{cov_type} argument specifies the covariance
-matrix estimate of the estimated regression parameters used to calculate the
-corresponding test statistic. Otherwise, the \code{cov_type} argument
-specifies the covariance matrix estimate of the estimated regression
-parameters used to calculate the coefficients of the independent chi-squared
-random variables, and the \code{p_method} argument specifies the
-approximation method used to calculate the p-value of the test statistic.
+argument is ignored and \code{cov_type} specifies the covariance matrix
+estimate used to calculate the corresponding test statistic. Otherwise,
+\code{cov_type} specifies the covariance matrix estimate used to calculate
+the coefficients of the sum of independent chi-squared random variables, and
+\code{p_method} argument specifies the approximation method used to calculate
+the p-value of the resulting test statistic.
 
 The comparison between two or more models will only be valid if they are
 fitted to the same dataset.

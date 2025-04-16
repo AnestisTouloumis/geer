@@ -51,9 +51,9 @@ test_that("gee - glm", {
 
 test_that("brgee_robust", {
   fit_model_or <- update(fit_model_or,
-                         method = "brgee_robust")
+                         method = "brgee-robust")
   fit_model_cor <- update(fit_model_cor,
-                          method = "brgee_robust")
+                          method = "brgee-robust")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
@@ -61,16 +61,16 @@ test_that("brgee_robust", {
 
 test_that("brgee_naive", {
   fit_model_or <- update(fit_model_or,
-                         method = "brgee_naive")
+                         method = "brgee-naive")
   fit_model_cor <- update(fit_model_cor,
-                          method = "brgee_naive")
+                          method = "brgee-naive")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
 
 test_that("brgee_naive - firth", {
   fit_model_or <- update(fit_model_or,
-                         method = "brgee_naive")
+                         method = "brgee-naive")
   fit_model_glm <- update(fit_model_glm,
                           control = list(type = "AS_mean",
                                          epsilon = 1e-12))
@@ -80,27 +80,27 @@ test_that("brgee_naive - firth", {
 
 test_that("brgee_empirical", {
   fit_model_or <- update(fit_model_or,
-                         method = "brgee_empirical")
+                         method = "brgee-empirical")
   fit_model_cor <- update(fit_model_cor,
-                          method = "brgee_empirical")
+                          method = "brgee-empirical")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
 
 test_that("bcgee_robust", {
   fit_model_or <- update(fit_model_or,
-                         method = "bcgee_robust")
+                         method = "bcgee-robust")
   fit_model_cor <- update(fit_model_cor,
-                          method = "bcgee_robust")
+                          method = "bcgee-robust")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
 
 test_that("bcgee_naive", {
   fit_model_or <- update(fit_model_or,
-                         method = "bcgee_naive")
+                         method = "bcgee-naive")
   fit_model_cor <- update(fit_model_cor,
-                          method = "bcgee_naive")
+                          method = "bcgee-naive")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
@@ -108,25 +108,25 @@ test_that("bcgee_naive", {
 
 test_that("bcgee_empirical", {
   fit_model_or <- update(fit_model_or,
-                         method = "bcgee_empirical")
+                         method = "bcgee-empirical")
   fit_model_cor <- update(fit_model_cor,
-                          method = "bcgee_empirical")
+                          method = "bcgee-empirical")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
 
 test_that("pgee_jeffreys", {
   fit_model_or <- update(fit_model_or,
-                         method = "pgee_jeffreys")
+                         method = "pgee-jeffreys")
   fit_model_cor <- update(fit_model_cor,
-                          method = "pgee_jeffreys")
+                          method = "pgee-jeffreys")
   expect_equal(coef(fit_model_or),
                coef(fit_model_cor))
 })
 
 test_that("pgee_jeffreys - glm", {
   fit_model_or <- update(fit_model_or,
-                         method = "pgee_jeffreys",
+                         method = "pgee-jeffreys",
                          control = list(jeffreys_power = jeffreys_power,
                                         tolerance = 1e-12))
   fit_model_glm <- update(fit_model_glm,
@@ -141,9 +141,9 @@ test_that("pgee_jeffreys - glm", {
 test_that("pgee_jeffreys - brgee_naive - logit", {
   fit_model_or <- update(fit_model_or,
                          link = "logit",
-                         method = "brgee_naive")
+                         method = "brgee-naive")
   fit_model_or2 <- update(fit_model_or,
-                          method = "pgee_jeffreys",
+                          method = "pgee-jeffreys",
                           control = list(jeffreys_power = 0.5,
                                          tolerance = 1e-12))
   expect_equal(coef(fit_model_or),

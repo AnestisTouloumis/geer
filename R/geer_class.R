@@ -5,35 +5,40 @@ geer <- function(x, ...) { # nolint
 #' @export
 geer.default <- function(x, ...) {
   object <- list()
-  object$call <- x$call
   object$coefficients <- x$coefficients
-  object$phi <- x$phi
-  object$association_structure <- x$association_structure
-  object$alpha <- x$alpha
+  object$residuals <- x$residuals
+  object$fitted.values <- x$fitted.values
+  object$rank <- x$rank
+  object$qr <- x$qr
+  object$family <- x$family
+  object$linear.predictors <- x$linear.predictors
+  object$iter <- x$iter
+  object$prior.weights <- x$prior.weights
+  object$df.residual <- x$df.residual
+  object$y <- x$y
+  object$x <- x$x
+  object$id <- x$id
+  object$repeated <- x$repeated
+  object$converged <- x$converged
+  object$call <- x$call
+  object$formula <- x$formula
+  object$terms <- x$terms
+  object$data <- x$data
+  object$offset <- x$offset
+  object$control <- x$control
+  object$method <- x$method
+  object$contrasts <- x$contrasts
+  object$xlevels <- x$xlevels
   object$naive_covariance <- x$naive_covariance
   object$robust_covariance <- x$robust_covariance
   object$bias_corrected_covariance <- x$bias_corrected_covariance
-  object$ee_value <- x$ee_value
-  object$converged <- x$converged
-  object$niter <- x$niter
-  object$criterion <- x$criterion
-  object$terms <- x$terms
-  object$family <- x$family
-  object$y <- x$y
-  object$model_matrix <- x$model_matrix
-  object$id <- x$id
-  object$repeated <- x$repeated
-  object$residuals <- x$residuals
-  object$fitted.values <- x$fitted.values
-  object$linear.predictors <- x$linear.predictors
+  object$association_structure <- x$association_structure
+  object$alpha <- x$alpha
+  object$phi <- x$phi
   object$obs_no <- x$obs_no
   object$clusters_no <- x$clusters_no
   object$min_cluster_size <- x$min_cluster_size
   object$max_cluster_size <- x$max_cluster_size
-  object$method <- x$method
-  object$levels <- x$levels
-  object$contrasts <- x$contrasts
-  object$df.residuals <- x$df.residuals
   class(object) <- "geer"
   object
 }
@@ -45,7 +50,7 @@ print.geer <- function(x, ...) {
   print(x$call)
   cat("\nCoefficients:\n")
   print(x$coefficients)
-  cat("\nNumber of iterations :", x$niter, "\n")
+  cat("\nNumber of iterations :", x$iter, "\n")
   cat("Algorithm converged  :", x$converged, "\n")
 }
 
@@ -69,7 +74,7 @@ summary.geer <- function(object, cov_type = "robust", ...) {
     alpha = object$alpha,
     call = object$call,
     residuals = object$residuals,
-    niter = object$niter,
+    niter = object$iter,
     converged = object$converged,
     phi = object$phi,
     association_structure = object$association_structure,
@@ -86,7 +91,7 @@ print.summary.geer <- function(x, ...) {
   cat("\ncall:\n")
   print(x$call)
   cat("\nEstimating Method   :", x$method, "\n")
-  cat("Number of iterations:", x$niter, "\n")
+  cat("Number of iterations:", x$iter, "\n")
   cat("Algorithm converged :", x$converged, "\n")
   cat("\nMarginal Model\n")
   cat("Family       :", x$family$family, "\n")
@@ -128,20 +133,19 @@ print.summary.geer <- function(x, ...) {
 #'
 #' In a scope formula . means 'what is already there'.
 #'
-#' Details about the testing procedures implied by the \code{test} argument can
+#' Details about the hypothesis testing procedures implied by \code{test} can
 #' be found in \cite{Rotnitzky and Jewell (1990)}. Note that
 #' \code{test = "working-lrt"} is only available to fitted models with an
 #' independence working association structure. Otherwise, an error message is
 #' returned.
 #'
 #' When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-#' argument is ignored and the \code{cov_type} argument specifies the covariance
-#' matrix estimate of the estimated regression parameters used to calculate the
-#' corresponding test statistic. Otherwise, the \code{cov_type} argument
-#' specifies the covariance matrix estimate of the estimated regression
-#' parameters used to calculate the coefficients of the independent chi-squared
-#' random variables, and the \code{p_method} argument specifies the
-#' approximation method used to calculate the p-value of the test statistic.
+#' argument is ignored and \code{cov_type} specifies the covariance matrix
+#' estimate used to calculate the corresponding test statistic. Otherwise,
+#' \code{cov_type} specifies the covariance matrix estimate used to calculate
+#' the coefficients of the sum of independent chi-squared random variables, and
+#' \code{p_method} argument specifies the approximation method used to calculate
+#' the p-value of the resulting test statistic.
 #'
 #' The output table also gives the Correlation Information Criterion (CIC)
 #' criterion.
@@ -326,20 +330,19 @@ drop1.geer <-
 #'        approximation is used.
 #'
 #' @details
-#' Details about the testing procedures implied by the \code{test} argument can
+#' Details about the hypothesis testing procedures implied by \code{test} can
 #' be found in \cite{Rotnitzky and Jewell (1990)}. Note that
 #' \code{test = "working-lrt"} is only available to fitted models with an
-#' independence association structure. Otherwise, an error message is
+#' independence working association structure. Otherwise, an error message is
 #' returned.
 #'
 #' When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-#' argument is ignored and the \code{cov_type} argument specifies the covariance
-#' matrix estimate of the estimated regression parameters used to calculate the
-#' corresponding test statistic. Otherwise, the \code{cov_type} argument
-#' specifies the covariance matrix estimate of the estimated regression
-#' parameters used to calculate the coefficients of the independent chi-squared
-#' random variables, and the \code{p_method} argument specifies the
-#' approximation method used to calculate the p-value of the test statistic.
+#' argument is ignored and \code{cov_type} specifies the covariance matrix
+#' estimate used to calculate the corresponding test statistic. Otherwise,
+#' \code{cov_type} specifies the covariance matrix estimate used to calculate
+#' the coefficients of the sum of independent chi-squared random variables, and
+#' \code{p_method} argument specifies the approximation method used to calculate
+#' the p-value of the resulting test statistic.
 #'
 #' The comparison between two or more models will only be valid if they are
 #' fitted to the same dataset.
@@ -389,7 +392,7 @@ anova.geer <-
     terms <- attr(object$terms, "term.labels")
     intercept <- attr(object$terms, "intercept")
     variables <- attr(object$terms, "variables")
-    varseq <- attr(object$model_matrix, "assign")
+    varseq <- attr(object$x, "assign")
     nvars <- max(0, varseq)
     object_list <- list()
     if (intercept == 1) {
@@ -550,9 +553,9 @@ fitted.geer <- function(object, ...){
 #' @method model.matrix geer
 #'
 #' @description
-#' \code{model.matrix} creates a design (or model) matrix from a \code{geer}
-#' object, e.g., by expanding factors to a set of dummy variables
-#' (depending on the contrasts) and expanding interactions similarly.
+#' Creates a design or model matrix from a object, e.g., by expanding factors
+#' to a set of dummy variables (depending on the contrasts) and expanding
+#' interactions similarly.
 #'
 #' @inheritParams coef.geer
 #'
@@ -604,21 +607,21 @@ model.matrix.geer <-	function(object,...){
 #' predictions from a fitted generalized estimating equations model object.
 #'
 #' @inheritParams add1.geer
-#' @param newdata	optionally, a data frame in which to look for variables with
+#' @param newdata optional data frame in which to look for variables with
 #'        which to predict. If omitted, the fitted linear predictors are used.
-#' @param type the type of prediction required. Options include the scale of the
+#' @param type type of prediction required. Options include the scale of the
 #'        linear predictors (\code{"link"}) and the scale of the response
 #'        variable (\code{"response"}). By default, the scale of the linear
 #'        predictors is used.
-#' @param se.fit logical switch indicating if standard errors are required.
-#'        By default, the standard errors are not required.
+#' @param se.fit logical indicating if standard errors are required. By default,
+#'         the standard errors are not required.
 #' @param cov_type character indicating the type of estimator which should be
-#'        used to the variance-covariance matrix of the interest parameters.
-#'        Options include the sandwich or robust estimator (\code{"robust"}),
-#'        the bias-corrected estimator (\code{"bias-corrected"}),
-#'        the degrees of freedom adjusted estimator (\code{"df-adjusted"}) and
-#'        the model-based or naive estimator (\code{"naive"}). By default, the
-#'        robust covariance estimator is used.
+#'        used to the covariance matrix of the interest parameters. Options
+#'        include the sandwich or robust estimator (\code{"robust"}), the
+#'        bias-corrected estimator (\code{"bias-corrected"}), the degrees of
+#'        freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
+#'        or naive estimator (\code{"naive"}). By default, the robust covariance
+#'        estimator is used.
 #'
 #' @details
 #' If \code{newdata} is omitted the predictions are based on the data used for
@@ -651,7 +654,7 @@ predict.geer <-
       }
       if (se.fit) {
         covariance_matrix <- vcov(object, type = cov_type)
-        model_matrix <- object$model_matrix
+        model_matrix <- object$x
         se.fit <-
           sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
         if (type == "response")
@@ -662,7 +665,7 @@ predict.geer <-
     } else {
       newdata <- data.frame(newdata)
       model_frame <-
-        model.frame(delete.response(object$terms), newdata, xlev = object$levels)
+        model.frame(delete.response(object$terms), newdata, xlev = object$xlevels)
       model_matrix <-
         model.matrix(delete.response(object$terms), model_frame, contrasts = object$contrasts)
       predicts <- c(model_matrix %*% object$coefficients)
@@ -722,7 +725,7 @@ residuals.geer <- function(object,
   type <- match.arg(type)
   response_vector <- object$y
   mu_vector <- object$fitted.values
-  weight_vector <- object$weights
+  weight_vector <- object$prior.weights
   ans <- switch(type,
                 deviance = if (object$df.residual > 0) {
                   deviance_res <-
@@ -813,7 +816,7 @@ vcov.geer <-
       total_obs <- object$obs_no
       sample_size <- object$clusters_no
       parameters_no <- length(object$coefficients)
-      df_residuals <- object$df.residuals
+      df_residuals <- object$df.residual
       kappa <-
         ((total_obs - 1)/df_residuals) * (sample_size / (sample_size - 1))
       delta <-
