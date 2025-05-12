@@ -229,6 +229,111 @@ arma::vec update_beta_robust_cc(const arma::vec & y_vector,
 //==============================================================================
 
 
+//============================ update beta - robust2 ============================
+// [[Rcpp::export]]
+arma::vec update_beta_robust2_cc(const arma::vec & y_vector,
+                                const arma::mat & model_matrix,
+                                const arma::vec & id_vector,
+                                const arma::vec & repeated_vector,
+                                const arma::vec & weights_vector,
+                                const char* link,
+                                const char* family,
+                                const arma::vec & beta_vector,
+                                const arma::vec & mu_vector,
+                                const arma::vec & eta_vector,
+                                const char * correlation_structure,
+                                const arma::vec & alpha_vector,
+                                const double & phi) {
+  int params_no = model_matrix.n_cols;
+  int sample_size = max(id_vector);
+  arma::mat u_vector = arma::zeros(params_no);
+  arma::mat partial_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat second_derivatives_matrix = arma::zeros(pow(params_no, 2), params_no);
+  arma::mat naive_matrix_inverse = arma::zeros(params_no, params_no);
+  arma::mat meat_matrix = arma::zeros(params_no, params_no);
+  arma::vec delta_vector = mueta(link, eta_vector);
+  arma::vec delta_star_vector = mueta2(link, eta_vector)/pow(delta_vector, 2);
+  arma::vec alpha_star_vector =
+    - 0.5 * variancemu(family, mu_vector) / variance(family, mu_vector);
+    arma::vec s_vector = y_vector - mu_vector;
+    arma::mat correlation_matrix =
+      get_correlation_matrix(correlation_structure,
+                             alpha_vector,
+                             max(repeated_vector));
+    for(int i=1; i < sample_size + 1; i++){
+      arma::uvec id_vector_i = find(id_vector == i);
+      arma::vec s_vector_i = s_vector(id_vector_i);
+      arma::vec alpha_star_vector_i = alpha_star_vector(id_vector_i);
+      arma::mat d_matrix_i =
+        arma::diagmat(delta_vector(id_vector_i)) * model_matrix.rows(id_vector_i);
+      arma::mat v_matrix_inverse_i =
+        arma::inv(get_v_matrix_cc(family,
+                                  mu_vector(id_vector_i),
+                                  repeated_vector(id_vector_i),
+                                  phi,
+                                  correlation_matrix,
+                                  weights_vector(id_vector_i)),
+                                  arma::inv_opts::allow_approx);
+      arma::mat d_matrix_trans_v_matrix_inverse_i =
+        trans(d_matrix_i) * v_matrix_inverse_i;
+      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+      arma::vec u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+      u_vector += u_vector_i;
+      meat_matrix += u_vector_i * trans(u_vector_i);
+      arma::mat v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i =
+        v_matrix_inverse_i *
+        arma::diagmat(alpha_star_vector_i + delta_star_vector(id_vector_i));
+      arma::mat kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i =
+        kappa_right(trans(v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i));
+      arma::mat v_matrix_inverse_alpha_star_matrix_i =
+        v_matrix_inverse_i * arma::diagmat(alpha_star_vector_i);
+      arma::mat kron_d_matrix_trans_d_matrix_trans_i = trans(kron(d_matrix_i, d_matrix_i));
+      second_derivatives_matrix -=
+        kron_d_matrix_trans_d_matrix_trans_i *
+        (kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
+        kronecker_left_identity_kappa(
+          v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i +
+            v_matrix_inverse_alpha_star_matrix_i) +
+            kronecker_identity_right_kappa(
+              v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i
+            )) *
+              d_matrix_i;
+      partial_derivatives_matrix +=
+        kron_d_matrix_trans_d_matrix_trans_i *
+        (kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
+        kronecker_left_identity_kappa(v_matrix_inverse_alpha_star_matrix_i)) *
+        s_vector_i * trans(u_vector_i);
+    }
+    arma::mat robust_matrix =
+      solve(naive_matrix_inverse, trans(solve(naive_matrix_inverse, meat_matrix)));
+    arma::mat naive_matrix_meat_matrix = solve(naive_matrix_inverse, meat_matrix);
+    arma::vec lambda_vector = arma::zeros(params_no);
+    double obs_no_total = model_matrix.n_rows;
+    double kappa = ((obs_no_total - 1)/(obs_no_total - params_no)) *
+      (sample_size / (sample_size - 1));
+    double lambda = params_no / (sample_size - params_no);
+    if (lambda > 0.5) lambda = 0.5;
+    double ksi = arma::trace(naive_matrix_meat_matrix)/ params_no;
+    if (ksi < 1.0) ksi = 1.0;
+    arma::mat bc_matrix =
+      kappa * robust_matrix + lambda * ksi * arma::pinv(naive_matrix_inverse);
+    for(int r = 1; r < params_no + 1; r++) {
+      lambda_vector(r - 1) = -
+        (trace(
+            solve(naive_matrix_inverse,
+                  partial_derivatives_matrix.rows((r - 1) * params_no,
+                                                  r * params_no - 1))) +
+                                                    0.5 * trace(
+                                                        bc_matrix * second_derivatives_matrix.rows((r - 1) * params_no,
+                                                                                                       r * params_no - 1))
+        );
+    }
+    arma::vec ans = beta_vector + solve(naive_matrix_inverse, u_vector + lambda_vector);
+    return ans;
+}
+//==============================================================================
+
+
 //============================ update beta - empirical =========================
 // [[Rcpp::export]]
 arma::vec update_beta_empirical_cc(const arma::vec & y_vector,
@@ -457,6 +562,20 @@ arma::vec update_beta_cc(const arma::vec & y_vector,
                                phi);
   }else if(std::strcmp(method, "brgee-robust") == 0){
     ans = update_beta_robust_cc(y_vector,
+                                model_matrix,
+                                id_vector,
+                                repeated_vector,
+                                weights_vector,
+                                link,
+                                family,
+                                beta_vector,
+                                mu_vector,
+                                eta_vector,
+                                correlation_structure,
+                                alpha_vector,
+                                phi);
+  }else if(std::strcmp(method, "brgee-robust2") == 0){
+    ans = update_beta_robust2_cc(y_vector,
                                 model_matrix,
                                 id_vector,
                                 repeated_vector,
