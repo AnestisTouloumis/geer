@@ -161,8 +161,8 @@ geewa_binary <- function(formula = formula(data),
   tolerance <- control$tolerance
   ## estimation method
   methods <- c("gee",
-               "brgee-naive", "brgee-robust", "brgee-empirical",
-               "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+               "brgee-naive", "brgee-robust", "brgee-robust2", "brgee-empirical",
+               "bcgee-naive", "bcgee-robust", "bcgee-robust2", "bcgee-empirical",
                "pgee-jeffreys")
   method <- as.character(method)
   icheck <- as.integer(match(method, methods, -1))
@@ -172,7 +172,7 @@ geewa_binary <- function(formula = formula(data),
   if (is.null(beta_start)) {
     control_glm <- do.call("brglm_control", control_glm)
     if (link != "identity") {
-      if (method %in% c("gee",
+      if (method %in% c("gee", "bcgee-robust2",
                         "bcgee-naive", "bcgee-robust", "bcgee-empirical",
                         "brgee-robust", "brgee-empirical")) {
         type <- "ML"
@@ -244,7 +244,7 @@ geewa_binary <- function(formula = formula(data),
   }
   ## change the estimation method to gee for bias corrected estimators
   method_original <- method
-  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-robust2", "bcgee-empirical")) {
     method <- "gee"
   }
   ## gee with or without adjustments
@@ -253,7 +253,7 @@ geewa_binary <- function(formula = formula(data),
                                  control$step_maxit, control$step_multi,
                                  control$jeffreys_power, method, alpha_vector)
   ## only for bias-corrected estimators
-  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-robust2", "bcgee-empirical")) {
     if (geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1] <= tolerance) {
       method <- sub("bcgee", "brgee", method_original)
       geesolver_fit <- fit_bingee_or(y, model_matrix, id, repeated, weights,
@@ -282,7 +282,7 @@ geewa_binary <- function(formula = formula(data),
   fit$id <- as.numeric(id)
   fit$repeated <- as.numeric(repeated)
   fit$converged <- geesolver_fit$criterion[fit$iter] <= tolerance
-  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-robust2", "bcgee-empirical")) {
     fit$converged <- TRUE
   }
   fit$call <- call

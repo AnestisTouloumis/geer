@@ -21,6 +21,10 @@ update_beta_robust_cc <- function(y_vector, model_matrix, id_vector, repeated_ve
     .Call(`_geer_update_beta_robust_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
 
+update_beta_robust2_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_update_beta_robust2_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
 update_beta_empirical_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
     .Call(`_geer_update_beta_empirical_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
@@ -47,6 +51,10 @@ update_beta_naive_or <- function(y_vector, model_matrix, id_vector, repeated_vec
 
 update_beta_robust_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
     .Call(`_geer_update_beta_robust_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
+}
+
+update_beta_robust2_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_update_beta_robust2_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
 }
 
 update_beta_empirical_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
