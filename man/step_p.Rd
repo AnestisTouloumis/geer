@@ -106,6 +106,21 @@ calculate the coefficients of the independent chi-squared random variables,
 and the \code{p_method} argument specifies the approximation method used to
 calculate the p-value of the test statistic.
 }
+\examples{
+data("respiratory")
+respiratory2 <- respiratory[respiratory$center==2, ]
+fitted_model <-
+geewa_binary(formula = y ~ (baseline + treatment + gender + visit + age)^2,
+             id = id,
+             repeated = visit,
+             link = "probit",
+             data = respiratory2,
+             orstr = "independence",
+             method = "pgee-jeffreys")
+step_p(fitted_model, direction = "backward", test = "wald",
+       cov_type = "bias-corrected", p_remove = 0.1)
+
+}
 \references{
 Rotnitzky A. and Jewell P. (1990) Hypothesis testing of regression parameters
 in semiparametric generalized linear models for cluster correlated data.

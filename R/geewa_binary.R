@@ -24,13 +24,15 @@
 #'
 #' @examples
 #' data("respiratory")
-#' fitted_model <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
-#'                              id = id,
-#'                              repeated = visit,
-#'                              link = "probit",
-#'                              data = respiratory[respiratory$center==2, ],
-#'                              orstr = "independence",
-#'                              method = "pgee-jeffreys")
+#' respiratory2 <- respiratory[respiratory$center==2, ]
+#' fitted_model <-
+#'   geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
+#'                id = id,
+#'                repeated = visit,
+#'                link = "probit",
+#'                data = respiratory2,
+#'                orstr = "independence",
+#'                method = "pgee-jeffreys")
 #' summary(fitted_model, type = "bias-corrected")
 #'
 #' data("obesity")

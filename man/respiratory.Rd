@@ -8,12 +8,12 @@
 A data frame with 444 rows and 7 columns:
 \describe{
   \item{id}{Patient identifier.}
-  \item{visit}{Visit identifier.}
   \item{y}{Respiratory status variable with two levels: good and poor.}
   \item{baseline}{Respiratory status variable at baseline with two levels:
    good and poor.}
   \item{treatment}{Treatment group variable with two levels: placebo and active.}
-  \item{gender}{The gender of the patient.}
+  \item{visit}{Visit identifier.}
+  \item{gender}{The gender of the patient with two levels: male and female.}
   \item{age}{The age in years recorded at baseline.}
   \item{center}{Center identifier.}
   }

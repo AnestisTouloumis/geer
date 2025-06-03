@@ -67,11 +67,11 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
                       weights_vector(id_vector_i));
     sc_criterion += trans(s_vector_i) * solve(working_covariance_matrix_i,
                           s_vector_i);
-    sum_log_det_working_covariance_matrices -= log(det(working_covariance_matrix_i));
+    sum_log_det_working_covariance_matrices += log(det(working_covariance_matrix_i));
   }
   Rcpp::List ans;
   ans["sc"] = sc_criterion;
-  ans["gp"] = 0.5 * (sc_criterion - sum_log_det_working_covariance_matrices);
+  ans["gp"] = -0.5 * (sc_criterion + sum_log_det_working_covariance_matrices);
   return ans;
 }
 //==============================================================================
@@ -104,6 +104,6 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
   }
   Rcpp::List ans;
   ans["sc"] = sc_criterion;
-  ans["gp"] = 0.5 * (sc_criterion - sum_log_det_working_covariance_matrices);
+  ans["gp"] = -0.5 * (sc_criterion + sum_log_det_working_covariance_matrices);
   return ans;
 }
