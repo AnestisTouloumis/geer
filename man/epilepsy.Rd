@@ -5,15 +5,19 @@
 \alias{epilepsy}
 \title{Epilepsy Clinical Trial}
 \format{
-A data frame with 295 rows and 6 columns:
+A data frame with 236 rows and 7 columns:
 \describe{
   \item{id}{Patient identifier.}
-  \item{week}{Week identifier: 0 represents the baseline over the
+  \item{time}{Week identifier: 0 represents the baseline over the
   preceeding 8 weeks}
-  \item{y}{Response coded as (1) if the subject had 5 or less seizures and as (0) otherwise.}
+  \item{seizures}{a numeric vector indicating the number of epileptic seizures.}
   \item{treatment}{Treatment group variable with two levels: placebo and progabide.}
-  \item{age}{Age recorded at baseline.}
-  \item{nSeizures}{The number of seizures.}
+  \item{base}{a numeric vector indicating the logarithm of
+              a quarter of the number of epileptic seizures in the baseline
+              eight-week interval.}
+  \item{age}{a numeric vector indicating the logarithm of the age recorded at
+             baseline.}
+  \item{visit4}{a binary indicator for the 4th visit.}
   }
 }
 \usage{

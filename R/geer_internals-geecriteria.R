@@ -8,7 +8,6 @@ compute_quasi_loglikelihood <- function(object) {
   dev <- residuals.geer(object, type = "deviance")
   phi <- object$phi
   mdis <- object$family$family
-  marginal_distribution <- object$family$family
   ans <-
     switch(mdis,
            gaussian = gaussian()$aic(y, n, mu, wt, dev),

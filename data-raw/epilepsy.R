@@ -1,19 +1,27 @@
 ## code to prepare `epilepsy` dataset goes here
 
-library("ALA")
+library("glmtoolbox")
 library("tidyverse")
+data("Seizures")
 epilepsy <-
-  ALA::epilepsy |>
-  mutate(response = if_else(nSeizures <= 5, 1, 0)) |>
-  relocate(id, week, response, treatment, age, nSeizures) |>
-  rename(y = response) |>
+  Seizures |>
+  relocate(id, time, seizures, treatment, base, age) |>
   mutate(id = factor(id),
-         week = as.numeric(week),
-         y = as.numeric(y),
+         time = as.numeric(time),
+         seizures = as.numeric(seizures),
          treatment = as.factor(treatment),
-         age = as.numeric(age),
-         nSeizures = as.numeric(nSeizures)) |>
+         age = log(as.numeric(age)),
+         base = log(as.numeric(base)/4),
+         visit4 = if_else(time == 4, 1, 0)) |>
   as.data.frame()
 
 rownames(epilepsy) <- 1:nrow(epilepsy)
 usethis::use_data(epilepsy, overwrite = TRUE)
+
+
+select(subject, age, treatment, base, period, seizure.rate) |>
+  mutate(base = log(base),
+         age = log(age),
+         visit4 = I(period == 4),
+         per = -log(4)) |>
+  select(subject, age, treatment, base, visit4, period, seizure.rate, per)
