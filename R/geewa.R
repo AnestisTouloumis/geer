@@ -416,7 +416,7 @@ geewa <- function(formula = formula(data),
                                         corstr, Mv, geesolver_fit$phi, 1)
       method <- method_original
     } else {
-      stop("bias-corrected estimator is NA due to non-convergence of the gee model")
+      stop("bias-corrected GEE estimator is NA due to non-convergence of the GEE model")
     }
   }
   ## output
@@ -489,5 +489,10 @@ geewa <- function(formula = formula(data),
       warning("geewa: fitted rates numerically 0 occurred",
               call. = FALSE)
   }
+  if (any(eigen(get_correlation_matrix(corstr,fit$alpha, max(repeated)),
+                symmetric = TRUE,
+                only.values = TRUE)$values <= 0))
+    warning("geewa: working correlation matrix is positive definite",
+            call. = FALSE)
   fit
 }

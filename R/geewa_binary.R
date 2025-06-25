@@ -262,7 +262,7 @@ geewa_binary <- function(formula = formula(data),
                                      control$jeffreys_power, method, alpha_vector)
       method <- method_original
     } else {
-      stop("bias-corrected estimator is NA due to non-convergence of the gee model")
+      stop("bias-corrected GEE estimator is NA due to non-convergence of the GEE model")
     }
   }
   ## output
