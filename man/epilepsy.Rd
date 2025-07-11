@@ -5,20 +5,21 @@
 \alias{epilepsy}
 \title{Epilepsy Clinical Trial}
 \format{
-A data frame with 236 rows and 7 columns:
+A data frame with 236 rows and 6 columns:
 \describe{
-  \item{id}{Patient identifier.}
-  \item{time}{Week identifier: 0 represents the baseline over the
-  preceeding 8 weeks}
+  \item{id}{a numeric vector indicating the patient identifier.}
+  \item{visit}{a numeric vector indicating which of the two-week interval
+               corresponds to the reported number of epileptic seizures.}
   \item{seizures}{a numeric vector indicating the number of epileptic seizures.}
-  \item{treatment}{Treatment group variable with two levels: placebo and progabide.}
-  \item{base}{a numeric vector indicating the logarithm of
-              a quarter of the number of epileptic seizures in the baseline
-              eight-week interval.}
-  \item{age}{a numeric vector indicating the logarithm of the age recorded at
-             baseline.}
-  \item{visit4}{a binary indicator for the 4th visit.}
+  \item{treatment}{a factor indicating the treatment group: Placebo and Progabide.}
+  \item{base}{a numeric vector indicating the number of epileptic seizures in the
+              baseline 8-week interval.}
+  \item{age}{a numeric vector indicating the age of patients at baseline.}
   }
+}
+\source{
+Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
+count data with overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
 }
 \usage{
 epilepsy
@@ -27,7 +28,7 @@ epilepsy
 The data are from a placebo-controlled clinical trial on epilepsy.
 }
 \details{
-A total of 57 patients with partial seizures were enrolled in a randomized
+A total of 59 patients with partial seizures were enrolled in a randomized
 clinical trial. Patients were allocated to either the anti-epileptic drug
 progabide or to placebo. Prior to receiving treatment,
 the number of epileptic seizures during the preceding 8-week interval were
@@ -39,7 +40,7 @@ data("epilepsy")
 str("epilepsy")
 }
 \references{
-Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
-count data with overdispersion. \emph{Biometrics}, \strong{46}, 657-671.
+Carey V.J., Wang Y.-G. (2011) Working covariance model selection for generalized
+estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117-–3124.
 }
 \keyword{datasets}

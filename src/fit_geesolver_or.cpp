@@ -362,7 +362,7 @@ arma::vec update_beta_robust2_or(const arma::vec & y_vector,
           )
       ) +
         0.5 * trace(
-            robust_matrix *
+            bc_matrix *
               second_derivatives_matrix.rows((r - 1) * params_no, r * params_no - 1)
         )
       );
