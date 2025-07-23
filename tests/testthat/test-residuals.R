@@ -11,21 +11,21 @@ print(c(link, association, method_gee))
 
 data("cerebrovascular")
 
-fit_geewa <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
+fit_geewa <- geewa(formula = ecg ~ treatment + factor(period),
                    id = id,
                    family = binomial(link = link),
                    data = cerebrovascular,
                    corstr = association,
                    method = method_gee)
 fit_geewa_binary <-
-  geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
+  geewa_binary(formula = ecg ~ treatment + factor(period),
                id = id,
                link = link,
                data = cerebrovascular,
                orstr = association,
                method = method_gee)
 
-response_vector <- I(cerebrovascular$ecg == "normal")
+response_vector <- I(cerebrovascular$ecg == 1)
 mu_vector_geewa <- fitted(fit_geewa)
 mu_vector_geewa_binary <- fitted(fit_geewa_binary)
 weights_geewa <- fit_geewa$prior.weights

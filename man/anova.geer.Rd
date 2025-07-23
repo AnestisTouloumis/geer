@@ -25,19 +25,19 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"working-score"}) and the modified working likelihood ratio
 test (\code{"working-lrt"}). By default, the Wald test is performed.}
 
-\item{cov_type}{character indicating the type of the covariance matrix to be
-used in the testing procedure. Options include the sandwich or robust
-covariance matrix (\code{"robust"}), the bias-corrected covariance
-matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
-covariance matrix (\code{"df-adjusted"}) and the model-based or naive
-covariance matrix (\code{"naive"}). By default, the robust covariance
+\item{cov_type}{character indicating the covariance matrix required for
+testing procedure. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance matrix
+(\code{"bias-corrected"}), the degrees of freedom adjusted covariance
+matrix (\code{"df-adjusted"}) and the model-based or naive covariance
+matrix (\code{"naive"}). By default, the robust covariance
 matrix is used.}
 
 \item{pmethod}{character indicating the method used to approximate the p-value
 when the modified working Wald test, the modified working score test or
 the modified working likelihood ratio test is selected. Options include
 the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-approximation (\code{"Satterthwaite"}). By default, the Rao-Scott
+approximation (\code{"satterthwaite"}). By default, the Rao-Scott
 approximation is used.}
 }
 \value{
@@ -72,7 +72,7 @@ The comparison between two or more models will only be valid if they are
 fitted to the same dataset.
 }
 \references{
-Rotnitzky A. and Jewell P. (1990) Hypothesis testing of regression parameters
+Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
 in semiparametric generalized linear models for cluster correlated data.
 \emph{Biometrika} \bold{77}, 485--497.
 }

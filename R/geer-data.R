@@ -1,44 +1,42 @@
-#' Cerebrovascular Deficiency Crossover Trial
+#' Cerebrovascular
 #'
-#' The dataset consists of safety data from a crossover trial on cerebrovascular deficiency.
+#' The data are from a crossover trial on cerebrovascular deficiency.
 #'
 #' @format A data frame with 134 rows and 4 columns:
 #' \describe{
-#'   \item{id}{Patient identifier.}
-#'   \item{period}{Period identifier.}
-#'   \item{ecg}{Response indicating whether an electrocardiogram was
-#'   abnormal or normal.}
-#'   \item{treatment}{Treatment group variable with two levels: placebo and active.}
+#'   \item{id}{numeric vector indicating the patient identifier.}
+#'   \item{period}{numeric vector indicating indicating the period identifier.}
+#'   \item{ecg}{numeric vector the indicating whether an electrocardiogram was
+#'   abnormal, coded as 0, or normal, coded as 1.}
+#'   \item{treatment}{factor indicating the treatment group: placebo and active.}
 #'   }
 #' @details
-#' The response variable is not a trial endpoint but rather a potential side
-#' effect, indicating whether an electrocardiogram (ECG) was abnormal or normal.
-#' This two-period crossover trial compares the effects of active drug to placebo.
-#' The 67 patients were randomly allocated to the two treatment sequences, with
-#' 34 patients receiving placebo followed by active treatment, and 33 patients
-#' receiving active treatment followed by placebo.
+#' A total of 67 patients were enrolled in a two-period crossover trial. Of those,
+#' 34 patients received placebo followed by active treatment and 33 received
+#' active treatment followed by placebo. The ecg status was determined on whether
+#' the electrocardiogram was abnormal or normal.
 #'
 #' @references Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
 #' Trials.} London: Chapman and Hall/CRC Press.
 #' data("cerebrovascular")
-#' str("cerebrovascular")
+#' str(cerebrovascular)
 "cerebrovascular"
 
 
-#' Epilepsy Clinical Trial
+#' Epilepsy
 #'
 #' The data are from a placebo-controlled clinical trial on epilepsy.
 #'
 #' @format A data frame with 236 rows and 6 columns:
 #' \describe{
-#'   \item{id}{a numeric vector indicating the patient identifier.}
-#'   \item{visit}{a numeric vector indicating which of the two-week interval
+#'   \item{id}{numeric vector indicating the patient identifier.}
+#'   \item{visit}{numeric vector indicating which of the two-week interval
 #'                corresponds to the reported number of epileptic seizures.}
-#'   \item{seizures}{a numeric vector indicating the number of epileptic seizures.}
-#'   \item{treatment}{a factor indicating the treatment group: Placebo and Progabide.}
-#'   \item{base}{a numeric vector indicating the number of epileptic seizures in the
+#'   \item{seizures}{numeric vector indicating the number of epileptic seizures.}
+#'   \item{treatment}{factor indicating the treatment group: Placebo and Progabide.}
+#'   \item{base}{numeric vector indicating the number of epileptic seizures in the
 #'               baseline 8-week interval.}
-#'   \item{age}{a numeric vector indicating the age of patients at baseline.}
+#'   \item{age}{numeric vector indicating the age of patients at baseline.}
 #'   }
 #' @details
 #' A total of 59 patients with partial seizures were enrolled in a randomized
@@ -51,35 +49,37 @@
 #' Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
 #' count data with overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
 #' @references
-#' Carey V.J., Wang Y.-G. (2011) Working covariance model selection for generalized
+#' Carey V.J., Wang Y.G. (2011) Working covariance model selection for generalized
 #' estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117-–3124.
 #' @examples
 #' data("epilepsy")
-#' str("epilepsy")
+#' str(epilepsy)
 "epilepsy"
 
 
 
-#' Respiratory Clinical Trial
+#' Respiratory
 #'
 #' The data are from a clinical trial of patients with respiratory illness.
 #'
 #' @format A data frame with 444 rows and 7 columns:
 #' \describe{
-#'   \item{id}{Patient identifier.}
-#'   \item{y}{Respiratory status variable with two levels: good and poor.}
-#'   \item{baseline}{Respiratory status variable at baseline with two levels:
-#'    good and poor.}
-#'   \item{treatment}{Treatment group variable with two levels: placebo and active.}
-#'   \item{visit}{Visit identifier.}
-#'   \item{gender}{The gender of the patient with two levels: male and female.}
-#'   \item{age}{The age in years recorded at baseline.}
-#'   \item{center}{Center identifier.}
+#'   \item{id}{numeric vector indicating the patient identifier.}
+#'   \item{visit}{numeric vector indicating which of the two-week interval
+#'                corresponds to the reported number of epileptic seizures.}
+#'   \item{y}{numeric vector indicating the respiratory status, coded as (1) for
+#'            good and as (0) for poor.}
+#'   \item{treatment}{a factor indicating the treatment group: placebo and active.}
+#'   \item{baseline}{numeric vector indicating the respiratory status at the
+#'                   baseline, coded as (1) for good and as (2) for poor.}
+#'   \item{age}{numeric vector indicating the age in years recorded at baseline.}
+#'   \item{gender}{factor indicating the gender of the patient: male and female.}
+#'   \item{center}{factor indicating the center identifier: C1 and C2.}
 #'   }
 #' @details
 #' A total of 111 patients from two different centers were enrolled in a randomized
 #' clinical trial. Prior to receiving treatment, patients were examined at baseline.
-#' After receiving treatment (placebo or active), patients were examined at four
+#' After receiving treatment, patients were examined at four
 #' visits during. The respiratory status was determined at the baseline and at
 #' each of the four follow-up visits.
 #'
@@ -87,57 +87,21 @@
 #' using the SAS System.} Cary, NC: SAS Institute, Inc.
 #' @examples
 #' data("respiratory")
-#' str("respiratory")
+#' str(respiratory)
 "respiratory"
 
 
-
-#' Obesity Study
-#'
-#' The data are from the Missouri Adolescent Female Twin Study.
-#'
-#' @format A data frame with 195 rows and 7 columns:
-#' \describe{
-#'   \item{fid}{Family identifier.}
-#'   \item{sid}{Individual identifier.}
-#'   \item{obesity}{Obesity status with three levels: Lean, Obese and
-#'   Overweight.}
-#'   \item{age}{Age in years.}
-#'   \item{zygosity}{Zygocity identifier with two levels: monozygotic (MZ) or
-#'   dizygotic (DZ).}
-#'   \item{ancestry}{Ancestry identifier with two levels: European (EA) or
-#'   African (AA).}
-#'   \item{bacteroides}{the abundance of bacteroides.}
-#'   }
-#' @details
-#' The data were collected from 54 families with adult female twin pairs born
-#' in Missouri. The obesity category for each individual was recorded as Obese
-#' (BMI > 29), lean (BMI < 25) or overweight (25 < BMI < 30). One of the aims of
-#'  the study was to understand the relationship between obesity and gut microbiome.
-#'  Individual RNA samples were obtained at the baseline and at most at one
-#'  follow up time and the abundance of several microbiomes was measured
-#'  using RNA sequencing. This dataset is a subset of the original dataset that
-#'  includes only the abundance of Bacteroides. In addition, the age, the
-#'  zygocity and the ancestry of each twin were recorded.
-#'
-#' @references Turnbaugh et al. (2009) A core gut microbiome in obese and lean twins. \emph{Nature} , \strong{457}, 480–484.
-#' @examples
-#' data("obesity")
-#' str("obesity")
-"obesity"
-
-
-#' Leprosy Clinical Trial
+#' Leprosy
 #'
 #' The data are from a clinical trial of patients with leprosy.
 #'
 #' @format A data frame with 80 rows and 4 columns:
 #' \describe{
-#'   \item{id}{Patient identifier.}
-#'   \item{period}{Period identifier.}
-#'   \item{time}{Indicator of the post-treatment measurement.}
-#'   \item{bacilli}{The number of leprosy bacilli at six sites of the body.}
-#'   \item{treatment}{Treatment group variable with three levels: A, B and C.}
+#'   \item{id}{numeric vector indicating the patient identifier.}
+#'   \item{period}{factor indicating the period identifier: pre and post.}
+#'   \item{bacilli}{numeric vector indicating the number of leprosy bacilli
+#'                  at six sites of the body.}
+#'   \item{treatment}{factor indicating the treatment group: A, B and C.}
 #'   }
 #' @details
 #' A total of 30 patients were enrolled in a randomized clinical trial in
@@ -153,5 +117,44 @@
 #' Ames, Iowa: Iowa State University Press.
 #' @examples
 #' data("leprosy")
-#' str("leprosy")
+#' str(leprosy)
 "leprosy"
+
+
+#' Cholecystectomy
+#'
+#' The data are from a clinical trial of patients with shoulder pain after
+#' laparoscopic cholecystectomy.
+#'
+#' @format A data frame with 246 rows and 6 columns:
+#' \describe{
+#'   \item{id}{numeric vector indicating the patient identifier.}
+#'   \item{time}{numeric vector indicating the occasion the patient was asked
+#'               to rate their shoulder pain after the laparoscopic surgery.}
+#'  \item{pain}{numeric vector indicating the shoulder pain rated by the patient,
+#'              coded as (1) for low pain and as (0) for high pain.}
+#'  \item{treatment}{factor indicating the treatment group: (abdominal) suction
+#'                   and placebo.}
+#'   \item{gender}{factor indicating the gender of the patient: male and female.}
+#'   \item{age}{numeric vector indicating the age in years.}
+#'   }
+#' @details
+#' A total of 41 patients were enrolled in a randomized clinical trial of shoulder
+#' pain after laparoscopic cholecystectomy. Patients were allocated to either
+#' the active group (with abdominal suction) or to the placebo group (without
+#' abdominal suction). After the operation, patients were asked to rate their
+#' shoulder pain in six occasions (morning and afternoon for three days after
+#' the operation).
+#'
+#' @references Jorgensen J.O., Gillies R.B., Hunt D.R., Caplehorn J.R.M. and
+#' Lumley T. (1995) A simple and effective way to reduce postoperative pain after
+#' laparoscopic cholecystectomy. \emph{Australian and New Zealand Journal of Surgery},
+#' \strong{65}, 466-–469.
+#'
+#' @source Lumley T. (1996) Generalized estimating equations for ordinal data:
+#' A note on working correlation structures. \emph{Biometrics}, \strong{52}, 354-–361.
+#'
+#' @examples
+#' data("cholecystectomy")
+#' str(cholecystectomy)
+"cholecystectomy"

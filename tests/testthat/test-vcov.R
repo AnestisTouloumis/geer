@@ -10,14 +10,14 @@ method_gee <-  sample(c("gee",
 print(c(link, association, method_gee))
 
 data("cerebrovascular")
-fit_geewa <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
+fit_geewa <- geewa(formula = ecg ~ treatment + factor(period),
                    id = id,
                    family = binomial(link = link),
                    data = cerebrovascular,
                    corstr = association,
                    method = method_gee)
 fit_geewa_binary <-
-  geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
+  geewa_binary(formula = ecg ~ treatment + factor(period),
                id = id,
                link = link,
                data = cerebrovascular,

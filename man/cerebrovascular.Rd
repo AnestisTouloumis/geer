@@ -3,35 +3,33 @@
 \docType{data}
 \name{cerebrovascular}
 \alias{cerebrovascular}
-\title{Cerebrovascular Deficiency Crossover Trial}
+\title{Cerebrovascular}
 \format{
 A data frame with 134 rows and 4 columns:
 \describe{
-  \item{id}{Patient identifier.}
-  \item{period}{Period identifier.}
-  \item{ecg}{Response indicating whether an electrocardiogram was
-  abnormal or normal.}
-  \item{treatment}{Treatment group variable with two levels: placebo and active.}
+  \item{id}{numeric vector indicating the patient identifier.}
+  \item{period}{numeric vector indicating indicating the period identifier.}
+  \item{ecg}{numeric vector the indicating whether an electrocardiogram was
+  abnormal, coded as 0, or normal, coded as 1.}
+  \item{treatment}{factor indicating the treatment group: placebo and active.}
   }
 }
 \usage{
 cerebrovascular
 }
 \description{
-The dataset consists of safety data from a crossover trial on cerebrovascular deficiency.
+The data are from a crossover trial on cerebrovascular deficiency.
 }
 \details{
-The response variable is not a trial endpoint but rather a potential side
-effect, indicating whether an electrocardiogram (ECG) was abnormal or normal.
-This two-period crossover trial compares the effects of active drug to placebo.
-The 67 patients were randomly allocated to the two treatment sequences, with
-34 patients receiving placebo followed by active treatment, and 33 patients
-receiving active treatment followed by placebo.
+A total of 67 patients were enrolled in a two-period crossover trial. Of those,
+34 patients received placebo followed by active treatment and 33 received
+active treatment followed by placebo. The ecg status was determined on whether
+the electrocardiogram was abnormal or normal.
 }
 \references{
 Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
 Trials.} London: Chapman and Hall/CRC Press.
 data("cerebrovascular")
-str("cerebrovascular")
+str(cerebrovascular)
 }
 \keyword{datasets}

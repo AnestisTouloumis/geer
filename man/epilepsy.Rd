@@ -3,18 +3,18 @@
 \docType{data}
 \name{epilepsy}
 \alias{epilepsy}
-\title{Epilepsy Clinical Trial}
+\title{Epilepsy}
 \format{
 A data frame with 236 rows and 6 columns:
 \describe{
-  \item{id}{a numeric vector indicating the patient identifier.}
-  \item{visit}{a numeric vector indicating which of the two-week interval
+  \item{id}{numeric vector indicating the patient identifier.}
+  \item{visit}{numeric vector indicating which of the two-week interval
                corresponds to the reported number of epileptic seizures.}
-  \item{seizures}{a numeric vector indicating the number of epileptic seizures.}
-  \item{treatment}{a factor indicating the treatment group: Placebo and Progabide.}
-  \item{base}{a numeric vector indicating the number of epileptic seizures in the
+  \item{seizures}{numeric vector indicating the number of epileptic seizures.}
+  \item{treatment}{factor indicating the treatment group: Placebo and Progabide.}
+  \item{base}{numeric vector indicating the number of epileptic seizures in the
               baseline 8-week interval.}
-  \item{age}{a numeric vector indicating the age of patients at baseline.}
+  \item{age}{numeric vector indicating the age of patients at baseline.}
   }
 }
 \source{
@@ -37,10 +37,10 @@ recorded at each of four 2-week intervals clinic visits.
 }
 \examples{
 data("epilepsy")
-str("epilepsy")
+str(epilepsy)
 }
 \references{
-Carey V.J., Wang Y.-G. (2011) Working covariance model selection for generalized
+Carey V.J., Wang Y.G. (2011) Working covariance model selection for generalized
 estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117-–3124.
 }
 \keyword{datasets}

@@ -3,19 +3,21 @@
 \docType{data}
 \name{respiratory}
 \alias{respiratory}
-\title{Respiratory Clinical Trial}
+\title{Respiratory}
 \format{
 A data frame with 444 rows and 7 columns:
 \describe{
-  \item{id}{Patient identifier.}
-  \item{y}{Respiratory status variable with two levels: good and poor.}
-  \item{baseline}{Respiratory status variable at baseline with two levels:
-   good and poor.}
-  \item{treatment}{Treatment group variable with two levels: placebo and active.}
-  \item{visit}{Visit identifier.}
-  \item{gender}{The gender of the patient with two levels: male and female.}
-  \item{age}{The age in years recorded at baseline.}
-  \item{center}{Center identifier.}
+  \item{id}{numeric vector indicating the patient identifier.}
+  \item{visit}{numeric vector indicating which of the two-week interval
+               corresponds to the reported number of epileptic seizures.}
+  \item{y}{numeric vector indicating the respiratory status, coded as (1) for
+           good and as (0) for poor.}
+  \item{treatment}{a factor indicating the treatment group: placebo and active.}
+  \item{baseline}{numeric vector indicating the respiratory status at the
+                  baseline, coded as (1) for good and as (2) for poor.}
+  \item{age}{numeric vector indicating the age in years recorded at baseline.}
+  \item{gender}{factor indicating the gender of the patient: male and female.}
+  \item{center}{factor indicating the center identifier: C1 and C2.}
   }
 }
 \usage{
@@ -27,13 +29,13 @@ The data are from a clinical trial of patients with respiratory illness.
 \details{
 A total of 111 patients from two different centers were enrolled in a randomized
 clinical trial. Prior to receiving treatment, patients were examined at baseline.
-After receiving treatment (placebo or active), patients were examined at four
+After receiving treatment, patients were examined at four
 visits during. The respiratory status was determined at the baseline and at
 each of the four follow-up visits.
 }
 \examples{
 data("respiratory")
-str("respiratory")
+str(respiratory)
 }
 \references{
 Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis

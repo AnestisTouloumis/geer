@@ -38,19 +38,19 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"working-score"}) and the modified working likelihood ratio
 test (\code{"working-lrt"}). By default, the Wald test is performed.}
 
-\item{cov_type}{character indicating the type of the covariance matrix to be
-used in the testing procedure. Options include the sandwich or robust
-covariance matrix (\code{"robust"}), the bias-corrected covariance
-matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
-covariance matrix (\code{"df-adjusted"}) and the model-based or naive
-covariance matrix (\code{"naive"}). By default, the robust covariance
+\item{cov_type}{character indicating the covariance matrix required for
+testing procedure. Options include the sandwich or robust covariance
+matrix (\code{"robust"}), the bias-corrected covariance matrix
+(\code{"bias-corrected"}), the degrees of freedom adjusted covariance
+matrix (\code{"df-adjusted"}) and the model-based or naive covariance
+matrix (\code{"naive"}). By default, the robust covariance
 matrix is used.}
 
 \item{pmethod}{character indicating the method used to approximate the p-value
 when the modified working Wald test, the modified working score test or
 the modified working likelihood ratio test is selected. Options include
 the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-approximation (\code{"Satterthwaite"}). By default, the Rao-Scott
+approximation (\code{"satterthwaite"}). By default, the Rao-Scott
 approximation is used.}
 
 \item{...}{additional argument(s) for methods.}
@@ -78,7 +78,7 @@ be found in \cite{Rotnitzky and Jewell (1990)}. Note that
 independence working association structure. Otherwise, an error message is
 returned.
 
-When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
+When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod}
 argument is ignored and \code{cov_type} specifies the covariance matrix
 estimate used to calculate the corresponding test statistic. Otherwise,
 \code{cov_type} specifies the covariance matrix estimate used to calculate
@@ -91,22 +91,23 @@ criterion.
 }
 \examples{
 fitted_model <-
-geewa(formula = y ~ baseline + treatment + gender + visit + age,
+geewa(formula = y ~ baseline + I(treatment == "active") + gender + visit + age,
       id = id, repeated = visit, family = binomial(link = "probit"),
-      data = respiratory[respiratory$center==2, ], corstr = "ar1",
+      data = respiratory[respiratory$center=="C2", ], corstr = "ar1",
       method = "gee")
 add1(fitted_model,
-     scope = .~. + baseline:age + age:visit + treatment:age + age:gender,
+     scope = .~. + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
      test = "score")
 
 drop1(fitted_model, test = "score")
 
 }
 \references{
-Rotnitzky A. and Jewell P. (1990) Hypothesis testing of regression parameters
+Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
 in semiparametric generalized linear models for cluster correlated data.
 \emph{Biometrika} \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{anova}}.
+\code{\link{anova}}, \code{\link{step}}, \code{\link{geewa}},
+          \code{\link{geewa_binary}}.
 }

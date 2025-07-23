@@ -1,5 +1,5 @@
 data("cerebrovascular")
-fit_gee <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
+fit_gee <- geewa(formula = ecg ~treatment + factor(period),
                  id = id,
                  family = binomial(link = "probit"),
                  phi_fixed = TRUE,
@@ -7,7 +7,7 @@ fit_gee <- geewa(formula = I(ecg == "normal") ~ treatment + factor(period),
                  data = cerebrovascular,
                  corstr = "independence",
                  method = "gee")
-fit_glm <- glm(formula = I(ecg == "normal") ~ treatment + factor(period),
+fit_glm <- glm(formula = ecg ~treatment + factor(period),
                family = binomial(link = "probit"),
                data = cerebrovascular)
 

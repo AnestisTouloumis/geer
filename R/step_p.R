@@ -60,17 +60,14 @@
 #'
 #' @examples
 #' data("respiratory")
-#' respiratory2 <- respiratory[respiratory$center==2, ]
+#' respiratory2 <- respiratory[respiratory$center=="C2", ]
 #' fitted_model <-
-#' geewa_binary(formula = y ~ (baseline + treatment + gender + visit + age)^2,
-#'              id = id,
-#'              repeated = visit,
-#'              link = "probit",
-#'              data = respiratory2,
-#'              orstr = "independence",
-#'              method = "pgee-jeffreys")
-#' step_p(fitted_model, direction = "backward", test = "wald",
-#'        cov_type = "bias-corrected", p_remove = 0.1)
+#' fitted_model <- geewa_binary(formula = y ~ (baseline + treatment + gender + visit + age)^2,
+#'                             id = id, repeated = visit, link = "probit",
+#'                             data = respiratory2, orstr = "independence",
+#'                             method = "pgee-jeffreys")
+#' step_p(fitted_model, direction = "backward", test = "wald", cov_type = "bias-corrected",
+#'        p_remove = 0.1)
 #'
 #' @export
 step_p <-

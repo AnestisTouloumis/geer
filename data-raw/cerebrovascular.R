@@ -1,9 +1,9 @@
 ## code to prepare `cerebrovascular` dataset goes here
 
 library("tidyverse")
-library("ALA")
+library("rio")
 cerebrovascular <-
-  ALA::ecg |>
+  rio::import("./data-raw/cerebrovascular.csv") |>
   mutate(treatment =
            if_else(sequence == "P->A" & period == 1,
                    "placebo",
@@ -13,14 +13,17 @@ cerebrovascular <-
                                    "active",
                                    "placebo")
                    )
-           )
+           ),
+         ecg = if_else(ecg == "normal", 1, 0)
   ) |>
   select(-sequence) |>
-  relocate(id, period, ecg, treatment) |>
-  mutate(id = factor(id),
-         period = factor(period),
-         ecg = factor(ecg),
+  mutate(id = as.numeric(id),
+         period = as.numeric(period),
+         ecg = as.numeric(ecg),
          treatment = factor(treatment)) |>
-  as.data.frame()
+  relocate(id, period, ecg, treatment)
+
 rownames(cerebrovascular) <- 1:nrow(cerebrovascular)
+cerebrovascular <- as_tibble(cerebrovascular)
+
 usethis::use_data(cerebrovascular, overwrite = TRUE)

@@ -1,5 +1,5 @@
 data("cerebrovascular")
-fit_gee <- geewa_binary(formula = I(ecg == "normal") ~ treatment + factor(period),
+fit_gee <- geewa_binary(formula = ecg ~ treatment + factor(period),
                         link =  "logit",
                         id = id,
                         data = cerebrovascular,

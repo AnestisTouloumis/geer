@@ -140,22 +140,15 @@
 #'
 #' @examples
 #' data("leprosy")
-#' fitted_model_gee <- geewa(
-#'    formula = bacilli ~ time+time:I(treatment == "C"),
-#'    data = leprosy,
-#'    id = id,
-#'    family = poisson(link = "log"),
-#'    corstr = "exchangeable",
-#'    method = "gee")
+#' fitted_model_gee <- geewa(formula = seizures ~ treatment + log(base/4) + log(age),
+#'                           data = epilepsy, id = id, family = poisson(link = "log"),
+#'                           corstr = "exchangeable", method = "gee")
 #' summary(fitted_model_gee, type = "bias-corrected")
-#' fitted_model_brgee_robust <-
-#'  update(fitted_model_gee, method = "brgee-robust")
+#' fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
 #' summary(fitted_model_brgee_robust, type = "bias-corrected")
-#' fitted_model_brgee_naive <-
-#'  update(fitted_model_gee, method = "brgee-naive")
+#' fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
 #' summary(fitted_model_brgee_naive, type = "bias-corrected")
-#' fitted_model_brgee_empirical <-
-#'   update(fitted_model_gee, method = "brgee-robust")
+#' fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-robust")
 #' summary(fitted_model_brgee_empirical, type = "bias-corrected")
 #'
 #' @export

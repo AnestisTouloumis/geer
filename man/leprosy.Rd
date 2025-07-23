@@ -3,15 +3,15 @@
 \docType{data}
 \name{leprosy}
 \alias{leprosy}
-\title{Leprosy Clinical Trial}
+\title{Leprosy}
 \format{
 A data frame with 80 rows and 4 columns:
 \describe{
-  \item{id}{Patient identifier.}
-  \item{period}{Period identifier.}
-  \item{time}{Indicator of the post-treatment measurement.}
-  \item{bacilli}{The number of leprosy bacilli at six sites of the body.}
-  \item{treatment}{Treatment group variable with three levels: A, B and C.}
+  \item{id}{numeric vector indicating the patient identifier.}
+  \item{period}{factor indicating the period identifier: pre and post.}
+  \item{bacilli}{numeric vector indicating the number of leprosy bacilli
+                 at six sites of the body.}
+  \item{treatment}{factor indicating the treatment group: A, B and C.}
   }
 }
 \usage{
@@ -32,7 +32,7 @@ of the body when compared to placebo (treatment C).
 }
 \examples{
 data("leprosy")
-str("leprosy")
+str(leprosy)
 }
 \references{
 Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}.

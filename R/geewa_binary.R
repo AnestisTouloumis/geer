@@ -24,34 +24,23 @@
 #'
 #' @examples
 #' data("respiratory")
-#' respiratory2 <- respiratory[respiratory$center==2, ]
-#' fitted_model <-
-#'   geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
-#'                id = id,
-#'                repeated = visit,
-#'                link = "probit",
-#'                data = respiratory2,
-#'                orstr = "independence",
-#'                method = "pgee-jeffreys")
+#' respiratory2 <- respiratory[respiratory$center=="C2", ]
+#' fitted_model <- geewa_binary(formula = y ~ baseline + treatment*gender + visit*age,
+#'                             id = id, repeated = visit, link = "probit",
+#'                             data = respiratory2, orstr = "independence",
+#'                             method = "pgee-jeffreys")
 #' summary(fitted_model, type = "bias-corrected")
 #'
-#' data("obesity")
-#' fitted_model_gee <- geewa_binary(
-#'   formula = I(obesity == "Obese") ~ age + zygosity + ancestry + bacteroides,
-#'   id = fid,
-#'   data = obesity,
-#'   link = "logit",
-#'   orstr = "independence",
-#'   method = "gee")
+#' data("cholecystectomy")
+#' fitted_model_gee <- geewa_binary( formula = pain ~ treatment + gender + age,
+#'                                  id = id, data = cholecystectomy, link = "logit",
+#'                                  orstr = "independence", method = "gee")
 #' summary(fitted_model_gee, type = "bias-corrected")
-#' fitted_model_brgee_robust <-
-#'   update(fitted_model_gee, method = "brgee-robust")
+#' fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
 #' summary(fitted_model_brgee_robust, type = "bias-corrected")
-#' fitted_model_brgee_naive <-
-#'   update(fitted_model_gee, method = "brgee-naive")
+#' fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
 #' summary(fitted_model_brgee_naive, type = "bias-corrected")
-#' fitted_model_brgee_empirical <-
-#'   update(fitted_model_gee, method = "brgee-robust")
+#' fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-robust")
 #' summary(fitted_model_brgee_empirical, type = "bias-corrected")
 #'
 #' @export
