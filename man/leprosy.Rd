@@ -5,9 +5,9 @@
 \alias{leprosy}
 \title{Leprosy}
 \format{
-A data frame with 80 rows and 4 columns:
+A data frame with 60 rows and 4 columns:
 \describe{
-  \item{id}{numeric vector indicating the patient identifier.}
+  \item{id}{numeric vector indicating the subject identifier.}
   \item{period}{factor indicating the period identifier: pre and post.}
   \item{bacilli}{numeric vector indicating the number of leprosy bacilli
                  at six sites of the body.}
@@ -18,10 +18,10 @@ A data frame with 80 rows and 4 columns:
 leprosy
 }
 \description{
-The data are from a clinical trial of patients with leprosy.
+The data are from a clinical trial on leprosy.
 }
 \details{
-A total of 30 patients were enrolled in a randomized clinical trial in
+A total of 30 subjects were enrolled in a randomized clinical trial in
 Philippines. Prior to receiving treatment, the number of leprosy bacilli at
 six sites of the body were recorded. After receiving treatment (A, B or C),
 the number of leprosy bacilli were recorded again. The respiratory status

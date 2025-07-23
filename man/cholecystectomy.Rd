@@ -7,14 +7,12 @@
 \format{
 A data frame with 246 rows and 6 columns:
 \describe{
-  \item{id}{numeric vector indicating the patient identifier.}
-  \item{time}{numeric vector indicating the occasion the patient was asked
-              to rate their shoulder pain after the laparoscopic surgery.}
- \item{pain}{numeric vector indicating the shoulder pain rated by the patient,
-             coded as (1) for low pain and as (0) for high pain.}
- \item{treatment}{factor indicating the treatment group: (abdominal) suction
-                  and placebo.}
-  \item{gender}{factor indicating the gender of the patient: male and female.}
+  \item{id}{numeric vector indicating the subject identifier.}
+  \item{time}{numeric vector indicating the time identifier.}
+ \item{pain}{numeric vector indicating the self-reported shoulder pain status,
+             coded as (0) for high pain and as (1) for low pain.}
+ \item{treatment}{factor indicating the treatment group: active and placebo.}
+  \item{gender}{factor indicating the gender: female and male.}
   \item{age}{numeric vector indicating the age in years.}
   }
 }
@@ -26,14 +24,14 @@ A note on working correlation structures. \emph{Biometrics}, \strong{52}, 354-â€
 cholecystectomy
 }
 \description{
-The data are from a clinical trial of patients with shoulder pain after
-laparoscopic cholecystectomy.
+The data are from a clinical trial on shoulder pain after laparoscopic
+cholecystectomy.
 }
 \details{
-A total of 41 patients were enrolled in a randomized clinical trial of shoulder
-pain after laparoscopic cholecystectomy. Patients were allocated to either
+A total of 41 subjects were enrolled in a randomized clinical trial of shoulder
+pain after laparoscopic cholecystectomy. Subjects were allocated to either
 the active group (with abdominal suction) or to the placebo group (without
-abdominal suction). After the operation, patients were asked to rate their
+abdominal suction). After the operation, subjects were asked to rate their
 shoulder pain in six occasions (morning and afternoon for three days after
 the operation).
 }

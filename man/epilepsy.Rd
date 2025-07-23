@@ -7,14 +7,14 @@
 \format{
 A data frame with 236 rows and 6 columns:
 \describe{
-  \item{id}{numeric vector indicating the patient identifier.}
+  \item{id}{numeric vector indicating the subject identifier.}
   \item{visit}{numeric vector indicating which of the two-week interval
                corresponds to the reported number of epileptic seizures.}
   \item{seizures}{numeric vector indicating the number of epileptic seizures.}
-  \item{treatment}{factor indicating the treatment group: Placebo and Progabide.}
+  \item{treatment}{factor indicating the treatment group: placebo and progabide.}
   \item{base}{numeric vector indicating the number of epileptic seizures in the
               baseline 8-week interval.}
-  \item{age}{numeric vector indicating the age of patients at baseline.}
+  \item{age}{numeric vector indicating the age in years.}
   }
 }
 \source{
@@ -25,15 +25,15 @@ count data with overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
 epilepsy
 }
 \description{
-The data are from a placebo-controlled clinical trial on epilepsy.
+The data are from a clinical trial on epilepsy.
 }
 \details{
-A total of 59 patients with partial seizures were enrolled in a randomized
-clinical trial. Patients were allocated to either the anti-epileptic drug
-progabide or to placebo. Prior to receiving treatment,
-the number of epileptic seizures during the preceding 8-week interval were
-recorded. After receiving treatment, the number of epileptic seizures were
-recorded at each of four 2-week intervals clinic visits.
+A total of 59 subjects with partial seizures were enrolled in a randomized
+clinical trial. Subjects were allocated to either the anti-epileptic drug
+progabide or to placebo. Prior to receiving treatment, the number of epileptic
+seizures during the preceding 8-week interval were recorded. After receiving
+treatment, the number of epileptic seizures were recorded at each of four
+2-week intervals clinic visits.
 }
 \examples{
 data("epilepsy")

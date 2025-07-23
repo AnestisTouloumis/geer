@@ -5,18 +5,17 @@
 \alias{respiratory}
 \title{Respiratory}
 \format{
-A data frame with 444 rows and 7 columns:
+A data frame with 444 rows and 8 columns:
 \describe{
-  \item{id}{numeric vector indicating the patient identifier.}
-  \item{visit}{numeric vector indicating which of the two-week interval
-               corresponds to the reported number of epileptic seizures.}
-  \item{y}{numeric vector indicating the respiratory status, coded as (1) for
-           good and as (0) for poor.}
-  \item{treatment}{a factor indicating the treatment group: placebo and active.}
+  \item{id}{numeric vector indicating the subject identifier.}
+  \item{visit}{numeric vector indicating the visit identifier.}
+  \item{y}{numeric vector indicating the respiratory status, coded as (0) for
+           poor and as (1) for good.}
+  \item{treatment}{factor indicating the treatment group: active and placebo.}
   \item{baseline}{numeric vector indicating the respiratory status at the
-                  baseline, coded as (1) for good and as (2) for poor.}
+                  baseline, coded as (0) for poor and as (1) for good.}
   \item{age}{numeric vector indicating the age in years recorded at baseline.}
-  \item{gender}{factor indicating the gender of the patient: male and female.}
+  \item{gender}{factor indicating the gender: female and male.}
   \item{center}{factor indicating the center identifier: C1 and C2.}
   }
 }
@@ -24,14 +23,14 @@ A data frame with 444 rows and 7 columns:
 respiratory
 }
 \description{
-The data are from a clinical trial of patients with respiratory illness.
+The data are from a clinical trial on respiratory illness.
 }
 \details{
-A total of 111 patients from two different centers were enrolled in a randomized
-clinical trial. Prior to receiving treatment, patients were examined at baseline.
-After receiving treatment, patients were examined at four
-visits during. The respiratory status was determined at the baseline and at
-each of the four follow-up visits.
+A total of 111 subjects from two different centers were enrolled in a randomized
+clinical trial. Prior to receiving treatment, subjects were examined at baseline.
+After receiving treatment, subjects were examined at four visits during. The
+respiratory status was determined at the baseline and at each of the four
+follow-up visits.
 }
 \examples{
 data("respiratory")

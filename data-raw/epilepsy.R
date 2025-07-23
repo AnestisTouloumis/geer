@@ -3,7 +3,7 @@
 library("rio")
 library("tidyverse")
 epilepsy <-
-  rio::import("./data-raw/seizures.csv") |>
+  rio::import("./data-raw/epilepsy.csv") |>
   mutate(id = as.numeric(id),
          visit = as.numeric(time),
          seizures = as.numeric(seizures),
