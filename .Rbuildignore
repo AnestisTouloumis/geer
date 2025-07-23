@@ -3,4 +3,7 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^\.github$
-^todelete
+^todelete$
+^\src\*.o
+^\src\*.so
+^\src\*.dll
