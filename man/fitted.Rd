@@ -14,9 +14,21 @@
 \item{...}{additional argument(s) for methods.}
 }
 \value{
-Fitted values extracted from the \code{object}.
+Fitted values extracted from \code{object}.
 }
 \description{
-\code{fitted} extracts fitted values from objects returned by modeling
-functions. \code{fitted.values} is an alias for it.
+\code{fitted} extracts fitted values from \code{objects}. \code{fitted.values}
+is an alias for it.
+}
+\examples{
+data("leprosy")
+fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+             family = poisson(link = "log"), id = id, data = leprosy)
+fitted(fit)
+
+data("cerebrovascular")
+fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+                    id = id, data = cerebrovascular)
+fitted(fit)
+
 }

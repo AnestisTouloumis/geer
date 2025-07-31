@@ -25,12 +25,12 @@ linear predictors (\code{"link"}) and the scale of the response
 variable (\code{"response"}). By default, the scale of the linear
 predictors is used.}
 
-\item{cov_type}{character indicating the type of estimator which should be
-used to the covariance matrix of the interest parameters. Options
-include the sandwich or robust estimator (\code{"robust"}), the
-bias-corrected estimator (\code{"bias-corrected"}), the degrees of
-freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-or naive estimator (\code{"naive"}). By default, the robust covariance
+\item{cov_type}{character indicating the covariance matrix estimator
+of the regression parameters. Options include the sandwich or
+robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"naive"}). By default, the robust covariance matrix
 estimator is used.}
 
 \item{se.fit}{logical indicating if standard errors are required. By default,
@@ -47,7 +47,7 @@ If \code{se.fit = TRUE}, a list with components
 }
 \description{
 Obtains predictions and optionally estimates standard errors of those
-predictions from a fitted generalized estimating equations model object.
+predictions from a \code{geer} object.
 }
 \details{
 If \code{newdata} is omitted the predictions are based on the data used for

@@ -14,9 +14,21 @@
 \item{...}{additional argument(s) for methods.}
 }
 \value{
-A named numeric vector with the coefficients extracted from the \code{object}.
+A named numeric vector with the coefficients extracted from \code{object}.
 }
 \description{
-Extracts model coefficients from objects returned by modeling functions.
-\code{coefficients} is an alias for it.
+Extracts model coefficients from a \code{geer} object. \code{coefficients} is
+an alias for it.
+}
+\examples{
+data("leprosy")
+fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+             family = poisson(link = "log"), id = id, data = leprosy)
+coef(fit)
+
+data("cerebrovascular")
+fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+                    id = id, data = cerebrovascular)
+coef(fit)
+
 }

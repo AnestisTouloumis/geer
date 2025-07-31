@@ -316,13 +316,13 @@ drop1.geer <-
 #'        (\code{"working-wald"}), the modified working score test
 #'        (\code{"working-score"}) and the modified working likelihood ratio
 #'        test (\code{"working-lrt"}). By default, the Wald test is performed.
-#' @param cov_type character indicating the covariance matrix required for
-#'        testing procedure. Options include the sandwich or robust covariance
-#'        matrix (\code{"robust"}), the bias-corrected covariance matrix
-#'        (\code{"bias-corrected"}), the degrees of freedom adjusted covariance
-#'        matrix (\code{"df-adjusted"}) and the model-based or naive covariance
-#'        matrix (\code{"naive"}). By default, the robust covariance
-#'        matrix is used.
+#' @param cov_type character indicating the covariance matrix estimator
+#'        of the regression parameters. Options include the sandwich or
+#'        robust estimator (\code{"robust"}), the bias-corrected estimator
+#'        (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+#'        (\code{"df-adjusted"}) and the model-based or naive estimator
+#'        (\code{"naive"}). By default, the robust covariance matrix
+#'        estimator is used.
 #' @param pmethod character indicating the method used to approximate the p-value
 #'        when the modified working Wald test, the modified working score test or
 #'        the modified working likelihood ratio test is selected. Options include
@@ -462,13 +462,24 @@ anova.geer <-
 #' @method coef geer
 #'
 #' @description
-#' Extracts model coefficients from objects returned by modeling functions.
-#' \code{coefficients} is an alias for it.
+#' Extracts model coefficients from a \code{geer} object. \code{coefficients} is
+#' an alias for it.
 #'
 #' @inheritParams add1.geer
 #'
 #' @return
-#' A named numeric vector with the coefficients extracted from the \code{object}.
+#' A named numeric vector with the coefficients extracted from \code{object}.
+#'
+#' @examples
+#' data("leprosy")
+#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' coef(fit)
+#'
+#' data("cerebrovascular")
+#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+#'                     id = id, data = cerebrovascular)
+#' coef(fit)
 #'
 #' @export
 coef.geer <- function(object, ...){
@@ -485,23 +496,27 @@ coef.geer <- function(object, ...){
 #' @method confint geer
 #'
 #' @description
-#' Confidence intervals for one or more parameters in a fitted model.
+#' Confidence intervals for one or more parameters in a \code{geer} object.
 #'
 #' @inheritParams add1.geer
 #' @inheritParams stats::confint
-#' @param cov_type character indicating the type of the covariance matrix to be
-#'        used in the construction of the confidence interval. Options include
-#'        the sandwich or robust covariance matrix (\code{"robust"}), the
-#'        bias-corrected covariance matrix (\code{"bias-corrected"}), the
-#'        degrees of freedom adjusted covariance matrix (\code{"df-adjusted"})
-#'        and the model-based or naive covariance matrix (\code{"naive"}). By
-#'        default, the robust covariance matrix is used.
 #'
 #' @details
 #' The references in \code{\link{vcov}} include the formulae for the covariance
-#' type implied by \code{cov_type}.
+#' matrix implied by \code{cov_type}.
 #'
 #' @inherit stats::confint.default return
+#'
+#' @examples
+#' data("leprosy")
+#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' confint(fit)
+#'
+#' data("cerebrovascular")
+#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+#'                     id = id, data = cerebrovascular)
+#' confint(fit)
 #'
 #' @export
 confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
@@ -532,13 +547,24 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #' @method fitted geer
 #'
 #' @description
-#' \code{fitted} extracts fitted values from objects returned by modeling
-#' functions. \code{fitted.values} is an alias for it.
+#' \code{fitted} extracts fitted values from \code{objects}. \code{fitted.values}
+#' is an alias for it.
 #'
 #' @inheritParams coef.geer
 #'
 #' @return
-#' Fitted values extracted from the \code{object}.
+#' Fitted values extracted from \code{object}.
+#'
+#' @examples
+#' data("leprosy")
+#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' fitted(fit)
+#'
+#' data("cerebrovascular")
+#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+#'                     id = id, data = cerebrovascular)
+#' fitted(fit)
 #'
 #' @export
 fitted.geer <- function(object, ...){
@@ -554,8 +580,8 @@ fitted.geer <- function(object, ...){
 #' @method model.matrix geer
 #'
 #' @description
-#' Creates a design or model matrix from a object, e.g., by expanding factors
-#' to a set of dummy variables (depending on the contrasts) and expanding
+#' Creates a design or model matrix from a \code{geer} object, e.g., by expanding
+#' factors to a set of dummy variables (depending on the contrasts) and expanding
 #' interactions similarly.
 #'
 #' @inheritParams coef.geer
@@ -573,7 +599,7 @@ fitted.geer <- function(object, ...){
 #' involving the term are retained.
 #'
 #' @return
-#' The design matrix for the regression model with the specified formula and
+#' The design matrix for the marginal regression model with the specified formula and
 #' data.
 #'
 #' There is an attribute \code{"assign"}, an integer vector with an entry for
@@ -587,6 +613,17 @@ fitted.geer <- function(object, ...){
 #' specifies the contrasts that would be used in terms in which the factor is
 #' coded by contrasts (in some terms dummy coding may be used), either as a
 #' character vector naming a function or as a numeric matrix.
+#'
+#' @examples
+#' data("leprosy")
+#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' model.matrix(fit)
+#'
+#' data("cerebrovascular")
+#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+#'                     id = id, data = cerebrovascular)
+#' model.matrix(fit)
 #'
 #' @export
 model.matrix.geer <-	function(object,...){
@@ -605,7 +642,7 @@ model.matrix.geer <-	function(object,...){
 #'
 #' @description
 #' Obtains predictions and optionally estimates standard errors of those
-#' predictions from a fitted generalized estimating equations model object.
+#' predictions from a \code{geer} object.
 #'
 #' @inheritParams add1.geer
 #' @param newdata optional data frame in which to look for variables with
@@ -616,13 +653,6 @@ model.matrix.geer <-	function(object,...){
 #'        predictors is used.
 #' @param se.fit logical indicating if standard errors are required. By default,
 #'         the standard errors are not required.
-#' @param cov_type character indicating the type of estimator which should be
-#'        used to the covariance matrix of the interest parameters. Options
-#'        include the sandwich or robust estimator (\code{"robust"}), the
-#'        bias-corrected estimator (\code{"bias-corrected"}), the degrees of
-#'        freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-#'        or naive estimator (\code{"naive"}). By default, the robust covariance
-#'        estimator is used.
 #'
 #' @details
 #' If \code{newdata} is omitted the predictions are based on the data used for
@@ -755,13 +785,6 @@ residuals.geer <- function(object,
 #' by \code{\link{coef}}.
 #'
 #' @inheritParams add1.geer
-#' @param cov_type character indicating the type of the covariance matrix to be
-#'        returned. Options include the sandwich or robust covariance
-#'        matrix (\code{"robust"}), the bias-corrected covariance
-#'        matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
-#'        covariance matrix (\code{"df-adjusted"}) and the model-based or naive
-#'        covariance matrix (\code{"naive"}). By default, the robust covariance
-#'        matrix is returned.
 #'
 #' @details
 #' If \code{cov_type = "robust"}, then the so-called sandwich or

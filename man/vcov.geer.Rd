@@ -14,13 +14,13 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{cov_type}{character indicating the type of the covariance matrix to be
-returned. Options include the sandwich or robust covariance
-matrix (\code{"robust"}), the bias-corrected covariance
-matrix (\code{"bias-corrected"}), the degrees of freedom adjusted
-covariance matrix (\code{"df-adjusted"}) and the model-based or naive
-covariance matrix (\code{"naive"}). By default, the robust covariance
-matrix is returned.}
+\item{cov_type}{character indicating the covariance matrix estimator
+of the regression parameters. Options include the sandwich or
+robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"naive"}). By default, the robust covariance matrix
+estimator is used.}
 
 \item{...}{additional argument(s) for methods.}
 }

@@ -16,13 +16,13 @@
 
 \item{level}{the confidence level required.}
 
-\item{cov_type}{character indicating the type of the covariance matrix to be
-used in the construction of the confidence interval. Options include
-the sandwich or robust covariance matrix (\code{"robust"}), the
-bias-corrected covariance matrix (\code{"bias-corrected"}), the
-degrees of freedom adjusted covariance matrix (\code{"df-adjusted"})
-and the model-based or naive covariance matrix (\code{"naive"}). By
-default, the robust covariance matrix is used.}
+\item{cov_type}{character indicating the covariance matrix estimator
+of the regression parameters. Options include the sandwich or
+robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"naive"}). By default, the robust covariance matrix
+estimator is used.}
 
 \item{...}{additional argument(s) for methods.}
 }
@@ -32,9 +32,21 @@ A matrix (or vector) with columns giving lower and upper confidence
   1 - (1-level)/2 in \% (by default 2.5\% and 97.5\%).
 }
 \description{
-Confidence intervals for one or more parameters in a fitted model.
+Confidence intervals for one or more parameters in a \code{geer} object.
 }
 \details{
 The references in \code{\link{vcov}} include the formulae for the covariance
-type implied by \code{cov_type}.
+matrix implied by \code{cov_type}.
+}
+\examples{
+data("leprosy")
+fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+             family = poisson(link = "log"), id = id, data = leprosy)
+confint(fit)
+
+data("cerebrovascular")
+fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+                    id = id, data = cerebrovascular)
+confint(fit)
+
 }

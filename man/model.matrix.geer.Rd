@@ -13,7 +13,7 @@
 \item{...}{additional argument(s) for methods.}
 }
 \value{
-The design matrix for the regression model with the specified formula and
+The design matrix for the marginal regression model with the specified formula and
 data.
 
 There is an attribute \code{"assign"}, an integer vector with an entry for
@@ -29,8 +29,8 @@ coded by contrasts (in some terms dummy coding may be used), either as a
 character vector naming a function or as a numeric matrix.
 }
 \description{
-Creates a design or model matrix from a object, e.g., by expanding factors
-to a set of dummy variables (depending on the contrasts) and expanding
+Creates a design or model matrix from a \code{geer} object, e.g., by expanding
+factors to a set of dummy variables (depending on the contrasts) and expanding
 interactions similarly.
 }
 \details{
@@ -44,4 +44,16 @@ one to appear in the formula (and not in the term), so in
 By convention, if the response variable also appears on the right-hand side
 of the formula it is dropped (with a warning), although interactions
 involving the term are retained.
+}
+\examples{
+data("leprosy")
+fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
+             family = poisson(link = "log"), id = id, data = leprosy)
+model.matrix(fit)
+
+data("cerebrovascular")
+fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
+                    id = id, data = cerebrovascular)
+model.matrix(fit)
+
 }

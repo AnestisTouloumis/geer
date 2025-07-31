@@ -38,13 +38,13 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"working-score"}) and the modified working likelihood ratio
 test (\code{"working-lrt"}). By default, the Wald test is performed.}
 
-\item{cov_type}{character indicating the covariance matrix required for
-testing procedure. Options include the sandwich or robust covariance
-matrix (\code{"robust"}), the bias-corrected covariance matrix
-(\code{"bias-corrected"}), the degrees of freedom adjusted covariance
-matrix (\code{"df-adjusted"}) and the model-based or naive covariance
-matrix (\code{"naive"}). By default, the robust covariance
-matrix is used.}
+\item{cov_type}{character indicating the covariance matrix estimator
+of the regression parameters. Options include the sandwich or
+robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"naive"}). By default, the robust covariance matrix
+estimator is used.}
 
 \item{pmethod}{character indicating the method used to approximate the p-value
 when the modified working Wald test, the modified working score test or
