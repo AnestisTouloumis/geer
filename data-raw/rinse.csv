@@ -314,3 +314,15 @@ subject,gender,age,rinse,smoke,time,score
 105,Male,25,B,No,0,2.44
 105,Male,25,B,No,3,0.88
 105,Male,25,B,No,6,1.31
+106,Female,27,Placebo,Yes,0,3.02
+106,Female,27,Placebo,Yes,3,2.76
+106,Female,27,Placebo,Yes,6,NA
+107,Male,28,Placebo,No,0,2.24
+107,Male,28,Placebo,No,3,1.37
+107,Male,28,Placebo,No,6,NA
+108,Female,27,A,No,0,2.52
+108,Female,27,A,No,3,0.71
+108,Female,27,A,No,6,NA
+109,Female,30,Placebo,No,0,2.61
+109,Female,30,Placebo,No,3,2.07
+109,Female,30,Placebo,No,6,NA
