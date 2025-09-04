@@ -91,7 +91,7 @@ criterion.
 }
 \examples{
 fitted_model <-
-geewa(formula = y ~ baseline + I(treatment == "active") + gender + visit + age,
+geewa(formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
       id = id, repeated = visit, family = binomial(link = "probit"),
       data = respiratory[respiratory$center=="C2", ], corstr = "ar1",
       method = "gee")

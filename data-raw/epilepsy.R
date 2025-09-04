@@ -7,11 +7,11 @@ epilepsy <-
   mutate(id = as.numeric(id),
          visit = as.numeric(time),
          seizures = as.numeric(seizures),
-         treatment = if_else(treatment == "Placebo", "placebo", "progabide") |>
+         treatment = if_else(treatment == "placebo", "placebo", "progabide") |>
                      as.factor(),
-         age = as.numeric(age),
-         base = as.numeric(base)) |>
-  select(id, visit, seizures, treatment, base, age)
+         lnage = log(as.numeric(age)),
+         lnbaseline = log(as.numeric(base)/4)) |>
+  select(id, visit, seizures, treatment, lnbaseline, lnage)
 rownames(epilepsy) <- 1:nrow(epilepsy)
 epilepsy <- as_tibble(epilepsy)
 usethis::use_data(epilepsy, overwrite = TRUE)

@@ -18,22 +18,21 @@ A data frame with 246 rows and 6 columns:
 }
 \source{
 Lumley T. (1996) Generalized estimating equations for ordinal data:
-A note on working correlation structures. \emph{Biometrics}, \strong{52}, 354-–361.
+A note on working correlation structures. \emph{Biometrics}, \strong{52}, 354--361.
 }
 \usage{
 cholecystectomy
 }
 \description{
-The data are from a clinical trial on shoulder pain after laparoscopic
-cholecystectomy.
+The data are from a randomized clinical trial on shoulder pain after
+laparoscopic cholecystectomy.
 }
 \details{
-A total of 41 subjects were enrolled in a randomized clinical trial of shoulder
-pain after laparoscopic cholecystectomy. Subjects were allocated to either
-the active group (with abdominal suction) or to the placebo group (without
-abdominal suction). After the operation, subjects were asked to rate their
-shoulder pain in six occasions (morning and afternoon for three days after
-the operation).
+Forty-one subjects were enrolled in a randomized clinical trial of shoulder pain
+after laparoscopic cholecystectomy. Subjects were assigned to either the active
+group (with abdominal suction) or the placebo group (without abdominal suction).
+Shoulder pain was assessed on six occasions: morning and afternoon for three
+days postoperatively.
 }
 \examples{
 data("cholecystectomy")
@@ -43,6 +42,6 @@ str(cholecystectomy)
 Jorgensen J.O., Gillies R.B., Hunt D.R., Caplehorn J.R.M. and
 Lumley T. (1995) A simple and effective way to reduce postoperative pain after
 laparoscopic cholecystectomy. \emph{Australian and New Zealand Journal of Surgery},
-\strong{65}, 466-–469.
+\strong{65}, 466--469.
 }
 \keyword{datasets}

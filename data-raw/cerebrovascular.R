@@ -22,8 +22,6 @@ cerebrovascular <-
          ecg = as.numeric(ecg),
          treatment = factor(treatment)) |>
   relocate(id, period, ecg, treatment)
-
 rownames(cerebrovascular) <- 1:nrow(cerebrovascular)
 cerebrovascular <- as_tibble(cerebrovascular)
-
 usethis::use_data(cerebrovascular, overwrite = TRUE)

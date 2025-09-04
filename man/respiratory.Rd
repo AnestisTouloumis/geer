@@ -9,8 +9,8 @@ A data frame with 444 rows and 8 columns:
 \describe{
   \item{id}{numeric vector indicating the subject identifier.}
   \item{visit}{numeric vector indicating the visit identifier.}
-  \item{y}{numeric vector indicating the respiratory status, coded as (0) for
-           poor and as (1) for good.}
+  \item{status}{numeric vector indicating the respiratory status, coded as (0)
+                for poor and as (1) for good.}
   \item{treatment}{factor indicating the treatment group: active and placebo.}
   \item{baseline}{numeric vector indicating the respiratory status at the
                   baseline, coded as (0) for poor and as (1) for good.}
@@ -23,14 +23,14 @@ A data frame with 444 rows and 8 columns:
 respiratory
 }
 \description{
-The data are from a clinical trial on respiratory illness.
+The data are from a randomized clinical trial on respiratory illness.
 }
 \details{
-A total of 111 subjects from two different centers were enrolled in a randomized
-clinical trial. Prior to receiving treatment, subjects were examined at baseline.
-After receiving treatment, subjects were examined at four visits during. The
-respiratory status was determined at the baseline and at each of the four
-follow-up visits.
+One hundred eleven subjects from two centers were enrolled in a randomized clinical
+trial. Subjects were randomly assigned to treatment groups. Baseline examinations
+were conducted before treatment. After treatment, subjects were examined at four
+follow-up visits, and respiratory status was assessed at baseline and at each
+follow-up.
 }
 \examples{
 data("respiratory")

@@ -18,17 +18,16 @@ A data frame with 60 rows and 4 columns:
 leprosy
 }
 \description{
-The data are from a clinical trial on leprosy.
+The data are from a randomized clinical trial on the efficacy of antibiotic
+treatments for leprosy in the Philippines.
 }
 \details{
-A total of 30 subjects were enrolled in a randomized clinical trial in
-Philippines. Prior to receiving treatment, the number of leprosy bacilli at
-six sites of the body were recorded. After receiving treatment (A, B or C),
-the number of leprosy bacilli were recorded again. The respiratory status
-was determined at the baseline and at each of the four follow-up visits. One
-of the goals of this study is whether treatment with antibiotics
-(treatments A and B) reduces the abundance of leprosy bacilli at the six sites
-of the body when compared to placebo (treatment C).
+Thirty subjects in the Philippines were enrolled in a randomized clinical trial.
+Subjects were assigned to receive treatment A, B, or C. Before treatment, the
+number of leprosy bacilli at six body sites was recorded. After treatment, bacilli
+counts were recorded again, and respiratory status was assessed at baseline and at
+four follow-up visits. The trial aimed to test whether antibiotic treatments A and B
+reduced bacilli abundance compared with placebo (treatment C).
 }
 \examples{
 data("leprosy")

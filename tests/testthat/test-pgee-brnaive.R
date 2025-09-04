@@ -1,5 +1,5 @@
 data("respiratory")
-formula <- y ~ baseline + treatment + gender + visit + age + center
+formula <- status ~ baseline + treatment + gender + visit + age + center
 fitted_pgee_corr <- geewa(formula = formula,
                           id = id,
                           repeated = visit,

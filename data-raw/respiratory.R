@@ -10,13 +10,13 @@ respiratory <-
          id = rep(1:111, each = 4)) |>
   mutate(id = as.numeric(id),
          visit = as.numeric(visit),
-         y = as.numeric(outcome),
+         status = as.numeric(outcome),
          treatment = as.factor(treat),
          baseline = as.numeric(baseline),
          age = as.numeric(age),
-         gender = factor(sex),
-         center = factor(center)) |>
-  select(id, visit, y, treatment, baseline, gender, age, center)
+         gender = as.factor(sex),
+         center = as.factor(center)) |>
+  select(id, visit, status, treatment, baseline, gender, age, center)
 rownames(respiratory) <- 1:nrow(respiratory)
 respiratory <- as_tibble(respiratory)
 usethis::use_data(respiratory, overwrite = TRUE)

@@ -4,7 +4,7 @@ print(c(link, jeffreys_power))
 data("respiratory")
 library("brglm2")
 
-fmla <- y ~  visit + age + baseline + center + treatment + gender
+fmla <- status ~  visit + age + baseline + center + treatment + gender
 
 fit_model_or <-
   geewa_binary(formula = fmla,

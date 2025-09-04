@@ -16,6 +16,4 @@ cholecystectomy <-
   select(id, time, pain, treatment, gender, age)
 rownames(cholecystectomy) <- 1:nrow(cholecystectomy)
 cholecystectomy <- as_tibble(cholecystectomy)
-
-
 usethis::use_data(cholecystectomy, overwrite = TRUE)

@@ -12,9 +12,10 @@ A data frame with 236 rows and 6 columns:
                corresponds to the reported number of epileptic seizures.}
   \item{seizures}{numeric vector indicating the number of epileptic seizures.}
   \item{treatment}{factor indicating the treatment group: placebo and progabide.}
-  \item{base}{numeric vector indicating the number of epileptic seizures in the
-              baseline 8-week interval.}
-  \item{age}{numeric vector indicating the age in years.}
+  \item{lnbaseline}{numeric vector indicating the logarithm of one-quarter of
+                    the number of epileptic seizures in the baseline 8-week
+                    interval.}
+  \item{lnage}{numeric vector indicating the logarithm of age in years.}
   }
 }
 \source{
@@ -25,15 +26,14 @@ count data with overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
 epilepsy
 }
 \description{
-The data are from a clinical trial on epilepsy.
+The data are from a randomized clinical trial on the efficacy of progabide in
+treating partial seizures.
 }
 \details{
-A total of 59 subjects with partial seizures were enrolled in a randomized
-clinical trial. Subjects were allocated to either the anti-epileptic drug
-progabide or to placebo. Prior to receiving treatment, the number of epileptic
-seizures during the preceding 8-week interval were recorded. After receiving
-treatment, the number of epileptic seizures were recorded at each of four
-2-week intervals clinic visits.
+Fifty-nine subjects with partial seizures were enrolled in a randomized clinical
+trial. Subjects were assigned to receive either the anti-epileptic drug progabide
+or placebo. Seizure counts were recorded during the 8 weeks prior to treatment.
+After treatment, seizure counts were assessed at four 2-week clinic visits.
 }
 \examples{
 data("epilepsy")
@@ -41,6 +41,6 @@ str(epilepsy)
 }
 \references{
 Carey V.J., Wang Y.G. (2011) Working covariance model selection for generalized
-estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117-–3124.
+estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117--3124.
 }
 \keyword{datasets}

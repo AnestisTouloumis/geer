@@ -10,7 +10,7 @@ A data frame with 134 rows and 4 columns:
   \item{id}{numeric vector indicating the subject identifier.}
   \item{period}{numeric vector indicating the period identifier.}
   \item{ecg}{numeric vector indicating the ecg status, coded as (0) for
-  abnormal electrocardiogram and as (1) for normal electrocardiogram.}
+             abnormal electrocardiogram and as (1) for normal electrocardiogram.}
   \item{treatment}{factor indicating the treatment group: active and placebo.}
   }
 }
@@ -18,13 +18,12 @@ A data frame with 134 rows and 4 columns:
 cerebrovascular
 }
 \description{
-The data are from a crossover trial on cerebrovascular deficiency.
+The data are from a randomized crossover trial on cerebrovascular deficiency.
 }
 \details{
-A total of 67 subjects were enrolled in a two-period crossover trial. Of those,
-34 subjects received placebo followed by active treatment and 33 received
-active treatment followed by placebo. The ecg status was determined on whether
-the electrocardiogram was abnormal or normal.
+Sixty-seven subjects were enrolled in a two-period crossover trial. Subjects were
+randomly assigned to receive either placebo followed by active treatment or active
+treatment followed by placebo. ECG status was classified as normal or abnormal.
 }
 \examples{
 data("cerebrovascular")

@@ -13,5 +13,4 @@ leprosy <-
   relocate(id, period, bacilli, treatment)
 rownames(leprosy) <- 1:nrow(leprosy)
 leprosy <- as_tibble(leprosy)
-
 usethis::use_data(leprosy, overwrite = TRUE)

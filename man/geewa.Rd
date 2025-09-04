@@ -176,7 +176,7 @@ are provided, should be the same as the number of observations.
 }
 \examples{
 data("leprosy")
-fitted_model_gee <- geewa(formula = seizures ~ treatment + log(base/4) + log(age),
+fitted_model_gee <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
                           data = epilepsy, id = id, family = poisson(link = "log"),
                           corstr = "exchangeable", method = "gee")
 summary(fitted_model_gee, type = "bias-corrected")
