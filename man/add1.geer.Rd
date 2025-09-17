@@ -5,7 +5,7 @@
 \alias{add1}
 \alias{drop1.geer}
 \alias{drop1}
-\title{Add or Drop All Possible Single Terms to a Model from a \code{geer} Object}
+\title{Add or Drop Single Terms to/from a Model from a \code{geer} Object}
 \usage{
 \method{add1}{geer}(
   object,
@@ -36,24 +36,22 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test
 (\code{"working-wald"}), the modified working score test
 (\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). By default, the Wald test is performed.}
+test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
 
 \item{cov_type}{character indicating the covariance matrix estimator
 of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the p-value
-when the modified working Wald test, the modified working score test or
-the modified working likelihood ratio test is selected. Options include
-the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-approximation (\code{"satterthwaite"}). By default, the Rao-Scott
-approximation is used.}
+\item{pmethod}{character indicating the method used to approximate the
+p-value when one of the modified working tests is selected. Options
+include the Rao–Scott approximation (\code{"rao-scott"}) and the
+Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
+\code{"rao-scott"}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
 An object of class \code{"anova"} summarizing the differences in fit
@@ -65,29 +63,25 @@ Compute all the single terms in the \code{scope} argument that can be
   table of the changes in fit.
 }
 \details{
-For \code{drop1}, a missing scope is taken to be all terms in the model. The
-hierarchy is respected when considering terms to be added or dropped:
-all main effects contained in a second-order interaction must remain, and so
-on.
+If \code{scope} is missing, all terms in the current model are considered.
+Model hierarchy is enforced: if a higher-order interaction is present, all
+of its lower-order main effects must also remain in the model. In scope
+formulas, \code{.} denotes the set of terms already included in the model.
 
-In a scope formula . means 'what is already there'.
+Details of the hypothesis tests controlled by \code{test} are given in
+\cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
+is valid only when the model is fitted under an \emph{independence} working
+association; otherwise, an error is returned.
 
-Details about the hypothesis testing procedures implied by \code{test} can
-be found in \cite{Rotnitzky and Jewell (1990)}. Note that
-\code{test = "working-lrt"} is only available to fitted models with an
-independence working association structure. Otherwise, an error message is
-returned.
+When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
+ignored, and \code{cov_type} specifies the covariance estimator used to
+compute the test statistic. For other tests, \code{cov_type} determines the
+covariance matrix used to form the coefficients of the sum of independent
+chi-squared random variables, while \code{p_method} specifies the
+approximation used to obtain the p-value.
 
-When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod}
-argument is ignored and \code{cov_type} specifies the covariance matrix
-estimate used to calculate the corresponding test statistic. Otherwise,
-\code{cov_type} specifies the covariance matrix estimate used to calculate
-the coefficients of the sum of independent chi-squared random variables, and
-\code{p_method} argument specifies the approximation method used to calculate
-the p-value of the resulting test statistic.
-
-The output table also gives the Correlation Information Criterion (CIC)
-criterion.
+The output table also includes the Correlation Information Criterion (CIC),
+a diagnostic for selecting the working correlation structure.
 }
 \examples{
 fitted_model <-

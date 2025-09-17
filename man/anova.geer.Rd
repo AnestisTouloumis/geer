@@ -23,53 +23,52 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test
 (\code{"working-wald"}), the modified working score test
 (\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). By default, the Wald test is performed.}
+test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
 
 \item{cov_type}{character indicating the covariance matrix estimator
 of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the p-value
-when the modified working Wald test, the modified working score test or
-the modified working likelihood ratio test is selected. Options include
-the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-approximation (\code{"satterthwaite"}). By default, the Rao-Scott
-approximation is used.}
+\item{pmethod}{character indicating the method used to approximate the
+p-value when one of the modified working tests is selected. Options
+include the Rao–Scott approximation (\code{"rao-scott"}) and the
+Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
+\code{"rao-scott"}.}
 }
 \value{
-This function returns an object of class \code{anova}. These objects represent
-analysis-of-variance tables within the GEE framework.
+An object of class \code{anova}, representing an analysis-of-variance table
+within the GEE framework.
 
-When given a single argument, \code{anova} produces a table which tests
-whether the model terms are significant. When given a sequence of objects,
-\code{anova} tests the models against one another in the order specified.
-This requires that two consecutive models are nested.
+\itemize{
+  \item With a single model, the table reports the significance of each model
+  term.
+  \item With multiple models, the table reports sequential tests comparing
+  each model to the previous one.
+}
 }
 \description{
-Compute analysis of variance tables using hypothesis testing procedures for
-one or more fitted model.
+Compute analysis of variance (ANOVA) tables for one or more fitted models of
+class \code{geer}, using a variety of hypothesis testing procedures.
 }
 \details{
-Details about the hypothesis testing procedures implied by \code{test} can
-be found in \cite{Rotnitzky and Jewell (1990)}. Note that
-\code{test = "working-lrt"} is only available to fitted models with an
-independence working association structure. Otherwise, an error message is
-returned.
+Details of the hypothesis tests controlled by \code{test} are given in
+\cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
+is valid only when the model is fitted with an \emph{independence} working
+correlation structure; otherwise an error is returned.
 
-When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-argument is ignored and \code{cov_type} specifies the covariance matrix
-estimate used to calculate the corresponding test statistic. Otherwise,
-\code{cov_type} specifies the covariance matrix estimate used to calculate
-the coefficients of the sum of independent chi-squared random variables, and
-\code{p_method} argument specifies the approximation method used to calculate
-the p-value of the resulting test statistic.
+When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
+ignored. In this case, \code{cov_type} specifies the covariance estimator
+used in the test statistic. For other tests, \code{cov_type} determines the
+covariance matrix used to form the coefficients of the sum of independent
+chi-squared random variables, and \code{p_method} specifies the approximation
+used to compute the p-value.
 
-The comparison between two or more models will only be valid if they are
-fitted to the same dataset.
+When comparing two or more models, the data must be identical across all
+fits, and the models must be nested in the order supplied. In particular,
+each consecutive pair of models must be nested.
 }
 \references{
 Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
@@ -77,6 +76,6 @@ in semiparametric generalized linear models for cluster correlated data.
 \emph{Biometrika} \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{drop1}} for so-called 'type II' ANOVA where each term is
-dropped one at a time respecting their hierarchy.
+\code{\link{drop1}} for type II ANOVA, where each term is dropped one at a
+time while respecting model hierarchy.
 }

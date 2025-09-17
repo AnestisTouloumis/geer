@@ -10,7 +10,7 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
 The design matrix for the marginal regression model with the specified formula and
@@ -29,21 +29,22 @@ coded by contrasts (in some terms dummy coding may be used), either as a
 character vector naming a function or as a numeric matrix.
 }
 \description{
-Creates a design or model matrix from a \code{geer} object, e.g., by expanding
-factors to a set of dummy variables (depending on the contrasts) and expanding
-interactions similarly.
+Build the design (model) matrix from a fitted \code{geer} object. Factor
+variables are expanded to dummy/contrast-coded columns (according to the
+active contrasts), and interaction terms are expanded accordingly.
 }
 \details{
-\code{model.matrix} creates a design matrix from the description given in
-\code{terms(object)}, using the data in \code{object$data}.
+The design matrix is constructed based on \code{terms(object)}, using the data
+stored in \code{object$data}.
 
-In an interaction term, the variable whose levels vary fastest is the first
-one to appear in the formula (and not in the term), so in
-\code{~ a + b + b:a} the interaction will have a varying fastest.
+For interaction terms, the variable whose levels vary fastest is the first one
+listed in the formula (not in the term). For example, in
+\code{~ a + b + b:a}, the interaction term \code{b:a} will vary fastest with
+respect to \code{a}.
 
-By convention, if the response variable also appears on the right-hand side
-of the formula it is dropped (with a warning), although interactions
-involving the term are retained.
+By convention, if the response variable also appears on the right-hand side of
+the formula it is dropped (with a warning). However, interactions involving
+that term are retained.
 }
 \examples{
 data("leprosy")

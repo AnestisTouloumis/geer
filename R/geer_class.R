@@ -113,7 +113,7 @@ print.summary.geer <- function(x, ...) {
 
 
 #' @title
-#' Add or Drop All Possible Single Terms to a Model from a \code{geer} Object
+#' Add or Drop Single Terms to/from a Model from a \code{geer} Object
 #'
 #' @rdname add1.geer
 #' @aliases add1 add1.geer
@@ -123,32 +123,28 @@ print.summary.geer <- function(x, ...) {
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::add1
-#' @param ... additional argument(s) for methods.
+#' @param ... additional argument(s) passed to methods.
 #'
 #' @details
-#' For \code{drop1}, a missing scope is taken to be all terms in the model. The
-#' hierarchy is respected when considering terms to be added or dropped:
-#' all main effects contained in a second-order interaction must remain, and so
-#' on.
+#' If \code{scope} is missing, all terms in the current model are considered.
+#' Model hierarchy is enforced: if a higher-order interaction is present, all
+#' of its lower-order main effects must also remain in the model. In scope
+#' formulas, \code{.} denotes the set of terms already included in the model.
 #'
-#' In a scope formula . means 'what is already there'.
+#' Details of the hypothesis tests controlled by \code{test} are given in
+#' \cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
+#' is valid only when the model is fitted under an \emph{independence} working
+#' association; otherwise, an error is returned.
 #'
-#' Details about the hypothesis testing procedures implied by \code{test} can
-#' be found in \cite{Rotnitzky and Jewell (1990)}. Note that
-#' \code{test = "working-lrt"} is only available to fitted models with an
-#' independence working association structure. Otherwise, an error message is
-#' returned.
+#' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
+#' ignored, and \code{cov_type} specifies the covariance estimator used to
+#' compute the test statistic. For other tests, \code{cov_type} determines the
+#' covariance matrix used to form the coefficients of the sum of independent
+#' chi-squared random variables, while \code{p_method} specifies the
+#' approximation used to obtain the p-value.
 #'
-#' When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod}
-#' argument is ignored and \code{cov_type} specifies the covariance matrix
-#' estimate used to calculate the corresponding test statistic. Otherwise,
-#' \code{cov_type} specifies the covariance matrix estimate used to calculate
-#' the coefficients of the sum of independent chi-squared random variables, and
-#' \code{p_method} argument specifies the approximation method used to calculate
-#' the p-value of the resulting test statistic.
-#'
-#' The output table also gives the Correlation Information Criterion (CIC)
-#' criterion.
+#' The output table also includes the Correlation Information Criterion (CIC),
+#' a diagnostic for selecting the working correlation structure.
 #'
 #' @inherit stats::add1 return
 #'
@@ -305,8 +301,8 @@ drop1.geer <-
 #' @method anova geer
 #'
 #' @description
-#' Compute analysis of variance tables using hypothesis testing procedures for
-#' one or more fitted model.
+#' Compute analysis of variance (ANOVA) tables for one or more fitted models of
+#' class \code{geer}, using a variety of hypothesis testing procedures.
 #'
 #' @param object an object representing a model of the class \code{geer}.
 #' @param ... additional objects representing models of the same class \code{geer}.
@@ -315,52 +311,52 @@ drop1.geer <-
 #'        (\code{"score"}), the modified working Wald test
 #'        (\code{"working-wald"}), the modified working score test
 #'        (\code{"working-score"}) and the modified working likelihood ratio
-#'        test (\code{"working-lrt"}). By default, the Wald test is performed.
+#'        test (\code{"working-lrt"}). Defaults to \code{"wald"}.
 #' @param cov_type character indicating the covariance matrix estimator
 #'        of the regression parameters. Options include the sandwich or
 #'        robust estimator (\code{"robust"}), the bias-corrected estimator
 #'        (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 #'        (\code{"df-adjusted"}) and the model-based or naive estimator
-#'        (\code{"naive"}). By default, the robust covariance matrix
-#'        estimator is used.
-#' @param pmethod character indicating the method used to approximate the p-value
-#'        when the modified working Wald test, the modified working score test or
-#'        the modified working likelihood ratio test is selected. Options include
-#'        the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-#'        approximation (\code{"satterthwaite"}). By default, the Rao-Scott
-#'        approximation is used.
+#'        (\code{"naive"}). Defaults to \code{"robust"}.
+#' @param pmethod character indicating the method used to approximate the
+#'        p-value when one of the modified working tests is selected. Options
+#'        include the Rao–Scott approximation (\code{"rao-scott"}) and the
+#'        Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
+#'        \code{"rao-scott"}.
 #'
 #' @details
-#' Details about the hypothesis testing procedures implied by \code{test} can
-#' be found in \cite{Rotnitzky and Jewell (1990)}. Note that
-#' \code{test = "working-lrt"} is only available to fitted models with an
-#' independence working association structure. Otherwise, an error message is
-#' returned.
+#' Details of the hypothesis tests controlled by \code{test} are given in
+#' \cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
+#' is valid only when the model is fitted with an \emph{independence} working
+#' correlation structure; otherwise an error is returned.
 #'
-#' When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-#' argument is ignored and \code{cov_type} specifies the covariance matrix
-#' estimate used to calculate the corresponding test statistic. Otherwise,
-#' \code{cov_type} specifies the covariance matrix estimate used to calculate
-#' the coefficients of the sum of independent chi-squared random variables, and
-#' \code{p_method} argument specifies the approximation method used to calculate
-#' the p-value of the resulting test statistic.
+#' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
+#' ignored. In this case, \code{cov_type} specifies the covariance estimator
+#' used in the test statistic. For other tests, \code{cov_type} determines the
+#' covariance matrix used to form the coefficients of the sum of independent
+#' chi-squared random variables, and \code{p_method} specifies the approximation
+#' used to compute the p-value.
 #'
-#' The comparison between two or more models will only be valid if they are
-#' fitted to the same dataset.
+#' When comparing two or more models, the data must be identical across all
+#' fits, and the models must be nested in the order supplied. In particular,
+#' each consecutive pair of models must be nested.
 #'
 #' @return
-#' This function returns an object of class \code{anova}. These objects represent
-#' analysis-of-variance tables within the GEE framework.
+#' An object of class \code{anova}, representing an analysis-of-variance table
+#' within the GEE framework.
 #'
-#' When given a single argument, \code{anova} produces a table which tests
-#' whether the model terms are significant. When given a sequence of objects,
-#' \code{anova} tests the models against one another in the order specified.
-#' This requires that two consecutive models are nested.
+#' \itemize{
+#'   \item With a single model, the table reports the significance of each model
+#'   term.
+#'   \item With multiple models, the table reports sequential tests comparing
+#'   each model to the previous one.
+#' }
 #'
 #' @inherit add1.geer references
 #'
-#' @seealso \code{\link{drop1}} for so-called 'type II' ANOVA where each term is
-#' dropped one at a time respecting their hierarchy.
+#' @seealso
+#' \code{\link{drop1}} for type II ANOVA, where each term is dropped one at a
+#' time while respecting model hierarchy.
 #'
 #' @export
 
@@ -462,13 +458,13 @@ anova.geer <-
 #' @method coef geer
 #'
 #' @description
-#' Extracts model coefficients from a \code{geer} object. \code{coefficients} is
-#' an alias for it.
+#' Extracts model coefficients from a \code{geer} object. The function
+#' \code{coefficients} is an alias.
 #'
 #' @inheritParams add1.geer
 #'
 #' @return
-#' A named numeric vector with the coefficients extracted from \code{object}.
+#' A named numeric vector containing the estimated model coefficients.
 #'
 #' @examples
 #' data("leprosy")
@@ -496,14 +492,17 @@ coef.geer <- function(object, ...){
 #' @method confint geer
 #'
 #' @description
-#' Confidence intervals for one or more parameters in a \code{geer} object.
+#' Compute confidence intervals for one or more regression parameters from a
+#' fitted \code{geer} model.
 #'
 #' @inheritParams add1.geer
 #' @inheritParams stats::confint
 #'
 #' @details
-#' The references in \code{\link{vcov}} include the formulae for the covariance
-#' matrix implied by \code{cov_type}.
+#' Confidence intervals are based on the estimated covariance matrix of the
+#' coefficients. The specific form of the covariance matrix is controlled by the
+#' \code{cov_type} argument; see \code{\link{vcov}} for available options and
+#' formulae.
 #'
 #' @inherit stats::confint.default return
 #'
@@ -547,13 +546,13 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #' @method fitted geer
 #'
 #' @description
-#' \code{fitted} extracts fitted values from \code{objects}. \code{fitted.values}
-#' is an alias for it.
+#' Extract fitted values from a model of class \code{geer}.
+#' The function \code{fitted.values()} is an alias.
 #'
 #' @inheritParams coef.geer
 #'
 #' @return
-#' Fitted values extracted from \code{object}.
+#' A numeric vector of fitted values extracted from \code{object}.
 #'
 #' @examples
 #' data("leprosy")
@@ -580,23 +579,24 @@ fitted.geer <- function(object, ...){
 #' @method model.matrix geer
 #'
 #' @description
-#' Creates a design or model matrix from a \code{geer} object, e.g., by expanding
-#' factors to a set of dummy variables (depending on the contrasts) and expanding
-#' interactions similarly.
+#' Build the design (model) matrix from a fitted \code{geer} object. Factor
+#' variables are expanded to dummy/contrast-coded columns (according to the
+#' active contrasts), and interaction terms are expanded accordingly.
 #'
 #' @inheritParams coef.geer
 #'
 #' @details
-#' \code{model.matrix} creates a design matrix from the description given in
-#' \code{terms(object)}, using the data in \code{object$data}.
+#' The design matrix is constructed based on \code{terms(object)}, using the data
+#' stored in \code{object$data}.
 #'
-#' In an interaction term, the variable whose levels vary fastest is the first
-#' one to appear in the formula (and not in the term), so in
-#' \code{~ a + b + b:a} the interaction will have a varying fastest.
+#' For interaction terms, the variable whose levels vary fastest is the first one
+#' listed in the formula (not in the term). For example, in
+#' \code{~ a + b + b:a}, the interaction term \code{b:a} will vary fastest with
+#' respect to \code{a}.
 #'
-#' By convention, if the response variable also appears on the right-hand side
-#' of the formula it is dropped (with a warning), although interactions
-#' involving the term are retained.
+#' By convention, if the response variable also appears on the right-hand side of
+#' the formula it is dropped (with a warning). However, interactions involving
+#' that term are retained.
 #'
 #' @return
 #' The design matrix for the marginal regression model with the specified formula and
@@ -635,37 +635,53 @@ model.matrix.geer <-	function(object,...){
 
 
 #' @title
-#' Model Predictions for a \code{geer} Object
+#' Predictions from a \code{geer} Object
 #'
 #' @aliases predict predict.geer
 #' @method predict geer
 #'
 #' @description
-#' Obtains predictions and optionally estimates standard errors of those
-#' predictions from a \code{geer} object.
+#' Generate predictions, optionally with standard errors, from a fitted
+#' \code{geer} object.
 #'
 #' @inheritParams add1.geer
-#' @param newdata optional data frame in which to look for variables with
-#'        which to predict. If omitted, the fitted linear predictors are used.
+#' @param newdata optional data frame in which to look for variables used
+#'        for prediction. If omitted, predictions are made on the data used for
+#'        fitting.
 #' @param type type of prediction required. Options include the scale of the
 #'        linear predictors (\code{"link"}) and the scale of the response
 #'        variable (\code{"response"}). By default, the scale of the linear
 #'        predictors is used.
-#' @param se.fit logical indicating if standard errors are required. By default,
-#'         the standard errors are not required.
+#' @param se.fit logical indicating if standard errors are required.
+#'        Defaults to \code{FALSE}.
 #'
 #' @details
+#' Predictions are obtained by computing the model matrix for \code{newdata}
+#' (or the original data if \code{newdata} is missing) and multiplying by the
+#' estimated coefficients. If \code{type = "response"}, predictions are
+#' transformed via the inverse link function.
+#'
+#' When \code{se.fit = TRUE}, approximate standard errors of predictions are
+#' computed using the model-based covariance matrix of the estimated
+#' coefficients.
+#'
 #' If \code{newdata} is omitted the predictions are based on the data used for
 #' the fit.
 #'
 #' @return
-#' If \code{se.fit = FALSE}, a vector or matrix of predictions.
+#' \describe{
+#'   \item{If \code{se.fit = FALSE}:}{A numeric vector (or matrix) of predicted
+#'   values.}
+#'   \item{If \code{se.fit = TRUE}:}{A list with components:
+#'     \itemize{
+#'       \item \code{fit} — predictions, as above.
+#'       \item \code{se.fit} — estimated standard errors of the predictions.
+#'     }
+#'   }
+#' }
 #'
-#' If \code{se.fit = TRUE}, a list with components
-#' \item{fit}{Predictions, as for \code{se.fit = FALSE}.}
-#' \item{se.fit}{Estimated standard errors.}
-#'
-#' @seealso \code{\link{geewa}} and \code{\link{geewa_binary}}.
+#' @seealso
+#' \code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.
 #'
 #' @export
 predict.geer <-
@@ -722,32 +738,38 @@ predict.geer <-
 
 
 #' @title
-#' Extract Model Residuals from a \code{geer} Object
+#' EResiduals from a \code{geer} Object
 #'
 #' @aliases resid residuals residuals.geer
 #' @method residuals geer
 #'
 #' @description
-#' Extract residuals from a fitted model.
+#' Extract residuals of different types from a fitted \code{geer} object.
 #'
 #' @inheritParams coef.geer
-#' @param type character indicating whether the type of the residuals to be
-#'        returned. Options include the working residuals (\code{"working"}),
-#'        the pearson residuals (\code{"pearson"}) and the deviance residuals
+#' @param type character indicating whether the type of the residuals to return.
+#'        Options include the working residuals (\code{"working"}), the pearson
+#'        residuals (\code{"pearson"}) and the deviance residuals
 #'        (\code{"deviance"}). By default, the working residuals are returned.
 #'
 #' @details
-#' If \code{type = "working"}, then the raw residuals (\code{observed - fitted})
-#' are returned.
+#' The residuals are computed according to the marginal distribution specified
+#' by \code{object$family$family}.
 #'
-#' If \code{type = "pearson"}, then the pearson residuals are returned. The
-#' marginal distribution of the responses is defined by \code{object$family$family}.
-#'
-#' If \code{type = "deviance"}, then the deviance residuals are returned. The
-#' marginal distribution of the responses is defined by \code{object$family$family}.
+#' \itemize{
+#'   \item Working residuals: raw differences between observed and fitted values.
+#'   \item Pearson residuals: standardized by the variance function of the
+#'         specified family.
+#'   \item Deviance residuals: signed square roots of the contribution of each
+#'         observation to the model deviance.
+#' }
 #'
 #' @return
-#' A vector with the observed residuals type \code{type}.
+#' A numeric vector of residuals of the requested \code{type}.
+#'
+#' @seealso
+#' \code{\link{geewa}}, \code{\link{geewa_binary}},
+#' \code{\link[stats]{residuals}}
 #'
 #' @export
 residuals.geer <- function(object,
@@ -780,30 +802,30 @@ residuals.geer <- function(object,
 #' @method vcov geer
 #'
 #' @description
-#' Returns the variance-covariance matrix of the main parameters of a fitted
-#' model object. The "main" parameters of model correspond to those returned
-#' by \code{\link{coef}}.
+#' Extract the variance–covariance matrix of the regression parameters from a
+#' fitted \code{geer} object. The parameters correspond to those returned by
+#' \code{\link{coef}}.
 #'
 #' @inheritParams add1.geer
 #'
 #' @details
-#' If \code{cov_type = "robust"}, then the so-called sandwich or
-#' robust covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
-#'
-#' If \code{cov_type = "naive"}, then the so-called naive or
-#' model-based covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
-#'
-#' If \code{cov_type = "df-adjusted"}, then the adjusted covariance matrix proposed
-#' by \cite{MacKinnon (1985)} is returned.
-#'
-#' If \code{cov_type = "bias-corrected"}, then the bias-corrected covariance matrix
-#' proposed by \cite{Morel, Bokossa and Neerchal (2003)} is returned.
+#' The form of the covariance estimator is controlled by the argument
+#' \code{cov_type}:
+#' \itemize{
+#'   \item \code{"robust"} — the sandwich (robust) covariance estimator
+#'     \insertCite{LiangZeger1986}{}
+#'   \item \code{"naive"} — the model-based covariance estimator
+#'     \insertCite{LiangZeger1986}{}
+#'   \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
+#'     \insertCite{MacKinnon1985}{}
+#'   \item \code{"bias-corrected"} — the bias-corrected covariance estimator
+#'     \insertCite{MorelEtAl2003}{}
+#' }
 #'
 #' @return
-#' A matrix of the estimated covariances between the parameter estimates
-#' in the linear predictor of the model. This should have row and column
-#' names corresponding to the parameter names given by the \code{\link[stats]{coef}}
-#' method.
+#' A square numeric matrix of estimated covariances between regression
+#' coefficients. Rows and columns are named according to the coefficient names
+#' returned by \code{\link[stats]{coef}}.
 #'
 #' @references
 #' Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance

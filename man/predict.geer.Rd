@@ -3,7 +3,7 @@
 \name{predict.geer}
 \alias{predict.geer}
 \alias{predict}
-\title{Model Predictions for a \code{geer} Object}
+\title{Predictions from a \code{geer} Object}
 \usage{
 \method{predict}{geer}(
   object,
@@ -17,8 +17,9 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{newdata}{optional data frame in which to look for variables with
-which to predict. If omitted, the fitted linear predictors are used.}
+\item{newdata}{optional data frame in which to look for variables used
+for prediction. If omitted, predictions are made on the data used for
+fitting.}
 
 \item{type}{type of prediction required. Options include the scale of the
 linear predictors (\code{"link"}) and the scale of the response
@@ -30,29 +31,42 @@ of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{se.fit}{logical indicating if standard errors are required. By default,
-the standard errors are not required.}
+\item{se.fit}{logical indicating if standard errors are required.
+Defaults to \code{FALSE}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
-If \code{se.fit = FALSE}, a vector or matrix of predictions.
-
-If \code{se.fit = TRUE}, a list with components
-\item{fit}{Predictions, as for \code{se.fit = FALSE}.}
-\item{se.fit}{Estimated standard errors.}
+\describe{
+  \item{If \code{se.fit = FALSE}:}{A numeric vector (or matrix) of predicted
+  values.}
+  \item{If \code{se.fit = TRUE}:}{A list with components:
+    \itemize{
+      \item \code{fit} — predictions, as above.
+      \item \code{se.fit} — estimated standard errors of the predictions.
+    }
+  }
+}
 }
 \description{
-Obtains predictions and optionally estimates standard errors of those
-predictions from a \code{geer} object.
+Generate predictions, optionally with standard errors, from a fitted
+\code{geer} object.
 }
 \details{
+Predictions are obtained by computing the model matrix for \code{newdata}
+(or the original data if \code{newdata} is missing) and multiplying by the
+estimated coefficients. If \code{type = "response"}, predictions are
+transformed via the inverse link function.
+
+When \code{se.fit = TRUE}, approximate standard errors of predictions are
+computed using the model-based covariance matrix of the estimated
+coefficients.
+
 If \code{newdata} is omitted the predictions are based on the data used for
 the fit.
 }
 \seealso{
-\code{\link{geewa}} and \code{\link{geewa_binary}}.
+\code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.
 }

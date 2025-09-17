@@ -4,33 +4,39 @@
 \alias{residuals.geer}
 \alias{resid}
 \alias{residuals}
-\title{Extract Model Residuals from a \code{geer} Object}
+\title{EResiduals from a \code{geer} Object}
 \usage{
 \method{residuals}{geer}(object, type = c("working", "pearson", "deviance"), ...)
 }
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{type}{character indicating whether the type of the residuals to be
-returned. Options include the working residuals (\code{"working"}),
-the pearson residuals (\code{"pearson"}) and the deviance residuals
+\item{type}{character indicating whether the type of the residuals to return.
+Options include the working residuals (\code{"working"}), the pearson
+residuals (\code{"pearson"}) and the deviance residuals
 (\code{"deviance"}). By default, the working residuals are returned.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
-A vector with the observed residuals type \code{type}.
+A numeric vector of residuals of the requested \code{type}.
 }
 \description{
-Extract residuals from a fitted model.
+Extract residuals of different types from a fitted \code{geer} object.
 }
 \details{
-If \code{type = "working"}, then the raw residuals (\code{observed - fitted})
-are returned.
+The residuals are computed according to the marginal distribution specified
+by \code{object$family$family}.
 
-If \code{type = "pearson"}, then the pearson residuals are returned. The
-marginal distribution of the responses is defined by \code{object$family$family}.
-
-If \code{type = "deviance"}, then the deviance residuals are returned. The
-marginal distribution of the responses is defined by \code{object$family$family}.
+\itemize{
+  \item Working residuals: raw differences between observed and fitted values.
+  \item Pearson residuals: standardized by the variance function of the
+        specified family.
+  \item Deviance residuals: signed square roots of the contribution of each
+        observation to the model deviance.
+}
+}
+\seealso{
+\code{\link{geewa}}, \code{\link{geewa_binary}},
+\code{\link[stats]{residuals}}
 }

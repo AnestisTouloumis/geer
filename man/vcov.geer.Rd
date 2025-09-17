@@ -19,34 +19,33 @@ of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
-A matrix of the estimated covariances between the parameter estimates
-in the linear predictor of the model. This should have row and column
-names corresponding to the parameter names given by the \code{\link[stats]{coef}}
-method.
+A square numeric matrix of estimated covariances between regression
+coefficients. Rows and columns are named according to the coefficient names
+returned by \code{\link[stats]{coef}}.
 }
 \description{
-Returns the variance-covariance matrix of the main parameters of a fitted
-model object. The "main" parameters of model correspond to those returned
-by \code{\link{coef}}.
+Extract the variance–covariance matrix of the regression parameters from a
+fitted \code{geer} object. The parameters correspond to those returned by
+\code{\link{coef}}.
 }
 \details{
-If \code{cov_type = "robust"}, then the so-called sandwich or
-robust covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
-
-If \code{cov_type = "naive"}, then the so-called naive or
-model-based covariance matrix is returned, see \cite{Liang and Zeger (1986)}.
-
-If \code{cov_type = "df-adjusted"}, then the adjusted covariance matrix proposed
-by \cite{MacKinnon (1985)} is returned.
-
-If \code{cov_type = "bias-corrected"}, then the bias-corrected covariance matrix
-proposed by \cite{Morel, Bokossa and Neerchal (2003)} is returned.
+The form of the covariance estimator is controlled by the argument
+\code{cov_type}:
+\itemize{
+  \item \code{"robust"} — the sandwich (robust) covariance estimator
+    \insertCite{LiangZeger1986}{}
+  \item \code{"naive"} — the model-based covariance estimator
+    \insertCite{LiangZeger1986}{}
+  \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
+    \insertCite{MacKinnon1985}{}
+  \item \code{"bias-corrected"} — the bias-corrected covariance estimator
+    \insertCite{MorelEtAl2003}{}
+}
 }
 \examples{
 data("cerebrovascular")

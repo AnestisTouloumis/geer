@@ -21,10 +21,9 @@ of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
 A matrix (or vector) with columns giving lower and upper confidence
@@ -32,11 +31,14 @@ A matrix (or vector) with columns giving lower and upper confidence
   1 - (1-level)/2 in \% (by default 2.5\% and 97.5\%).
 }
 \description{
-Confidence intervals for one or more parameters in a \code{geer} object.
+Compute confidence intervals for one or more regression parameters from a
+fitted \code{geer} model.
 }
 \details{
-The references in \code{\link{vcov}} include the formulae for the covariance
-matrix implied by \code{cov_type}.
+Confidence intervals are based on the estimated covariance matrix of the
+coefficients. The specific form of the covariance matrix is controlled by the
+\code{cov_type} argument; see \code{\link{vcov}} for available options and
+formulae.
 }
 \examples{
 data("leprosy")

@@ -45,22 +45,20 @@ include the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test
 (\code{"working-wald"}), the modified working score test
 (\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). By default, the Wald test is performed.}
+test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
 
 \item{cov_type}{character indicating the covariance matrix estimator
 of the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
 (\code{"df-adjusted"}) and the model-based or naive estimator
-(\code{"naive"}). By default, the robust covariance matrix
-estimator is used.}
+(\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the p-value
-when the modified working Wald test, the modified working score test or
-the modified working likelihood ratio test is selected. Options include
-the Rao-Scott approximation (\code{"rao-scott"}) and the Satterthwaite
-approximation (\code{"satterthwaite"}). By default, the Rao-Scott
-approximation is used.}
+\item{pmethod}{character indicating the method used to approximate the
+p-value when one of the modified working tests is selected. Options
+include the Rao–Scott approximation (\code{"rao-scott"}) and the
+Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
+\code{"rao-scott"}.}
 
 \item{steps}{
     the maximum number of steps to be considered.  The default is 1000

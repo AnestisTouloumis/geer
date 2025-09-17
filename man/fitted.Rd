@@ -11,14 +11,14 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
-Fitted values extracted from \code{object}.
+A numeric vector of fitted values extracted from \code{object}.
 }
 \description{
-\code{fitted} extracts fitted values from \code{objects}. \code{fitted.values}
-is an alias for it.
+Extract fitted values from a model of class \code{geer}.
+The function \code{fitted.values()} is an alias.
 }
 \examples{
 data("leprosy")

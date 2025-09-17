@@ -11,14 +11,14 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{...}{additional argument(s) for methods.}
+\item{...}{additional argument(s) passed to methods.}
 }
 \value{
-A named numeric vector with the coefficients extracted from \code{object}.
+A named numeric vector containing the estimated model coefficients.
 }
 \description{
-Extracts model coefficients from a \code{geer} object. \code{coefficients} is
-an alias for it.
+Extracts model coefficients from a \code{geer} object. The function
+\code{coefficients} is an alias.
 }
 \examples{
 data("leprosy")
