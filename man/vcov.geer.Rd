@@ -38,13 +38,13 @@ The form of the covariance estimator is controlled by the argument
 \code{cov_type}:
 \itemize{
   \item \code{"robust"} — the sandwich (robust) covariance estimator
-    \insertCite{LiangZeger1986}{}
+    \cite{Liang and Zeger (1986)}
   \item \code{"naive"} — the model-based covariance estimator
-    \insertCite{LiangZeger1986}{}
+    \cite{Liang and Zeger (1986)}
   \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
-    \insertCite{MacKinnon1985}{}
+    \cite{MacKinnon (1985)}
   \item \code{"bias-corrected"} — the bias-corrected covariance estimator
-    \insertCite{MorelEtAl2003}{}
+    \cite{Morel et al. (2003)}
 }
 }
 \examples{

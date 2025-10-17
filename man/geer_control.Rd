@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer.control.R
 \name{geer_control}
 \alias{geer_control}
-\title{Auxiliary for Controlling Fitting of \code{geer} Objects}
+\title{Control Parameters for Fitting \code{geer} Objects}
 \usage{
 geer_control(
   tolerance = 1e-06,
@@ -14,36 +14,36 @@ geer_control(
 )
 }
 \arguments{
-\item{tolerance}{positive convergence tolerance. By default,
-\code{tolerance = 1e-06}.}
+\item{tolerance}{positive convergence tolerance. Default is \code{1e-6}.}
 
 \item{maxiter}{positive integer giving the maximal number of iterations
-allowed. By default, \code{default = 500}.}
+allowed. Default is \code{500}.}
 
-\item{or_adding}{positive constant to be added at each cell of
-the full marginalized contingency table. By default,
-\code{or_adding = `0.5`}.}
+\item{or_adding}{positive constant added to each cell of the full
+marginalized contingency table. Default is \code{0.5}.}
 
-\item{step_maxit}{positive integer giving the maximal number of step halving
-steps allowed. By default, \code{step_maxit = 10}.}
+\item{step_maxit}{positive integer giving the maximum number of step-halving
+steps allowed. Default is \code{10}.}
 
-\item{step_multi}{positive integer used as a multiplier for the step. By
-default, \code{step_multi = 1}.}
+\item{step_multi}{positive integer used as a multiplier for the step. Default
+is \code{1}.}
 
 \item{jeffreys_power}{positive constant indicating the power of the
-Jeffreys-prior penalty. By default, \code{jeffreys_power = 0.5}.}
+Jeffreys-prior penalty. Default is \code{0.5}.}
 }
 \value{
-A list with components named as the arguments.
+A list with components named as the arguments, suitable for passing as the
+\code{control} argument to \code{geewa} or \code{geewa_binary}.
 }
 \description{
-Auxiliary function for \code{\link{geewa}} and \code{\link{geewa_binary}}
-fitting. Typically used internally but may be used to construct a
-\code{control} argument to either function.
+Create a list of control parameters for use in \code{\link{geewa}} and
+\code{\link{geewa_binary}}. This function is typically used internally, but
+may also be supplied directly as the \code{control} argument when calling
+those functions.
 }
 \details{
-The \code{or_adding_constant} is ignored in the function \code{\link{geewa}}.
+The \code{or_adding_constant} argument is ignored by \code{\link{geewa}}.
 
-The \code{jeffreys_power} is ignored unless \code{method = "pgee_jeffreys"} in
-functions \code{\link{geewa}} or \code{\link{geewa_binary}}.
+The \code{jeffreys_power} argument is only used if \code{method = "pgee_jeffreys"}
+in \code{\link{geewa}} or \code{\link{geewa_binary}}.
 }

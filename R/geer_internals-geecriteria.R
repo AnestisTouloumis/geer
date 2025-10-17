@@ -2,22 +2,19 @@
 ## !! Need to improve this code !!
 compute_quasi_loglikelihood <- function(object) {
   y  <- object$y
-  n <- rep(1, length(y))
   mu <- object$fitted.values
   wt <- object$prior.weights
-  dev <- residuals.geer(object, type = "deviance")
-  phi <- object$phi
   mdis <- object$family$family
   ans <-
     switch(mdis,
-           gaussian = gaussian()$aic(y, n, mu, wt, dev),
-           binomial = binomial()$aic(y, n, mu, wt, dev),
-           poisson  = poisson()$aic(y, n, mu, wt, dev),
-           Gamma = Gamma()$aic(y, n, mu, wt, dev),
-           inverse.gaussian = inverse.gaussian()$aic(y, n, mu, wt, dev),
+           gaussian = -sum(wt * (y - mu)^2)/2,
+           binomial = sum(wt * (y * qlogis(mu) + log(1 - mu))),
+           poisson  = sum(wt * (y * log(y) - mu)),
+           Gamma = -sum(wt * (y/mu + log(mu))),
+           inverse.gaussian = -sum(wt * (y/(2 * mu^2) - 1/mu)),
            stop("Error: distribution not recognized")
-    )/phi
-  -ans/2
+    )
+  ans
 }
 
 

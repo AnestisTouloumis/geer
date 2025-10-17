@@ -18,7 +18,7 @@
 #' @importFrom stats drop1 factor.scope family formula gaussian glm glm.fit
 #' @importFrom stats model.extract model.frame model.matrix model.offset
 #' @importFrom stats model.response model.weights pchisq pnorm printCoefmat
-#' @importFrom stats qnorm terms update update.formula vcov
+#' @importFrom stats qlogis qnorm terms update update.formula vcov
 #' @importFrom stats Gamma inverse.gaussian poisson
 #' @importFrom utils combn
 #' @keywords internal

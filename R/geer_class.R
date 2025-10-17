@@ -74,7 +74,7 @@ summary.geer <- function(object, cov_type = "robust", ...) {
     alpha = object$alpha,
     call = object$call,
     residuals = object$residuals,
-    niter = object$iter,
+    iter = object$iter,
     converged = object$converged,
     phi = object$phi,
     association_structure = object$association_structure,
@@ -813,13 +813,13 @@ residuals.geer <- function(object,
 #' \code{cov_type}:
 #' \itemize{
 #'   \item \code{"robust"} — the sandwich (robust) covariance estimator
-#'     \insertCite{LiangZeger1986}{}
+#'     \cite{Liang and Zeger (1986)}
 #'   \item \code{"naive"} — the model-based covariance estimator
-#'     \insertCite{LiangZeger1986}{}
+#'     \cite{Liang and Zeger (1986)}
 #'   \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
-#'     \insertCite{MacKinnon1985}{}
+#'     \cite{MacKinnon (1985)}
 #'   \item \code{"bias-corrected"} — the bias-corrected covariance estimator
-#'     \insertCite{MorelEtAl2003}{}
+#'     \cite{Morel et al. (2003)}
 #' }
 #'
 #' @return

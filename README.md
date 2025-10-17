@@ -24,7 +24,6 @@ To use `geer`, you should load the package as follows:
 
 ``` r
 library("geer")
-#> Loading required package: gnm
 ```
 
 ## Usage
