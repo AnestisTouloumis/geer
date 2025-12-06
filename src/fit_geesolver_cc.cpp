@@ -407,21 +407,22 @@ arma::vec update_beta_empirical_cc(const arma::vec & y_vector,
     observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
     partial_derivatives_matrix +=
       arma::vectorise(trans(observed_fisher_info_matrix_i)) * trans(u_vector_i);
+    arma::mat alpha_star_plus_delta_star_matrix_i = arma::diagmat(alpha_star_plus_delta_star_vector_i);
     second_derivatives_matrix +=
       trans(kron(d_matrix_i, d_matrix_i)) *
       (kappa_right(
-          arma::diagmat(alpha_star_plus_delta_star_vector_i) * epsilon_matrix_i -
+          alpha_star_plus_delta_star_matrix_i * epsilon_matrix_i -
             arma::diagmat(alpha_star_plus_delta_star_vector_i %
             (alpha_star_plus_delta_star_vector_i + alpha_star_vector_i) %
             w_vector_i) +
             arma::diagmat((alpha_tilde_star_vector_i + delta_tilde_star_vector(id_vector_i)) %
             w_vector_i))
          + kronecker_identity_right_kappa(
-             trans(epsilon_matrix_i) * arma::diagmat(alpha_star_plus_delta_star_vector_i)
+             trans(epsilon_matrix_i) * alpha_star_plus_delta_star_matrix_i
          ) +
            kronecker_left_identity_kappa(
              epsilon_matrix_i *
-               arma::diagmat(alpha_star_plus_delta_star_vector_i) +
+               alpha_star_plus_delta_star_matrix_i +
                v_matrix_inverse_i *
                arma::diagmat(s_vector_i % alpha_tilde_star_vector_i -
                alpha_star_vector_i)

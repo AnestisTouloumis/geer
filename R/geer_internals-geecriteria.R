@@ -5,16 +5,17 @@ compute_quasi_loglikelihood <- function(object) {
   mu <- object$fitted.values
   wt <- object$prior.weights
   mdis <- object$family$family
+  phi <- object$phi
   ans <-
     switch(mdis,
            gaussian = -sum(wt * (y - mu)^2)/2,
            binomial = sum(wt * (y * qlogis(mu) + log(1 - mu))),
-           poisson  = sum(wt * (y * log(y) - mu)),
+           poisson  = sum(wt * (y * log(mu) - mu)),
            Gamma = -sum(wt * (y/mu + log(mu))),
-           inverse.gaussian = -sum(wt * (y/(2 * mu^2) - 1/mu)),
+           inverse.gaussian = -sum(wt * (mu - 0.5*y)/mu^2),
            stop("Error: distribution not recognized")
     )
-  ans
+  ans/phi
 }
 
 

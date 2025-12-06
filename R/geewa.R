@@ -38,6 +38,11 @@
 #'        observation.
 #' @param beta_start numerical vector indicating the initial values of the
 #'        regression parameters.
+#' @param offset this can be used to specify an a priori known component to be
+#'        included in the linear predictor during fitting. This should be NULL
+#'        or a numeric vector of length equal to the number of cases.
+#'        One or more offset terms can be included in the formula instead or
+#'        as well, and if more than one is specified their sum is used.
 #' @param control_glm list of parameters for controlling the fitting process for
 #'        the initial values of the parameter vector when these are not provided.
 #' @param use_p logical indicating whether to use the \code{N - p} correction
@@ -163,6 +168,7 @@ geewa <- function(formula = formula(data),
                   method = "gee",
                   weights,
                   beta_start = NULL,
+                  offset,
                   control_glm = list(...),
                   use_p = TRUE,
                   alpha_vector = NULL,
@@ -482,10 +488,10 @@ geewa <- function(formula = formula(data),
       warning("geewa: fitted rates numerically 0 occurred",
               call. = FALSE)
   }
-  if (any(eigen(get_correlation_matrix(corstr,fit$alpha, max(repeated)),
+  if (any(eigen(get_correlation_matrix(corstr, fit$alpha, max(repeated)),
                 symmetric = TRUE,
                 only.values = TRUE)$values <= 0))
-    warning("geewa: working correlation matrix is positive definite",
+    warning("geewa: working correlation matrix is not positive definite",
             call. = FALSE)
   fit
 }

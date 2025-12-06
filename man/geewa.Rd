@@ -16,6 +16,7 @@ geewa(
   method = "gee",
   weights,
   beta_start = NULL,
+  offset,
   control_glm = list(...),
   use_p = TRUE,
   alpha_vector = NULL,
@@ -67,6 +68,12 @@ observation.}
 
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameters.}
+
+\item{offset}{this can be used to specify an a priori known component to be
+included in the linear predictor during fitting. This should be NULL
+or a numeric vector of length equal to the number of cases.
+One or more offset terms can be included in the formula instead or
+as well, and if more than one is specified their sum is used.}
 
 \item{control_glm}{list of parameters for controlling the fitting process for
 the initial values of the parameter vector when these are not provided.}

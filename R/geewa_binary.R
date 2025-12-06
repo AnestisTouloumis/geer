@@ -54,6 +54,7 @@ geewa_binary <- function(formula = formula(data),
                          method = "gee",
                          weights,
                          beta_start = NULL,
+                         offset,
                          control_glm = list(...),
                          alpha_vector = NULL,
                          ...) {
