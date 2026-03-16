@@ -20,38 +20,38 @@
 
 \item{test}{character indicating the hypothesis testing procedure. Options
 include the Wald test (\code{"wald"}), the generalized score test
-(\code{"score"}), the modified working Wald test
-(\code{"working-wald"}), the modified working score test
-(\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
+(\code{"score"}), the modified working Wald test (\code{"working-wald"}),
+the modified working score test (\code{"working-score"}), and the modified
+working likelihood ratio test (\code{"working-lrt"}). Defaults to
+\code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the
-p-value when one of the modified working tests is selected. Options
-include the Rao–Scott approximation (\code{"rao-scott"}) and the
-Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
-\code{"rao-scott"}.}
+\item{pmethod}{character indicating the approximation used to compute the
+p-value for the modified working tests. Options include the Rao--Scott
+approximation (\code{"rao-scott"}) and the Satterthwaite approximation
+(\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 }
 \value{
 An object of class \code{anova}, representing an analysis-of-variance table
 within the GEE framework.
 
 \itemize{
-  \item With a single model, the table reports the significance of each model
-  term.
+  \item With a single model, the table reports tests for terms added
+  sequentially (from first to last).
   \item With multiple models, the table reports sequential tests comparing
   each model to the previous one.
 }
 }
 \description{
 Compute analysis of variance (ANOVA) tables for one or more fitted models of
-class \code{geer}, using a variety of hypothesis testing procedures.
+class \code{geer}. The table is based on hypothesis tests for regression
+terms in generalized estimating equation (GEE) models.
 }
 \details{
 Details of the hypothesis tests controlled by \code{test} are given in
@@ -61,14 +61,38 @@ correlation structure; otherwise an error is returned.
 
 When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
 ignored. In this case, \code{cov_type} specifies the covariance estimator
-used in the test statistic. For other tests, \code{cov_type} determines the
-covariance matrix used to form the coefficients of the sum of independent
-chi-squared random variables, and \code{p_method} specifies the approximation
-used to compute the p-value.
+used in the test statistic. For modified working tests, \code{cov_type}
+determines the covariance matrix used to form the coefficients of the sum of
+independent chi-squared random variables, and \code{pmethod} specifies the
+approximation used to compute the p-value.
 
 When comparing two or more models, the data must be identical across all
 fits, and the models must be nested in the order supplied. In particular,
 each consecutive pair of models must be nested.
+}
+\examples{
+data("cerebrovascular")
+
+## Single-model ANOVA (sequential terms)
+fit_full <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  id = id,
+  data = cerebrovascular,
+  link = "logit",
+  orstr = "exchangeable"
+)
+anova(fit_full, test = "wald", cov_type = "robust")
+
+## Two-model comparison (models must be nested)
+fit_null <- geewa_binary(
+  formula = ecg ~ 1,
+  id = id,
+  data = cerebrovascular,
+  link = "logit",
+  orstr = "exchangeable"
+)
+anova(fit_null, fit_full, test = "wald", cov_type = "robust")
+
 }
 \references{
 Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters

@@ -14,7 +14,7 @@
 \item{...}{additional argument(s) passed to methods.}
 }
 \value{
-A named numeric vector containing the estimated model coefficients.
+A named numeric vector of estimated regression coefficients.
 }
 \description{
 Extracts model coefficients from a \code{geer} object. The function
@@ -22,13 +22,22 @@ Extracts model coefficients from a \code{geer} object. The function
 }
 \examples{
 data("leprosy")
-fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-             family = poisson(link = "log"), id = id, data = leprosy)
+fit <- geewa(
+  formula = bacilli ~ factor(period) + factor(period):treatment,
+  family = poisson(link = "log"),
+  id = id,
+  data = leprosy
+)
 coef(fit)
+names(coef(fit))
 
 data("cerebrovascular")
-fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-                    id = id, data = cerebrovascular)
-coef(fit)
+fit2 <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  id = id,
+  data = cerebrovascular
+)
+coef(fit2)
 
 }

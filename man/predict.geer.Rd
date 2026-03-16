@@ -10,7 +10,7 @@
   newdata = NULL,
   type = c("link", "response"),
   cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-  se.fit = c(FALSE, TRUE),
+  se.fit = FALSE,
   ...
 )
 }
@@ -26,11 +26,11 @@ linear predictors (\code{"link"}) and the scale of the response
 variable (\code{"response"}). By default, the scale of the linear
 predictors is used.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
 \item{se.fit}{logical indicating if standard errors are required.
@@ -39,16 +39,8 @@ Defaults to \code{FALSE}.}
 \item{...}{additional argument(s) passed to methods.}
 }
 \value{
-\describe{
-  \item{If \code{se.fit = FALSE}:}{A numeric vector (or matrix) of predicted
-  values.}
-  \item{If \code{se.fit = TRUE}:}{A list with components:
-    \itemize{
-      \item \code{fit} — predictions, as above.
-      \item \code{se.fit} — estimated standard errors of the predictions.
-    }
-  }
-}
+If \code{se.fit = FALSE}, a numeric vector of predictions.
+If \code{se.fit = TRUE}, a list with components \code{fit} and \code{se.fit}.
 }
 \description{
 Generate predictions, optionally with standard errors, from a fitted
@@ -66,6 +58,26 @@ coefficients.
 
 If \code{newdata} is omitted the predictions are based on the data used for
 the fit.
+}
+\examples{
+data("cerebrovascular")
+fit <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  id = id,
+  data = cerebrovascular,
+  orstr = "exchangeable"
+)
+head(predict(fit, type = "link"))
+head(predict(fit, type = "response"))
+
+nd <- cerebrovascular[1:5, , drop = FALSE]
+predict(fit, newdata = nd, type = "response")
+
+pred <- predict(fit, type = "response", se.fit = TRUE, cov_type = "robust")
+head(pred$fit)
+head(pred$se.fit)
+
 }
 \seealso{
 \code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.

@@ -30,35 +30,32 @@ used as the initial model in the stepwise search.}
 \item{direction}{character indicating the mode of the stepwise search.
 Options include backward elimination (\code{"backward"}),
 forward selection (\code{"forward"}) and bidirectional elimination
-(\code{"both"}). By default, a backward elimination is performed.}
+(\code{"both"}). Default is \code{"backward"}..}
 
 \item{p_enter}{numeric between 0 and 1 indicating the p-value threshold for
-adding variables in the stepwise search. By default,
-\code{p_enter = 0.15}.}
+adding variables in the stepwise search. Default is \code{p_enter=0.15}.}
 
 \item{p_remove}{numeric between 0 and 1 indicating the p-value threshold for
-removing variables in the stepwise search. By default,
-\code{p_remove = 0.15}.}
+removing variables in the stepwise search. Default is \code{p_remove=0.15}.}
 
 \item{test}{character indicating the hypothesis testing procedure. Options
 include the Wald test (\code{"wald"}), the generalized score test
-(\code{"score"}), the modified working Wald test
-(\code{"working-wald"}), the modified working score test
-(\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
+(\code{"score"}), the modified working Wald test (\code{"working-wald"}),
+the modified working score test (\code{"working-score"}), and the modified
+working likelihood ratio test (\code{"working-lrt"}). Defaults to
+\code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the
-p-value when one of the modified working tests is selected. Options
-include the Rao–Scott approximation (\code{"rao-scott"}) and the
-Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
-\code{"rao-scott"}.}
+\item{pmethod}{character indicating the approximation used to compute the
+p-value for the modified working tests. Options include the Rao--Scott
+approximation (\code{"rao-scott"}) and the Satterthwaite approximation
+(\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 
 \item{steps}{
     the maximum number of steps to be considered.  The default is 1000
@@ -67,11 +64,13 @@ Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
   }
 }
 \value{
-The stepwise-selected model is returned, with an \code{anova} component
-corresponding to the steps taken in the search.
+A fitted model object of class \code{geer}, corresponding to the final selected model.
+The returned object contains an \code{anova} component summarizing the stepwise path.
 }
 \description{
-Select a formula-based model by hypothesis testing.
+Perform stepwise model selection for fitted \code{geer} models using repeated
+single-term additions (\code{\link{add1}}) and/or deletions (\code{\link{drop1}})
+based on hypothesis tests.
 }
 \details{
 \code{step_p} uses \code{\link{add1}} and \code{\link{drop1}} repeatedly; it
@@ -101,18 +100,29 @@ matrix estimate of the estimated regression parameters used to calculate the
 corresponding test statistic. Otherwise, the \code{cov_type} argument specifies the
 covariance matrix estimate of the estimated regression parameters used to
 calculate the coefficients of the independent chi-squared random variables,
-and the \code{p_method} argument specifies the approximation method used to
+and the \code{pmethod} argument specifies the approximation method used to
 calculate the p-value of the test statistic.
 }
 \examples{
-data("respiratory")
-respiratory2 <- respiratory[respiratory$center=="C2", ]
-fitted_model <-
-  geewa_binary(formula = status ~ (baseline + treatment + gender + visit + age)^2,
-               id = id, repeated = visit, link = "probit", data = respiratory2,
-               orstr = "independence", method = "pgee-jeffreys")
-step_p(fitted_model, direction = "backward", test = "wald", cov_type = "bias-corrected",
-       p_remove = 0.1)
+data("respiratory", package = "geer")
+respiratory2 <- respiratory[respiratory$center == "C2", ]
+
+full_fit <- geewa_binary(
+  formula = status ~ (baseline + treatment + gender + visit + age)^2,
+  id = id, repeated = visit, link = "probit", data = respiratory2,
+  orstr = "independence", method = "pgee-jeffreys"
+)
+
+## Backward elimination using a Wald test
+step_p(full_fit, direction = "backward", test = "wald",
+       cov_type = "bias-corrected", p_remove = 0.10)
+
+## Bidirectional selection with an explicit scope
+step_p(full_fit,
+       scope = list(lower = ~ baseline + treatment,
+       upper = ~ (baseline + treatment + gender + visit + age)^2),
+       direction = "both", test = "score", cov_type = "robust",
+       p_enter = 0.10, p_remove = 0.15, steps = 50)
 
 }
 \references{

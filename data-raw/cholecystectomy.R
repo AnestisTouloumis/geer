@@ -1,19 +1,31 @@
 ## code to prepare `cholecystectomy` dataset goes here
 
-library("tidyverse")
-library("rio")
-cholecystectomy <-
-  rio::import("./data-raw/cholecystectomy.csv") |>
-  select(-pain) |>
-  mutate(treatment = if_else(treatment == "A", "active", "placebo"),
-         gender = if_else(gender == "F", "female", "male"),
-         treatment = factor(treatment),
-         gender = factor(gender),
-         age = as.numeric(age),
-         time = as.numeric(time),
-         pain2 = as.numeric(pain2)) |>
-  rename(pain = pain2) |>
-  select(id, time, pain, treatment, gender, age)
-rownames(cholecystectomy) <- 1:nrow(cholecystectomy)
-cholecystectomy <- as_tibble(cholecystectomy)
-usethis::use_data(cholecystectomy, overwrite = TRUE)
+library(dplyr)
+library(rio)
+
+path <- file.path("data-raw", "cholecystectomy.csv")
+
+cholecystectomy <- rio::import(path) |>
+  transmute(
+    id = as.integer(id),
+    time = as.integer(time),
+    pain = as.integer(pain2),  # 0/1 indicator, as documented
+    treatment = factor(
+      if_else(treatment == "A", "active", "placebo"),
+      levels = c("placebo", "active")
+    ),
+    gender = factor(
+      if_else(gender == "F", "female", "male"),
+      levels = c("female", "male")
+    ),
+    age = as.numeric(age)
+  )
+
+stopifnot(
+  nrow(cholecystectomy) == 246L,
+  all(cholecystectomy$pain %in% c(0L, 1L)),
+  !anyNA(cholecystectomy$treatment),
+  !anyNA(cholecystectomy$gender)
+)
+
+usethis::use_data(cholecystectomy, overwrite = TRUE, compress = "xz")

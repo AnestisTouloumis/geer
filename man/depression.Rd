@@ -7,13 +7,12 @@
 \format{
 A data frame with 366 rows and 5 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{visit}{numeric vector indicating the follow-up month.}
-  \item{score}{numeric vector indicating the Edinburgh Postnatal Depression Scale
-               (EDPS) score.}
-  \item{treatment}{factor indicating the treatment group: placebo and oestrogen.}
-  \item{baseline}{numeric vector indicating the EDPS score at baseline.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{visit}{integer follow-up month identifier.}
+  \item{score}{numeric Edinburgh Postnatal Depression Scale (EPDS) score. Higher scores indicate greater depression.}
+  \item{treatment}{factor with levels \code{placebo} and \code{oestrogen}.}
+  \item{baseline}{numeric EPDS score at baseline.}
+}
 }
 \source{
 \url{https://stats.oarc.ucla.edu/spss/library/spss-librarypanel-data-analysis-using-gee/}
@@ -22,14 +21,13 @@ A data frame with 366 rows and 5 columns:
 depression
 }
 \description{
-The data are from a randomized clinical trial on the efficacy of oestrogen
-patches in treating postnatal depression.
+Data from a randomized clinical trial on the efficacy of oestrogen patches in treating
+postnatal depression.
 }
 \details{
-Sixty-one women with major depression were randomly assigned to a placebo control
-group or an oestrogen patch group. Before treatment, depressive symptoms were
-assessed with the EPDS. EPDS scores were then collected monthly for six months.
-Higher scores indicate greater depression.
+Sixty-one women with major depression were randomly assigned to a placebo control group
+or an oestrogen patch group. Before treatment, depressive symptoms were assessed with
+the EPDS. EPDS scores were then collected monthly for six months.
 }
 \examples{
 data("depression")

@@ -5,10 +5,10 @@
 \title{Solving (Adjusted) GEE}
 \usage{
 geewa(
-  formula = formula(data),
+  formula,
   family = gaussian(link = "identity"),
   data = parent.frame(),
-  id = id,
+  id,
   repeated,
   control = geer_control(...),
   corstr = "independence",
@@ -30,13 +30,15 @@ geewa(
 \code{response ~ predictors}: a symbolic description of the marginal
 model to be fitted.}
 
-\item{family}{\code{\link{family}} object indicating the link and variance
-functions. Options include \code{gaussian}, \code{binomial},
-\code{poisson}, \code{Gamma}, \code{inverse.gaussian} and \code{quasi}.
- By default, \code{family = gaussian(link = "identity")}.}
+\item{family}{A \code{\link[stats]{family}} object indicating the link and
+variance functions. Supported families include \code{gaussian},
+\code{binomial}, \code{poisson}, \code{Gamma},
+\code{inverse.gaussian} and \code{quasi}. By default,
+\code{family = gaussian(link = "identity")}.}
 
-\item{data}{optional data frame containing the variables provided in
-\code{formula}, \code{id} and \code{repeated}.}
+\item{data}{optional data frame containing variables referenced in
+\code{formula}. The cluster identifiers \code{id} and \code{repeated}
+may be supplied either as columns in \code{data} or as separate vectors.}
 
 \item{id}{a vector identifying the clusters.}
 
@@ -49,8 +51,8 @@ and the power of the Jeffreys prior when
 
 \item{corstr}{character specifying the correlation structure. Options
 include \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
-\code{"m-dependent"} and \code{"unstructured"}. By default,
-\code{corstr = "independence"}.}
+\code{"m-dependent"}, \code{"unstructured"} and \code{"fixed"}.
+By default, \code{corstr = "independence"}.}
 
 \item{Mv}{positive integer which must be specified whenever
 \code{corstr = "m-dependent"}. By default, \code{Mv = 1}.}
@@ -63,8 +65,8 @@ traditional gee method (\code{"gee"}), bias-reduction methods
 \code{"bcgee-empirical"}) and a penalized GEE method
 (\code{"pgee-jeffreys"}). By default, \code{method = "gee"}.}
 
-\item{weights}{optional numeric vector identifying the weights for each
-observation.}
+\item{weights}{optional numeric vector of observation weights. Must be finite
+and strictly positive. If not supplied, all weights are 1.}
 
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameters.}
@@ -82,8 +84,9 @@ the initial values of the parameter vector when these are not provided.}
 for estimating the scale and the correlation parameters. By default,
 \code{use_p = TRUE}.}
 
-\item{alpha_vector}{numerical vector indicating the correlation structure for
-when \code{corstr == "fixed"}. Otherwise, it is ignored.}
+\item{alpha_vector}{Numeric vector of fixed association parameters used only
+when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)} where
+\code{T = max(repeated)} after recoding. Ignored otherwise.}
 
 \item{phi_fixed}{logical indicating whether the scale parameter is fixed at
 the value of \code{phi_value}. By default, \code{phi_fixed = FALSE}.}
@@ -155,48 +158,47 @@ Jeffreys prior type penalty.
 For the construction of the \code{formula} argument, see the documentation of
 \code{\link{glm}} and \code{\link{formula}}.
 
-The \code{data} must be provided in case level or equivalently in `long'
-format. See details about the `long' format in the function
-\code{\link{reshape}}.
+The \code{data} must be in long format (one row per observation). See
+\code{\link{reshape}} for details on reshaping between long and wide formats.
 
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 \eqn{N} is the sample size, i.e. the total number of clusters. Otherwise,
 the function recodes the given labels of \code{id} onto this set.
 
-The argument \code{repeated} can be safely ignored only if the \code{data}
-are assumed to be sorted so that observations on a cluster are contiguous
-rows for all entities in the formula. If this is not the case, then the user
-is advised to provide \code{repeated}. The default set for the labels of
-\code{repeated} is \eqn{\{1,\ldots,T\}}, where \eqn{T} is the number of
-observed labels. Otherwise, the function recodes the given labels of
-\code{id} onto this set.
+The argument \code{repeated} can be safely omitted only if observations are
+already ordered within each cluster as intended. If \code{repeated} is not
+provided, it is created as \code{1, 2, ..., n_i} within each cluster \eqn{i},
+using the current row order (before internal sorting). If \code{repeated} is
+provided, its labels are recoded to \code{1, ..., T} and must be unique within
+each cluster.
 
 The variables \code{id} and \code{repeated} do not need to be pre-sorted.
-Instead the function reshapes \code{data} in an ascending order of \code{id}
+Instead the function sorts observations in ascending order of \code{id}
 and \code{repeated}.
 
 A term of the form \code{offset(expression)} is allowed in the right hand
 side of \code{formula}.
 
-The length of \code{id} and, of \code{repeated} or \code{weight} when these
-are provided, should be the same as the number of observations.
+The length of \code{id} and of \code{repeated} or \code{weights} (when
+provided) should be the same as the number of observations.
 }
 \examples{
-data("leprosy")
+data("epilepsy")
 fitted_model_gee <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
-                          data = epilepsy, id = id, family = poisson(link = "log"),
+                          data = epilepsy, id = id,
+                          family = poisson(link = "log"),
                           corstr = "exchangeable", method = "gee")
-summary(fitted_model_gee, type = "bias-corrected")
+summary(fitted_model_gee, cov_type = "bias-corrected")
 fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
-summary(fitted_model_brgee_robust, type = "bias-corrected")
+summary(fitted_model_brgee_robust, cov_type = "bias-corrected")
 fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
-summary(fitted_model_brgee_naive, type = "bias-corrected")
-fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-robust")
-summary(fitted_model_brgee_empirical, type = "bias-corrected")
+summary(fitted_model_brgee_naive, cov_type = "bias-corrected")
+fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-empirical")
+summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
 
 }
 \seealso{
-\code{link{geewa_binary}}.
+\code{\link{geewa_binary}}.
 }
 \author{
 Anestis Touloumis

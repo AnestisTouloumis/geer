@@ -1,7 +1,17 @@
 #include <RcppArmadillo.h>
 #include "variance_functions.h"
 #include "utils.h"
+#include <cmath>
 using namespace Rcpp;
+
+
+inline bool is_contiguous_1based(const arma::vec& r) {
+  if (r.n_elem <= 1) return true;
+  for (arma::uword i = 1; i < r.n_elem; ++i) {
+    if (r[i] != r[i - 1] + 1.0) return false;
+  }
+  return true;
+}
 
 
 //============================ pearson residuals ===============================
@@ -11,9 +21,12 @@ arma::vec get_pearson_residuals(const char * family,
                                 const arma::vec & y_vector,
                                 const arma::vec & mu_vector,
                                 const arma::vec & weights_vector) {
-  arma::vec ans =
-    (y_vector - mu_vector) % sqrt(weights_vector/variance(family, mu_vector));
-  return(ans);
+  arma::vec variance_vector = variance(family, mu_vector);
+  arma::vec scale = arma::sqrt(weights_vector / variance_vector);
+  return (y_vector - mu_vector) % scale;
+  //arma::vec ans =
+  //  (y_vector - mu_vector) % sqrt(weights_vector/variance(family, mu_vector));
+  //return(ans);
 }
 //==============================================================================
 
@@ -22,10 +35,15 @@ arma::vec get_pearson_residuals(const char * family,
 // [[Rcpp::export]]
 double get_phi_hat(const arma::vec & pearson_residuals_vector,
                    const int & params_no) {
-  int obs_no = pearson_residuals_vector.n_elem;
-  double ans = arma::accu(pow(pearson_residuals_vector, 2))/(obs_no - params_no);
-  if(ans < DBL_EPSILON) ans = 10 * DBL_EPSILON;
-  return(ans);
+  //int obs_no = pearson_residuals_vector.n_elem;
+  //double ans = arma::accu(pow(pearson_residuals_vector, 2))/(obs_no - params_no);
+  //if(ans < DBL_EPSILON) ans = 10 * DBL_EPSILON;
+  //return(ans);
+  const double n = static_cast<double>(pearson_residuals_vector.n_elem);
+  double ans = arma::accu(arma::square(pearson_residuals_vector)) / (n - params_no);
+  if (ans < DBL_EPSILON) ans = 10.0 * DBL_EPSILON;
+  return ans;
+
 }
 //==============================================================================
 
@@ -267,12 +285,16 @@ arma::mat correlation_exchangeable(const arma::vec & alpha_vector,
 // [[Rcpp::export]]
 arma::mat correlation_ar1(const arma::vec & alpha_vector,
                           const int & dimension) {
-  arma::vec ans_elements(dimension);
-  for(int i = 0; i < dimension; ++i) {
-    ans_elements(i) = std::pow(alpha_vector(0), i);
-  }
-  arma::mat ans = arma::toeplitz(ans_elements);
-  return(ans);
+//  arma::vec ans_elements(dimension);
+//  for(int i = 0; i < dimension; ++i) {
+//   ans_elements(i) = std::pow(alpha_vector(0), i);
+//  }
+//  arma::mat ans = arma::toeplitz(ans_elements);
+//  return(ans);
+  arma::vec ans(dimension);
+  ans[0] = 1.0;
+  for (int i = 1; i < dimension; ++i) ans[i] = ans[i - 1] * alpha_vector[0];
+  return arma::toeplitz(ans);
 }
 //==============================================================================
 
@@ -347,22 +369,30 @@ arma::mat get_correlation_matrix(const char * correlation_structure,
 
 // =========================== subject-specific weight matrix ==================
 // [[Rcpp::export]]
-arma::mat get_v_matrix_cc(const char * family,
-                          const arma::vec & mu_vector,
-                          const arma::vec & repeated_vector,
-                          const double & phi,
-                          const arma::mat & cor_matrix,
-                          const arma::vec & weights_vector) {
-  arma::vec sd_vector =
-    sqrt(variance(family, mu_vector)/weights_vector);
-  if(repeated_vector.n_elem == 1) {
-    return(phi * (sd_vector * trans(sd_vector)));
-  } else {
-    arma::mat ans =
-      phi *
-      subset_matrix(cor_matrix, repeated_vector) %
-      (sd_vector * trans(sd_vector));
-    return(ans);
+arma::mat get_v_matrix_cc(const char* family,
+                          const arma::vec& mu_vector,
+                          const arma::vec& repeated_vector,
+                          const double& phi,
+                          const arma::mat& cor_matrix,
+                          const arma::vec& weights_vector) {
+  arma::vec variance_vector = variance(family, mu_vector);
+  arma::vec sd_vector = arma::sqrt(variance_vector / weights_vector);
+  const arma::uword m = sd_vector.n_elem;
+  if (m == 1) {
+    arma::mat ans(1, 1);
+    ans(0, 0) = phi * sd_vector[0] * sd_vector[0];
+    return ans;
   }
-}
-//==============================================================================
+  arma::mat ans;
+  if (is_contiguous_1based(repeated_vector)) {
+    const arma::uword r0 = static_cast<arma::uword>(repeated_vector[0]) - 1;
+    const arma::uword r1 = r0 + m - 1;
+    ans = cor_matrix.submat(r0, r0, r1, r1);
+  } else {
+    ans = subset_matrix(cor_matrix, repeated_vector);
+  }
+  ans.each_col() %= sd_vector;
+  ans.each_row() %= sd_vector.t();
+  ans *= phi;
+  return ans;
+}//==============================================================================

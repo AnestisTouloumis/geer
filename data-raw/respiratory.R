@@ -1,22 +1,38 @@
 ## code to prepare `respiratory` dataset goes here
 
-library("rio")
-library("tidyverse")
-respiratory <-
-  rio::import("./data-raw/respiratory.csv") |>
-  mutate(treat = if_else(treat == "P", "placebo", "active"),
-         sex = if_else(sex == "M", "male", "female"),
-         center = if_else(center == 1, "C1", "C2"),
-         id = rep(1:111, each = 4)) |>
-  mutate(id = as.numeric(id),
-         visit = as.numeric(visit),
-         status = as.numeric(outcome),
-         treatment = as.factor(treat),
-         baseline = as.numeric(baseline),
-         age = as.numeric(age),
-         gender = as.factor(sex),
-         center = as.factor(center)) |>
-  select(id, visit, status, treatment, baseline, gender, age, center)
-rownames(respiratory) <- 1:nrow(respiratory)
-respiratory <- as_tibble(respiratory)
-usethis::use_data(respiratory, overwrite = TRUE)
+library(dplyr)
+library(rio)
+
+path <- file.path("data-raw", "respiratory.csv")
+
+respiratory <- rio::import(path) |>
+  transmute(
+    id = as.integer(rep(1:111, each = 4)),
+    visit = as.integer(visit),
+    status = as.integer(outcome),
+    treatment = factor(
+      if_else(treat == "P", "placebo", "active"),
+      levels = c("placebo", "active")
+    ),
+    baseline = as.integer(baseline),
+    gender = factor(
+      if_else(sex == "M", "male", "female"),
+      levels = c("female", "male")
+    ),
+    age = as.numeric(age),
+    center = factor(
+      if_else(center == 1, "C1", "C2"),
+      levels = c("C1", "C2")
+    )
+  )
+
+stopifnot(
+  nrow(respiratory) == 444L,
+  all(respiratory$status %in% c(0L, 1L)),
+  all(respiratory$baseline %in% c(0L, 1L)),
+  !anyNA(respiratory$treatment),
+  !anyNA(respiratory$gender),
+  !anyNA(respiratory$center)
+)
+
+usethis::use_data(respiratory, overwrite = TRUE, compress = "xz")

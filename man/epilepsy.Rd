@@ -7,40 +7,36 @@
 \format{
 A data frame with 236 rows and 6 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{visit}{numeric vector indicating which of the two-week interval
-               corresponds to the reported number of epileptic seizures.}
-  \item{seizures}{numeric vector indicating the number of epileptic seizures.}
-  \item{treatment}{factor indicating the treatment group: placebo and progabide.}
-  \item{lnbaseline}{numeric vector indicating the logarithm of one-quarter of
-                    the number of epileptic seizures in the baseline 8-week
-                    interval.}
-  \item{lnage}{numeric vector indicating the logarithm of age in years.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{visit}{integer visit identifier (two-week interval).}
+  \item{seizures}{integer count of epileptic seizures.}
+  \item{treatment}{factor with levels \code{placebo} and \code{progabide}.}
+  \item{lnbaseline}{numeric logarithm of one-quarter of the number of seizures in the baseline 8-week interval.}
+  \item{lnage}{numeric logarithm of age in years.}
+}
 }
 \source{
-Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
-count data with overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
+Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal count data with
+overdispersion. \emph{Biometrics}, \strong{46}, 657--671.
 }
 \usage{
 epilepsy
 }
 \description{
-The data are from a randomized clinical trial on the efficacy of progabide in
-treating partial seizures.
+Data from a randomized clinical trial on the efficacy of progabide in treating partial seizures.
 }
 \details{
-Fifty-nine subjects with partial seizures were enrolled in a randomized clinical
-trial. Subjects were assigned to receive either the anti-epileptic drug progabide
-or placebo. Seizure counts were recorded during the 8 weeks prior to treatment.
-After treatment, seizure counts were assessed at four 2-week clinic visits.
+Fifty-nine subjects with partial seizures were enrolled in a randomized clinical trial.
+Subjects were assigned to receive either the anti-epileptic drug progabide or placebo.
+Seizure counts were recorded during the 8 weeks prior to treatment. After treatment,
+seizure counts were assessed at four 2-week clinic visits.
 }
 \examples{
 data("epilepsy")
 str(epilepsy)
 }
 \references{
-Carey V.J., Wang Y.G. (2011) Working covariance model selection for generalized
-estimating equations. \emph{Statistics in Medicine}, \strong{30}, 3117--3124.
+Carey V.J. and Wang Y.G. (2011) Working covariance model selection for generalized estimating
+equations. \emph{Statistics in Medicine}, \strong{30}, 3117--3124.
 }
 \keyword{datasets}

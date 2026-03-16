@@ -1,13 +1,17 @@
 #' @title
-#' Variable and Covariance Selection Criteria for \code{geer} Objects
+#' Variable and Correlation Selection Criteria for \code{geer} Objects
 #'
 #' @description
 #' Reports commonly used criteria for variable selection and association structure
 #' selection for one or several fitted models.
 #'
 #' @return
-#' A data frame with the QIC, CIC, RJC, QICu, GESSC, GPC and the number
-#' of regression parameters (including intercepts).
+#' If one model is supplied, a one-row data frame containing QIC, CIC, RJC, QICu,
+#' GESSC, GPC and the number of regression parameters.
+#'
+#' If multiple models are supplied, a data frame with one row per model and the
+#' same columns.
+#'
 #'
 #' @inheritParams anova.geer
 #' @param cov_type character indicating the type of covariance matrix estimator
@@ -15,8 +19,8 @@
 #'        include the sandwich or robust estimator (\code{"robust"}), the
 #'        bias-corrected estimator (\code{"bias-corrected"}), the degrees of
 #'        freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-#'        or naive estimator (\code{"naive"}). By default, the robust covariance
-#'        estimator is used.
+#'        or naive estimator (\code{"naive"}). By default,
+#'        \code{cov_type = "robust"}.
 #' @param digits integer indicating the number of decimal places for the GEE
 #'        criteria to be rounded at. By default, \code{digits = 2}.
 #'
@@ -56,32 +60,47 @@
 #'
 #' @examples
 #' data("cerebrovascular")
-#' fitted_gee <- geewa_binary(formula = ecg ~ period * treatment,
-#'                            id = id,
-#'                            data = cerebrovascular,
-#'                            link = "logit",
-#'                            orstr = "exchangeable",
-#'                            method = "gee")
+#' fitted_gee <- geewa_binary(
+#'   formula = ecg ~ period * treatment,
+#'   id = id,
+#'   data = cerebrovascular,
+#'   link = "logit",
+#'   orstr = "exchangeable",
+#'   method = "gee"
+#' )
 #' fitted_brgee <- update(fitted_gee, method = "brgee-robust")
-#' geecriteria(fitted_gee, fitted_brgee)
+#'
+#' ## Compare two fits
+#' geecriteria(fitted_gee, fitted_brgee, cov_type = "robust")
 #'
 #' @export
-geecriteria <- function(object, ..., cov_type = "robust", digits = 2) {
-  if (length(list(...))) {
-    all_models <- list(object, ...)
-    if (any(lapply(all_models, function(x) class(x)[1]) != "geer"))
-      stop("Only 'geer' objects are supported")
-    results <- lapply(all_models, compute_criteria, cov_type, digits)
-    check <- sapply(all_models, function(x) length(x$obs_no))
-    if (any(check != check[1]))
-      warning("models do not have the same number of observations")
-    ans <- do.call("rbind", results)
-    Call <- match.call()
-    remove_names <- c(which(names(Call) == "cov_type"),
-                      which(names(Call) == "digits"))
-    row.names(ans) <- as.character(Call[-c(1, remove_names)])
-  } else {
-    ans <- compute_criteria(object, cov_type, digits)
+geecriteria <- function(object, ..., cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"), digits = 2) {
+  cov_type <- match.arg(cov_type)
+  is_single_nonneg_int <- function(x) {
+    is.numeric(x) && length(x) == 1L && is.finite(x) && x >= 0 && x == floor(x)
+  }
+  if (!is_single_nonneg_int(digits)) {
+    stop("'digits' must be a single non-negative integer", call. = FALSE)
+  }
+  digits <- as.integer(digits)
+  models <- c(list(object), list(...))
+  is_geer <- vapply(models, inherits, logical(1), what = "geer")
+  if (!all(is_geer)) {
+    stop("Only 'geer' objects are supported", call. = FALSE)
+  }
+  out_list <- lapply(models, compute_criteria, cov_type = cov_type, digits = digits)
+  ans <- do.call(rbind, out_list)
+  obs_no <- vapply(models, function(m) {
+    if (!is.null(m$obs_no)) as.numeric(m$obs_no) else NA_real_
+  }, numeric(1))
+  if (sum(!is.na(obs_no)) > 1L && any(obs_no[!is.na(obs_no)] != obs_no[which(!is.na(obs_no))[1L]])) {
+    warning("models do not have the same number of observations", call. = FALSE)
+  }
+  if (length(models) > 1L && nrow(ans) == length(models)) {
+    Call <- match.call(expand.dots = FALSE)
+    exprs <- c(list(Call[[2L]]), as.list(Call$...))
+    rn <- vapply(exprs, function(e) paste(deparse(e, width.cutoff = 500), collapse = ""), character(1))
+    rownames(ans) <- rn
   }
   ans
 }

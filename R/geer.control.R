@@ -20,9 +20,9 @@
 #'        Jeffreys-prior penalty. Default is \code{0.5}.
 #'
 #' @details
-#' The \code{or_adding_constant} argument is ignored by \code{\link{geewa}}.
+#' The \code{or_adding} argument is ignored by \code{\link{geewa}}.
 #'
-#' The \code{jeffreys_power} argument is only used if \code{method = "pgee_jeffreys"}
+#' The \code{jeffreys_power} argument is only used if \code{method = "pgee-jeffreys"}
 #' in \code{\link{geewa}} or \code{\link{geewa_binary}}.
 #'
 #' @returns
@@ -35,28 +35,25 @@ geer_control <- function(tolerance = 1e-06,
                          or_adding = 0.5,
                          step_maxit = 10,
                          step_multi = 1,
-                         jeffreys_power = 1/2) {
-  if (!is.numeric(tolerance) || tolerance <= 0)
-    stop("value of 'tolerance' must be > 0")
-  if (!is.numeric(maxiter) || maxiter <= 0)
-    stop("maximum number of iterations must be > 0")
-  if (!is.numeric(step_multi) || step_multi <= 0)
-    stop("value of 'step_multi' must be > 0")
-  if (!is.numeric(step_maxit) || step_maxit < 1) {
-    warning("`step_maxit = ",
-            deparse(step_maxit),
-            "` is not a permissible value. Defaulting to 10")
-    step_maxit <- 10
-  }
-  if (!is.numeric(jeffreys_power) || jeffreys_power <= 0)
-    stop("value of 'jeffreys_power' must be > 0")
-  if (!is.numeric(or_adding) || or_adding <= 0)
-    stop("value of 'or_adding_constant' must be > 0")
-  list(tolerance = tolerance,
-       maxiter = as.integer(maxiter),
-       or_adding = or_adding,
-       step_maxit = as.integer(step_maxit),
-       step_multi = step_multi,
-       jeffreys_power = jeffreys_power
+                         jeffreys_power = 0.5) {
+  if (!is_pos_scalar(tolerance))
+    stop("'tolerance' must be a positive number", call. = FALSE)
+  if (!is_pos_int_scalar(maxiter))
+    stop("'maxiter' must be a positive integer", call. = FALSE)
+  if (!is_pos_int_scalar(step_maxit))
+    stop("'step_maxit' must be a positive integer", call. = FALSE)
+  if (!is_pos_int_scalar(step_multi))
+    stop("'step_multi' must be a positive integer", call. = FALSE)
+  if (!is_pos_scalar(jeffreys_power))
+    stop("'jeffreys_power' must be a positive number", call. = FALSE)
+  if (!is_pos_scalar(or_adding))
+    stop("'or_adding' must be a positive number", call. = FALSE)
+  list(
+    tolerance = tolerance,
+    maxiter = as.integer(maxiter),
+    or_adding = or_adding,
+    step_maxit = as.integer(step_maxit),
+    step_multi = as.integer(step_multi),
+    jeffreys_power = jeffreys_power
   )
 }

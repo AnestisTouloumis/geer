@@ -14,11 +14,11 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
 \item{...}{additional argument(s) passed to methods.}
@@ -37,13 +37,13 @@ fitted \code{geer} object. The parameters correspond to those returned by
 The form of the covariance estimator is controlled by the argument
 \code{cov_type}:
 \itemize{
-  \item \code{"robust"} — the sandwich (robust) covariance estimator
+  \item \code{"robust"} -- the sandwich (robust) covariance estimator
     \cite{Liang and Zeger (1986)}
-  \item \code{"naive"} — the model-based covariance estimator
+  \item \code{"naive"} -- the model-based covariance estimator
     \cite{Liang and Zeger (1986)}
-  \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
+  \item \code{"df-adjusted"} -- the small-sample adjusted covariance matrix
     \cite{MacKinnon (1985)}
-  \item \code{"bias-corrected"} — the bias-corrected covariance estimator
+  \item \code{"bias-corrected"} -- the bias-corrected covariance estimator
     \cite{Morel et al. (2003)}
 }
 }
@@ -59,9 +59,8 @@ vcov(fitted_model, cov_type = "bias-corrected")
 
 }
 \references{
-Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
-estimators for generalized estimating equations. \emph{Biometrika} \bold{73},
-13-–22.
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using generalized
+linear models \emph{Biometrika} \bold{73}, 13-–22.
 
 MacKinnon, J.G. (1985) Some heteroskedasticity-consistent
 covariance matrix estimators with improved finite sample properties.

@@ -7,34 +7,31 @@
 \format{
 A data frame with 60 rows and 4 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{period}{factor indicating the period identifier: pre and post.}
-  \item{bacilli}{numeric vector indicating the number of leprosy bacilli
-                 at six sites of the body.}
-  \item{treatment}{factor indicating the treatment group: A, B and C.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{period}{factor period identifier with levels \code{pre} and \code{post}.}
+  \item{bacilli}{integer count of leprosy bacilli at six sites of the body.}
+  \item{treatment}{factor with levels \code{A}, \code{B} and \code{C} (C = placebo).}
+}
 }
 \usage{
 leprosy
 }
 \description{
-The data are from a randomized clinical trial on the efficacy of antibiotic
-treatments for leprosy in the Philippines.
+Data from a randomized clinical trial on the efficacy of antibiotic treatments for leprosy
+in the Philippines.
 }
 \details{
-Thirty subjects in the Philippines were enrolled in a randomized clinical trial.
-Subjects were assigned to receive treatment A, B, or C. Before treatment, the
-number of leprosy bacilli at six body sites was recorded. After treatment, bacilli
-counts were recorded again, and respiratory status was assessed at baseline and at
-four follow-up visits. The trial aimed to test whether antibiotic treatments A and B
-reduced bacilli abundance compared with placebo (treatment C).
+Thirty subjects in the Philippines were enrolled in a randomized clinical trial. Subjects
+were assigned to receive treatment A, B, or C. Before treatment, the number of leprosy
+bacilli at six body sites was recorded. After treatment, bacilli counts were recorded again.
+The trial aimed to test whether antibiotic treatments A and B reduced bacilli abundance
+compared with placebo (treatment C).
 }
 \examples{
 data("leprosy")
 str(leprosy)
 }
 \references{
-Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}.
-Ames, Iowa: Iowa State University Press.
+Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}. Ames, Iowa: Iowa State University Press.
 }
 \keyword{datasets}

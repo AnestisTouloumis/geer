@@ -21,10 +21,6 @@ update_beta_robust_cc <- function(y_vector, model_matrix, id_vector, repeated_ve
     .Call(`_geer_update_beta_robust_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
 
-update_beta_robust2_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_update_beta_robust2_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
 update_beta_empirical_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
     .Call(`_geer_update_beta_empirical_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
@@ -259,38 +255,6 @@ estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repea
 
 estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
     .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-subset_matrix <- function(x, y) {
-    .Call(`_geer_subset_matrix`, x, y)
-}
-
-kappa_matrix <- function(dimension) {
-    .Call(`_geer_kappa_matrix`, dimension)
-}
-
-kronecker_left_identity_kappa <- function(x) {
-    .Call(`_geer_kronecker_left_identity_kappa`, x)
-}
-
-kronecker_identity_right_kappa <- function(x) {
-    .Call(`_geer_kronecker_identity_right_kappa`, x)
-}
-
-kappa_right <- function(x) {
-    .Call(`_geer_kappa_right`, x)
-}
-
-kronecker_sum_same <- function(x) {
-    .Call(`_geer_kronecker_sum_same`, x)
-}
-
-kronecker_vector_identity <- function(x) {
-    .Call(`_geer_kronecker_vector_identity`, x)
-}
-
-kronecker_vector_matrix <- function(x, y) {
-    .Call(`_geer_kronecker_vector_matrix`, x, y)
 }
 
 variance <- function(family, mu_vector) {

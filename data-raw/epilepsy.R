@@ -1,17 +1,29 @@
 ## code to prepare `epilepsy` dataset goes here
 
-library("rio")
-library("tidyverse")
-epilepsy <-
-  rio::import("./data-raw/epilepsy.csv") |>
-  mutate(id = as.numeric(id),
-         visit = as.numeric(time),
-         seizures = as.numeric(seizures),
-         treatment = if_else(treatment == "placebo", "placebo", "progabide") |>
-                     as.factor(),
-         lnage = log(as.numeric(age)),
-         lnbaseline = log(as.numeric(base)/4)) |>
-  select(id, visit, seizures, treatment, lnbaseline, lnage)
-rownames(epilepsy) <- 1:nrow(epilepsy)
-epilepsy <- as_tibble(epilepsy)
-usethis::use_data(epilepsy, overwrite = TRUE)
+library(dplyr)
+library(rio)
+
+path <- file.path("data-raw", "epilepsy.csv")
+
+epilepsy <- rio::import(path) |>
+  transmute(
+    id = as.integer(id),
+    visit = as.integer(time),
+    seizures = as.integer(seizures),
+    treatment = factor(
+      case_when(
+        treatment == "placebo" ~ "placebo",
+        treatment == "Progabide" ~ "progabide"
+      )
+      ),
+    lnbaseline = log(as.numeric(base) / 4),
+    lnage = log(as.numeric(age))
+  )
+
+stopifnot(
+  !anyNA(epilepsy),
+  all(is.finite(epilepsy$lnbaseline)),
+  all(is.finite(epilepsy$lnage))
+)
+
+usethis::use_data(epilepsy, overwrite = TRUE, compress = "xz")

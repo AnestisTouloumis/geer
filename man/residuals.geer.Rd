@@ -4,7 +4,7 @@
 \alias{residuals.geer}
 \alias{resid}
 \alias{residuals}
-\title{EResiduals from a \code{geer} Object}
+\title{Residuals from a \code{geer} Object}
 \usage{
 \method{residuals}{geer}(object, type = c("working", "pearson", "deviance"), ...)
 }
@@ -35,6 +35,20 @@ by \code{object$family$family}.
   \item Deviance residuals: signed square roots of the contribution of each
         observation to the model deviance.
 }
+}
+\examples{
+data("cerebrovascular")
+fit <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  id = id,
+  data = cerebrovascular,
+  orstr = "exchangeable"
+)
+head(residuals(fit, type = "working"))
+head(residuals(fit, type = "pearson"))
+head(residuals(fit, type = "deviance"))
+
 }
 \seealso{
 \code{\link{geewa}}, \code{\link{geewa_binary}},

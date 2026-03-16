@@ -16,11 +16,11 @@
 
 \item{level}{the confidence level required.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
 \item{...}{additional argument(s) passed to methods.}
@@ -31,24 +31,25 @@ A matrix (or vector) with columns giving lower and upper confidence
   1 - (1-level)/2 in \% (by default 2.5\% and 97.5\%).
 }
 \description{
-Compute confidence intervals for one or more regression parameters from a
-fitted \code{geer} model.
+Compute Wald-type confidence intervals for one or more regression parameters
+from a fitted \code{geer} model.
 }
 \details{
-Confidence intervals are based on the estimated covariance matrix of the
-coefficients. The specific form of the covariance matrix is controlled by the
-\code{cov_type} argument; see \code{\link{vcov}} for available options and
-formulae.
+Confidence intervals are computed as
+\eqn{\hat\beta \pm z_{1-\alpha/2}\,\mathrm{SE}(\hat\beta)},
+where standard errors are obtained from \code{vcov(object, cov_type = cov_type)}.
+The resulting intervals rely on the usual large-sample normal approximation.
 }
 \examples{
-data("leprosy")
-fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-             family = poisson(link = "log"), id = id, data = leprosy)
-confint(fit)
-
 data("cerebrovascular")
-fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-                    id = id, data = cerebrovascular)
+fit <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  id = id,
+  data = cerebrovascular,
+  orstr = "exchangeable"
+)
 confint(fit)
-
+confint(fit, parm = "treatmentactive")
+confint(fit, cov_type = "naive")
 }

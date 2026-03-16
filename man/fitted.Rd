@@ -17,18 +17,13 @@
 A numeric vector of fitted values extracted from \code{object}.
 }
 \description{
-Extract fitted values from a model of class \code{geer}.
-The function \code{fitted.values()} is an alias.
+Extract fitted values (mean response on the response scale) from a fitted
+\code{geer} model. \code{fitted.values()} is an alias for \code{fitted()}.
 }
 \examples{
 data("leprosy")
 fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
              family = poisson(link = "log"), id = id, data = leprosy)
-fitted(fit)
-
-data("cerebrovascular")
-fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-                    id = id, data = cerebrovascular)
-fitted(fit)
+head(fitted(fit))
 
 }

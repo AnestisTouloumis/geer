@@ -7,18 +7,17 @@
 \format{
 A data frame with 134 rows and 4 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{period}{numeric vector indicating the period identifier.}
-  \item{ecg}{numeric vector indicating the ecg status, coded as (0) for
-             abnormal electrocardiogram and as (1) for normal electrocardiogram.}
-  \item{treatment}{factor indicating the treatment group: active and placebo.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{period}{integer period identifier.}
+  \item{ecg}{integer indicator for ECG status, 0 = abnormal, 1 = normal.}
+  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+}
 }
 \usage{
 cerebrovascular
 }
 \description{
-The data are from a randomized crossover trial on cerebrovascular deficiency.
+Data from a randomized two-period crossover trial on cerebrovascular deficiency.
 }
 \details{
 Sixty-seven subjects were enrolled in a two-period crossover trial. Subjects were
@@ -30,7 +29,7 @@ data("cerebrovascular")
 str(cerebrovascular)
 }
 \references{
-Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
-Trials.} London: Chapman and Hall/CRC Press.
+Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over Trials.}
+London: Chapman and Hall/CRC Press.
 }
 \keyword{datasets}

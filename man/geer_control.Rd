@@ -10,7 +10,7 @@ geer_control(
   or_adding = 0.5,
   step_maxit = 10,
   step_multi = 1,
-  jeffreys_power = 1/2
+  jeffreys_power = 0.5
 )
 }
 \arguments{
@@ -42,8 +42,8 @@ may also be supplied directly as the \code{control} argument when calling
 those functions.
 }
 \details{
-The \code{or_adding_constant} argument is ignored by \code{\link{geewa}}.
+The \code{or_adding} argument is ignored by \code{\link{geewa}}.
 
-The \code{jeffreys_power} argument is only used if \code{method = "pgee_jeffreys"}
+The \code{jeffreys_power} argument is only used if \code{method = "pgee-jeffreys"}
 in \code{\link{geewa}} or \code{\link{geewa_binary}}.
 }

@@ -33,23 +33,22 @@
 
 \item{test}{character indicating the hypothesis testing procedure. Options
 include the Wald test (\code{"wald"}), the generalized score test
-(\code{"score"}), the modified working Wald test
-(\code{"working-wald"}), the modified working score test
-(\code{"working-score"}) and the modified working likelihood ratio
-test (\code{"working-lrt"}). Defaults to \code{"wald"}.}
+(\code{"score"}), the modified working Wald test (\code{"working-wald"}),
+the modified working score test (\code{"working-score"}), and the modified
+working likelihood ratio test (\code{"working-lrt"}). Defaults to
+\code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator
-of the regression parameters. Options include the sandwich or
+\item{cov_type}{character indicating the covariance matrix estimator used for
+inference on the regression parameters. Options include the sandwich or
 robust estimator (\code{"robust"}), the bias-corrected estimator
 (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}) and the model-based or naive estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the method used to approximate the
-p-value when one of the modified working tests is selected. Options
-include the Rao–Scott approximation (\code{"rao-scott"}) and the
-Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
-\code{"rao-scott"}.}
+\item{pmethod}{character indicating the approximation used to compute the
+p-value for the modified working tests. Options include the Rao--Scott
+approximation (\code{"rao-scott"}) and the Satterthwaite approximation
+(\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 
 \item{...}{additional argument(s) passed to methods.}
 }
@@ -75,23 +74,30 @@ association; otherwise, an error is returned.
 
 When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
 ignored, and \code{cov_type} specifies the covariance estimator used to
-compute the test statistic. For other tests, \code{cov_type} determines the
-covariance matrix used to form the coefficients of the sum of independent
-chi-squared random variables, while \code{p_method} specifies the
+compute the test statistic. For modified working tests, \code{cov_type}
+determines the covariance matrix used to form the coefficients of the sum of
+independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to obtain the p-value.
 
 The output table also includes the Correlation Information Criterion (CIC),
 a diagnostic for selecting the working correlation structure.
 }
 \examples{
+data("respiratory")
 fitted_model <-
-geewa(formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
-      id = id, repeated = visit, family = binomial(link = "probit"),
-      data = respiratory[respiratory$center=="C2", ], corstr = "ar1",
-      method = "gee")
-add1(fitted_model,
-     scope = .~. + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
-     test = "score")
+  geewa(
+    formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+    id = id, repeated = visit,
+    family = binomial(link = "probit"),
+    data = respiratory[respiratory$center == "C2", ],
+    corstr = "ar1",
+    method = "gee"
+  )
+add1(
+  fitted_model,
+  scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
+  test = "score"
+)
 
 drop1(fitted_model, test = "score")
 

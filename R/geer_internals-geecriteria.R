@@ -1,5 +1,3 @@
-## marginal likelihood
-## !! Need to improve this code !!
 compute_quasi_loglikelihood <- function(object) {
   y  <- object$y
   mu <- object$fitted.values
@@ -45,9 +43,9 @@ compute_criteria <- function(object, cov_type, digits) {
                                 object$alpha,
                                 object$prior.weights)
   }
-  if (object$association == "indepedence") {
+  if (object$association == "independence") {
     association_params_no <- 0
-  } else if (object$association == "exchangeable") {
+  } else if (object$association == "exchangeable" || object$association == "ar1") {
     association_params_no <- 1
   } else {
     association_params_no <- length(object$alpha)
@@ -70,16 +68,16 @@ compute_criteria <- function(object, cov_type, digits) {
   gessc <- sc_wc_stats[[1]]/(object$obs_no - p - association_params_no)
   gpc <- sc_wc_stats[[2]]
   qic_u <- 2 * (p - quasi_loglikelihood)
-  cic <- sum(diag(independence_naive_covariance_inverse %*% beta_covariance))
+  cic <- sum(independence_naive_covariance_inverse * beta_covariance)
   qic <- 2 * (cic - quasi_loglikelihood)
-  q_matrix <- solve(naive_covariance) %*% beta_covariance
+  q_matrix <- solve(naive_covariance, beta_covariance)
   c1 <- sum(diag(q_matrix)) / p
   c2 <- sum(q_matrix * t(q_matrix)) / p
   rjc <- sqrt(((1 - c1) ^ 2) + ((1 - c2) ^ 2))
   ans <- data.frame(QIC = qic,
                     CIC = cic,
                     RJC = rjc,
-                    QICU = qic_u,
+                    QICu = qic_u,
                     GESSC = gessc,
                     GPC = gpc,
                     Parameters = p)

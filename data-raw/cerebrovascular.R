@@ -1,27 +1,31 @@
 ## code to prepare `cerebrovascular` dataset goes here
 
-library("tidyverse")
-library("rio")
-cerebrovascular <-
-  rio::import("./data-raw/cerebrovascular.csv") |>
-  mutate(treatment =
-           if_else(sequence == "P->A" & period == 1,
-                   "placebo",
-                   if_else(sequence == "P->A" & period == 2,
-                           "active",
-                           if_else(sequence == "A->P" & period == 1,
-                                   "active",
-                                   "placebo")
-                   )
-           ),
-         ecg = if_else(ecg == "normal", 1, 0)
-  ) |>
-  select(-sequence) |>
-  mutate(id = as.numeric(id),
-         period = as.numeric(period),
-         ecg = as.numeric(ecg),
-         treatment = factor(treatment)) |>
-  relocate(id, period, ecg, treatment)
-rownames(cerebrovascular) <- 1:nrow(cerebrovascular)
-cerebrovascular <- as_tibble(cerebrovascular)
-usethis::use_data(cerebrovascular, overwrite = TRUE)
+library(dplyr)
+library(rio)
+
+path <- file.path("data-raw", "cerebrovascular.csv")
+
+cerebrovascular <- rio::import(path) |>
+  transmute(
+    id = as.integer(id),
+    period = as.integer(period),
+    ecg = as.integer(if_else(ecg == "normal", 1L, 0L)),
+    treatment = factor(
+      case_when(
+        sequence == "P->A" & period == 1 ~ "placebo",
+        sequence == "P->A" & period == 2 ~ "active",
+        sequence == "A->P" & period == 1 ~ "active",
+        sequence == "A->P" & period == 2 ~ "placebo",
+        TRUE ~ NA_character_
+      ),
+      levels = c("placebo", "active")
+    )
+  )
+
+stopifnot(
+  all(c("id", "period", "ecg", "treatment") %in% names(cerebrovascular)),
+  all(cerebrovascular$ecg %in% c(0L, 1L)),
+  !anyNA(cerebrovascular$treatment)
+)
+
+usethis::use_data(cerebrovascular, overwrite = TRUE, compress = "xz")

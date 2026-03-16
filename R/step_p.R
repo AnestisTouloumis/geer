@@ -2,7 +2,9 @@
 #' Choose a Model by Hypothesis Testing in a Stepwise Algorithm
 #'
 #' @description
-#' Select a formula-based model by hypothesis testing.
+#' Perform stepwise model selection for fitted \code{geer} models using repeated
+#' single-term additions (\code{\link{add1}}) and/or deletions (\code{\link{drop1}})
+#' based on hypothesis tests.
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::step
@@ -11,13 +13,11 @@
 #' @param direction character indicating the mode of the stepwise search.
 #'        Options include backward elimination (\code{"backward"}),
 #'        forward selection (\code{"forward"}) and bidirectional elimination
-#'        (\code{"both"}). By default, a backward elimination is performed.
+#'        (\code{"both"}). Default is \code{"backward"}..
 #' @param p_enter numeric between 0 and 1 indicating the p-value threshold for
-#'        adding variables in the stepwise search. By default,
-#'        \code{p_enter = 0.15}.
+#'        adding variables in the stepwise search. Default is \code{p_enter=0.15}.
 #' @param p_remove numeric between 0 and 1 indicating the p-value threshold for
-#'        removing variables in the stepwise search. By default,
-#'        \code{p_remove = 0.15}.
+#'        removing variables in the stepwise search. Default is \code{p_remove=0.15}.
 #'
 #' @details
 #' \code{step_p} uses \code{\link{add1}} and \code{\link{drop1}} repeatedly; it
@@ -47,26 +47,37 @@
 #' corresponding test statistic. Otherwise, the \code{cov_type} argument specifies the
 #' covariance matrix estimate of the estimated regression parameters used to
 #' calculate the coefficients of the independent chi-squared random variables,
-#' and the \code{p_method} argument specifies the approximation method used to
+#' and the \code{pmethod} argument specifies the approximation method used to
 #' calculate the p-value of the test statistic.
 #'
 #' @returns
-#' The stepwise-selected model is returned, with an \code{anova} component
-#' corresponding to the steps taken in the search.
+#' A fitted model object of class \code{geer}, corresponding to the final selected model.
+#' The returned object contains an \code{anova} component summarizing the stepwise path.
 #'
 #' @inherit add1.geer references
 #'
 #' @seealso \code{\link{add1}} and \code{\link{drop1}}.
 #'
 #' @examples
-#' data("respiratory")
-#' respiratory2 <- respiratory[respiratory$center=="C2", ]
-#' fitted_model <-
-#'   geewa_binary(formula = status ~ (baseline + treatment + gender + visit + age)^2,
-#'                id = id, repeated = visit, link = "probit", data = respiratory2,
-#'                orstr = "independence", method = "pgee-jeffreys")
-#' step_p(fitted_model, direction = "backward", test = "wald", cov_type = "bias-corrected",
-#'        p_remove = 0.1)
+#' data("respiratory", package = "geer")
+#' respiratory2 <- respiratory[respiratory$center == "C2", ]
+#'
+#' full_fit <- geewa_binary(
+#'   formula = status ~ (baseline + treatment + gender + visit + age)^2,
+#'   id = id, repeated = visit, link = "probit", data = respiratory2,
+#'   orstr = "independence", method = "pgee-jeffreys"
+#' )
+#'
+#' ## Backward elimination using a Wald test
+#' step_p(full_fit, direction = "backward", test = "wald",
+#'        cov_type = "bias-corrected", p_remove = 0.10)
+#'
+#' ## Bidirectional selection with an explicit scope
+#' step_p(full_fit,
+#'        scope = list(lower = ~ baseline + treatment,
+#'        upper = ~ (baseline + treatment + gender + visit + age)^2),
+#'        direction = "both", test = "score", cov_type = "robust",
+#'        p_enter = 0.10, p_remove = 0.15, steps = 50)
 #'
 #' @export
 step_p <-
@@ -79,27 +90,35 @@ step_p <-
            cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
            pmethod = c("rao-scott", "satterthwaite"),
            steps = 1000) {
-    if (!("geer" %in% class(object)))
-      stop("'object' must be of 'geer' class")
+    if (!inherits(object, "geer")) {
+      stop("'object' must be of 'geer' class", call. = FALSE)
+    }
     test <- match.arg(test)
-    if (test %in% c("working-wald", "working-score", "working-lrt"))
-      pmethod <- match.arg(pmethod)
-    if (test == "working-lrt" & object$association_structure != "independence")
-      stop("the modified working lrt can only be applied to an independence working model")
+    direction <- match.arg(direction)
     cov_type <- match.arg(cov_type)
-    if (!(is.numeric(p_enter) & (0 < p_enter) & (p_enter < 1)))
-      stop("'p_enter' must be a numeric object between 0 and 1")
-    if (!(is.numeric(p_remove) & (0 < p_remove) & (p_remove < 1)))
-      stop("'p_enter' must be a numeric object between 0 and 1")
-    direction = match.arg(direction)
-    ans <-
-      switch(direction,
-             backward = step_p_backward(object, scope, test, cov_type, pmethod,
-                                        p_remove, steps),
-             forward = step_p_forward(object, scope, test, cov_type, pmethod,
-                                      p_enter, steps),
-             both = step_p_both(object, scope, test, cov_type, pmethod,
-                                p_enter, p_remove, steps)
-      )
-    ans
+    if (test %in% c("working-wald", "working-score", "working-lrt")) {
+      pmethod <- match.arg(pmethod)
+    }
+    if (test == "working-lrt" && object$association_structure != "independence") {
+      stop("the modified working lrt can only be applied to an independence working model",
+           call. = FALSE)
+    }
+    if (!is.numeric(p_enter) || length(p_enter) != 1L || !is.finite(p_enter) ||
+        p_enter <= 0 || p_enter >= 1) {
+      stop("'p_enter' must be a single number strictly between 0 and 1", call. = FALSE)
+    }
+    if (!is.numeric(p_remove) || length(p_remove) != 1L || !is.finite(p_remove) ||
+        p_remove <= 0 || p_remove >= 1) {
+      stop("'p_remove' must be a single number strictly between 0 and 1", call. = FALSE)
+    }
+    if (!is.numeric(steps) || length(steps) != 1L || !is.finite(steps) || steps < 0) {
+      stop("'steps' must be a single non-negative number", call. = FALSE)
+    }
+    steps <- as.integer(steps)
+    switch(
+      direction,
+      backward = step_p_backward(object, scope, test, cov_type, pmethod, p_remove, steps),
+      forward = step_p_forward(object, scope, test, cov_type, pmethod, p_enter,  steps),
+      both = step_p_both(object, scope, test, cov_type, pmethod, p_enter, p_remove, steps)
+    )
   }

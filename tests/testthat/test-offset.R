@@ -1,4 +1,4 @@
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fitor1 <- geewa_binary(formula = ecg ~ treatment + offset(period),
                        link =  "logit",
                        id = id,
@@ -29,6 +29,7 @@ fitcc2 <- geewa(formula = ecg ~ treatment,
                 method = "gee",
                 phi_fixed = TRUE,
                 phi_value = 1)
+
 
 test_that("bcgee-offset", {
   expect_equal(coef(fitor1),

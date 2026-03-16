@@ -7,37 +7,37 @@
 \format{
 A data frame with 444 rows and 8 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{visit}{numeric vector indicating the visit identifier.}
-  \item{status}{numeric vector indicating the respiratory status, coded as (0)
-                for poor and as (1) for good.}
-  \item{treatment}{factor indicating the treatment group: active and placebo.}
-  \item{baseline}{numeric vector indicating the respiratory status at the
-                  baseline, coded as (0) for poor and as (1) for good.}
-  \item{age}{numeric vector indicating the age in years recorded at baseline.}
-  \item{gender}{factor indicating the gender: female and male.}
-  \item{center}{factor indicating the center identifier: C1 and C2.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{visit}{integer visit identifier.}
+  \item{status}{integer indicator for respiratory status, 0 = poor, 1 = good.}
+  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+  \item{baseline}{integer indicator for baseline respiratory status, 0 = poor, 1 = good.}
+  \item{age}{numeric age in years recorded at baseline.}
+  \item{gender}{factor with levels \code{female} and \code{male}.}
+  \item{center}{factor with levels \code{C1} and \code{C2}.}
+}
 }
 \usage{
 respiratory
 }
 \description{
-The data are from a randomized clinical trial on respiratory illness.
+Data from a randomized clinical trial on respiratory illness.
 }
 \details{
-One hundred eleven subjects from two centers were enrolled in a randomized clinical
-trial. Subjects were randomly assigned to treatment groups. Baseline examinations
-were conducted before treatment. After treatment, subjects were examined at four
-follow-up visits, and respiratory status was assessed at baseline and at each
-follow-up.
+One hundred eleven subjects from two centers were enrolled in a randomized clinical trial.
+Subjects were randomly assigned to treatment groups. Baseline examinations were conducted
+before treatment. After treatment, subjects were examined at four follow-up visits.
 }
 \examples{
 data("respiratory")
-str(respiratory)
+fit <- geewa_binary(status ~ treatment + baseline + age + gender,
+                    id = id, data = respiratory,
+                    link = "logit",
+                    orstr = "exchangeable")
+summary(fit)
 }
 \references{
-Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis
-using the SAS System.} Cary, NC: SAS Institute, Inc.
+Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data Analysis using the SAS System.}
+Cary, NC: SAS Institute, Inc.
 }
 \keyword{datasets}

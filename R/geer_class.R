@@ -1,72 +1,69 @@
-geer <- function(x, ...) { # nolint
+#' @export
+geer <- function(x, ...) {
   UseMethod("geer")
 }
 
+
 #' @export
 geer.default <- function(x, ...) {
-  object <- list()
-  object$coefficients <- x$coefficients
-  object$residuals <- x$residuals
-  object$fitted.values <- x$fitted.values
-  object$rank <- x$rank
-  object$qr <- x$qr
-  object$family <- x$family
-  object$linear.predictors <- x$linear.predictors
-  object$iter <- x$iter
-  object$prior.weights <- x$prior.weights
-  object$df.residual <- x$df.residual
-  object$y <- x$y
-  object$x <- x$x
-  object$id <- x$id
-  object$repeated <- x$repeated
-  object$converged <- x$converged
-  object$call <- x$call
-  object$formula <- x$formula
-  object$terms <- x$terms
-  object$data <- x$data
-  object$offset <- x$offset
-  object$control <- x$control
-  object$method <- x$method
-  object$contrasts <- x$contrasts
-  object$xlevels <- x$xlevels
-  object$naive_covariance <- x$naive_covariance
-  object$robust_covariance <- x$robust_covariance
-  object$bias_corrected_covariance <- x$bias_corrected_covariance
-  object$association_structure <- x$association_structure
-  object$alpha <- x$alpha
-  object$phi <- x$phi
-  object$obs_no <- x$obs_no
-  object$clusters_no <- x$clusters_no
-  object$min_cluster_size <- x$min_cluster_size
-  object$max_cluster_size <- x$max_cluster_size
-  class(object) <- "geer"
-  object
+  if (!is.list(x)) {
+    stop("'x' must be a list", call. = FALSE)
+  }
+  required <- c(
+    "coefficients", "residuals", "fitted.values", "qr", "rank", "family",
+    "linear.predictors", "iter", "prior.weights", "df.residual", "y", "x", "na.action",
+    "id", "repeated", "converged", "call", "formula", "terms", "data", "offset",
+    "control", "method", "contrasts", "xlevels", "naive_covariance",
+    "robust_covariance", "bias_corrected_covariance", "association_structure",
+    "alpha", "phi", "obs_no", "clusters_no", "min_cluster_size", "max_cluster_size"
+  )
+  missing <- setdiff(required, names(x))
+  if (length(missing)) {
+    stop("Input is missing required components: ",
+         paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  class(x) <- unique(c("geer", class(x)))
+  x
 }
 
 
+#' Print Method for geer Objects
+#'
+#' @param x an object of class \code{"geer"}.
+#' @param ... additional arguments passed to or from other methods.
+#'
+#' @return The input object \code{x} is returned invisibly.
+#'
 #' @export
 print.geer <- function(x, ...) {
   cat("Call:\n")
   print(x$call)
   cat("\nCoefficients:\n")
-  print(x$coefficients)
+  if (!is.null(x$coefficients)) print(x$coefficients) else cat("<none>\n")
   cat("\nNumber of iterations :", x$iter, "\n")
   cat("Algorithm converged  :", x$converged, "\n")
+  invisible(x)
 }
+
 
 
 #' @method summary geer
 #' @export
-summary.geer <- function(object, cov_type = "robust", ...) {
-  coefficients_hat <- coef(object)
-  standard_errors <- sqrt(diag(vcov(object, cov_type)))
-  z_statistics  <- coefficients_hat / standard_errors
-  pvalue <- 2 * (1 - pnorm(abs(z_statistics)))
+summary.geer <- function(object,
+                         cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                         ...) {
+  cov_type <- match.arg(cov_type)
+  beta <- coef(object)
+  V <- vcov(object, cov_type = cov_type)
+  se <- sqrt(pmax(0, diag(V)))
+  z <- beta / se
+  p <- 2 * pnorm(abs(z), lower.tail = FALSE)
   TAB <- cbind(
-    Estimate = coefficients_hat,
-    `Std.Error` = standard_errors,
-    `z value` = z_statistics,
-    `Pr(>|z|)` = pvalue
+    Estimate = beta,
+    `Std. Error` = se,
+    `z value` = z,
+    `Pr(>|z|)` = p
   )
   res <- list(
     coefficients = TAB,
@@ -108,8 +105,8 @@ print.summary.geer <- function(x, ...) {
     print(round(x$alpha, digits = 4))
     cat("\n")
   }
+  invisible(x)
 }
-
 
 
 #' @title
@@ -138,9 +135,9 @@ print.summary.geer <- function(x, ...) {
 #'
 #' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
 #' ignored, and \code{cov_type} specifies the covariance estimator used to
-#' compute the test statistic. For other tests, \code{cov_type} determines the
-#' covariance matrix used to form the coefficients of the sum of independent
-#' chi-squared random variables, while \code{p_method} specifies the
+#' compute the test statistic. For modified working tests, \code{cov_type}
+#' determines the covariance matrix used to form the coefficients of the sum of
+#' independent chi-squared random variables, and \code{pmethod} specifies the
 #' approximation used to obtain the p-value.
 #'
 #' The output table also includes the Correlation Information Criterion (CIC),
@@ -157,14 +154,21 @@ print.summary.geer <- function(x, ...) {
 #'           \code{\link{geewa_binary}}.
 #'
 #' @examples
+#' data("respiratory")
 #' fitted_model <-
-#' geewa(formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
-#'       id = id, repeated = visit, family = binomial(link = "probit"),
-#'       data = respiratory[respiratory$center=="C2", ], corstr = "ar1",
-#'       method = "gee")
-#' add1(fitted_model,
-#'      scope = .~. + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
-#'      test = "score")
+#'   geewa(
+#'     formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+#'     id = id, repeated = visit,
+#'     family = binomial(link = "probit"),
+#'     data = respiratory[respiratory$center == "C2", ],
+#'     corstr = "ar1",
+#'     method = "gee"
+#'   )
+#' add1(
+#'   fitted_model,
+#'   scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
+#'   test = "score"
+#' )
 #'
 #' @export
 add1.geer <-
@@ -175,53 +179,59 @@ add1.geer <-
            pmethod = c("rao-scott", "satterthwaite"),
            ...) {
     test <- match.arg(test)
-    if (test %in% c("working-wald", "working-score", "working-lrt"))
+    cov_type <- match.arg(cov_type)
+    if (test %in% c("working-wald", "working-score", "working-lrt")) {
       pmethod <- match.arg(pmethod)
-    cov_type <- match.arg(cov_type)
-    if (test == "working-lrt" & object$association_structure != "independence")
-      stop("the modified working lrt can only be applied to the independence working model")
-    cov_type <- match.arg(cov_type)
-    if (missing(scope) || is.null(scope))
-      stop("no terms in scope")
-    if (!is.character(scope))
+    }
+    if (test == "working-lrt" && object$association_structure != "independence") {
+      stop("the modified working lrt can only be applied to the independence working model",
+           call. = FALSE)
+    }
+    if (missing(scope) || is.null(scope)) {
+      stop("no terms in scope", call. = FALSE)
+    }
+    if (!is.character(scope)) {
       scope <- add.scope(object, update.formula(object, scope))
-    if (!length(scope))
-      stop("no terms in scope for adding to object")
+    }
+    if (!length(scope)) {
+      stop("no terms in scope for adding to object", call. = FALSE)
+    }
     ns <- length(scope)
-    ans <- matrix(nrow = ns + 1L, ncol = 4L,
-                  dimnames = list(c("<none>", scope), c("Df", "CIC", "Chi", "Pr(>Chi)")))
-    ans[1L, 2] <- extract_cic(object, cov_type)
-    for (i in seq_along(scope)) {
-      tt <- scope[i]
-      add1_model <- update(object, formula = as.formula(paste("~ . +", tt)))
-      value <-
-        switch(test,
-               wald = wald_test(object, add1_model, cov_type),
-               score = score_test(object, add1_model, cov_type),
-               `working-wald` =
-                 working_wald_test(object, add1_model, cov_type, pmethod),
-               `working-score` =
-                 working_score_test(object, add1_model, cov_type, pmethod),
-               `working-lrt` =
-                 working_lr_test(object, add1_model, cov_type, pmethod)
-        )
-      ans[i + 1, ] <-
-        c(value$test_df, extract_cic(add1_model, cov_type), value$test_stat, value$test_p)
+    ans <- matrix(NA_real_, nrow = ns + 1L, ncol = 4L,
+                  dimnames = list(c("<none>", scope),
+                                  c("Df", "CIC", "Chi", "Pr(>Chi)")))
+
+    ans[1L, 2L] <- extract_cic(object, cov_type)
+    for (i in seq_len(ns)) {
+      tt <- scope[[i]]
+      add1_model <- update(object, formula = as.formula(paste(". ~ . +", tt)))
+      value <- switch(
+        test,
+        wald = wald_test(object, add1_model, cov_type),
+        score = score_test(object, add1_model, cov_type),
+        `working-wald`  = working_wald_test(object, add1_model, cov_type, pmethod),
+        `working-score` = working_score_test(object, add1_model, cov_type, pmethod),
+        `working-lrt`   = working_lr_test(object, add1_model, cov_type, pmethod)
+      )
+
+      ans[i + 1L, ] <- c(value$test_df,
+                         extract_cic(add1_model, cov_type),
+                         value$test_stat,
+                         value$test_p)
     }
     aod <- as.data.frame(ans)
-    test_type <- switch(test,
-                        wald = "Wald",
-                        score = "Score",
-                        `working-wald` = "Modified Working Wald",
-                        `working-score` = "Modified Working Score",
-                        `working-lrt` = "Modified Working LR")
+    test_type <- switch(
+      test,
+      wald = "Wald",
+      score = "Score",
+      `working-wald` = "Modified Working Wald",
+      `working-score` = "Modified Working Score",
+      `working-lrt` = "Modified Working LR"
+    )
     head <- c(paste("Single term additions using", test_type, "test:"),
-              "\nModel:", deparse(formula(object$call$formula)))
-    structure(aod,
-              heading = head,
-              class = c("anova", "data.frame"))
+              "\nModel:", deparse(object$call$formula))
+    structure(aod, heading = head, class = c("anova", "data.frame"))
   }
-
 
 
 #' @rdname add1.geer
@@ -232,66 +242,70 @@ add1.geer <-
 #' drop1(fitted_model, test = "score")
 #'
 #' @export
-drop1.geer <-
-  function(object,
-           scope,
-           test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-           pmethod = c("rao-scott", "satterthwaite"),
-           ...) {
-    test <- match.arg(test)
-    if (test %in% c("working-wald", "working-score", "working-lrt"))
-      pmethod <- match.arg(pmethod)
-    cov_type <- match.arg(cov_type)
-    if (test == "working-lrt" & object$association_structure != "independence")
-      stop("the modified working lrt can only be applied to the independence working model")
-    cov_type <- match.arg(cov_type)
-    model_terms <- attr(terms(object), "term.labels")
-    if (missing(scope)) {
-      scope <- drop.scope(object)
-    } else {
-      if (!is.character(scope))
-        scope <- attr(terms(update.formula(object, scope)), "term.labels")
-      if (!all(match(scope, model_terms, 0L) > 0L))
-        stop("scope is not a subset of term labels")
-    }
-    ns <- length(scope)
-    ans <- matrix(nrow = ns + 1L, ncol = 4L,
-                  dimnames = list(c("<none>", scope),
-                                  c("Df", "CIC", "Chi", "Pr(>Chi)")))
-    ans[1L, 2] <- extract_cic(object, cov_type)
-    for (i in seq_along(scope)) {
-      tt <- scope[i]
-      drop1_model <-
-        update(object,
-               formula = as.formula(paste("~ . -", tt)))
-      value <-
-        switch(test,
-               wald = wald_test(drop1_model, object, cov_type),
-               score = score_test(drop1_model, object, cov_type),
-               `working-wald` =
-                 working_wald_test(drop1_model, object, cov_type, pmethod),
-               `working-score` =
-                 working_score_test(drop1_model, object, cov_type, pmethod),
-               `working-lrt` =
-                 working_lr_test(drop1_model, object, cov_type, pmethod))
-      ans[i + 1, ] <-
-        c(value$test_df, extract_cic(drop1_model, cov_type), value$test_stat, value$test_p)
-    }
-    aod <- as.data.frame(ans)
-    test_type <- switch(test,
-                        wald = "Wald",
-                        score = "Score",
-                        `working-wald` = "Modified Working Wald",
-                        `working-score` = "Modified Working Score",
-                        `working-lrt` = "Modified Working LR")
-    head <- c(paste("Single term deletions using", test_type, "test:"),
-              "\nModel:", deparse(formula(object$call$formula)))
-    structure(aod,
-              heading = head,
-              class = c("anova", "data.frame"))
+drop1.geer <- function(object,
+                       scope,
+                       test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
+                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                       pmethod = c("rao-scott", "satterthwaite"),
+                       ...) {
+  test <- match.arg(test)
+  cov_type <- match.arg(cov_type)
+  if (test %in% c("working-wald", "working-score", "working-lrt")) {
+    pmethod <- match.arg(pmethod)
   }
+  if (test == "working-lrt" && object$association_structure != "independence") {
+    stop("the modified working lrt can only be applied to the independence working model",
+         call. = FALSE)
+  }
+  model_terms <- attr(terms(object), "term.labels")
+  if (missing(scope) || is.null(scope)) {
+    scope <- drop.scope(object)
+  } else {
+    if (!is.character(scope)) {
+      scope <- attr(terms(update.formula(object, scope)), "term.labels")
+    }
+    if (!all(match(scope, model_terms, 0L) > 0L)) {
+      stop("scope is not a subset of term labels", call. = FALSE)
+    }
+  }
+  ns <- length(scope)
+  if (ns == 0L) {
+    stop("no terms in scope for dropping from object", call. = FALSE)
+  }
+  ans <- matrix(NA_real_, nrow = ns + 1L, ncol = 4L,
+                dimnames = list(c("<none>", scope),
+                                c("Df", "CIC", "Chi", "Pr(>Chi)")))
+  ans[1L, 2L] <- extract_cic(object, cov_type)
+  for (i in seq_len(ns)) {
+    tt <- scope[[i]]
+    drop1_model <- update(object, formula = as.formula(paste(". ~ . -", tt)))
 
+    value <- switch(
+      test,
+      wald = wald_test(drop1_model, object, cov_type),
+      score = score_test(drop1_model, object, cov_type),
+      `working-wald` = working_wald_test(drop1_model, object, cov_type, pmethod),
+      `working-score` = working_score_test(drop1_model, object, cov_type, pmethod),
+      `working-lrt` = working_lr_test(drop1_model, object, cov_type, pmethod)
+    )
+    ans[i + 1L, ] <- c(value$test_df,
+                       extract_cic(drop1_model, cov_type),
+                       value$test_stat,
+                       value$test_p)
+  }
+  aod <- as.data.frame(ans)
+  test_type <- switch(
+    test,
+    wald = "Wald",
+    score = "Score",
+    `working-wald` = "Modified Working Wald",
+    `working-score` = "Modified Working Score",
+    `working-lrt` = "Modified Working LR"
+  )
+  head <- c(paste("Single term deletions using", test_type, "test:"),
+            "\nModel:", deparse(object$call$formula))
+  structure(aod, heading = head, class = c("anova", "data.frame"))
+}
 
 
 #' @title
@@ -302,27 +316,27 @@ drop1.geer <-
 #'
 #' @description
 #' Compute analysis of variance (ANOVA) tables for one or more fitted models of
-#' class \code{geer}, using a variety of hypothesis testing procedures.
+#' class \code{geer}. The table is based on hypothesis tests for regression
+#' terms in generalized estimating equation (GEE) models.
 #'
 #' @param object an object representing a model of the class \code{geer}.
 #' @param ... additional objects representing models of the same class \code{geer}.
 #' @param test character indicating the hypothesis testing procedure. Options
-#'        include the Wald test (\code{"wald"}), the generalized score test
-#'        (\code{"score"}), the modified working Wald test
-#'        (\code{"working-wald"}), the modified working score test
-#'        (\code{"working-score"}) and the modified working likelihood ratio
-#'        test (\code{"working-lrt"}). Defaults to \code{"wald"}.
-#' @param cov_type character indicating the covariance matrix estimator
-#'        of the regression parameters. Options include the sandwich or
-#'        robust estimator (\code{"robust"}), the bias-corrected estimator
-#'        (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-#'        (\code{"df-adjusted"}) and the model-based or naive estimator
-#'        (\code{"naive"}). Defaults to \code{"robust"}.
-#' @param pmethod character indicating the method used to approximate the
-#'        p-value when one of the modified working tests is selected. Options
-#'        include the Rao–Scott approximation (\code{"rao-scott"}) and the
-#'        Satterthwaite approximation (\code{"satterthwaite"}). Defaults to
-#'        \code{"rao-scott"}.
+#'   include the Wald test (\code{"wald"}), the generalized score test
+#'   (\code{"score"}), the modified working Wald test (\code{"working-wald"}),
+#'   the modified working score test (\code{"working-score"}), and the modified
+#'   working likelihood ratio test (\code{"working-lrt"}). Defaults to
+#'   \code{"wald"}.
+#' @param cov_type character indicating the covariance matrix estimator used for
+#'   inference on the regression parameters. Options include the sandwich or
+#'   robust estimator (\code{"robust"}), the bias-corrected estimator
+#'   (\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+#'   (\code{"df-adjusted"}), and the model-based or naive estimator
+#'   (\code{"naive"}). Defaults to \code{"robust"}.
+#' @param pmethod character indicating the approximation used to compute the
+#'   p-value for the modified working tests. Options include the Rao--Scott
+#'   approximation (\code{"rao-scott"}) and the Satterthwaite approximation
+#'   (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.
 #'
 #' @details
 #' Details of the hypothesis tests controlled by \code{test} are given in
@@ -332,10 +346,10 @@ drop1.geer <-
 #'
 #' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
 #' ignored. In this case, \code{cov_type} specifies the covariance estimator
-#' used in the test statistic. For other tests, \code{cov_type} determines the
-#' covariance matrix used to form the coefficients of the sum of independent
-#' chi-squared random variables, and \code{p_method} specifies the approximation
-#' used to compute the p-value.
+#' used in the test statistic. For modified working tests, \code{cov_type}
+#' determines the covariance matrix used to form the coefficients of the sum of
+#' independent chi-squared random variables, and \code{pmethod} specifies the
+#' approximation used to compute the p-value.
 #'
 #' When comparing two or more models, the data must be identical across all
 #' fits, and the models must be nested in the order supplied. In particular,
@@ -346,8 +360,8 @@ drop1.geer <-
 #' within the GEE framework.
 #'
 #' \itemize{
-#'   \item With a single model, the table reports the significance of each model
-#'   term.
+#'   \item With a single model, the table reports tests for terms added
+#'   sequentially (from first to last).
 #'   \item With multiple models, the table reports sequential tests comparing
 #'   each model to the previous one.
 #' }
@@ -358,59 +372,96 @@ drop1.geer <-
 #' \code{\link{drop1}} for type II ANOVA, where each term is dropped one at a
 #' time while respecting model hierarchy.
 #'
+#' @examples
+#' data("cerebrovascular")
+#'
+#' ## Single-model ANOVA (sequential terms)
+#' fit_full <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   id = id,
+#'   data = cerebrovascular,
+#'   link = "logit",
+#'   orstr = "exchangeable"
+#' )
+#' anova(fit_full, test = "wald", cov_type = "robust")
+#'
+#' ## Two-model comparison (models must be nested)
+#' fit_null <- geewa_binary(
+#'   formula = ecg ~ 1,
+#'   id = id,
+#'   data = cerebrovascular,
+#'   link = "logit",
+#'   orstr = "exchangeable"
+#' )
+#' anova(fit_null, fit_full, test = "wald", cov_type = "robust")
+#'
 #' @export
-
 anova.geer <-
   function(object,
            ...,
            test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
            cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-           pmethod = c("rao-scott", "satterthwaite") ){
+           pmethod = c("rao-scott", "satterthwaite") ) {
     test <- match.arg(test)
-    if (test %in% c("working-wald", "working-score", "working-lrt"))
+    if (test %in% c("working-wald", "working-score", "working-lrt")) {
       pmethod <- match.arg(pmethod)
+    }
     cov_type <- match.arg(cov_type)
     dotargs <- list(...)
-    named <- if (is.null(names(dotargs)))
-      rep_len(FALSE, length(dotargs)) else (names(dotargs) != "")
-    if (any(named))
+    named <- if (is.null(names(dotargs))) {
+      rep_len(FALSE, length(dotargs))
+    } else {
+      (names(dotargs) != "")
+    }
+    if (any(named)) {
       warning("the following arguments to 'anova.geer' are invalid and dropped: ",
               paste(deparse(dotargs[named]), collapse = ", "))
+    }
     dotargs <- dotargs[!named]
-    is_geer <- vapply(dotargs, function(x) inherits(x, "geer"), NA)
+    is_geer <- vapply(dotargs, function(x) inherits(x, "geer"), logical(1))
     dotargs <- dotargs[is_geer]
-    if (length(dotargs))
+    if (length(dotargs)) {
       return(anova_geerlist(c(list(object), dotargs),
                             test = test,
                             cov_type = cov_type,
                             pmethod = pmethod))
-    if (test == "working-lrt" & object$association_structure != "independence")
-      stop("the modified working lr test requires independence working models")
+    }
+    if (test == "working-lrt" && object$association_structure != "independence") {
+      stop("the modified working lr test requires independence working models",
+           call. = FALSE)
+    }
     terms <- attr(object$terms, "term.labels")
     intercept <- attr(object$terms, "intercept")
     variables <- attr(object$terms, "variables")
     varseq <- attr(object$x, "assign")
-    nvars <- max(0, varseq)
+    nvars <- max(c(0, varseq))
     object_list <- list()
     if (intercept == 1) {
       object_list[[1]] <- update(object, formula = . ~ 1)
       for (i in seq_len(nvars)) {
-        object_list[[i + 1]] <- update(object_list[[i]], formula = paste(". ~ . + ", terms[i]))
+        object_list[[i + 1]] <- update(object_list[[i]],
+                                       formula = paste(". ~ . + ", terms[i]))
       }
     } else {
       object_list[[1]] <- update(object, formula = paste(". ~ -1 + ", terms[1]))
       for (i in seq_len(nvars - 1)) {
-        object_list[[i + 1]] <- update(object_list[[i]], formula = paste(". ~ . + ", terms[i + 1]))
+        object_list[[i + 1]] <- update(object_list[[i]],
+                                       formula = paste(". ~ . + ", terms[i + 1]))
       }
     }
-    resdf  <- as.numeric(lapply(object_list, function(x) x$df.residual))
-    table <- data.frame(c(NA, resdf[-1]), resdf, c(NA, resdf[-1]), c(NA, resdf[-1]))
+    resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))
+    table <- data.frame(
+      c(NA_real_, resdf[-1]),
+      resdf,
+      c(NA_real_, resdf[-1]),
+      c(NA_real_, resdf[-1])
+    )
     if (intercept == 1) {
       dimnames(table) <- list(c("NULL", terms),
                               c("Df", "Resid. Df", "Chi", "Pr(>Chi)"))
     } else {
       dimnames(table) <- list(c(terms),
-                              c( "Df", "Resid. Df", "Chi", "Pr(>Chi)"))
+                              c("Df", "Resid. Df", "Chi", "Pr(>Chi)"))
     }
     test_type <- switch(test,
                         wald = "Wald",
@@ -419,19 +470,17 @@ anova.geer <-
                         `working-score` = "Working Score",
                         `working-lrt` = "Working LRT")
     for (i in seq_len(length(object_list) - 1)) {
-      value <-
-        switch(test,
-               wald =
-                 wald_test(object_list[[i]], object_list[[i + 1]], cov_type),
-               score =
-                 score_test(object_list[[i]], object_list[[i + 1]], cov_type),
-               `working-wald` =
-                 working_wald_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
-               `working-score` =
-                 working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
-               `working-lrt` =
-                 working_lr_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
-        )
+      value <- switch(
+        test,
+        wald = wald_test(object_list[[i]], object_list[[i + 1]], cov_type),
+        score = score_test(object_list[[i]], object_list[[i + 1]], cov_type),
+        `working-wald` =
+          working_wald_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
+        `working-score` =
+          working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
+        `working-lrt` =
+          working_lr_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
+      )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }
     test_type <- switch(test,
@@ -450,7 +499,6 @@ anova.geer <-
   }
 
 
-
 #' @title
 #' Extract Model Coefficients from a \code{geer} Object
 #'
@@ -464,23 +512,34 @@ anova.geer <-
 #' @inheritParams add1.geer
 #'
 #' @return
-#' A named numeric vector containing the estimated model coefficients.
+#' A named numeric vector of estimated regression coefficients.
 #'
 #' @examples
 #' data("leprosy")
-#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' fit <- geewa(
+#'   formula = bacilli ~ factor(period) + factor(period):treatment,
+#'   family = poisson(link = "log"),
+#'   id = id,
+#'   data = leprosy
+#' )
 #' coef(fit)
+#' names(coef(fit))
 #'
 #' data("cerebrovascular")
-#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-#'                     id = id, data = cerebrovascular)
-#' coef(fit)
+#' fit2 <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   id = id,
+#'   data = cerebrovascular
+#' )
+#' coef(fit2)
 #'
 #' @export
-coef.geer <- function(object, ...){
-  coeffs <- object$coefficients
-  coeffs
+coef.geer <- function(object, ...) {
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
+  }
+ object$coefficients
 }
 
 
@@ -492,39 +551,47 @@ coef.geer <- function(object, ...){
 #' @method confint geer
 #'
 #' @description
-#' Compute confidence intervals for one or more regression parameters from a
-#' fitted \code{geer} model.
+#' Compute Wald-type confidence intervals for one or more regression parameters
+#' from a fitted \code{geer} model.
 #'
 #' @inheritParams add1.geer
 #' @inheritParams stats::confint
 #'
 #' @details
-#' Confidence intervals are based on the estimated covariance matrix of the
-#' coefficients. The specific form of the covariance matrix is controlled by the
-#' \code{cov_type} argument; see \code{\link{vcov}} for available options and
-#' formulae.
+#' Confidence intervals are computed as
+#' \eqn{\hat\beta \pm z_{1-\alpha/2}\,\mathrm{SE}(\hat\beta)},
+#' where standard errors are obtained from \code{vcov(object, cov_type = cov_type)}.
+#' The resulting intervals rely on the usual large-sample normal approximation.
 #'
 #' @inherit stats::confint.default return
 #'
+#'
 #' @examples
-#' data("leprosy")
-#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-#'              family = poisson(link = "log"), id = id, data = leprosy)
-#' confint(fit)
-#'
 #' data("cerebrovascular")
-#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-#'                     id = id, data = cerebrovascular)
+#' fit <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   id = id,
+#'   data = cerebrovascular,
+#'   orstr = "exchangeable"
+#' )
 #' confint(fit)
-#'
+#' confint(fit, parm = "treatmentactive")
+#' confint(fit, cov_type = "naive")
 #' @export
 confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
-  coefficients <- coef(object)
-  coefficients_names <- names(coefficients)
+  if (!is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
+    stop("'level' must be a single number in (0, 1)", call. = FALSE)
+  }
+  beta <- coef(object)
+  beta_names <- names(beta)
   if (missing(parm)) {
-    parm <- coefficients_names
+    parm <- beta_names
   } else if (is.numeric(parm)) {
-    parm <- coefficients_names[parm]
+    parm <- beta_names[parm]
+  }
+  if (anyNA(parm) || !all(parm %in% beta_names)) {
+    stop("invalid 'parm' specification", call. = FALSE)
   }
   alpha <- (1 - level) / 2
   alpha <- c(alpha, 1 - alpha)
@@ -532,9 +599,10 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
   percentiles <- qnorm(alpha)
   ans <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
   standard_errors <- sqrt(diag(vcov(object, cov_type = cov_type)))[parm]
-  ans[] <- coefficients[parm] + standard_errors %o% percentiles
+  ans[] <- beta[parm] + standard_errors %o% percentiles
   ans
 }
+
 
 
 
@@ -546,8 +614,8 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #' @method fitted geer
 #'
 #' @description
-#' Extract fitted values from a model of class \code{geer}.
-#' The function \code{fitted.values()} is an alias.
+#' Extract fitted values (mean response on the response scale) from a fitted
+#' \code{geer} model. \code{fitted.values()} is an alias for \code{fitted()}.
 #'
 #' @inheritParams coef.geer
 #'
@@ -558,15 +626,13 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #' data("leprosy")
 #' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
 #'              family = poisson(link = "log"), id = id, data = leprosy)
-#' fitted(fit)
-#'
-#' data("cerebrovascular")
-#' fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-#'                     id = id, data = cerebrovascular)
-#' fitted(fit)
+#' head(fitted(fit))
 #'
 #' @export
 fitted.geer <- function(object, ...){
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
+  }
   object$fitted.values
 }
 
@@ -579,9 +645,10 @@ fitted.geer <- function(object, ...){
 #' @method model.matrix geer
 #'
 #' @description
-#' Build the design (model) matrix from a fitted \code{geer} object. Factor
-#' variables are expanded to dummy/contrast-coded columns (according to the
-#' active contrasts), and interaction terms are expanded accordingly.
+#' Construct the design (model) matrix for the marginal mean model underlying a
+#' fitted \code{geer} object. Factor variables are expanded according to the
+#' contrasts used when fitting the model, and interaction terms are expanded
+#' accordingly.
 #'
 #' @inheritParams coef.geer
 #'
@@ -627,11 +694,13 @@ fitted.geer <- function(object, ...){
 #'
 #' @export
 model.matrix.geer <-	function(object,...){
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
+  }
   model.matrix(object = object$terms,
                data = object$data,
                contrasts = object$contrasts)
 }
-
 
 
 #' @title
@@ -669,76 +738,85 @@ model.matrix.geer <-	function(object,...){
 #' the fit.
 #'
 #' @return
-#' \describe{
-#'   \item{If \code{se.fit = FALSE}:}{A numeric vector (or matrix) of predicted
-#'   values.}
-#'   \item{If \code{se.fit = TRUE}:}{A list with components:
-#'     \itemize{
-#'       \item \code{fit} — predictions, as above.
-#'       \item \code{se.fit} — estimated standard errors of the predictions.
-#'     }
-#'   }
-#' }
+#' If \code{se.fit = FALSE}, a numeric vector of predictions.
+#' If \code{se.fit = TRUE}, a list with components \code{fit} and \code{se.fit}.
 #'
 #' @seealso
 #' \code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.
 #'
+#' @examples
+#' data("cerebrovascular")
+#' fit <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   id = id,
+#'   data = cerebrovascular,
+#'   orstr = "exchangeable"
+#' )
+#' head(predict(fit, type = "link"))
+#' head(predict(fit, type = "response"))
+#'
+#' nd <- cerebrovascular[1:5, , drop = FALSE]
+#' predict(fit, newdata = nd, type = "response")
+#'
+#' pred <- predict(fit, type = "response", se.fit = TRUE, cov_type = "robust")
+#' head(pred$fit)
+#' head(pred$se.fit)
+#'
 #' @export
-predict.geer <-
-  function(object,
-           newdata = NULL,
-           type = c("link", "response"),
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-           se.fit = c(FALSE, TRUE),
-           ...) {
-    type <- match.arg(type)
-    se.fit <- match.arg(se.fit)
-    if (missing(newdata)) {
-      if (type == "link") {
-        predicts <- object$linear.predictors
-      } else {
-        predicts <- object$fitted.values
-      }
-      if (se.fit) {
-        covariance_matrix <- vcov(object, type = cov_type)
-        model_matrix <- object$x
-        se.fit <-
-          sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
-        if (type == "response")
-          se.fit <- se.fit * abs(object$family$mu.eta(object$linear.predictors))
-        names(predicts) <- names(se.fit)
-        predicts <- list(fit = predicts, se.fit = se.fit)
-      }
-    } else {
-      newdata <- data.frame(newdata)
-      model_frame <-
-        model.frame(delete.response(object$terms), newdata, xlev = object$xlevels)
-      model_matrix <-
-        model.matrix(delete.response(object$terms), model_frame, contrasts = object$contrasts)
-      predicts <- c(model_matrix %*% object$coefficients)
-      offset_term <- model.offset(model_frame)
-      if (!is.null(offset_term)) predicts <- predicts + c(offset_term)
-      if (se.fit) {
-        covariance_matrix <- vcov(object, cov_type)
-        se.fit <-
-          sqrt(apply(tcrossprod(model_matrix, covariance_matrix) * model_matrix, 1, sum))
-        if (type == "response") {
-          se.fit <- se.fit * abs(object$family$mu.eta(predicts))
-          predicts <- object$family$linkinv(predicts)
-        }
-        names(predicts) <- names(se.fit)
-        predicts <- list(fit = predicts, se.fit = se.fit)
-      } else if (type == "response") {
-        predicts <- object$family$linkinv(predicts)
-      }
-    }
-    predicts
+predict.geer <- function(object,
+                         newdata = NULL,
+                         type = c("link", "response"),
+                         cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                         se.fit = FALSE,
+                         ...) {
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
   }
+  type <- match.arg(type)
+  cov_type <- match.arg(cov_type)
+  se.fit <- isTRUE(se.fit)
+  if (is.null(newdata)) {
+    eta <- object$linear.predictors
+    mu <- object$fitted.values
+    out <- if (type == "link") eta else mu
+    if (!se.fit) return(out)
+    V <- vcov(object, cov_type = cov_type)
+    X <- object$x
+    se <- sqrt(rowSums((X %*% V) * X))
+    if (type == "response") {
+      se <- se * abs(object$family$mu.eta(eta))
+    }
+    return(list(fit = out, se.fit = se))
+  }
+  newdata <- data.frame(newdata)
+  tt <- delete.response(object$terms)
+  mf <- model.frame(tt, newdata, xlev = object$xlevels)
+  X <- model.matrix(tt, mf, contrasts = object$contrasts)
+  eta <- drop(X %*% object$coefficients)
+  off <- model.offset(mf)
+  if (!is.null(off)) eta <- eta + drop(off)
+
+  if (!se.fit) {
+    return(if (type == "link") eta else object$family$linkinv(eta))
+  }
+
+  V <- vcov(object, cov_type = cov_type)
+  se <- sqrt(rowSums((X %*% V) * X))
+
+  if (type == "response") {
+    mu <- object$family$linkinv(eta)
+    se <- se * abs(object$family$mu.eta(eta))
+    return(list(fit = mu, se.fit = se))
+  }
+
+  list(fit = eta, se.fit = se)
+}
 
 
 
 #' @title
-#' EResiduals from a \code{geer} Object
+#' Residuals from a \code{geer} Object
 #'
 #' @aliases resid residuals residuals.geer
 #' @method residuals geer
@@ -771,27 +849,46 @@ predict.geer <-
 #' \code{\link{geewa}}, \code{\link{geewa_binary}},
 #' \code{\link[stats]{residuals}}
 #'
+#' @examples
+#' data("cerebrovascular")
+#' fit <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   id = id,
+#'   data = cerebrovascular,
+#'   orstr = "exchangeable"
+#' )
+#' head(residuals(fit, type = "working"))
+#' head(residuals(fit, type = "pearson"))
+#' head(residuals(fit, type = "deviance"))
+#'
 #' @export
 residuals.geer <- function(object,
                            type = c("working", "pearson", "deviance"),
                            ...) {
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
+  }
   type <- match.arg(type)
-  response_vector <- object$y
-  mu_vector <- object$fitted.values
-  weight_vector <- object$prior.weights
-  ans <- switch(type,
-                deviance = if (object$df.residual > 0) {
-                  deviance_res <-
-                    sqrt(pmax((object$family$dev.resids)(response_vector, mu_vector, weight_vector), 0))
-                  ifelse(response_vector > mu_vector, deviance_res, -deviance_res)
-                } else rep.int(0, length(mu_vector)),
-                pearson =
-                  c(get_pearson_residuals(object$family$family, response_vector,
-                                          mu_vector, weight_vector)),
-                working = object$residuals
+  y <- object$y
+  mu <- object$fitted.values
+  w <- object$prior.weights
+  ans <- switch(
+    type,
+    working = object$residuals,
+    pearson = as.numeric(get_pearson_residuals(object$family$family, y, mu, w)),
+    deviance = {
+      if (object$df.residual > 0) {
+        dr <- sqrt(pmax(object$family$dev.resids(y, mu, w), 0))
+        ifelse(y > mu, dr, -dr)
+      } else {
+        rep.int(0, length(mu))
+      }
+    }
   )
   ans
 }
+
 
 
 
@@ -812,13 +909,13 @@ residuals.geer <- function(object,
 #' The form of the covariance estimator is controlled by the argument
 #' \code{cov_type}:
 #' \itemize{
-#'   \item \code{"robust"} — the sandwich (robust) covariance estimator
+#'   \item \code{"robust"} -- the sandwich (robust) covariance estimator
 #'     \cite{Liang and Zeger (1986)}
-#'   \item \code{"naive"} — the model-based covariance estimator
+#'   \item \code{"naive"} -- the model-based covariance estimator
 #'     \cite{Liang and Zeger (1986)}
-#'   \item \code{"df-adjusted"} — the small-sample adjusted covariance matrix
+#'   \item \code{"df-adjusted"} -- the small-sample adjusted covariance matrix
 #'     \cite{MacKinnon (1985)}
-#'   \item \code{"bias-corrected"} — the bias-corrected covariance estimator
+#'   \item \code{"bias-corrected"} -- the bias-corrected covariance estimator
 #'     \cite{Morel et al. (2003)}
 #' }
 #'
@@ -828,9 +925,8 @@ residuals.geer <- function(object,
 #' returned by \code{\link[stats]{coef}}.
 #'
 #' @references
-#' Liang, K.Y. and Zeger, S.L. (1986) A comparison of two bias-corrected covariance
-#' estimators for generalized estimating equations. \emph{Biometrika} \bold{73},
-#' 13-–22.
+#' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using generalized
+#' linear models \emph{Biometrika} \bold{73}, 13-–22.
 #'
 #' MacKinnon, J.G. (1985) Some heteroskedasticity-consistent
 #' covariance matrix estimators with improved finite sample properties.
@@ -851,38 +947,27 @@ residuals.geer <- function(object,
 #' vcov(fitted_model, cov_type = "bias-corrected")
 #'
 #' @export
-vcov.geer <-
-  function(object,
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-           ...) {
-    cov_type <- match.arg(cov_type)
-    if (cov_type == "robust") {
-      ans <- object$robust_covariance
-    } else if (cov_type == "bias-corrected") {
-      total_obs <- object$obs_no
-      sample_size <- object$clusters_no
-      parameters_no <- length(object$coefficients)
-      df_residuals <- object$df.residual
-      kappa <-
-        ((total_obs - 1)/df_residuals) * (sample_size / (sample_size - 1))
-      delta <-
-        min(parameters_no / (sample_size - parameters_no),
-            0.5)
-      robust_covariance <- object$robust_covariance
-      naive_covariance <- object$naive_covariance
-      trace_robust_naive_inverse <- sum(diag(solve(naive_covariance, robust_covariance)))
-      ksi <-
-        max(1,
-            trace_robust_naive_inverse/parameters_no)
-      ans <- kappa * robust_covariance + delta * ksi * naive_covariance
-    } else if (cov_type == "df-adjusted") {
-      sample_size <- object$clusters_no
-      parameters_no <- length(object$coefficients)
-      ans <-
-        (sample_size / (sample_size - parameters_no)) *
-        object$robust_covariance
-    } else {
-      ans <- object$naive_covariance
-    }
-    ans
+vcov.geer <- function(object,
+                      cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                      ...) {
+  cov_type <- match.arg(cov_type)
+  if (!inherits(object, "geer")) {
+    stop("'object' must be a 'geer' object", call. = FALSE)
   }
+  if (cov_type == "robust") {
+    return(object$robust_covariance)
+  }
+  if (cov_type == "naive") {
+    return(object$naive_covariance)
+  }
+  if (cov_type == "bias-corrected") {
+    return(object$bias_corrected_covariance)
+  }
+  sample_size <- object$clusters_no
+  p <- ncol(object$robust_covariance)
+  if (sample_size <= p) {
+    stop("clusters_no must be > number of coefficients",
+         call. = FALSE)
+  }
+  (sample_size / (sample_size - p)) * object$robust_covariance
+}

@@ -29,9 +29,10 @@ coded by contrasts (in some terms dummy coding may be used), either as a
 character vector naming a function or as a numeric matrix.
 }
 \description{
-Build the design (model) matrix from a fitted \code{geer} object. Factor
-variables are expanded to dummy/contrast-coded columns (according to the
-active contrasts), and interaction terms are expanded accordingly.
+Construct the design (model) matrix for the marginal mean model underlying a
+fitted \code{geer} object. Factor variables are expanded according to the
+contrasts used when fitting the model, and interaction terms are expanded
+accordingly.
 }
 \details{
 The design matrix is constructed based on \code{terms(object)}, using the data

@@ -7,25 +7,23 @@
 \format{
 A data frame with 246 rows and 6 columns:
 \describe{
-  \item{id}{numeric vector indicating the subject identifier.}
-  \item{time}{numeric vector indicating the time identifier.}
- \item{pain}{numeric vector indicating the self-reported shoulder pain status,
-             coded as (0) for high pain and as (1) for low pain.}
- \item{treatment}{factor indicating the treatment group: active and placebo.}
-  \item{gender}{factor indicating the gender: female and male.}
-  \item{age}{numeric vector indicating the age in years.}
-  }
+  \item{id}{integer subject identifier.}
+  \item{time}{integer time identifier.}
+  \item{pain}{integer indicator for shoulder pain status, 0 = high pain, 1 = low pain.}
+  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+  \item{gender}{factor with levels \code{female} and \code{male}.}
+  \item{age}{numeric age in years.}
+}
 }
 \source{
-Lumley T. (1996) Generalized estimating equations for ordinal data:
-A note on working correlation structures. \emph{Biometrics}, \strong{52}, 354--361.
+Lumley T. (1996) Generalized estimating equations for ordinal data: A note on working
+correlation structures. \emph{Biometrics}, \strong{52}, 354--361.
 }
 \usage{
 cholecystectomy
 }
 \description{
-The data are from a randomized clinical trial on shoulder pain after
-laparoscopic cholecystectomy.
+Data from a randomized clinical trial on shoulder pain after laparoscopic cholecystectomy.
 }
 \details{
 Forty-one subjects were enrolled in a randomized clinical trial of shoulder pain
@@ -39,9 +37,8 @@ data("cholecystectomy")
 str(cholecystectomy)
 }
 \references{
-Jorgensen J.O., Gillies R.B., Hunt D.R., Caplehorn J.R.M. and
-Lumley T. (1995) A simple and effective way to reduce postoperative pain after
-laparoscopic cholecystectomy. \emph{Australian and New Zealand Journal of Surgery},
-\strong{65}, 466--469.
+Jorgensen J.O., Gillies R.B., Hunt D.R., Caplehorn J.R.M. and Lumley T. (1995)
+A simple and effective way to reduce postoperative pain after laparoscopic cholecystectomy.
+\emph{Australian and New Zealand Journal of Surgery}, \strong{65}, 466--469.
 }
 \keyword{datasets}

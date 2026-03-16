@@ -5,13 +5,13 @@
 \title{Solving (Adjusted) GEE for Binary Responses}
 \usage{
 geewa_binary(
-  formula = formula(data),
+  formula,
   link = "logit",
   data = parent.frame(),
-  id = id,
+  id,
   repeated = NULL,
-  control = geer_control(),
-  orstr = "exchangeable",
+  control = geer_control(...),
+  orstr = "independence",
   method = "gee",
   weights,
   beta_start = NULL,
@@ -31,8 +31,9 @@ model to be fitted.}
 \code{identity}, \code{log}, \code{sqrt}, \code{1/mu^2} and
 \code{inverse}. By default, \code{link = "logit"}.}
 
-\item{data}{optional data frame containing the variables provided in
-\code{formula}, \code{id} and \code{repeated}.}
+\item{data}{optional data frame containing variables referenced in
+\code{formula}. The cluster identifiers \code{id} and \code{repeated}
+may be supplied either as columns in \code{data} or as separate vectors.}
 
 \item{id}{a vector identifying the clusters.}
 
@@ -56,8 +57,8 @@ traditional gee method (\code{"gee"}), bias-reduction methods
 \code{"bcgee-empirical"}) and a penalized GEE method
 (\code{"pgee-jeffreys"}). By default, \code{method = "gee"}.}
 
-\item{weights}{optional numeric vector identifying the weights for each
-observation.}
+\item{weights}{optional numeric vector of observation weights. Must be finite
+and strictly positive. If not supplied, all weights are 1.}
 
 \item{beta_start}{numerical vector indicating the initial values of the
 regression parameters.}
@@ -138,52 +139,54 @@ Jeffreys prior type penalty.
 For the construction of the \code{formula} argument, see the documentation of
 \code{\link{glm}} and \code{\link{formula}}.
 
-The \code{data} must be provided in case level or equivalently in `long'
-format. See details about the `long' format in the function
-\code{\link{reshape}}.
+The \code{data} must be in long format (one row per observation). See
+\code{\link{reshape}} for details on reshaping between long and wide formats.
 
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 \eqn{N} is the sample size, i.e. the total number of clusters. Otherwise,
 the function recodes the given labels of \code{id} onto this set.
 
-The argument \code{repeated} can be safely ignored only if the \code{data}
-are assumed to be sorted so that observations on a cluster are contiguous
-rows for all entities in the formula. If this is not the case, then the user
-is advised to provide \code{repeated}. The default set for the labels of
-\code{repeated} is \eqn{\{1,\ldots,T\}}, where \eqn{T} is the number of
-observed labels. Otherwise, the function recodes the given labels of
-\code{id} onto this set.
+The argument \code{repeated} can be safely omitted only if observations are
+already ordered within each cluster as intended. If \code{repeated} is not
+provided, it is created as \code{1, 2, ..., n_i} within each cluster \eqn{i},
+using the current row order (before internal sorting). If \code{repeated} is
+provided, its labels are recoded to \code{1, ..., T} and must be unique within
+each cluster.
 
 The variables \code{id} and \code{repeated} do not need to be pre-sorted.
-Instead the function reshapes \code{data} in an ascending order of \code{id}
+Instead the function sorts observations in ascending order of \code{id}
 and \code{repeated}.
 
 A term of the form \code{offset(expression)} is allowed in the right hand
 side of \code{formula}.
 
-The length of \code{id} and, of \code{repeated} or \code{weight} when these
-are provided, should be the same as the number of observations.
+The length of \code{id} and of \code{repeated} or \code{weights} (when
+provided) should be the same as the number of observations.
 }
 \examples{
 data("respiratory")
-respiratory2 <- respiratory[respiratory$center=="C2", ]
-fitted_model <- geewa_binary(formula = status ~ baseline + treatment*gender + visit*age,
-                            id = id, repeated = visit, link = "probit",
-                            data = respiratory2, orstr = "independence",
-                            method = "pgee-jeffreys")
-summary(fitted_model, type = "bias-corrected")
+respiratory2 <- respiratory[respiratory$center == "C2", ]
+fitted_model <- geewa_binary(
+  formula = status ~ baseline + treatment * gender + visit * age,
+  id = id, repeated = visit, link = "probit",
+  data = respiratory2, orstr = "independence",
+  method = "pgee-jeffreys"
+)
+summary(fitted_model, cov_type = "bias-corrected")
 
 data("cholecystectomy")
-fitted_model_gee <- geewa_binary( formula = pain ~ treatment + gender + age,
-                                 id = id, data = cholecystectomy, link = "logit",
-                                 orstr = "independence", method = "gee")
-summary(fitted_model_gee, type = "bias-corrected")
+fitted_model_gee <- geewa_binary(
+  formula = pain ~ treatment + gender + age,
+  id = id, data = cholecystectomy, link = "logit",
+  orstr = "independence", method = "gee"
+)
+summary(fitted_model_gee, cov_type = "bias-corrected")
 fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
-summary(fitted_model_brgee_robust, type = "bias-corrected")
+summary(fitted_model_brgee_robust, cov_type = "bias-corrected")
 fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
-summary(fitted_model_brgee_naive, type = "bias-corrected")
-fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-robust")
-summary(fitted_model_brgee_empirical, type = "bias-corrected")
+summary(fitted_model_brgee_naive, cov_type = "bias-corrected")
+fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-empirical")
+summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
 
 }
 \author{

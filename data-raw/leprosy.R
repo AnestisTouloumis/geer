@@ -1,16 +1,22 @@
 ## code to prepare `leprosy` dataset goes here
 
-library("tidyverse")
-library("rio")
-leprosy <-
-  rio::import("./data-raw/leprosy.csv") |>
-  rename(bacilli = nBacilli,
-         treatment = drug) |>
-  mutate(id = as.numeric(id),
-         period = factor(period),
-         bacilli = as.numeric(bacilli),
-         treatment = factor(treatment)) |>
-  relocate(id, period, bacilli, treatment)
-rownames(leprosy) <- 1:nrow(leprosy)
-leprosy <- as_tibble(leprosy)
-usethis::use_data(leprosy, overwrite = TRUE)
+library(dplyr)
+library(rio)
+
+path <- file.path("data-raw", "leprosy.csv")
+
+leprosy <- rio::import(path) |>
+  transmute(
+    id = as.integer(id),
+    period = factor(period, levels = c("pre", "post")),
+    bacilli = as.integer(nBacilli),
+    treatment = factor(drug, levels = c("A", "B", "C"))
+  )
+
+stopifnot(
+  all(c("id", "period", "bacilli", "treatment") %in% names(leprosy)),
+  !anyNA(leprosy$period),
+  !anyNA(leprosy$treatment)
+)
+
+usethis::use_data(leprosy, overwrite = TRUE, compress = "xz")

@@ -2,9 +2,14 @@
 % Please edit documentation in R/geecriteria.R
 \name{geecriteria}
 \alias{geecriteria}
-\title{Variable and Covariance Selection Criteria for \code{geer} Objects}
+\title{Variable and Correlation Selection Criteria for \code{geer} Objects}
 \usage{
-geecriteria(object, ..., cov_type = "robust", digits = 2)
+geecriteria(
+  object,
+  ...,
+  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  digits = 2
+)
 }
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
@@ -16,15 +21,18 @@ which should be used to the calculation of the criteria. Options
 include the sandwich or robust estimator (\code{"robust"}), the
 bias-corrected estimator (\code{"bias-corrected"}), the degrees of
 freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-or naive estimator (\code{"naive"}). By default, the robust covariance
-estimator is used.}
+or naive estimator (\code{"naive"}). By default,
+\code{cov_type = "robust"}.}
 
 \item{digits}{integer indicating the number of decimal places for the GEE
 criteria to be rounded at. By default, \code{digits = 2}.}
 }
 \value{
-A data frame with the QIC, CIC, RJC, QICu, GESSC, GPC and the number
-of regression parameters (including intercepts).
+If one model is supplied, a one-row data frame containing QIC, CIC, RJC, QICu,
+GESSC, GPC and the number of regression parameters.
+
+If multiple models are supplied, a data frame with one row per model and the
+same columns.
 }
 \description{
 Reports commonly used criteria for variable selection and association structure
@@ -46,14 +54,18 @@ preferred.
 }
 \examples{
 data("cerebrovascular")
-fitted_gee <- geewa_binary(formula = ecg ~ period * treatment,
-                           id = id,
-                           data = cerebrovascular,
-                           link = "logit",
-                           orstr = "exchangeable",
-                           method = "gee")
+fitted_gee <- geewa_binary(
+  formula = ecg ~ period * treatment,
+  id = id,
+  data = cerebrovascular,
+  link = "logit",
+  orstr = "exchangeable",
+  method = "gee"
+)
 fitted_brgee <- update(fitted_gee, method = "brgee-robust")
-geecriteria(fitted_gee, fitted_brgee)
+
+## Compare two fits
+geecriteria(fitted_gee, fitted_brgee, cov_type = "robust")
 
 }
 \references{
