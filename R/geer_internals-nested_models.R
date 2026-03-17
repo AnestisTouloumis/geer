@@ -72,16 +72,58 @@ lcsumchisq <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) 
     test_stat <- test_stat / x_bar
     test_p <- 1 - pchisq(test_stat, df = test_df)
   } else {
-    alpha <- sum((x - x_bar)^2) / (test_df * x_bar^2)
-    test_df <- test_df / (1 + alpha^2)
-    test_stat <- test_stat / ((1 + alpha^2) * x_bar)
-    test_p <- 1 - pchisq(test_stat, df = test_df)
+    satt_cv2 <- sum((x - x_bar)^2) / (test_df * x_bar^2)
+    test_df   <- test_df / (1 + satt_cv2)
+    test_stat <- test_stat / ((1 + satt_cv2) * x_bar)
+    test_p    <- 1 - pchisq(test_stat, df = test_df)
   }
 
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
+## score components
+get_score_components <- function(obj0, obj1, coeffs_test) {
+  if (identical(as.character(obj1$call[[1]]), "geewa")) {
+    uvector    <- estimating_equations_gee_cc(
+      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
+      obj1$family$link, obj1$family$family,
+      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
+      obj1$association_structure, obj1$alpha, obj1$phi
+    )
+    covariance <- get_covariance_matrices_cc(
+      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
+      obj1$family$link, obj1$family$family,
+      obj0$fitted.values, obj0$linear.predictors,
+      obj1$association_structure, obj1$alpha, obj1$phi
+    )
+  } else {
+    association_alpha <- if (length(obj1$alpha) == 1L) {
+      rep(obj1$alpha, choose(max(as.integer(obj1$repeated)), 2))
+    } else {
+      obj1$alpha
+    }
+    uvector    <- estimating_equations_gee_or(
+      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
+      obj1$family$link,
+      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
+      association_alpha
+    )
+    covariance <- get_covariance_matrices_or(
+      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
+      obj1$family$link,
+      obj0$fitted.values, obj0$linear.predictors,
+      association_alpha
+    )
+  }
+  list(
+    uvector           = uvector,
+    naive_covariance  = covariance$naive_covariance,
+    robust_covariance = covariance$robust_covariance,
+    bc_covariance     = covariance$bc_covariance
+  )
+}
 
+## wald test
 wald_test <- function(object0, object1,
                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
@@ -171,12 +213,15 @@ working_lr_test <- function(object0, object1,
   if (test_df < 1L) {
     stop("Working LR test failed: no parameters to test (empty index set)", call. = FALSE)
   }
-  if(obj0$phi != obj0$phi) {
-    stop("Working LR test failed: dispersion parameters differ", call.=FALSE)
+  phi_tol <- sqrt(.Machine$double.eps) * max(abs(obj0$phi), abs(obj1$phi), 1)
+  if (abs(obj0$phi - obj1$phi) > phi_tol) {
+    stop("Working LR test failed: dispersion parameters differ between models", call. = FALSE)
   }
-  if(obj1$family %in% c("poisson", "binomial")) {
-    if(obj0$phi != 1 || obj1$phi != 1)
-      stop("Working LR test failed: dispersion parameters must be 1", call.=FALSE)
+  if (obj1$family$family %in% c("poisson", "binomial")) {
+    if (abs(obj0$phi - 1) > phi_tol || abs(obj1$phi - 1) > phi_tol) {
+      stop("Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models",
+           call. = FALSE)
+    }
   }
   ll_obj0 <- compute_quasi_loglikelihood(obj0)
   ll_obj1 <- compute_quasi_loglikelihood(obj1)
@@ -220,56 +265,25 @@ score_test <- function(object0, object1,
   }
   coeffs_test <- obj1$coefficients
   coeffs_test[index] <- 0
-  coeffs_test[-index] <- obj0$coefficients
-  is_geewa <- identical(as.character(obj1$call[[1]]), "geewa")
-  if (is_geewa) {
-    uvector <- estimating_equations_gee_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
-    )
-    covariance <- get_covariance_matrices_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
-    )
-  } else {
-    if (length(obj1$alpha) == 1) {
-      association_alpha <- rep(obj1$alpha, choose(max(obj1$repeated), 2))
-    } else {
-      association_alpha <- obj1$alpha
-    }
-    uvector <- estimating_equations_gee_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
-      association_alpha
-    )
-    covariance <- get_covariance_matrices_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      obj0$fitted.values, obj0$linear.predictors,
-      association_alpha
-    )
-  }
+  coeffs_test[names(obj0$coefficients)] <- obj0$coefficients
+  sc <- get_score_components(obj0, obj1, coeffs_test)
+  uvector   <- sc$uvector
   cov_test <- switch(
     cov_type,
-    robust = covariance$robust_covariance[index, index, drop = FALSE],
-    naive = covariance$naive_covariance[index, index, drop = FALSE],
-    `bias-corrected` = covariance$bc_covariance[index, index, drop = FALSE],
+    robust          = sc$robust_covariance[index, index, drop = FALSE],
+    naive           = sc$naive_covariance[index, index, drop = FALSE],
+    `bias-corrected`= sc$bc_covariance[index, index, drop = FALSE],
     {
-      cl_no <- obj1$clusters_no
+      cl_no  <- obj1$clusters_no
       coef_no <- length(coef(obj1))
       if (cl_no <= coef_no) {
         stop("Score test failed: clusters_no must be > number of coefficients for df-adjusted covariance",
              call. = FALSE)
       }
-      (cl_no / (cl_no - coef_no)) * covariance$robust_covariance[index, index, drop = FALSE]
+      (cl_no / (cl_no - coef_no)) * sc$robust_covariance[index, index, drop = FALSE]
     }
   )
-  naive_cov <- covariance$naive_covariance
+  naive_cov <- sc$naive_covariance
   mid <- naive_cov[index, , drop = FALSE] %*% uvector
   sol <- tryCatch(
     solve(cov_test, mid),
@@ -311,48 +325,15 @@ working_score_test <- function(object0, object1,
   coeffs_test <- as.numeric(obj1$coefficients)
   names(coeffs_test) <- names(obj1$coefficients)
   coeffs_test[index] <- 0
-  coeffs_test[-index] <- obj0$coefficients
-  is_geewa <- identical(as.character(obj1$call[[1]]), "geewa")
-  if (is_geewa) {
-    uvector <- estimating_equations_gee_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
-    )
-    covariance <- get_covariance_matrices_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
-    )
-  } else {
-    if (length(obj1$alpha) == 1) {
-      mrep <- max(as.integer(obj1$repeated))
-      association_alpha <- rep(obj1$alpha, choose(mrep, 2))
-    } else {
-      association_alpha <- obj1$alpha
-    }
-    uvector <- estimating_equations_gee_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
-      association_alpha
-    )
-
-    covariance <- get_covariance_matrices_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      obj0$fitted.values, obj0$linear.predictors,
-      association_alpha
-    )
-  }
-  cov_test <- covariance$naive_covariance
+  coeffs_test[names(obj0$coefficients)] <- obj0$coefficients
+  sc       <- get_score_components(obj0, obj1, coeffs_test)
+  uvector  <- sc$uvector
+  cov_test <- sc$naive_covariance
   rob_test <- switch(
     cov_type,
-    robust = covariance$robust_covariance,
-    naive = covariance$naive_covariance,
-    `bias-corrected` = covariance$bc_covariance,
+    robust          = sc$robust_covariance,
+    naive           = sc$naive_covariance,
+    `bias-corrected`= sc$bc_covariance,
     {
       m <- obj1$clusters_no
       p <- length(coef(obj1))
@@ -363,7 +344,7 @@ working_score_test <- function(object0, object1,
         stop("Working score test failed: clusters_no must be > number of coefficients for df-adjusted covariance",
              call. = FALSE)
       }
-      (m / (m - p)) * covariance$robust_covariance
+      (m / (m - p)) * sc$robust_covariance
     }
   )
   cov_ii <- cov_test[index, index, drop = FALSE]
@@ -394,80 +375,84 @@ working_score_test <- function(object0, object1,
 
 ## anova list
 anova_geerlist <- function(object, ..., test, cov_type, pmethod){
-    response_vectors <-
-      as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))
-    same_response <- response_vectors == response_vectors[1L]
-    if (!all(same_response)) {
-      object <- object[same_response]
-      warning("Models with response ", deparse(response_vectors[!same_response]),
-              " removed because response differs from Model 1")
-    }
-    if (test == "working-lrt") {
-      association_vector <-
-        as.character(lapply(object, function(x) x$association_structure))
-      independence_vector <- association_vector == "independence"
-      if (all(!independence_vector))
-        stop("the modified working lr test requires independence working models")
-      if (!all(independence_vector)) {
-        object <- object[independence_vector]
-        warning("Models with association structure ",
-                deparse(association_vector[!independence_vector]),
-                " removed because association structure differs from independence")
-      }
-    }
+  response_vectors <-
+    as.character(lapply(object, function(x) deparse(formula(x)[[2L]])))
+  same_response <- response_vectors == response_vectors[1L]
+  if (!all(same_response)) {
+    object <- object[same_response]
+    warning("Models with response ", deparse(response_vectors[!same_response]),
+            " removed because response differs from Model 1")
+  }
+  if (test == "working-lrt") {
     association_vector <-
       as.character(lapply(object, function(x) x$association_structure))
-    same_association <- association_vector == association_vector[1L]
-    if (!all(same_association)) {
-      object <- object[same_association]
+    independence_vector <- association_vector == "independence"
+    if (all(!independence_vector))
+      stop("the modified working lr test requires independence working models")
+    if (!all(independence_vector)) {
+      object <- object[independence_vector]
       warning("Models with association structure ",
-              deparse(association_vector[!same_association]),
-              " removed because association structure differs from model 1")
+              deparse(association_vector[!independence_vector]),
+              " removed because association structure differs from independence")
     }
-    sample_size_vector <- sapply(object, function(x) length(x$residuals))
-    if (any(sample_size_vector != sample_size_vector[1L]))
-      stop("models were not all fitted to the same size of dataset")
-    models_no <- length(object)
-    if (models_no == 1)
-      return(anova.geer(object[[1L]], cov_type = cov_type, pmethod = pmethod))
-
-    resdf  <- as.numeric(lapply(object, function(x) x$df.residual))
-    table <- data.frame(resdf, c(NA, resdf[-1]), c(NA, resdf[-1]), c(NA, resdf[-1]))
-    dimnames(table) <- list(1L:models_no,
-                            c("Resid. Df", "Df", "Chi", "Pr(>Chi)"))
-    test_type <- switch(test,
-                        wald = "Wald",
-                        score = "Score",
-                        `working-wald` = "Working Wald",
-                        `working-score` = "Working Score",
-                        `working-lrt` = "Working LRT")
-    for (i in 2:models_no) {
-      value <-
-        switch(test,
-               wald =
-                 wald_test(object[[i - 1]], object[[i]], cov_type),
-               score =
-                 score_test(object[[i - 1]], object[[i]], cov_type),
-               `working-wald` =
-                 working_wald_test(object[[i - 1]], object[[i]], cov_type, pmethod),
-               `working-score` =
-                 working_score_test(object[[i - 1]], object[[i]], cov_type, pmethod),
-               `working-lrt` =
-                 working_lr_test(object[[i - 1]], object[[i]], cov_type, pmethod)
-        )
-      table[i, -1] <- c(value$test_df, value$test_stat, value$test_p)
-    }
-    title  <- paste("Analysis of", test_type, "Statistic Table\n", sep = " ")
-    variables <- lapply(object, function(x)
-      paste(deparse(formula(x)), collapse = "\n") )
-    topnote <-
-      paste("Model ",
-            format(1L:models_no),
-            ": ",
-            variables,
-            sep = "",
-            collapse = "\n")
-    structure(table,
-              heading = c(title, topnote),
-              class = c("anova", "data.frame"))
   }
+  association_vector <-
+    as.character(lapply(object, function(x) x$association_structure))
+  same_association <- association_vector == association_vector[1L]
+  if (!all(same_association)) {
+    object <- object[same_association]
+    warning("Models with association structure ",
+            deparse(association_vector[!same_association]),
+            " removed because association structure differs from model 1")
+  }
+  sample_size_vector <- vapply(object, function(x) length(x$residuals), integer(1))
+  if (any(sample_size_vector != sample_size_vector[1L]))
+    stop("models were not all fitted to the same size of dataset")
+  models_no <- length(object)
+  if (models_no == 1)
+    return(anova.geer(object[[1L]], cov_type = cov_type, pmethod = pmethod))
+
+  resdf <- vapply(object, function(x) x$df.residual, numeric(1))
+  table <- data.frame(
+    `Resid. Df` = resdf,
+    Df          = NA_real_,
+    Chi         = NA_real_,
+    `Pr(>Chi)`  = NA_real_,
+    check.names = FALSE
+  )
+  test_type <- switch(test,
+                      wald = "Wald",
+                      score = "Score",
+                      `working-wald` = "Working Wald",
+                      `working-score` = "Working Score",
+                      `working-lrt` = "Working LRT")
+  for (i in 2:models_no) {
+    value <-
+      switch(test,
+             wald =
+               wald_test(object[[i - 1]], object[[i]], cov_type),
+             score =
+               score_test(object[[i - 1]], object[[i]], cov_type),
+             `working-wald` =
+               working_wald_test(object[[i - 1]], object[[i]], cov_type, pmethod),
+             `working-score` =
+               working_score_test(object[[i - 1]], object[[i]], cov_type, pmethod),
+             `working-lrt` =
+               working_lr_test(object[[i - 1]], object[[i]], cov_type, pmethod)
+      )
+    table[i, -1] <- c(value$test_df, value$test_stat, value$test_p)
+  }
+  title  <- paste("Analysis of", test_type, "Statistic Table\n", sep = " ")
+  variables <- lapply(object, function(x)
+    paste(deparse(formula(x)), collapse = "\n") )
+  topnote <-
+    paste("Model ",
+          format(1L:models_no),
+          ": ",
+          variables,
+          sep = "",
+          collapse = "\n")
+  structure(table,
+            heading = c(title, topnote),
+            class = c("anova", "data.frame"))
+}

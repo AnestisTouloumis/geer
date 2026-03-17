@@ -443,7 +443,7 @@ geewa <- function(formula,
   fit$data <- data
   fit$offset <- geesolver_fit$offset
   fit$control <- control
-  fit$method <- method
+  fit$method <- method_original
   fit$contrasts <- attr(model_matrix, "contrasts")
   fit$xlevels <- .getXlevels(attr(model_frame, "terms"), model_frame)
   fit$naive_covariance <- geesolver_fit$naive_covariance

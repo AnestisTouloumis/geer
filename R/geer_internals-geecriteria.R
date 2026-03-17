@@ -43,9 +43,9 @@ compute_criteria <- function(object, cov_type, digits) {
                                 object$alpha,
                                 object$prior.weights)
   }
-  if (object$association == "independence") {
+  if (object$association_structure == "independence") {
     association_params_no <- 0
-  } else if (object$association == "exchangeable" || object$association == "ar1") {
+  } else if (object$association_structure == "exchangeable" || object$association_structure == "ar1") {
     association_params_no <- 1
   } else {
     association_params_no <- length(object$alpha)
@@ -64,7 +64,7 @@ compute_criteria <- function(object, cov_type, digits) {
                                           object$fitted.values,
                                           object$linear.predictors,
                                           object$phi)
-  p <- length(object$coeff)
+  p <- length(object$coefficients)
   gessc <- sc_wc_stats[[1]]/(object$obs_no - p - association_params_no)
   gpc <- sc_wc_stats[[2]]
   qic_u <- 2 * (p - quasi_loglikelihood)
