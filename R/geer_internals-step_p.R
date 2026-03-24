@@ -61,6 +61,7 @@
   fitted_model <- stats::update(
     fitted_model,
     formula = paste(". ~ .", change),
+    data = fitted_model$data,
     evaluate = FALSE
   )
   fitted_model <- eval.parent(fitted_model)

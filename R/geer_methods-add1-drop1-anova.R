@@ -94,7 +94,8 @@ add1.geer <-
     ans[1L, 2L] <- extract_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
-      add1_model <- update(object, formula = as.formula(paste(". ~ . +", tt)))
+      add1_model <- update(object, formula = as.formula(paste(". ~ . +", tt)),
+                           data = object$data)
       value <- switch(
         test,
         wald = wald_test(object, add1_model, cov_type),
@@ -162,7 +163,8 @@ drop1.geer <- function(object,
   ans[1L, 2L] <- extract_cic(object, cov_type)
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
-    drop1_model <- update(object, formula = as.formula(paste(". ~ . -", tt)))
+    drop1_model <- update(object, formula = as.formula(paste(". ~ . -", tt)),
+                          data = object$data)
     value <- switch(
       test,
       wald = wald_test(drop1_model, object, cov_type),

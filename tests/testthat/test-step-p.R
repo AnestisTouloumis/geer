@@ -1,10 +1,13 @@
 testthat::local_edition(3)
+data("respiratory", package = "geer")
+respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
+cerebrovascular <- test_data$cerebrovascular
 
 fit_resp_full_indep <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
   id = id,
   repeated = visit,
-  data = test_data$respiratory2,
+  data = respiratory2,
   link = "probit",
   orstr = "independence",
   method = "pgee-jeffreys"
@@ -14,7 +17,7 @@ fit_resp_full_exch <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
   id = id,
   repeated = visit,
-  data = test_data$respiratory2,
+  data = respiratory2,
   link = "probit",
   orstr = "exchangeable",
   method = "pgee-jeffreys"
@@ -24,7 +27,7 @@ fit_resp_lower <- geewa_binary(
   formula = status ~ baseline + treatment,
   id = id,
   repeated = visit,
-  data = test_data$respiratory2,
+  data = respiratory2,
   link = "probit",
   orstr = "independence",
   method = "pgee-jeffreys"
@@ -34,7 +37,7 @@ fit_resp_mid <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit,
   id = id,
   repeated = visit,
-  data = test_data$respiratory2,
+  data = respiratory2,
   link = "probit",
   orstr = "independence",
   method = "pgee-jeffreys"
@@ -46,7 +49,7 @@ fit_bin_full_indep <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = test_data$cerebrovascular,
+  data = cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -57,7 +60,7 @@ fit_bin_lower <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = test_data$cerebrovascular,
+  data = cerebrovascular,
   corstr = "independence",
   method = "gee"
 )

@@ -1,11 +1,27 @@
+#build_geer_model_frame <- function(mcall, env = parent.frame()) {
+#  mcall$drop.unused.levels <- TRUE
+#  keep <- c("formula", "data", "id", "repeated", "weights", "offset")
+#  mcall <- mcall[c(1L, match(keep, names(mcall), 0L))]
+#  mcall[[1L]] <- as.name("model.frame")
+#  eval(mcall, envir = env)
+#}
+
 build_geer_model_frame <- function(mcall, env = parent.frame()) {
   mcall$drop.unused.levels <- TRUE
   keep <- c("formula", "data", "id", "repeated", "weights", "offset")
   mcall <- mcall[c(1L, match(keep, names(mcall), 0L))]
-  mcall[[1L]] <- as.name("model.frame")
-  eval(mcall, envir = env)
-}
+  mcall[[1L]] <- quote(stats::model.frame)
 
+  enclos <- env
+  if (!is.null(mcall$formula)) {
+    f <- tryCatch(eval(mcall$formula, envir = env), error = function(e) NULL)
+    if (inherits(f, "formula") && !is.null(environment(f))) {
+      enclos <- environment(f)
+    }
+  }
+
+  eval(mcall, envir = env, enclos = enclos)
+}
 
 extract_geer_offset <- function(model_frame, y_length) {
   offset <- model.offset(model_frame)
