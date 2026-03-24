@@ -779,14 +779,15 @@ Rcpp::List fit_bingee_or(const arma::vec & y_vector,
   ans["beta_hat"] = beta_vector;
   ans["beta_mat"] = beta_hat_matrix;
   ans["alpha"] = alpha_vector;
+  ans["phi"] = 1.0;
   ans["naive_covariance"] = cov_matrices[0];
   ans["robust_covariance"] = cov_matrices[1];
   ans["bc_covariance"] = cov_matrices[2];
   ans["criterion"] = criterion_vector;
-  ans["criterion_ee"] = criterion_vector_inner;
   ans["eta"] = eta_vector;
   ans["residuals"] = y_vector - mu_vector;
   ans["fitted"] = mu_vector;
+  ans["offset"] = offset;
   return ans;
 }
 //==============================================================================

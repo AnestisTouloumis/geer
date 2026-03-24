@@ -65,11 +65,7 @@ geewa_binary <- function(formula,
   ## call and model frame
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
-  mcall$drop.unused.levels <- TRUE
-  keep <- c("formula", "data", "id", "repeated", "weights", "offset")
-  mcall <- mcall[c(1L, match(keep, names(mcall), 0L))]
-  mcall[[1L]] <- as.name("model.frame")
-  model_frame <- eval(mcall, envir = parent.frame())
+  model_frame <- build_geer_model_frame(mcall, env = parent.frame())
   ## link function
   links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
              "sqrt", "1/mu^2", "inverse")
@@ -125,26 +121,17 @@ geewa_binary <- function(formula,
     stop("'repeated' does not have unique values per 'id'")
   }
   ## offset
-  offset <- model.offset(model_frame)
-  if (is.null(offset)) {
-    offset <- rep.int(0, length(y))
-  } else {
-    if (!is.numeric(offset)) stop("'offset' should be a numeric vector")
-    if (length(offset) == 1L) offset <- rep.int(as.numeric(offset), length(y))
-    if (length(offset) != length(y)) stop("response variable and 'offset' are not of same length")
-    offset <- as.double(offset)
-  }
+  offset <- extract_geer_offset(model_frame, y_length = length(y))
   ## model matrix
-  model_terms <- attr(model_frame, "terms")
-  model_matrix <- model.matrix(model_terms, model_frame)
-  xnames <- colnames(model_matrix)
-  if (length(xnames) == 1L) model_matrix <- matrix(model_matrix, ncol = 1L)
-  qr_model_matrix <- qr(model_matrix)
-  if (qr_model_matrix$rank < ncol(model_matrix)) stop("rank-deficient model matrix")
+  design <- build_geer_design_matrix(model_frame)
+  model_terms <- design$terms
+  model_matrix <- design$x
+  xnames <- design$xnames
+  qr_model_matrix <- design$qr
+  x_assign <- design$assign
+  x_contrasts <- design$contrasts
   ## sort by id then repeated
   ord <- order(id, repeated)
-  x_assign <- attr(model_matrix, "assign")
-  x_contrasts <- attr(model_matrix, "contrasts")
   y <- y[ord]
   model_matrix <- model_matrix[ord, , drop = FALSE]
   weights <- weights[ord]
@@ -154,7 +141,7 @@ geewa_binary <- function(formula,
   attr(model_matrix, "assign") <- x_assign
   attr(model_matrix, "contrasts") <- x_contrasts
   ## control
-  control <- do.call("geer_control", control)
+  control <- normalize_geer_control(control)
   maxiter <- control$maxiter
   tolerance <- control$tolerance
   ## method
@@ -167,56 +154,16 @@ geewa_binary <- function(formula,
     stop("'method' should be one of: gee, brgee-naive, brgee-robust, brgee-empirical, bcgee-naive, bcgee-robust, bcgee-empirical, pgee-jeffreys")
   }
   ## initial beta
-  if (is.null(beta_start)) {
-    control_glm <- do.call("brglm_control", control_glm)
-
-    if (link != "identity") {
-      if (method %in% c("gee",
-                        "bcgee-naive", "bcgee-robust", "bcgee-empirical",
-                        "brgee-robust", "brgee-empirical")) {
-        type <- "ML"
-      } else if (identical(method, "pgee-jeffreys")) {
-        type <- "MPL_Jeffreys"
-      } else {
-        type <- "AS_mean"
-      }
-      glmfit <- try(
-        brglmFit(
-          x = model_matrix, y = y, family = family, weights = weights, offset = offset,
-          control = list(
-            epsilon = tolerance,
-            maxit = control_glm$maxit,
-            type = type,
-            trace = FALSE,
-            slowit = control_glm$slowit,
-            max_step_factor = control_glm$max_step_factor,
-            a = control$jeffreys_power
-          )
-        ),
-        silent = TRUE
-      )
-    } else {
-      glmfit <- try(
-        glm.fit(
-          x = model_matrix, y = y, family = family, weights = weights, offset = offset,
-          control = list(epsilon = tolerance, maxit = control_glm$maxit, trace = FALSE)
-        ),
-        silent = TRUE
-      )
-    }
-    if (!inherits(glmfit, "try-error") && all(is.finite(glmfit$coefficients))) {
-      beta_zero <- glmfit$coefficients
-    } else {
-      stop("cannot compute starting values; please supply 'beta_start'", call. = FALSE)
-    }
-  } else {
-    beta_start <- as.numeric(beta_start)
-    p <- ncol(model_matrix)
-    if (length(beta_start) != p) {
-      stop("'beta_start' must be a numeric vector of length ", p)
-    }
-    beta_zero <- beta_start
-  }
+  beta_zero <- compute_start_values_geewa_binary(
+    model_matrix = model_matrix,
+    y = y,
+    weights = weights,
+    offset = offset,
+    family = family,
+    beta_start = beta_start,
+    control_glm = control_glm,
+    tolerance = tolerance
+  )
   ## odds ratios structure
   orstrs <- c("independence", "exchangeable", "unstructured", "fixed")
   if (!isTRUE(orstr %in% orstrs)) {
@@ -267,61 +214,36 @@ geewa_binary <- function(formula,
     }
   }
   ## output
-  fit <- list()
-  fit$coefficients <- as.numeric(geesolver_fit$beta_hat)
-  names(fit$coefficients) <- xnames
-  fit$residuals <- as.numeric(geesolver_fit$residuals)
-  fit$fitted.values <- as.numeric(geesolver_fit$fitted)
-  fit$qr <- qr_model_matrix
-  fit$rank <- qr_model_matrix$rank
-  fit$family <- family
-  fit$linear.predictors <- as.numeric(geesolver_fit$eta)
-  fit$iter <- ncol(geesolver_fit$beta_mat) - 1L
-  fit$prior.weights <- weights
-  fit$df.residual <- nrow(model_matrix) - ncol(model_matrix)
-  fit$y <- y
-  fit$x <- model_matrix
-  fit$na.action <- attr(model_frame, "na.action")
-  fit$id <- as.numeric(id)
-  fit$repeated <- as.numeric(repeated)
+  fit <- finalize_geer_fit(
+    geesolver_fit = geesolver_fit,
+    xnames = xnames,
+    qr_model_matrix = qr_model_matrix,
+    family = family,
+    weights = weights,
+    y = y,
+    model_matrix = model_matrix,
+    model_frame = model_frame,
+    id = id,
+    repeated = repeated,
+    call = call,
+    data = data,
+    model_terms = model_terms,
+    control = control,
+    method = method_original,
+    association_structure = orstr
+  )
   fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
   if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
     fit$converged <- TRUE
   }
-  fit$call <- call
-  fit$formula <- fit$call$formula
-  fit$terms <- model_terms
-  fit$data <- data
-  fit$offset <- geesolver_fit$offset
-  fit$control <- control
-  fit$method <- method_original
-  fit$contrasts <- attr(model_matrix, "contrasts")
-  fit$xlevels <- .getXlevels(attr(model_frame, "terms"), model_frame)
-  fit$naive_covariance <- geesolver_fit$naive_covariance
-  dimnames(fit$naive_covariance) <- list(xnames, xnames)
-  fit$robust_covariance <- geesolver_fit$robust_covariance
-  dimnames(fit$robust_covariance) <- list(xnames, xnames)
-  fit$bias_corrected_covariance <- geesolver_fit$bc_covariance
-  dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
-  fit$association_structure <- orstr
-  if (identical(orstr, "independence")) {
-    fit$alpha <- 1
-  } else if (identical(orstr, "exchangeable")) {
-    fit$alpha <- as.numeric(geesolver_fit$alpha)[1L]
-  } else {
-    fit$alpha <- as.numeric(geesolver_fit$alpha)
-  }
+
+  fit$alpha <- if (identical(orstr, "independence")) 0 else as.numeric(geesolver_fit$alpha)
+
   if (orstr %in% c("unstructured", "fixed")) {
     pairs_matrix <- combn(max(repeated), 2)
-    names(fit$alpha) <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
+    alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
+    names(fit$alpha) <- alpha_names
   }
-  fit$phi <- 1
-  fit$obs_no <- nrow(model_matrix)
-  fit$clusters_no <- length(unique(id))
-  cluster_sizes <- vapply(split(repeated, id), length, integer(1))
-  fit$min_cluster_size <- min(cluster_sizes)
-  fit$max_cluster_size <- max(cluster_sizes)
-  class(fit) <- "geer"
   if (!fit$converged) {
     warning("geewa_binary: algorithm did not converge", call. = FALSE)
   }
@@ -329,5 +251,6 @@ geewa_binary <- function(formula,
   if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps)) {
     warning("geewa_binary: fitted probabilities numerically 0 or 1 occurred", call. = FALSE)
   }
+  fit <- new_geer(fit)
   fit
 }

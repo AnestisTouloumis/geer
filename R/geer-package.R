@@ -19,7 +19,7 @@
 #' @importFrom stats model.extract model.frame model.matrix model.offset
 #' @importFrom stats model.response model.weights pchisq pnorm printCoefmat
 #' @importFrom stats qlogis qnorm terms update update.formula vcov
-#' @importFrom stats Gamma inverse.gaussian poisson confint
+#' @importFrom stats Gamma inverse.gaussian poisson confint na.pass
 #' @importFrom utils combn
 #' @importFrom generics tidy
 #' @export

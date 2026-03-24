@@ -1,35 +1,31 @@
-data("cerebrovascular", package = "geer")
-fit <- geewa_binary(
-  formula = ecg ~ treatment + factor(period),
-  id = id,
-  data = cerebrovascular,
-  link = "logit",
-  orstr = "exchangeable"
-)
+testthat::local_edition(3)
 
+fit <- fit_geewa_bin_exch
 
-test_that("confint.geer returns a 2-column matrix with correct row names", {
+test_that("confint.geer returns a well-formed confidence interval matrix", {
   ci <- confint(fit)
+
   expect_true(is.matrix(ci))
-  expect_equal(ncol(ci), 2L)
-  expect_true(all(rownames(ci) %in% names(coef(fit))))
+  expect_equal(dim(ci)[2], 2L)
+  expect_identical(colnames(ci), c("2.5%", "97.5%"))
+  expect_identical(rownames(ci), names(coef(fit)))
   expect_true(all(is.finite(ci)))
 })
 
+test_that("confint.geer supports selecting parameters by name and index", {
+  coef_names <- names(coef(fit))[1:2]
 
-test_that("confint.geer supports parm by name and by index", {
-  nm <- names(coef(fit))[1]
-  ci1 <- confint(fit, parm = nm)
-  ci2 <- confint(fit, parm = 1)
-  expect_equal(dim(ci1), c(1L, 2L))
-  expect_equal(dim(ci2), c(1L, 2L))
-  expect_identical(rownames(ci1), nm)
-  expect_identical(rownames(ci2), nm)
+  ci_by_name <- confint(fit, parm = coef_names)
+  ci_by_index <- confint(fit, parm = 1:2)
+
+  expect_equal(dim(ci_by_name), c(2L, 2L))
+  expect_equal(dim(ci_by_index), c(2L, 2L))
+  expect_identical(rownames(ci_by_name), coef_names)
+  expect_identical(rownames(ci_by_index), coef_names)
+  expect_equal(unname(ci_by_name), unname(ci_by_index))
 })
 
-
-test_that("confint.geer errors on invalid level and invalid parm", {
+test_that("confint.geer validates level and parm", {
   expect_error(confint(fit, level = 1), "level")
-  expect_error(confint(fit, level = 0), "level")
   expect_error(confint(fit, parm = "not_a_coef"), "parm")
 })

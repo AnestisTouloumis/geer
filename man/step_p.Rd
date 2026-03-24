@@ -17,8 +17,7 @@ step_p(
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}. This is
-used as the initial model in the stepwise search.}
+\item{object}{an object representing a model of the class \code{geer}.}
 
 \item{scope}{
     defines the range of models examined in the stepwise search.
@@ -30,13 +29,13 @@ used as the initial model in the stepwise search.}
 \item{direction}{character indicating the mode of the stepwise search.
 Options include backward elimination (\code{"backward"}),
 forward selection (\code{"forward"}) and bidirectional elimination
-(\code{"both"}). Default is \code{"backward"}..}
+(\code{"both"}). Default is \code{"backward"}.}
 
 \item{p_enter}{numeric between 0 and 1 indicating the p-value threshold for
-adding variables in the stepwise search. Default is \code{p_enter=0.15}.}
+adding variables in the stepwise search. Default is \code{0.15}.}
 
 \item{p_remove}{numeric between 0 and 1 indicating the p-value threshold for
-removing variables in the stepwise search. Default is \code{p_remove=0.15}.}
+removing variables in the stepwise search. Default is \code{0.15}.}
 
 \item{test}{character indicating the hypothesis testing procedure. Options
 include the Wald test (\code{"wald"}), the generalized score test
@@ -64,8 +63,9 @@ approximation (\code{"rao-scott"}) and the Satterthwaite approximation
   }
 }
 \value{
-A fitted model object of class \code{geer}, corresponding to the final selected model.
-The returned object contains an \code{anova} component summarizing the stepwise path.
+A fitted model object of class \code{geer}, corresponding to the final selected
+model. The returned object contains an \code{anova} component summarizing the
+stepwise path.
 }
 \description{
 Perform stepwise model selection for fitted \code{geer} models using repeated
@@ -77,31 +77,31 @@ based on hypothesis tests.
 will work for any model for which they work.
 
 The set of models searched is determined by the \code{scope} argument. The
-right-hand-side of its \code{lower} component is always included in the model,
-and right-hand-side of the model is included in the \code{upper} component.
-If \code{scope} is a single formula, it specifies the \code{upper} component,
-and the \code{lower} model is empty. If \code{scope} is missing, the initial
-model is used as the \code{upper} model.
+right-hand side of its \code{lower} component is always retained in the model,
+and the right-hand side of its \code{upper} component defines the largest model
+that can be considered. If \code{scope} is a single formula, it specifies the
+\code{upper} component and the \code{lower} model is empty.
 
-Models specified by \code{scope} can be templates to update \code{object} as
-used by \code{\link[stats]{update.formula}}. So using \code{.} in a
-\code{scope} formula means ‘what is already there’, with \code{.^2}
-indicating all interactions of existing terms.
+If \code{scope} is missing, the stepwise search is restricted to the terms in
+the initial model.
+
+With \code{direction = "both"}, backward elimination is attempted first at each
+step. A forward addition is considered only if no eligible backward deletion is
+found. The algorithm stops if neither move satisfies its corresponding threshold,
+or if an immediate add-drop cycle on the same term would occur.
 
 Details about the testing procedures implied by the \code{test} argument can
 be found in \cite{Rotnitzky and Jewell (1990)}. Note that
-\code{test = "working-lrt"} is only available to fitted models with an
-independence working association structure. Otherwise, an error message is
-returned.
+\code{test = "working-lrt"} is only available for models fitted with an
+independence working association structure. Otherwise, an error is returned.
 
-When \code{test = "wald"} or \code{test = "score"}, the \code{p_method}
-argument is ignored and the \code{cov_type} argument specifies the covariance
-matrix estimate of the estimated regression parameters used to calculate the
-corresponding test statistic. Otherwise, the \code{cov_type} argument specifies the
-covariance matrix estimate of the estimated regression parameters used to
-calculate the coefficients of the independent chi-squared random variables,
-and the \code{pmethod} argument specifies the approximation method used to
-calculate the p-value of the test statistic.
+When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod}
+argument is ignored and \code{cov_type} specifies the covariance matrix estimate
+of the estimated regression parameters used to calculate the corresponding test
+statistic. Otherwise, \code{cov_type} specifies the covariance matrix estimate
+used to calculate the coefficients of the independent chi-squared random
+variables, and \code{pmethod} specifies the approximation used to calculate the
+p-value of the test statistic.
 }
 \examples{
 data("respiratory", package = "geer")
