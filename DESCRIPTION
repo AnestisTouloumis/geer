@@ -24,6 +24,7 @@ Depends:
     R (>= 3.5)
 LazyData: true
 Suggests: 
+    covr,
     testthat (>= 3.0.0),
     tibble
 Config/testthat/edition: 3
