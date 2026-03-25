@@ -40,10 +40,8 @@ unused).}
 A data frame with one row per regression coefficient.
 }
 \description{
-Summarises the coefficient-level components of a fitted \code{geer} model
-into a tidy data frame, one row per term. Follows the \pkg{broom}
-conventions so that \code{geer} objects integrate naturally with
-\pkg{tidymodels}, \pkg{modelsummary}, and related tooling.
+Summarise a fitted \code{geer} model at the coefficient level, returning
+one row per regression term in a tidy data frame.
 }
 \details{
 The returned data frame has the following columns:
@@ -53,8 +51,8 @@ The returned data frame has the following columns:
     \code{exponentiate = TRUE}).}
   \item{\code{std.error}}{standard error derived from
     \code{vcov(x, cov_type = cov_type)}.}
-  \item{\code{statistic}}{Wald z-statistic
-    \eqn{\hat{\beta} / \mathrm{SE}(\hat{\beta})}.}
+    \item{\code{statistic}}{coefficient estimate divided by its standard error,
+    with \code{NA} reported when the standard error is not positive.}
   \item{\code{p.value}}{two-sided p-value from the standard normal
     distribution.}
   \item{\code{conf.low}, \code{conf.high}}{lower and upper Wald confidence
@@ -67,7 +65,7 @@ When \pkg{tibble} is available the result has class
 \pkg{modelsummary} and \pkg{broom}.
 }
 \examples{
-data("epilepsy")
+data("epilepsy", package = "geer")
 fitmodel <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
   data = epilepsy, id = id, family = poisson(link = "log"), corstr  = "exchangeable",
   method  = "gee")
@@ -76,7 +74,7 @@ tidy(fitmodel, conf.int = TRUE)
 tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
 tidy(fitmodel, cov_type = "bias-corrected")
 
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fitbin <- geewa_binary(formula = ecg ~ treatment + factor(period),
   id = id, data = cerebrovascular, link = "logit", orstr = "exchangeable")
 tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
@@ -88,7 +86,6 @@ Robinson D., Hayes A. and Couch S. (2024)
 \url{https://broom.tidymodels.org/}.
 }
 \seealso{
-\code{\link{glance.geer}}, \code{\link{vcov.geer}},
-  \code{\link{confint.geer}}, \code{\link{geewa}},
-  \code{\link{geewa_binary}}.
+\code{\link{glance.geer}}, \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+\code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

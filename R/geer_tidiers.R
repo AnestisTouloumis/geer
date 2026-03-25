@@ -2,10 +2,8 @@
 #' Tidy a \code{geer} Object
 #'
 #' @description
-#' Summarises the coefficient-level components of a fitted \code{geer} model
-#' into a tidy data frame, one row per term. Follows the \pkg{broom}
-#' conventions so that \code{geer} objects integrate naturally with
-#' \pkg{tidymodels}, \pkg{modelsummary}, and related tooling.
+#' Summarise a fitted \code{geer} model at the coefficient level, returning
+#' one row per regression term in a tidy data frame.
 #'
 #' @param x an object of class \code{"geer"}.
 #' @param conf.int logical indicating whether to append confidence interval
@@ -29,15 +27,15 @@
 #' \describe{
 #'   \item{\code{term}}{name of the regression coefficient.}
 #'   \item{\code{estimate}}{point estimate (or exponentiated value when
-#'     \code{exponentiate = TRUE}).}
+#'         \code{exponentiate = TRUE}).}
 #'   \item{\code{std.error}}{standard error derived from
-#'     \code{vcov(x, cov_type = cov_type)}.}
-#'   \item{\code{statistic}}{Wald z-statistic
-#'     \eqn{\hat{\beta} / \mathrm{SE}(\hat{\beta})}.}
+#'        \code{vcov(x, cov_type = cov_type)}.}
+#'   \item{\code{statistic}}{coefficient estimate divided by its standard error,
+#'         with \code{NA} reported when the standard error is not positive.}
 #'   \item{\code{p.value}}{two-sided p-value from the standard normal
-#'     distribution.}
+#'         distribution.}
 #'   \item{\code{conf.low}, \code{conf.high}}{lower and upper Wald confidence
-#'     limits (only present when \code{conf.int = TRUE}).}
+#'         limits (only present when \code{conf.int = TRUE}).}
 #' }
 #'
 #' When \pkg{tibble} is available the result has class
@@ -45,19 +43,20 @@
 #' \code{data.frame} is returned. Either form is accepted by
 #' \pkg{modelsummary} and \pkg{broom}.
 #'
-#' @return A data frame with one row per regression coefficient.
+#' @return
+#' A data frame with one row per regression coefficient.
 #'
 #' @references
 #' Robinson D., Hayes A. and Couch S. (2024)
 #' \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 #' \url{https://broom.tidymodels.org/}.
 #'
-#' @seealso \code{\link{glance.geer}}, \code{\link{vcov.geer}},
-#'   \code{\link{confint.geer}}, \code{\link{geewa}},
-#'   \code{\link{geewa_binary}}.
+#' @seealso
+#' \code{\link{glance.geer}}, \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+#' \code{\link{geewa}}, \code{\link{geewa_binary}}.
 #'
 #' @examples
-#' data("epilepsy")
+#' data("epilepsy", package = "geer")
 #' fitmodel <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
 #'   data = epilepsy, id = id, family = poisson(link = "log"), corstr  = "exchangeable",
 #'   method  = "gee")
@@ -66,7 +65,7 @@
 #' tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
 #' tidy(fitmodel, cov_type = "bias-corrected")
 #'
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fitbin <- geewa_binary(formula = ecg ~ treatment + factor(period),
 #'   id = id, data = cerebrovascular, link = "logit", orstr = "exchangeable")
 #' tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
@@ -94,11 +93,20 @@ tidy.geer <- function(x,
       is.na(exponentiate)) {
     stop("'exponentiate' must be a single logical value", call. = FALSE)
   }
+  if (exponentiate && !x$family$link %in% c("log", "logit", "cloglog")) {
+    warning(
+      "'exponentiate = TRUE' is typically most meaningful for log, logit, or cloglog links",
+      call. = FALSE
+    )
+  }
   beta <- coef(x)
   covariance_matrix <- vcov(x, cov_type = cov_type)
   se <- sqrt(pmax(0, diag(covariance_matrix)))
-  zstat <- beta/se
-  pval  <- 2 * pnorm(abs(zstat), lower.tail = FALSE)
+  zstat <- rep(NA_real_, length(beta))
+  ok <- is.finite(beta) & is.finite(se) & se > 0
+  zstat[ok] <- beta[ok] / se[ok]
+  pval <- rep(NA_real_, length(beta))
+  pval[ok] <- 2 * pnorm(abs(zstat[ok]), lower.tail = FALSE)
   ans <- data.frame(
     term = names(beta),
     estimate = unname(beta),
@@ -131,10 +139,8 @@ tidy.geer <- function(x,
 #' Glance at a \code{geer} Object
 #'
 #' @description
-#' Returns a single-row model-level summary of a fitted \code{geer} object,
-#' following \pkg{broom} conventions. Suitable for use with
-#' \pkg{modelsummary} and related reporting packages, and for comparing models
-#' side-by-side via \code{lapply(model_list, glance)}.
+#' Return a one-row model summary for a fitted \code{geer} object,
+#' following \pkg{broom} conventions.
 #'
 #' @param x an object of class \code{"geer"}.
 #' @param ... additional arguments passed to or from other methods (currently
@@ -157,27 +163,28 @@ tidy.geer <- function(x,
 #'     \eqn{n^{\star} - p}.}
 #'   \item{\code{phi}}{estimated (or fixed) dispersion parameter. Equal to
 #'     1 for the odds-ratio binary parameterisation.}
-#'   \item{\code{QIC}}{Quasi Information Criterion (Pan 2001) computed from
+#'   \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001) computed from
 #'     the robust sandwich covariance estimator. Lower is better.}
-#'   \item{\code{QICu}}{Covariate-selection variant of QIC (Pan 2001).
+#'   \item{\code{QICu}}{Covariate-selection variant of QIC (Pan, 2001).
 #'     Lower is better.}
-#'   \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang 2009).
+#'   \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009).
 #'     Lower is better.}
 #'   \item{\code{converged}}{logical; \code{TRUE} if the fitting algorithm
 #'     converged.}
 #'   \item{\code{niter}}{number of iterations used.}
 #' }
 #'
-#' QIC, QICu and CIC are always evaluated using the robust sandwich covariance
-#' matrix, consistent with \code{\link{geecriteria}}. If their computation
-#' fails for any reason (e.g. a degenerate working correlation matrix) the
-#' corresponding columns contain \code{NA_real_}.
+#' QIC, QICu and CIC are computed using the robust sandwich covariance
+#' matrix, consistent with \code{\link{geecriteria}}. If computation fails,
+#' the corresponding values are returned as \code{NA_real_}.
 #'
 #' When \pkg{tibble} is available the result has class
 #' \code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
 #' \code{data.frame} is returned.
 #'
-#' @return A one-row data frame.
+#' @return
+#' A one-row data frame containing model-level summary information.
+#'
 #'
 #' @references
 #' Pan W. (2001) Akaike's information criterion in generalized estimating
@@ -191,23 +198,23 @@ tidy.geer <- function(x,
 #' \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 #' \url{https://broom.tidymodels.org/}.
 #'
-#' @seealso \code{\link{tidy.geer}}, \code{\link{geecriteria}},
-#'   \code{\link{geewa}}, \code{\link{geewa_binary}}.
+#' @seealso
+#' \code{\link{tidy.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+#' \code{\link{geewa_binary}}.
 #'
 #' @examples
-#'
-#' data("epilepsy")
+#' data("epilepsy", package = "geer")
 #' fitmodel <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
 #'   data = epilepsy, id = id, family = poisson(link = "log"), corstr  = "exchangeable",
 #'   method  = "gee")
 #' glance(fitmodel)
 #'
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fitbin <- geewa_binary(formula = ecg ~ treatment + factor(period),
 #'   id = id, data = cerebrovascular, link = "logit", orstr = "exchangeable")
 #' glance(fitbin)
 #'
-#' \donttest{
+#' \dontrun{
 #' fitind  <- update(fitmodel, corstr = "independence")
 #' fitar1  <- update(fitmodel, corstr = "ar1")
 #' fitunst <- update(fitmodel, corstr = "unstructured")
@@ -215,8 +222,7 @@ tidy.geer <- function(x,
 #'   list(independence = fitind, exchangeable = fitmodel, ar1 = fitar1,
 #'        unstructured = fitunst),
 #'   glance
-#' ))[, c("corstr", "QIC", "CIC", "niter")]
-#' }
+#' ))[, c("corstr", "QIC", "CIC", "niter")]}
 #'
 #' @export
 glance.geer <- function(x, ...) {
@@ -227,6 +233,9 @@ glance.geer <- function(x, ...) {
     compute_criteria(x, cov_type = "robust", digits = 15L),
     error = function(e) NULL
   )
+  qic <- if (is.null(crit)) NA_real_ else crit$QIC
+  qicu <- if (is.null(crit)) NA_real_ else crit$QICu
+  cic <- if (is.null(crit)) NA_real_ else crit$CIC
   ans <- data.frame(
     family = x$family$family,
     link = x$family$link,
@@ -239,9 +248,9 @@ glance.geer <- function(x, ...) {
     npar = length(x$coefficients),
     df.residual = x$df.residual,
     phi = x$phi,
-    QIC = if (!is.null(crit)) crit$QIC  else NA_real_,
-    QICu = if (!is.null(crit)) crit$QICu else NA_real_,
-    CIC = if (!is.null(crit)) crit$CIC  else NA_real_,
+    QIC = qic,
+    QICu = qicu,
+    CIC = cic,
     converged = x$converged,
     niter = x$iter,
     stringsAsFactors = FALSE

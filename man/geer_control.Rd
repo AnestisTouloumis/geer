@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer.control.R
 \name{geer_control}
 \alias{geer_control}
-\title{Control Parameters for Fitting \code{geer} Objects}
+\title{Control Parameters for \code{geer} Model Fitting}
 \usage{
 geer_control(
   tolerance = 1e-06,
@@ -14,36 +14,38 @@ geer_control(
 )
 }
 \arguments{
-\item{tolerance}{positive convergence tolerance. Default is \code{1e-6}.}
+\item{tolerance}{Strictly positive convergence tolerance. Default is
+\code{1e-6}.}
 
-\item{maxiter}{positive integer giving the maximal number of iterations
-allowed. Default is \code{500}.}
+\item{maxiter}{Positive integer giving the maximum number of fitting
+iterations. Default is \code{500}.}
 
-\item{or_adding}{positive constant added to each cell of the full
+\item{or_adding}{Strictly positive constant added to each cell of the full
 marginalized contingency table. Default is \code{0.5}.}
 
-\item{step_maxit}{positive integer giving the maximum number of step-halving
-steps allowed. Default is \code{10}.}
+\item{step_maxit}{Positive integer giving the maximum number of step-halving
+attempts allowed within an iteration. Default is \code{10}.}
 
-\item{step_multi}{positive integer used as a multiplier for the step. Default
-is \code{1}.}
+\item{step_multi}{Positive integer used to scale the proposed step before
+step-halving. Default is \code{1}.}
 
-\item{jeffreys_power}{positive constant indicating the power of the
+\item{jeffreys_power}{Strictly positive constant giving the power of the
 Jeffreys-prior penalty. Default is \code{0.5}.}
 }
 \value{
-A list with components named as the arguments, suitable for passing as the
-\code{control} argument to \code{geewa} or \code{geewa_binary}.
+A named list suitable for use as the \code{control} argument to
+\code{geewa} or \code{geewa_binary}.
 }
 \description{
-Create a list of control parameters for use in \code{\link{geewa}} and
-\code{\link{geewa_binary}}. This function is typically used internally, but
-may also be supplied directly as the \code{control} argument when calling
-those functions.
+Create a list of control parameters for iterative fitting in
+\code{\link{geewa}} and \code{\link{geewa_binary}}. This function is used
+internally, but may also be supplied directly through the \code{control}
+argument of those functions.
 }
 \details{
 The \code{or_adding} argument is ignored by \code{\link{geewa}}.
 
-The \code{jeffreys_power} argument is only used if \code{method = "pgee-jeffreys"}
-in \code{\link{geewa}} or \code{\link{geewa_binary}}.
+The \code{jeffreys_power} argument is only used when
+\code{method = "pgee-jeffreys"} in \code{\link{geewa}} or
+\code{\link{geewa_binary}}.
 }

@@ -28,7 +28,7 @@ step_p(
 
 \item{direction}{Character string specifying the direction of the stepwise
 search: backward elimination (\code{"backward"}), forward selection
-(\code{"forward"}), or both (\code{"both"}). The default is
+(\code{"forward"}), or both (\code{"both"}). Default is
 \code{"backward"}.}
 
 \item{p_enter}{Numeric value between 0 and 1 giving the p-value threshold

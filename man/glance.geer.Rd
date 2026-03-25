@@ -13,7 +13,7 @@
 unused).}
 }
 \value{
-A one-row data frame.
+A one-row data frame containing model-level summary information.
 }
 \description{
 Returns a single-row model-level summary of a fitted \code{geer} object,
@@ -38,40 +38,38 @@ The one-row data frame contains the following columns:
     \eqn{n^{\star} - p}.}
   \item{\code{phi}}{estimated (or fixed) dispersion parameter. Equal to
     1 for the odds-ratio binary parameterisation.}
-  \item{\code{QIC}}{Quasi Information Criterion (Pan 2001) computed from
+  \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001) computed from
     the robust sandwich covariance estimator. Lower is better.}
-  \item{\code{QICu}}{Covariate-selection variant of QIC (Pan 2001).
+  \item{\code{QICu}}{Covariate-selection variant of QIC (Pan. 2001).
     Lower is better.}
-  \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang 2009).
+  \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009).
     Lower is better.}
   \item{\code{converged}}{logical; \code{TRUE} if the fitting algorithm
     converged.}
   \item{\code{niter}}{number of iterations used.}
 }
 
-QIC, QICu and CIC are always evaluated using the robust sandwich covariance
-matrix, consistent with \code{\link{geecriteria}}. If their computation
-fails for any reason (e.g. a degenerate working correlation matrix) the
-corresponding columns contain \code{NA_real_}.
+QIC, QICu and CIC are computed using the robust sandwich covariance
+matrix, consistent with \code{\link{geecriteria}}. If computation fails,
+the corresponding values are returned as \code{NA_real_}.
 
 When \pkg{tibble} is available the result has class
 \code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
 \code{data.frame} is returned.
 }
 \examples{
-
-data("epilepsy")
+data("epilepsy", package = "geer")
 fitmodel <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
   data = epilepsy, id = id, family = poisson(link = "log"), corstr  = "exchangeable",
   method  = "gee")
 glance(fitmodel)
 
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fitbin <- geewa_binary(formula = ecg ~ treatment + factor(period),
   id = id, data = cerebrovascular, link = "logit", orstr = "exchangeable")
 glance(fitbin)
 
-\donttest{
+\dontrun{
 fitind  <- update(fitmodel, corstr = "independence")
 fitar1  <- update(fitmodel, corstr = "ar1")
 fitunst <- update(fitmodel, corstr = "unstructured")
@@ -79,8 +77,7 @@ do.call(rbind, lapply(
   list(independence = fitind, exchangeable = fitmodel, ar1 = fitar1,
        unstructured = fitunst),
   glance
-))[, c("corstr", "QIC", "CIC", "niter")]
-}
+))[, c("corstr", "QIC", "CIC", "niter")]}
 
 }
 \references{
@@ -96,6 +93,6 @@ Robinson D., Hayes A. and Couch S. (2024)
 \url{https://broom.tidymodels.org/}.
 }
 \seealso{
-\code{\link{tidy.geer}}, \code{\link{geecriteria}},
-  \code{\link{geewa}}, \code{\link{geewa_binary}}.
+\code{\link{tidy.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+\code{\link{geewa_binary}}.
 }
