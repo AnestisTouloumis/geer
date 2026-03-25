@@ -48,15 +48,15 @@ The returned data frame has the following columns:
 \describe{
   \item{\code{term}}{name of the regression coefficient.}
   \item{\code{estimate}}{point estimate (or exponentiated value when
-    \code{exponentiate = TRUE}).}
+        \code{exponentiate = TRUE}).}
   \item{\code{std.error}}{standard error derived from
-    \code{vcov(x, cov_type = cov_type)}.}
-    \item{\code{statistic}}{coefficient estimate divided by its standard error,
-    with \code{NA} reported when the standard error is not positive.}
+       \code{vcov(x, cov_type = cov_type)}.}
+  \item{\code{statistic}}{coefficient estimate divided by its standard error,
+        with \code{NA} reported when the standard error is not positive.}
   \item{\code{p.value}}{two-sided p-value from the standard normal
-    distribution.}
+        distribution.}
   \item{\code{conf.low}, \code{conf.high}}{lower and upper Wald confidence
-    limits (only present when \code{conf.int = TRUE}).}
+        limits (only present when \code{conf.int = TRUE}).}
 }
 
 When \pkg{tibble} is available the result has class

@@ -112,6 +112,6 @@ test_that("model.matrix returns the stored design matrix", {
 test_that("model.matrix.geer rejects non-geer objects", {
   expect_error(
     model.matrix.geer(list(terms = terms(~ 1), data = data.frame(x = 1))),
-    "must be a 'geer' object"
+    "'object' must be of 'geer' class"
   )
 })

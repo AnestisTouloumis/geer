@@ -16,10 +16,8 @@ unused).}
 A one-row data frame containing model-level summary information.
 }
 \description{
-Returns a single-row model-level summary of a fitted \code{geer} object,
-following \pkg{broom} conventions. Suitable for use with
-\pkg{modelsummary} and related reporting packages, and for comparing models
-side-by-side via \code{lapply(model_list, glance)}.
+Return a one-row model summary for a fitted \code{geer} object,
+following \pkg{broom} conventions.
 }
 \details{
 The one-row data frame contains the following columns:
@@ -40,7 +38,7 @@ The one-row data frame contains the following columns:
     1 for the odds-ratio binary parameterisation.}
   \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001) computed from
     the robust sandwich covariance estimator. Lower is better.}
-  \item{\code{QICu}}{Covariate-selection variant of QIC (Pan. 2001).
+  \item{\code{QICu}}{Covariate-selection variant of QIC (Pan, 2001).
     Lower is better.}
   \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009).
     Lower is better.}
