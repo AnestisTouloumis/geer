@@ -1,24 +1,25 @@
 #' @title
-#' Choose a Model by Hypothesis Testing in a Stepwise Algorithm
+#' Stepwise Model Selection by Hypothesis Testing
 #'
 #' @description
-#' Perform stepwise model selection for fitted \code{geer} models using repeated
-#' single-term additions (\code{\link{add1}}) and/or deletions (\code{\link{drop1}})
-#' based on hypothesis tests.
+#' Perform stepwise model selection for fitted \code{geer} models using
+#' repeated single-term additions with \code{\link{add1}} and/or single-term
+#' deletions with \code{\link{drop1}}, where candidate moves are evaluated
+#' using hypothesis tests.
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::step
-#' @param direction character indicating the mode of the stepwise search.
-#'        Options include backward elimination (\code{"backward"}),
-#'        forward selection (\code{"forward"}) and bidirectional elimination
-#'        (\code{"both"}). Default is \code{"backward"}.
-#' @param p_enter numeric between 0 and 1 indicating the p-value threshold for
-#'        adding variables in the stepwise search. Default is \code{0.15}.
-#' @param p_remove numeric between 0 and 1 indicating the p-value threshold for
-#'        removing variables in the stepwise search. Default is \code{0.15}.
+#' @param direction Character string specifying the direction of the stepwise
+#'        search: backward elimination (\code{"backward"}), forward selection
+#'        (\code{"forward"}), or both (\code{"both"}). The default is
+#'        \code{"backward"}.
+#' @param p_enter Numeric value between 0 and 1 giving the p-value threshold
+#'        for adding a term during forward steps. Default is \code{0.15}.
+#' @param p_remove Numeric value between 0 and 1 giving the p-value threshold
+#'        for removing a term during backward steps. Default is \code{0.15}.
+#'
 #' @details
-#' \code{step_p} uses \code{\link{add1}} and \code{\link{drop1}} repeatedly; it
-#' will work for any model for which they work.
+#' \code{step_p} repeatedly calls \code{\link{add1}} and \code{\link{drop1}}.
 #'
 #' The set of models searched is determined by the \code{scope} argument. The
 #' right-hand side of its \code{lower} component is always retained in the model,
@@ -26,40 +27,39 @@
 #' that can be considered. If \code{scope} is a single formula, it specifies the
 #' \code{upper} component and the \code{lower} model is empty.
 #'
-#' If \code{scope} is missing, the stepwise search is restricted to the terms in
-#' the initial model.
+#' If \code{scope} is omitted, the search is restricted to the terms in the
+#' initial model.
 #'
-#' With \code{direction = "both"}, backward elimination is attempted first at each
-#' step. A forward addition is considered only if no eligible backward deletion is
-#' found. The algorithm stops if neither move satisfies its corresponding threshold,
-#' or if an immediate add-drop cycle on the same term would occur.
+#' With \code{direction = "both"}, backward elimination is attempted first at
+#' each step. A forward addition is considered only if no eligible backward
+#' deletion is found. The algorithm stops when no candidate move satisfies the
+#' relevant p-value threshold, when the maximum number of steps is reached, or
+#' when an immediate add-remove cycle involving the same term would occur.
 #'
 #' Details about the testing procedures implied by the \code{test} argument can
-#' be found in \cite{Rotnitzky and Jewell (1990)}. Note that
+#' be found in \cite{Rotnitzky and Jewell (1990)}. The option
 #' \code{test = "working-lrt"} is only available for models fitted with an
-#' independence working association structure. Otherwise, an error is returned.
+#' independence working association structure.
 #'
-#' When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod}
-#' argument is ignored and \code{cov_type} specifies the covariance matrix estimate
-#' of the estimated regression parameters used to calculate the corresponding test
-#' statistic. Otherwise, \code{cov_type} specifies the covariance matrix estimate
-#' used to calculate the coefficients of the independent chi-squared random
-#' variables, and \code{pmethod} specifies the approximation used to calculate the
-#' p-value of the test statistic.
+#' When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod} argument
+#' is ignored and \code{cov_type} specifies the covariance matrix estimate of the
+#' regression parameter estimator used to compute the test statistic. Otherwise,
+#' \code{cov_type} specifies the covariance matrix estimate used to compute the
+#' coefficients of the independent chi-squared random variables, and \code{pmethod}
+#' specifies the approximation used to compute the p-value.
 #'
 #' @return
-#' A fitted model object of class \code{geer}, corresponding to the final selected
-#' model. The returned object contains an \code{anova} component summarizing the
-#' stepwise path.
-#'
+#' A fitted model object of class \code{geer} corresponding to the final selected
+#' model. The returned object includes an \code{anova} component summarizing the
+#' stepwise sequence of fitted models and the terms added or removed at each step.
 #'
 #' @inherit add1.geer references
 #'
-#' @seealso \code{\link{add1}} and \code{\link{drop1}}.
+#' @seealso \code{\link{add1}}, \code{\link{drop1}}
 #'
 #' @examples
 #' data("respiratory", package = "geer")
-#' respiratory2 <- respiratory[respiratory$center == "C2", ]
+#' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #'
 #' full_fit <- geewa_binary(
 #'   formula = status ~ (baseline + treatment + gender + visit + age)^2,
@@ -67,16 +67,24 @@
 #'   orstr = "independence", method = "pgee-jeffreys"
 #' )
 #'
-#' ## Backward elimination using a Wald test
+#' ## Backward elimination within the initial model terms
 #' step_p(full_fit, direction = "backward", test = "wald",
 #'        cov_type = "bias-corrected", p_remove = 0.10)
 #'
 #' ## Bidirectional selection with an explicit scope
-#' step_p(full_fit,
-#'        scope = list(lower = ~ baseline + treatment,
-#'        upper = ~ (baseline + treatment + gender + visit + age)^2),
-#'        direction = "both", test = "score", cov_type = "robust",
-#'        p_enter = 0.10, p_remove = 0.15, steps = 50)
+#' step_p(
+#'   full_fit,
+#'   scope = list(
+#'     lower = ~ baseline + treatment,
+#'     upper = ~ (baseline + treatment + gender + visit + age)^2
+#'   ),
+#'   direction = "both",
+#'   test = "score",
+#'   cov_type = "robust",
+#'   p_enter = 0.10,
+#'   p_remove = 0.15,
+#'   steps = 50
+#' )
 #'
 #' @export
 step_p <-
@@ -107,11 +115,12 @@ step_p <-
     test <- opts$test
     cov_type <- opts$cov_type
     pmethod <- opts$pmethod
-    switch(
+    scope_value <- if (missing(scope)) NULL else scope
+    ans <- switch(
       direction,
       backward = step_p_backward(
         object = object,
-        scope = scope,
+        scope = scope_value,
         test = test,
         cov_type = cov_type,
         pmethod = pmethod,
@@ -120,7 +129,7 @@ step_p <-
       ),
       forward = step_p_forward(
         object = object,
-        scope = scope,
+        scope = scope_value,
         test = test,
         cov_type = cov_type,
         pmethod = pmethod,
@@ -129,7 +138,7 @@ step_p <-
       ),
       both = step_p_both(
         object = object,
-        scope = scope,
+        scope = scope_value,
         test = test,
         cov_type = cov_type,
         pmethod = pmethod,
@@ -138,4 +147,5 @@ step_p <-
         steps = steps
       )
     )
+    ans
   }
