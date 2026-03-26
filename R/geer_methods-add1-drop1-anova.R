@@ -12,10 +12,11 @@
 #' @param ... additional argument(s) passed to methods.
 #'
 #' @details
-#' If \code{scope} is missing, all terms in the current model are considered.
-#' Model hierarchy is enforced: if a higher-order interaction is present, all
-#' of its lower-order main effects must also remain in the model. In scope
-#' formulas, \code{.} denotes the set of terms already included in the model.
+#' For \code{add1.geer()}, \code{scope} must specify the candidate terms to be
+#' added. If no eligible terms are supplied, an error is returned. Model hierarchy
+#' is enforced: if a higher-order interaction is present, all of its lower-order
+#' main effects must also remain in the model. In scope formulas, \code{.} denotes
+#' the set of terms already included in the model.
 #'
 #' Details of the hypothesis tests controlled by \code{test} are given in
 #' \cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
@@ -43,7 +44,7 @@
 #'           \code{\link{geewa_binary}}.
 #'
 #' @examples
-#' data("respiratory")
+#' data("respiratory", package = "geer")
 #' fitted_model <-
 #'   geewa(
 #'     formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
@@ -78,7 +79,7 @@ add1.geer <-
     cov_type <- opts$cov_type
     pmethod <- opts$pmethod
     if (missing(scope) || is.null(scope)) {
-      stop("no terms in scope", call. = FALSE)
+      stop("no terms in scope for adding to object", call. = FALSE)
     }
     if (!is.character(scope)) {
       scope <- add.scope(object, update.formula(object, scope))
@@ -112,8 +113,11 @@ add1.geer <-
     }
     aod <- as.data.frame(ans)
     test_type <- test_label(test)
-    head <- c(paste("Single term additions using", test_type, "test:"),
-              "\nModel:", deparse(object$call$formula))
+    formula_txt <- paste(deparse(object$call$formula), collapse = " ")
+    head <- c(
+      paste("Single term additions using", test_type, "test:"),
+      "\nModel:", formula_txt
+    )
     structure(aod, heading = head, class = c("anova", "data.frame"))
   }
 
@@ -180,8 +184,11 @@ drop1.geer <- function(object,
   }
   aod <- as.data.frame(ans)
   test_type <- test_label(test)
-  head <- c(paste("Single term deletions using", test_type, "test:"),
-            "\nModel:", deparse(object$call$formula))
+  formula_txt <- paste(deparse(object$call$formula), collapse = " ")
+  head <- c(
+    paste("Single term deletions using", test_type, "test:"),
+    "\nModel:", formula_txt
+  )
   structure(aod, heading = head, class = c("anova", "data.frame"))
 }
 
@@ -234,8 +241,9 @@ drop1.geer <- function(object,
 #' each consecutive pair of models must be nested.
 #'
 #' @return
-#' An object of class \code{anova}, representing an analysis-of-variance table
-#' within the GEE framework.
+#' An object of class \code{c("anova", "data.frame")} containing sequential
+#' hypothesis tests for terms in a single fitted model, or sequential
+#' comparisons between nested fitted models.
 #'
 #' \itemize{
 #'   \item With a single model, the table reports tests for terms added
@@ -251,7 +259,7 @@ drop1.geer <- function(object,
 #' time while respecting model hierarchy.
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #'
 #' ## Single-model ANOVA (sequential terms)
 #' fit_full <- geewa_binary(
@@ -297,8 +305,7 @@ anova.geer <-
       (names(dotargs) != "")
     }
     if (any(named)) {
-      warning("the following arguments to 'anova.geer' are invalid and dropped: ",
-              paste(deparse(dotargs[named]), collapse = ", "))
+      warning("named arguments in '...' are ignored", call. = FALSE)
     }
     dotargs <- dotargs[!named]
     is_geer <- vapply(dotargs, function(x) inherits(x, "geer"), logical(1))
@@ -331,10 +338,11 @@ anova.geer <-
     }
     resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))
     table <- data.frame(
-      c(NA_real_, resdf[-1]),
-      resdf,
-      c(NA_real_, resdf[-1]),
-      c(NA_real_, resdf[-1])
+      Df = c(NA_real_, rep(NA_real_, length(resdf) - 1L)),
+      `Resid. Df` = resdf,
+      Chi = c(NA_real_, rep(NA_real_, length(resdf) - 1L)),
+      `Pr(>Chi)` = c(NA_real_, rep(NA_real_, length(resdf) - 1L)),
+      check.names = FALSE
     )
     if (intercept == 1) {
       dimnames(table) <- list(c("NULL", terms),
