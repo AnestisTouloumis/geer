@@ -15,12 +15,17 @@
 #' A numeric vector of fitted values extracted from \code{object}.
 #'
 #' @examples
-#' data("leprosy")
-#' fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-#'              family = poisson(link = "log"), id = id, data = leprosy)
+#' data("leprosy", package = "geer")
+#' fit <- geewa(
+#'   formula = bacilli ~ factor(period) + factor(period):treatment,
+#'   family = poisson(link = "log"),
+#'   id = id,
+#'   data = leprosy
+#' )
 #' head(fitted(fit))
 #'
 #' @export
+#'
 fitted.geer <- function(object, ...){
   object <- check_geer_object(object)
   object$fitted.values
@@ -98,47 +103,44 @@ predict.geer <- function(object,
   object <- check_geer_object(object)
   type <- match.arg(type)
   cov_type <- match.arg(cov_type)
+  if (!is.logical(se.fit) || length(se.fit) != 1L || is.na(se.fit)) {
+    stop("'se.fit' must be a single logical value", call. = FALSE)
+  }
   se.fit <- isTRUE(se.fit)
   coef_names <- names(object$coefficients)
   if (is.null(coef_names) || !length(coef_names)) {
     stop("'object$coefficients' must be named", call. = FALSE)
   }
   if (is.null(newdata)) {
-    eta <- object$linear.predictors
-    mu <- object$fitted.values
-    out <- if (type == "link") eta else mu
+    eta_vector <- object$linear.predictors
+    mu_vector <- object$fitted.values
+    out <- if (type == "link") eta_vector else mu_vector
     if (!se.fit) {
       return(out)
     }
     vcov_matrix <- vcov(object, cov_type = cov_type)
     vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-
     design_matrix <- object$x
     if (is.null(colnames(design_matrix))) {
       stop("'object$x' must have column names", call. = FALSE)
     }
     design_matrix <- design_matrix[, coef_names, drop = FALSE]
-
     se <- sqrt(rowSums((design_matrix %*% vcov_matrix) * design_matrix))
     if (type == "response") {
-      se <- se * abs(object$family$mu.eta(eta))
+      se <- se * abs(object$family$mu.eta(eta_vector))
     }
-
-    return(list(fit = out, se.fit = se))
+    ans <- list(fit = out, se.fit = se)
+    return(ans)
   }
-
   if (!is.data.frame(newdata)) {
     newdata <- as.data.frame(newdata)
   }
-
   tt <- delete.response(object$terms)
   mf <- model.frame(tt, newdata, xlev = object$xlevels, na.action = na.pass)
   design_matrix <- model.matrix(tt, mf, contrasts.arg = object$contrasts)
-
   if (is.null(colnames(design_matrix))) {
     stop("prediction model matrix must have column names", call. = FALSE)
   }
-
   missing_cols <- setdiff(coef_names, colnames(design_matrix))
   if (length(missing_cols)) {
     stop(
@@ -149,32 +151,26 @@ predict.geer <- function(object,
       call. = FALSE
     )
   }
-
   design_matrix <- design_matrix[, coef_names, drop = FALSE]
-
-  eta <- drop(design_matrix %*% object$coefficients)
-
-  off <- model.offset(mf)
-  if (!is.null(off)) {
-    eta <- eta + drop(off)
+  eta_vector <- drop(design_matrix %*% object$coefficients)
+  offset_vector <- model.offset(mf)
+  if (!is.null(offset_vector)) {
+    eta_vector <- eta_vector + drop(offset_vector)
   }
-
   if (!se.fit) {
-    return(if (type == "link") eta else object$family$linkinv(eta))
+    return(if (type == "link") eta_vector else object$family$linkinv(eta_vector))
   }
-
   vcov_matrix <- vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-
   se <- sqrt(rowSums((design_matrix %*% vcov_matrix) * design_matrix))
-
   if (type == "response") {
-    mu <- object$family$linkinv(eta)
-    se <- se * abs(object$family$mu.eta(eta))
-    return(list(fit = mu, se.fit = se))
+    mu_vector <- object$family$linkinv(eta_vector)
+    se <- se * abs(object$family$mu.eta(eta_vector))
+    ans <- list(fit = mu_vector, se.fit = se)
+    return(ans)
   }
-
-  list(fit = eta, se.fit = se)
+  ans <- list(fit = eta_vector, se.fit = se)
+  ans
 }
 
 
@@ -189,8 +185,8 @@ predict.geer <- function(object,
 #' Extract residuals of different types from a fitted \code{geer} object.
 #'
 #' @inheritParams coef.geer
-#' @param type character indicating whether the type of the residuals to return.
-#'        Options include the working residuals (\code{"working"}), the pearson
+#' @param type character indicating the type of residuals to return. Options
+#'        include the working residuals (\code{"working"}), the pearson
 #'        residuals (\code{"pearson"}) and the deviance residuals
 #'        (\code{"deviance"}). By default, the working residuals are returned.
 #'
@@ -214,7 +210,7 @@ predict.geer <- function(object,
 #' \code{\link[stats]{residuals}}
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
@@ -242,7 +238,8 @@ residuals.geer <- function(object,
     deviance = {
       if (object$df.residual > 0) {
         dr <- sqrt(pmax(object$family$dev.resids(y, mu, w), 0))
-        ifelse(y > mu, dr, -dr)
+        sign_term <- ifelse(y > mu, 1, ifelse(y < mu, -1, 0))
+        dr * sign_term
       } else {
         rep.int(0, length(mu))
       }
