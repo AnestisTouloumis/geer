@@ -38,8 +38,9 @@ approximation (\code{"rao-scott"}) and the Satterthwaite approximation
 (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 }
 \value{
-An object of class \code{anova}, representing an analysis-of-variance table
-within the GEE framework.
+An object of class \code{c("anova", "data.frame")} containing sequential
+hypothesis tests for terms in a single fitted model, or sequential
+comparisons between nested fitted models.
 
 \itemize{
   \item With a single model, the table reports tests for terms added
@@ -71,7 +72,7 @@ fits, and the models must be nested in the order supplied. In particular,
 each consecutive pair of models must be nested.
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 
 ## Single-model ANOVA (sequential terms)
 fit_full <- geewa_binary(

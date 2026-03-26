@@ -5,7 +5,13 @@
 \alias{confint}
 \title{Confidence Intervals for Model Parameters from a \code{geer} Object}
 \usage{
-\method{confint}{geer}(object, parm, level = 0.95, cov_type = "robust", ...)
+\method{confint}{geer}(
+  object,
+  parm,
+  level = 0.95,
+  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  ...
+)
 }
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
@@ -41,7 +47,7 @@ where standard errors are obtained from \code{vcov(object, cov_type = cov_type)}
 The resulting intervals rely on the usual large-sample normal approximation.
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",

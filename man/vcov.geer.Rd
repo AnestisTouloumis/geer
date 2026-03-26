@@ -48,7 +48,7 @@ The form of the covariance estimator is controlled by the argument
 }
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
                              id = id,
                              data = cerebrovascular,

@@ -21,7 +21,7 @@ Extracts model coefficients from a \code{geer} object. The function
 \code{coefficients} is an alias.
 }
 \examples{
-data("leprosy")
+data("leprosy", package = "geer")
 fit <- geewa(
   formula = bacilli ~ factor(period) + factor(period):treatment,
   family = poisson(link = "log"),
@@ -31,7 +31,7 @@ fit <- geewa(
 coef(fit)
 names(coef(fit))
 
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fit2 <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",

@@ -11,8 +11,8 @@
 \arguments{
 \item{object}{an object representing a model of the class \code{geer}.}
 
-\item{type}{character indicating whether the type of the residuals to return.
-Options include the working residuals (\code{"working"}), the pearson
+\item{type}{character indicating the type of residuals to return. Options
+include the working residuals (\code{"working"}), the pearson
 residuals (\code{"pearson"}) and the deviance residuals
 (\code{"deviance"}). By default, the working residuals are returned.}
 
@@ -37,7 +37,7 @@ by \code{object$family$family}.
 }
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",

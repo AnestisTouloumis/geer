@@ -7,7 +7,7 @@ test_that("confint.geer returns a well-formed confidence interval matrix", {
 
   expect_true(is.matrix(ci))
   expect_equal(dim(ci)[2], 2L)
-  expect_identical(colnames(ci), c("2.5%", "97.5%"))
+  expect_identical(colnames(ci), c(" 2.5%", "97.5%"))
   expect_identical(rownames(ci), names(coef(fit)))
   expect_true(all(is.finite(ci)))
 })

@@ -2,13 +2,16 @@ format_perc <- function(probs, digits = 2, check = FALSE) {
   if (!is.numeric(probs)) {
     stop("'probs' must be numeric", call. = FALSE)
   }
+  if (anyNA(probs) || any(!is.finite(probs))) {
+    stop("'probs' must contain only finite numeric values", call. = FALSE)
+  }
   if (!is_pos_int_scalar(digits)) {
     stop("'digits' must be a positive integer", call. = FALSE)
   }
   if (!is.logical(check) || length(check) != 1L || is.na(check)) {
     stop("'check' must be a single logical value", call. = FALSE)
   }
-  if (check && any(probs < 0 | probs > 1, na.rm = TRUE)) {
+  if (check && any(probs < 0 | probs > 1)) {
     warning("Some probabilities are outside [0, 1]", call. = FALSE)
   }
   formatted <- formatC(
@@ -18,7 +21,7 @@ format_perc <- function(probs, digits = 2, check = FALSE) {
     flag = "",
     drop0trailing = FALSE
   )
-  paste0(trimws(formatted), "%")
+  paste0(formatted, "%")
 }
 
 
@@ -30,24 +33,33 @@ is_pos_scalar <- function(x) {
     x > 0
 }
 
+
 is_pos_int_scalar <- function(x, tol = .Machine$double.eps^0.5) {
-  is_pos_scalar(x) && abs(x - round(x)) < tol
+  is_pos_scalar(x) && abs(x - round(x)) <= tol
 }
+
 
 check_single_numeric <- function(x, name) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x)) {
     stop(sprintf("'%s' must be a single finite numeric value", name), call. = FALSE)
   }
+  invisible(x)
 }
+
 
 check_positive_numeric <- function(x, name) {
   check_single_numeric(x, name)
   if (x <= 0) {
     stop(sprintf("'%s' must be positive", name), call. = FALSE)
   }
+  invisible(x)
 }
 
+
 check_probability <- function(x, name, open = TRUE) {
+  if (!is.logical(open) || length(open) != 1L || is.na(open)) {
+    stop("'open' must be a single logical value", call. = FALSE)
+  }
   check_single_numeric(x, name)
   if (open) {
     if (x <= 0 || x >= 1) {
@@ -58,19 +70,26 @@ check_probability <- function(x, name, open = TRUE) {
       stop(sprintf("'%s' must be between 0 and 1", name), call. = FALSE)
     }
   }
+  invisible(x)
 }
 
+
 check_choice <- function(x, choices, name) {
-  if (length(x) != 1L || !is.character(x) || is.na(x) || !(x %in% choices)) {
+  if (!is.character(x) || length(x) != 1L || is.na(x)) {
+    stop(sprintf("'%s' must be a single character value", name), call. = FALSE)
+  }
+  if (!(x %in% choices)) {
     stop(
       sprintf("'%s' should be one of: %s", name, paste(choices, collapse = ", ")),
       call. = FALSE
     )
   }
+  invisible(x)
 }
 
+
 test_label <- function(test) {
-  switch(
+  out <- switch(
     test,
     wald = "Wald",
     score = "Score",
@@ -78,4 +97,8 @@ test_label <- function(test) {
     `working-score` = "Modified Working Score",
     `working-lrt` = "Modified Working LRT"
   )
+  if (is.null(out)) {
+    stop("invalid 'test' value", call. = FALSE)
+  }
+  out
 }

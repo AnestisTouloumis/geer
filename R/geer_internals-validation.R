@@ -1,5 +1,4 @@
 ## internal validation helpers for geer user-facing functions
-
 .geer_test_choices <- c(
   "wald", "score", "working-wald", "working-score", "working-lrt"
 )

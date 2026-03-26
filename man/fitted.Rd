@@ -21,9 +21,13 @@ Extract fitted values (mean response on the response scale) from a fitted
 \code{geer} model. \code{fitted.values()} is an alias for \code{fitted()}.
 }
 \examples{
-data("leprosy")
-fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-             family = poisson(link = "log"), id = id, data = leprosy)
+data("leprosy", package = "geer")
+fit <- geewa(
+  formula = bacilli ~ factor(period) + factor(period):treatment,
+  family = poisson(link = "log"),
+  id = id,
+  data = leprosy
+)
 head(fitted(fit))
 
 }

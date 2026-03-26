@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer_method-print-summary.R
 \name{print.geer}
 \alias{print.geer}
-\title{Print Method for geer Objects}
+\title{Print a \code{geer} Object}
 \usage{
 \method{print}{geer}(x, ...)
 }
@@ -15,5 +15,6 @@
 The input object \code{x} is returned invisibly.
 }
 \description{
-Print Method for geer Objects
+Print the stored call, estimated regression coefficients, and basic fitting
+information for a fitted \code{geer} object.
 }

@@ -62,10 +62,11 @@ Compute all the single terms in the \code{scope} argument that can be
   table of the changes in fit.
 }
 \details{
-If \code{scope} is missing, all terms in the current model are considered.
-Model hierarchy is enforced: if a higher-order interaction is present, all
-of its lower-order main effects must also remain in the model. In scope
-formulas, \code{.} denotes the set of terms already included in the model.
+For \code{add1.geer()}, \code{scope} must specify the candidate terms to be
+added. If no eligible terms are supplied, an error is returned. Model hierarchy
+is enforced: if a higher-order interaction is present, all of its lower-order
+main effects must also remain in the model. In scope formulas, \code{.} denotes
+the set of terms already included in the model.
 
 Details of the hypothesis tests controlled by \code{test} are given in
 \cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
@@ -83,7 +84,7 @@ The output table also includes the Correlation Information Criterion (CIC),
 a diagnostic for selecting the working correlation structure.
 }
 \examples{
-data("respiratory")
+data("respiratory", package = "geer")
 fitted_model <-
   geewa(
     formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
