@@ -14,7 +14,7 @@
 #' A named numeric vector of estimated regression coefficients.
 #'
 #' @examples
-#' data("leprosy")
+#' data("leprosy", package = "geer")
 #' fit <- geewa(
 #'   formula = bacilli ~ factor(period) + factor(period):treatment,
 #'   family = poisson(link = "log"),
@@ -24,7 +24,7 @@
 #' coef(fit)
 #' names(coef(fit))
 #'
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fit2 <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
@@ -64,7 +64,7 @@ coef.geer <- function(object, ...) {
 #'
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
@@ -76,17 +76,26 @@ coef.geer <- function(object, ...) {
 #' confint(fit, parm = "treatmentactive")
 #' confint(fit, cov_type = "naive")
 #' @export
-confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
-  if (!is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
+confint.geer <- function(object,
+                         parm,
+                         level = 0.95,
+                         cov_type = c("robust", "bias-corrected",
+                                      "df-adjusted", "naive"),
+                         ...) {
+  if (!is.numeric(level) || length(level) != 1L ||
+      !is.finite(level) || level <= 0 || level >= 1) {
     stop("'level' must be a single number in (0, 1)", call. = FALSE)
   }
   object <- check_geer_object(object)
+  cov_type <- match.arg(cov_type)
   beta <- coef(object)
   beta_names <- names(beta)
   if (missing(parm)) {
     parm <- beta_names
   } else if (is.numeric(parm)) {
     parm <- beta_names[parm]
+  } else if (!is.character(parm)) {
+    stop("'parm' must be missing, numeric, or character", call. = FALSE)
   }
   if (anyNA(parm) || !all(parm %in% beta_names)) {
     stop("invalid 'parm' specification", call. = FALSE)
@@ -95,8 +104,14 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
   alpha <- c(alpha, 1 - alpha)
   pct <- format_perc(alpha, 3)
   percentiles <- qnorm(alpha)
-  ans <- array(NA, dim = c(length(parm), 2L), dimnames = list(parm, pct))
-  standard_errors <- sqrt(diag(vcov(object, cov_type = cov_type)))[parm]
+  ans <- matrix(
+    NA_real_,
+    nrow = length(parm),
+    ncol = 2L,
+    dimnames = list(parm, pct)
+  )
+  vcov_matrix <- vcov(object, cov_type = cov_type)
+  standard_errors <- sqrt(pmax(diag(vcov_matrix), 0))[parm]
   ans[] <- beta[parm] + standard_errors %o% percentiles
   ans
 }
@@ -146,7 +161,7 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #' 395–-409.
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
 #'                              id = id,
 #'                              data = cerebrovascular,
@@ -157,24 +172,23 @@ confint.geer <- function(object, parm, level = 0.95, cov_type = "robust", ...) {
 #'
 #' @export
 vcov.geer <- function(object,
-                      cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                      cov_type = c("robust", "bias-corrected",
+                                   "df-adjusted", "naive"),
                       ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
-  if (cov_type == "robust") {
-    return(object$robust_covariance)
-  }
-  if (cov_type == "naive") {
-    return(object$naive_covariance)
-  }
-  if (cov_type == "bias-corrected") {
-    return(object$bias_corrected_covariance)
-  }
-  sample_size <- object$clusters_no
-  p <- ncol(object$robust_covariance)
-  if (sample_size <= p) {
-    stop("clusters_no must be > number of coefficients",
-         call. = FALSE)
-  }
-  (sample_size / (sample_size - p)) * object$robust_covariance
+  switch(
+    cov_type,
+    robust = object$robust_covariance,
+    naive = object$naive_covariance,
+    `bias-corrected` = object$bias_corrected_covariance,
+    `df-adjusted` = {
+      sample_size <- object$clusters_no
+      p <- ncol(object$robust_covariance)
+      if (sample_size <= p) {
+        stop("clusters_no must be > number of coefficients", call. = FALSE)
+      }
+      (sample_size / (sample_size - p)) * object$robust_covariance
+    }
+  )
 }
