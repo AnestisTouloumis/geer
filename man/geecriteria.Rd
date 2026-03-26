@@ -2,7 +2,7 @@
 % Please edit documentation in R/geecriteria.R
 \name{geecriteria}
 \alias{geecriteria}
-\title{Variable and Correlation Selection Criteria for \code{geer} Objects}
+\title{Model Selection Criteria for \code{geer} Objects}
 \usage{
 geecriteria(
   object,
@@ -16,44 +16,48 @@ geecriteria(
 
 \item{...}{additional objects representing models of the same class \code{geer}.}
 
-\item{cov_type}{character indicating the type of covariance matrix estimator
-which should be used to the calculation of the criteria. Options
-include the sandwich or robust estimator (\code{"robust"}), the
-bias-corrected estimator (\code{"bias-corrected"}), the degrees of
-freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-or naive estimator (\code{"naive"}). By default,
-\code{cov_type = "robust"}.}
+\item{cov_type}{Character string specifying the covariance estimator used in
+the covariance-based criteria. Options are \code{"robust"},
+\code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
+The default is \code{"robust"}.}
 
-\item{digits}{integer indicating the number of decimal places for the GEE
-criteria to be rounded at. By default, \code{digits = 2}.}
+\item{digits}{Non-negative integer giving the number of decimal places used
+to round the reported criteria. The default is \code{2}.}
 }
 \value{
-If one model is supplied, a one-row data frame containing QIC, CIC, RJC, QICu,
-GESSC, GPC and the number of regression parameters.
-
-If multiple models are supplied, a data frame with one row per model and the
-same columns.
+A data frame with one row per fitted model and columns \code{QIC},
+\code{CIC}, \code{RJC}, \code{QICu}, \code{GESSC}, \code{GPC}, and
+\code{Parameters}.
 }
 \description{
-Reports commonly used criteria for variable selection and association structure
-selection for one or several fitted models.
+Compute commonly used criteria for comparing fitted \code{geer} models for
+marginal mean selection and working association structure selection.
 }
 \details{
-The Quasi Information Criterion (QIC), the Correlation Information Criterion
-(CIC), the Rotnitzky and Jewell Criterion (RJC), the Generalized Error Sum of
-Squares (GESSC) and the Gaussian Pseudolikelihood Criterion (GPC) are used for
-selecting the best association structure.
-The QICu criterion is used for selecting the best subset of covariates.
+The reported criteria are:
+\describe{
+  \item{\code{QIC}}{Quasi Information Criterion for model comparison. Smaller
+    values are preferred.}
+  \item{\code{CIC}}{Correlation Information Criterion for selecting the
+    working association structure. Smaller values are preferred.}
+  \item{\code{RJC}}{Rotnitzky and Jewell Criterion. Smaller values are
+    preferred.}
+  \item{\code{QICu}}{A variant of QIC primarily intended for comparing mean
+    models with different covariate sets. Smaller values are preferred.}
+  \item{\code{GESSC}}{Generalized Error Sum of Squares Criterion. Smaller
+    values are preferred.}
+  \item{\code{GPC}}{Gaussian Pseudolikelihood Criterion. Larger values are
+    preferred.}
+  \item{\code{Parameters}}{Number of marginal mean-model regression
+    parameters.}
+}
 
-When choosing between ordinary, bias-reducing and penalized GEE models with
-the same subset of covariates, the model with the smallest value of QIC, CIC,
-RJC or GESSC or the model with the higher GPC should be preferred. When
-choosing between ordinary, bias-reducing and penalized models with different
-number of covariates, the model with the smallest QICu value should be
-preferred.
+The \code{cov_type} argument affects the covariance-based criteria,
+specifically \code{QIC}, \code{CIC}, and \code{RJC}. If several supplied
+models do not have the same number of observations, a warning is issued.
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fitted_gee <- geewa_binary(
   formula = ecg ~ period * treatment,
   id = id,

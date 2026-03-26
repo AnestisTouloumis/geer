@@ -1,42 +1,46 @@
 #' @title
-#' Variable and Correlation Selection Criteria for \code{geer} Objects
+#' Model Selection Criteria for \code{geer} Objects
 #'
 #' @description
-#' Reports commonly used criteria for variable selection and association structure
-#' selection for one or several fitted models.
+#' Compute commonly used criteria for comparing fitted \code{geer} models for
+#' marginal mean selection and working association structure selection.
 #'
 #' @return
-#' If one model is supplied, a one-row data frame containing QIC, CIC, RJC, QICu,
-#' GESSC, GPC and the number of regression parameters.
-#'
-#' If multiple models are supplied, a data frame with one row per model and the
-#' same columns.
+#' A data frame with one row per fitted model and columns \code{QIC},
+#' \code{CIC}, \code{RJC}, \code{QICu}, \code{GESSC}, \code{GPC}, and
+#' \code{Parameters}.
 #'
 #'
 #' @inheritParams anova.geer
-#' @param cov_type character indicating the type of covariance matrix estimator
-#'        which should be used to the calculation of the criteria. Options
-#'        include the sandwich or robust estimator (\code{"robust"}), the
-#'        bias-corrected estimator (\code{"bias-corrected"}), the degrees of
-#'        freedom adjusted estimator (\code{"df-adjusted"}) and the model-based
-#'        or naive estimator (\code{"naive"}). By default,
-#'        \code{cov_type = "robust"}.
-#' @param digits integer indicating the number of decimal places for the GEE
-#'        criteria to be rounded at. By default, \code{digits = 2}.
+#' @param cov_type Character string specifying the covariance estimator used in
+#'        the covariance-based criteria. Options are \code{"robust"},
+#'        \code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
+#'        The default is \code{"robust"}.
+#' @param digits Non-negative integer giving the number of decimal places used
+#'        to round the reported criteria. The default is \code{2}.
 #'
 #' @details
-#' The Quasi Information Criterion (QIC), the Correlation Information Criterion
-#' (CIC), the Rotnitzky and Jewell Criterion (RJC), the Generalized Error Sum of
-#' Squares (GESSC) and the Gaussian Pseudolikelihood Criterion (GPC) are used for
-#' selecting the best association structure.
-#' The QICu criterion is used for selecting the best subset of covariates.
+#' The reported criteria are:
+#' \describe{
+#'   \item{\code{QIC}}{Quasi Information Criterion for model comparison. Smaller
+#'     values are preferred.}
+#'   \item{\code{CIC}}{Correlation Information Criterion for selecting the
+#'     working association structure. Smaller values are preferred.}
+#'   \item{\code{RJC}}{Rotnitzky and Jewell Criterion. Smaller values are
+#'     preferred.}
+#'   \item{\code{QICu}}{A variant of QIC primarily intended for comparing mean
+#'     models with different covariate sets. Smaller values are preferred.}
+#'   \item{\code{GESSC}}{Generalized Error Sum of Squares Criterion. Smaller
+#'     values are preferred.}
+#'   \item{\code{GPC}}{Gaussian Pseudolikelihood Criterion. Larger values are
+#'     preferred.}
+#'   \item{\code{Parameters}}{Number of marginal mean-model regression
+#'     parameters.}
+#' }
 #'
-#' When choosing between ordinary, bias-reducing and penalized GEE models with
-#' the same subset of covariates, the model with the smallest value of QIC, CIC,
-#' RJC or GESSC or the model with the higher GPC should be preferred. When
-#' choosing between ordinary, bias-reducing and penalized models with different
-#' number of covariates, the model with the smallest QICu value should be
-#' preferred.
+#' The \code{cov_type} argument affects the covariance-based criteria,
+#' specifically \code{QIC}, \code{CIC}, and \code{RJC}. If several supplied
+#' models do not have the same number of observations, a warning is issued.
 #'
 #' @references
 #' Carey, V.J. and Wang, Y.G. (2011) Working covariance model selection for
@@ -59,7 +63,7 @@
 #' data. \emph{Biometrika} \bold{77}, 485--497.
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fitted_gee <- geewa_binary(
 #'   formula = ecg ~ period * treatment,
 #'   id = id,
@@ -74,33 +78,40 @@
 #' geecriteria(fitted_gee, fitted_brgee, cov_type = "robust")
 #'
 #' @export
-geecriteria <- function(object, ..., cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"), digits = 2) {
+geecriteria <- function(object,
+                        ...,
+                        cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                        digits = 2) {
   cov_type <- match.arg(cov_type)
-  is_single_nonneg_int <- function(x) {
-    is.numeric(x) && length(x) == 1L && is.finite(x) && x >= 0 && x == floor(x)
-  }
-  if (!is_single_nonneg_int(digits)) {
-    stop("'digits' must be a single non-negative integer", call. = FALSE)
-  }
-  digits <- as.integer(digits)
+  digits <- check_nonnegative_integerish(digits, "digits")
   models <- c(list(object), list(...))
-  is_geer <- vapply(models, inherits, logical(1), what = "geer")
-  if (!all(is_geer)) {
-    stop("Only 'geer' objects are supported", call. = FALSE)
-  }
-  out_list <- lapply(models, compute_criteria, cov_type = cov_type, digits = digits)
-  ans <- do.call(rbind, out_list)
-  obs_no <- vapply(models, function(m) {
-    if (!is.null(m$obs_no)) as.numeric(m$obs_no) else NA_real_
+  models <- lapply(models, check_geer_object)
+  obs_no <- vapply(models, function(model) {
+    if (!is.null(model$obs_no)) {
+      as.numeric(model$obs_no)
+    } else {
+      NA_real_
+    }
   }, numeric(1))
-  if (sum(!is.na(obs_no)) > 1L && any(obs_no[!is.na(obs_no)] != obs_no[which(!is.na(obs_no))[1L]])) {
-    warning("models do not have the same number of observations", call. = FALSE)
+  if (sum(!is.na(obs_no)) > 1L) {
+    ref_obs <- obs_no[which(!is.na(obs_no))[1L]]
+    if (any(obs_no[!is.na(obs_no)] != ref_obs)) {
+      warning("models do not have the same number of observations", call. = FALSE)
+    }
   }
+  out_list <- lapply(models, compute_criteria, cov_type = cov_type, digits = NULL)
+  ans <- do.call(rbind, out_list)
+  numeric_cols <- c("QIC", "CIC", "RJC", "QICu", "GESSC", "GPC")
+  ans[, numeric_cols] <- lapply(ans[, numeric_cols, drop = FALSE], round, digits = digits)
+  ans[, "Parameters"] <- round(ans[, "Parameters"], digits = 0)
   if (length(models) > 1L && nrow(ans) == length(models)) {
-    Call <- match.call(expand.dots = FALSE)
-    exprs <- c(list(Call[[2L]]), as.list(Call$...))
-    rn <- vapply(exprs, function(e) paste(deparse(e, width.cutoff = 500), collapse = ""), character(1))
-    rownames(ans) <- rn
+    call_expr <- match.call(expand.dots = FALSE)
+    exprs <- c(list(call_expr[[2L]]), as.list(call_expr$...))
+    rownames(ans) <- vapply(
+      exprs,
+      function(expr) paste(deparse(expr, width.cutoff = 500L), collapse = ""),
+      character(1)
+    )
   }
   ans
 }
