@@ -1,9 +1,15 @@
-#' Print Method for geer Objects
+#' @title
+#' Print a \code{geer} Object
+#'
+#' @description
+#' Print the stored call, estimated regression coefficients, and basic fitting
+#' information for a fitted \code{geer} object.
 #'
 #' @param x an object of class \code{"geer"}.
 #' @param ... additional arguments passed to or from other methods.
 #'
-#' @return The input object \code{x} is returned invisibly.
+#' @return
+#' The input object \code{x} is returned invisibly.
 #'
 #' @export
 print.geer <- function(x, ...) {
@@ -11,7 +17,11 @@ print.geer <- function(x, ...) {
   cat("Call:\n")
   print(x$call)
   cat("\nCoefficients:\n")
-  if (!is.null(x$coefficients)) print(x$coefficients) else cat("<none>\n")
+  if (!is.null(x$coefficients)) {
+    print(x$coefficients)
+  } else {
+    cat("<none>\n")
+  }
   cat("\nNumber of iterations :", x$iter, "\n")
   cat("Algorithm converged  :", x$converged, "\n")
   invisible(x)
@@ -19,7 +29,25 @@ print.geer <- function(x, ...) {
 
 
 
-#' @method summary geer
+#' @title
+#' Summarize a \code{geer} Object
+#'
+#' @description
+#' Produce a coefficient table and basic model summary information for a fitted
+#' \code{geer} object.
+#'
+#' @param object A fitted model object of class \code{geer}.
+#' @param cov_type Character string specifying the covariance estimator used to
+#'        compute standard errors, z-statistics, and p-values. Options are
+#'        \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
+#'        \code{"naive"}. Default is \code{robust}.
+#' @param ... Additional arguments passed to or from other methods. Currently
+#'        unused.
+#'
+#' @return
+#' An object of class \code{"summary.geer"} containing the coefficient table
+#' and basic fitting information.
+#'
 #' @export
 summary.geer <- function(object,
                          cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
@@ -27,21 +55,21 @@ summary.geer <- function(object,
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
   beta <- coef(object)
-  V <- vcov(object, cov_type = cov_type)
-  se <- sqrt(pmax(0, diag(V)))
-  z <- rep.int(NA_real_, length(beta))
-  p <- rep.int(NA_real_, length(beta))
-  ok <- is.finite(se) & se > 0
-  z[ok] <- beta[ok] / se[ok]
-  p[ok] <- 2 * pnorm(abs(z[ok]), lower.tail = FALSE)
-  TAB <- cbind(
+  vcov_matrix <- vcov(object, cov_type = cov_type)
+  se <- sqrt(pmax(0, diag(vcov_matrix)))
+  z_stat <- rep.int(NA_real_, length(beta))
+  pval <- rep.int(NA_real_, length(beta))
+  ok <- is.finite(beta) & is.finite(se) & se > 0
+  z_stat[ok] <- beta[ok] / se[ok]
+  pval[ok] <- 2 * pnorm(abs(z_stat[ok]), lower.tail = FALSE)
+  coef_table <- cbind(
     Estimate = beta,
     `Std. Error` = se,
-    `z value` = z,
-    `Pr(>|z|)` = p
+    `z value` = z_stat,
+    `Pr(>|z|)` = pval
   )
   res <- list(
-    coefficients = TAB,
+    coefficients = coef_table,
     family = object$family,
     alpha = object$alpha,
     call = object$call,
@@ -57,11 +85,20 @@ summary.geer <- function(object,
   res
 }
 
-
+#' @title
+#' Print a \code{summary.geer} Object
+#'
+#' @param x An object of class \code{summary.geer}.
+#' @param ... Additional arguments passed to or from other methods. Currently
+#'        unused.
+#'
+#' @return
+#' The input object \code{x} is returned invisibly.
+#'
 #' @export
 print.summary.geer <- function(x, ...) {
   x <- check_summary_geer_object(x)
-  cat("\ncall:\n")
+  cat("\nCall:\n")
   print(x$call)
   cat("\nEstimating Method   :", x$method, "\n")
   cat("Number of iterations:", x$iter, "\n")

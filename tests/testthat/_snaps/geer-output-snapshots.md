@@ -14,7 +14,7 @@
 ---
 
     
-    call:
+    Call:
     geewa(formula = seizures ~ treatment + lnbaseline + lnage, data = epilepsy, 
         id = id, repeated = visit)
     
