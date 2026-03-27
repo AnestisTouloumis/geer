@@ -1,31 +1,23 @@
-#build_geer_model_frame <- function(mcall, env = parent.frame()) {
-#  mcall$drop.unused.levels <- TRUE
-#  keep <- c("formula", "data", "id", "repeated", "weights", "offset")
-#  mcall <- mcall[c(1L, match(keep, names(mcall), 0L))]
-#  mcall[[1L]] <- as.name("model.frame")
-#  eval(mcall, envir = env)
-#}
-
-build_geer_model_frame <- function(mcall, env = parent.frame()) {
-  mcall$drop.unused.levels <- TRUE
+build_geer_model_frame <- function(model_call, env = parent.frame()) {
+  model_call$drop.unused.levels <- TRUE
   keep <- c("formula", "data", "id", "repeated", "weights", "offset")
-  mcall <- mcall[c(1L, match(keep, names(mcall), 0L))]
-  mcall[[1L]] <- quote(stats::model.frame)
+  model_call <- model_call[c(1L, match(keep, names(model_call), 0L))]
+  model_call[[1L]] <- quote(model.frame)
 
   enclos <- env
-  if (!is.null(mcall$formula)) {
-    f <- tryCatch(eval(mcall$formula, envir = env), error = function(e) NULL)
-    if (inherits(f, "formula") && !is.null(environment(f))) {
-      enclos <- environment(f)
+  if (!is.null(model_call$formula)) {
+    formula_obj <- tryCatch(eval(model_call$formula, envir = env), error = function(e) NULL)
+    if (inherits(formula_obj, "formula") && !is.null(environment(formula_obj))) {
+      enclos <- environment(formula_obj)
     }
   }
 
-  eval(mcall, envir = env, enclos = enclos)
+  eval(model_call, envir = env, enclos = enclos)
 }
+
 
 extract_geer_offset <- function(model_frame, y_length) {
   offset <- model.offset(model_frame)
-
   if (is.null(offset)) {
     offset <- rep.int(0, y_length)
   } else {
@@ -40,7 +32,6 @@ extract_geer_offset <- function(model_frame, y_length) {
     }
     offset <- as.double(offset)
   }
-
   offset
 }
 
@@ -71,12 +62,10 @@ normalize_geer_control <- function(control) {
   if (is.null(control)) {
     return(geer_control())
   }
-
   if (is.list(control) &&
       !is.null(control$maxiter) &&
       !is.null(control$tolerance)) {
     return(control)
   }
-
   do.call("geer_control", control)
 }

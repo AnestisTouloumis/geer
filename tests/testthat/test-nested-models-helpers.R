@@ -154,8 +154,8 @@ test_that("get_score_components returns expected matrix components for nested ge
   sc <- get_score_components(fit_bin_trt, fit_bin_full, coeffs_test)
 
   expect_type(sc, "list")
-  expect_true(all(c("uvector", "naive_covariance", "robust_covariance", "bc_covariance") %in% names(sc)))
-  expect_true(is.numeric(sc$uvector))
+  expect_true(all(c("score_vector", "naive_covariance", "robust_covariance", "bc_covariance") %in% names(sc)))
+  expect_true(is.numeric(sc$score_vector))
   expect_true(is.matrix(sc$naive_covariance))
   expect_true(is.matrix(sc$robust_covariance))
   expect_true(is.matrix(sc$bc_covariance))

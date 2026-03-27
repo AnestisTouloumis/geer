@@ -17,24 +17,24 @@ check_nested_models <- function(object0, object1) {
       stop("repeated indices differ between models", call. = FALSE)
     }
   }
-  nms0 <- names(object0$coefficients)
-  nms1 <- names(object1$coefficients)
-  if (is.null(nms0) || is.null(nms1)) {
+  coef_names0 <- names(object0$coefficients)
+  coef_names1 <- names(object1$coefficients)
+  if (is.null(coef_names0) || is.null(coef_names1)) {
     stop("models must have named coefficients to assess nesting", call. = FALSE)
   }
-  if (length(nms0) == length(nms1)) {
+  if (length(coef_names0) == length(coef_names1)) {
     stop("models must be nested and have different numbers of coefficients", call. = FALSE)
   }
-  if (length(nms0) < length(nms1)) {
-    obj_small <- object0
-    obj_big <- object1
-    nms_small <- nms0
-    nms_big <- nms1
+  if (length(coef_names0) < length(coef_names1)) {
+    smaller_model <- object0
+    larger_model <- object1
+    nms_small <- coef_names0
+    nms_big <- coef_names1
   } else {
-    obj_small <- object1
-    obj_big <- object0
-    nms_small <- nms1
-    nms_big <- nms0
+    smaller_model <- object1
+    larger_model <- object0
+    nms_small <- coef_names1
+    nms_big <- coef_names0
   }
   if (length(setdiff(nms_small, nms_big)) != 0L) {
     stop("models must be nested", call. = FALSE)
@@ -44,8 +44,8 @@ check_nested_models <- function(object0, object1) {
     stop("models must be nested", call. = FALSE)
   }
   list(
-    obj0 = obj_small,
-    obj1 = obj_big,
+    obj0 = smaller_model,
+    obj1 = larger_model,
     index = index
   )
 }
@@ -163,12 +163,12 @@ lcsumchisq <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) 
 
 
 ## score components
-get_score_components <- function(obj0, obj1, coeffs_test) {
+get_score_components <- function(obj0, obj1, test_coefficients) {
   if (.is_geewa_fit(obj1)) {
-    uvector <- estimating_equations_gee_cc(
+    score_vector <- estimating_equations_gee_cc(
       obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
       obj1$family$link, obj1$family$family,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
+      test_coefficients, obj0$fitted.values, obj0$linear.predictors,
       obj1$association_structure, obj1$alpha, obj1$phi
     )
 
@@ -181,10 +181,10 @@ get_score_components <- function(obj0, obj1, coeffs_test) {
   } else {
     association_alpha <- .get_or_alpha(obj1)
 
-    uvector <- estimating_equations_gee_or(
+    score_vector <- estimating_equations_gee_or(
       obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
       obj1$family$link,
-      coeffs_test, obj0$fitted.values, obj0$linear.predictors,
+      test_coefficients, obj0$fitted.values, obj0$linear.predictors,
       association_alpha
     )
     covariance <- get_covariance_matrices_or(
@@ -195,7 +195,7 @@ get_score_components <- function(obj0, obj1, coeffs_test) {
     )
   }
   list(
-    uvector = uvector,
+    score_vector = score_vector,
     naive_covariance = covariance$naive_covariance,
     robust_covariance = covariance$robust_covariance,
     bc_covariance = covariance$bc_covariance
@@ -211,11 +211,11 @@ wald_test <- function(object0, object1,
   obj1 <- nested_models$obj1
   index <- nested_models$index
   test_df <- .validate_test_index(index, "Wald test")
-  coeffs_test <- as.numeric(obj1$coefficients[index])
+  test_coefficients <- as.numeric(obj1$coefficients[index])
   cov_mat <- vcov(obj1, cov_type = cov_type)
   cov_test <- cov_mat[index, index, drop = FALSE]
   test_stat <- tryCatch(
-    as.numeric(crossprod(coeffs_test, solve(cov_test, coeffs_test))),
+    as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
     error = function(e) {
       stop("Wald test failed: covariance matrix is singular or invalid",
            call. = FALSE)
@@ -237,11 +237,11 @@ working_wald_test <- function(object0, object1,
   obj1 <- nested_models$obj1
   index <- nested_models$index
   .validate_test_index(index, "Working Wald test")
-  coeffs_test <- as.numeric(obj1$coefficients[index])
+  test_coefficients <- as.numeric(obj1$coefficients[index])
   naive_mat <- vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
   stat_test <- tryCatch(
-    as.numeric(crossprod(coeffs_test, solve(cov_test, coeffs_test))),
+    as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
     error = function(e) {
       stop(
         "Working Wald test failed: naive covariance matrix is singular or invalid",
@@ -311,11 +311,11 @@ score_test <- function(object0, object1,
   obj1 <- nested_models$obj1
   index <- nested_models$index
   test_df <- .validate_test_index(index, "Score test")
-  coeffs_test <- obj1$coefficients
-  coeffs_test[index] <- 0
-  coeffs_test[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- get_score_components(obj0, obj1, coeffs_test)
-  uvector <- sc$uvector
+  test_coefficients <- obj1$coefficients
+  test_coefficients[index] <- 0
+  test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
+  sc <- get_score_components(obj0, obj1, test_coefficients)
+  score_vector <- sc$score_vector
   cov_test <- switch(
     cov_type,
     robust = sc$robust_covariance[index, index, drop = FALSE],
@@ -329,7 +329,7 @@ score_test <- function(object0, object1,
     )
   )
   naive_cov <- sc$naive_covariance
-  mid <- naive_cov[index, , drop = FALSE] %*% uvector
+  mid <- naive_cov[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(
     solve(cov_test, mid),
     error = function(e) {
@@ -337,7 +337,7 @@ score_test <- function(object0, object1,
            call. = FALSE)
     }
   )
-  test_stat <- as.numeric((t(uvector) %*% naive_cov[, index, drop = FALSE]) %*% sol)
+  test_stat <- as.numeric((t(score_vector) %*% naive_cov[, index, drop = FALSE]) %*% sol)
   test_stat <- .validate_test_statistic(test_stat, "Score test")
   test_p <- 1 - pchisq(test_stat, df = test_df)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
@@ -355,12 +355,12 @@ working_score_test <- function(object0, object1,
   obj1 <- nested_models$obj1
   index <- nested_models$index
   .validate_test_index(index, "Working score test")
-  coeffs_test <- as.numeric(obj1$coefficients)
-  names(coeffs_test) <- names(obj1$coefficients)
-  coeffs_test[index] <- 0
-  coeffs_test[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- get_score_components(obj0, obj1, coeffs_test)
-  uvector <- sc$uvector
+  test_coefficients <- as.numeric(obj1$coefficients)
+  names(test_coefficients) <- names(obj1$coefficients)
+  test_coefficients[index] <- 0
+  test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
+  sc <- get_score_components(obj0, obj1, test_coefficients)
+  score_vector <- sc$score_vector
   cov_test <- sc$naive_covariance
   rob_test <- switch(
     cov_type,
@@ -375,7 +375,7 @@ working_score_test <- function(object0, object1,
     )
   )
   cov_ii <- cov_test[index, index, drop = FALSE]
-  mid <- cov_test[index, , drop = FALSE] %*% uvector
+  mid <- cov_test[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(
     solve(cov_ii, mid),
     error = function(e) {
@@ -385,7 +385,7 @@ working_score_test <- function(object0, object1,
       )
     }
   )
-  score_stat <- as.numeric((t(uvector) %*% cov_test[, index, drop = FALSE]) %*% sol)
+  score_stat <- as.numeric((t(score_vector) %*% cov_test[, index, drop = FALSE]) %*% sol)
   score_stat <- .validate_test_statistic(score_stat, "Working score test")
   eigen_test <- .compute_mixture_eigenvalues(
     naive_mat = cov_ii,

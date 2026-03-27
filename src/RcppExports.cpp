@@ -369,8 +369,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_bingee_or
-Rcpp::List fit_bingee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weight_vector, const char * link, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char * method, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_fit_bingee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weight_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP offsetSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP step_maxiterSEXP, SEXP step_multiplierSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP, SEXP alpha_vectorSEXP) {
+Rcpp::List fit_bingee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char * method, const arma::vec& alpha_vector);
+RcppExport SEXP _geer_fit_bingee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP offsetSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP step_maxiterSEXP, SEXP step_multiplierSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -378,7 +378,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weight_vector(weight_vectorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
     Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type offset(offsetSEXP);
@@ -389,7 +389,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double& >::type jeffreys_power(jeffreys_powerSEXP);
     Rcpp::traits::input_parameter< const char * >::type method(methodSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_bingee_or(y_vector, model_matrix, id_vector, repeated_vector, weight_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector));
+    rcpp_result_gen = Rcpp::wrap(fit_bingee_or(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector));
     return rcpp_result_gen;
 END_RCPP
 }

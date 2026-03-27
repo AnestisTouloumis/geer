@@ -13,9 +13,9 @@
 #'   iterations. Default is \code{500}.
 #' @param or_adding Strictly positive constant added to each cell of the full
 #'   marginalized contingency table. Default is \code{0.5}.
-#' @param step_maxit Positive integer giving the maximum number of step-halving
+#' @param step_maxiter Positive integer giving the maximum number of step-halving
 #'   attempts allowed within an iteration. Default is \code{10}.
-#' @param step_multi Positive integer used to scale the proposed step before
+#' @param step_multiplier Positive integer used to scale the proposed step before
 #'   step-halving. Default is \code{1}.
 #' @param jeffreys_power Strictly positive constant giving the power of the
 #'   Jeffreys-prior penalty. Default is \code{0.5}.
@@ -35,8 +35,8 @@
 geer_control <- function(tolerance = 1e-06,
                          maxiter = 500,
                          or_adding = 0.5,
-                         step_maxit = 10,
-                         step_multi = 1,
+                         step_maxiter = 10,
+                         step_multiplier = 1,
                          jeffreys_power = 0.5) {
   if (!is_pos_scalar(tolerance)) {
     stop("'tolerance' must be a positive number", call. = FALSE)
@@ -47,11 +47,11 @@ geer_control <- function(tolerance = 1e-06,
   if (!is_pos_scalar(or_adding)) {
     stop("'or_adding' must be a positive number", call. = FALSE)
   }
-  if (!is_pos_int_scalar(step_maxit)) {
-    stop("'step_maxit' must be a positive integer", call. = FALSE)
+  if (!is_pos_int_scalar(step_maxiter)) {
+    stop("'step_maxiter' must be a positive integer", call. = FALSE)
   }
-  if (!is_pos_int_scalar(step_multi)) {
-    stop("'step_multi' must be a positive integer", call. = FALSE)
+  if (!is_pos_int_scalar(step_multiplier)) {
+    stop("'step_multiplier' must be a positive integer", call. = FALSE)
   }
   if (!is_pos_scalar(jeffreys_power)) {
     stop("'jeffreys_power' must be a positive number", call. = FALSE)
@@ -60,8 +60,8 @@ geer_control <- function(tolerance = 1e-06,
     tolerance = tolerance,
     maxiter = as.integer(maxiter),
     or_adding = or_adding,
-    step_maxit = as.integer(step_maxit),
-    step_multi = as.integer(step_multi),
+    step_maxiter = as.integer(step_maxiter),
+    step_multiplier = as.integer(step_multiplier),
     jeffreys_power = jeffreys_power
   )
 }

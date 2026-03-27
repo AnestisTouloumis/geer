@@ -65,8 +65,8 @@ update_beta_or <- function(y_vector, model_matrix, id_vector, repeated_vector, w
     .Call(`_geer_update_beta_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, jeffreys_power, method)
 }
 
-fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weight_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {
-    .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, weight_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
+fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {
+    .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
 }
 
 get_naive_matrix_inverse_independence <- function(y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi) {
