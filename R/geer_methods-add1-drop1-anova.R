@@ -69,7 +69,7 @@ add1.geer <-
            pmethod = c("rao-scott", "satterthwaite"),
            ...) {
     object <- check_geer_object(object)
-    opts <- normalize_test_options(
+    opts <- normalize_geer_test_options(
       test = test[1L],
       cov_type = cov_type[1L],
       pmethod = pmethod[1L],
@@ -92,7 +92,7 @@ add1.geer <-
                   dimnames = list(c("<none>", scope),
                                   c("Df", "CIC", "Chi", "Pr(>Chi)")))
 
-    ans[1L, 2L] <- extract_cic(object, cov_type)
+    ans[1L, 2L] <- compute_gee_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
       add1_model <- update(object, formula = as.formula(paste(". ~ . +", tt)),
@@ -103,16 +103,16 @@ add1.geer <-
         score = score_test(object, add1_model, cov_type),
         `working-wald`  = working_wald_test(object, add1_model, cov_type, pmethod),
         `working-score` = working_score_test(object, add1_model, cov_type, pmethod),
-        `working-lrt`   = working_lr_test(object, add1_model, cov_type, pmethod)
+        `working-lrt`   = working_lrt_test(object, add1_model, cov_type, pmethod)
       )
 
       ans[i + 1L, ] <- c(value$test_df,
-                         extract_cic(add1_model, cov_type),
+                         compute_gee_cic(add1_model, cov_type),
                          value$test_stat,
                          value$test_p)
     }
     aod <- as.data.frame(ans)
-    test_type <- test_label(test)
+    test_type <- format_test_label(test)
     formula_txt <- paste(deparse(object$call$formula), collapse = " ")
     head <- c(
       paste("Single term additions using", test_type, "test:"),
@@ -137,7 +137,7 @@ drop1.geer <- function(object,
                        pmethod = c("rao-scott", "satterthwaite"),
                        ...) {
   object <- check_geer_object(object)
-  opts <- normalize_test_options(
+  opts <- normalize_geer_test_options(
     test = test[1L],
     cov_type = cov_type[1L],
     pmethod = pmethod[1L],
@@ -164,7 +164,7 @@ drop1.geer <- function(object,
   ans <- matrix(NA_real_, nrow = ns + 1L, ncol = 4L,
                 dimnames = list(c("<none>", scope),
                                 c("Df", "CIC", "Chi", "Pr(>Chi)")))
-  ans[1L, 2L] <- extract_cic(object, cov_type)
+  ans[1L, 2L] <- compute_gee_cic(object, cov_type)
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
     drop1_model <- update(object, formula = as.formula(paste(". ~ . -", tt)),
@@ -175,15 +175,15 @@ drop1.geer <- function(object,
       score = score_test(drop1_model, object, cov_type),
       `working-wald` = working_wald_test(drop1_model, object, cov_type, pmethod),
       `working-score` = working_score_test(drop1_model, object, cov_type, pmethod),
-      `working-lrt` = working_lr_test(drop1_model, object, cov_type, pmethod)
+      `working-lrt` = working_lrt_test(drop1_model, object, cov_type, pmethod)
     )
     ans[i + 1L, ] <- c(value$test_df,
-                       extract_cic(drop1_model, cov_type),
+                       compute_gee_cic(drop1_model, cov_type),
                        value$test_stat,
                        value$test_p)
   }
   aod <- as.data.frame(ans)
-  test_type <- test_label(test)
+  test_type <- format_test_label(test)
   formula_txt <- paste(deparse(object$call$formula), collapse = " ")
   head <- c(
     paste("Single term deletions using", test_type, "test:"),
@@ -289,7 +289,7 @@ anova.geer <-
            cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
            pmethod = c("rao-scott", "satterthwaite") ) {
     object <- check_geer_object(object)
-    opts <- normalize_test_options(
+    opts <- normalize_geer_test_options(
       test = test[1L],
       cov_type = cov_type[1L],
       pmethod = pmethod[1L],
@@ -312,10 +312,10 @@ anova.geer <-
     dotargs <- dotargs[is_geer]
     if (length(dotargs)) {
       dotargs <- lapply(dotargs, check_geer_object)
-      return(anova_geerlist(c(list(object), dotargs),
-                            test = test,
-                            cov_type = cov_type,
-                            pmethod = pmethod))
+      return(compute_anova_geer_list(c(list(object), dotargs),
+                             test = test,
+                             cov_type = cov_type,
+                             pmethod = pmethod))
     }
     terms <- attr(object$terms, "term.labels")
     intercept <- attr(object$terms, "intercept")
@@ -361,11 +361,11 @@ anova.geer <-
         `working-score` =
           working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
         `working-lrt` =
-          working_lr_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
+          working_lrt_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
       )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }
-    test_type <- test_label(test)
+    test_type <- format_test_label(test)
     title <- paste(
       "Analysis of ", test_type, " Statistic Table",
       "\n\nModel: ", object$family$family,

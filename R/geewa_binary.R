@@ -67,16 +67,16 @@ geewa_binary <- function(formula,
   mcall <- match.call(expand.dots = FALSE)
   model_frame <- build_geer_model_frame(mcall, env = parent.frame())
   ## link function
-  links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
-             "sqrt", "1/mu^2", "inverse")
+  valid_links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log",
+                   "sqrt", "1/mu^2", "inverse")
   link <- as.character(link)
-  if (!isTRUE(link %in% links)) {
-    stop("'link' should be one of: logit, probit, cauchit, cloglog, identity, log, sqrt, 1/mu^2, inverse")
+  if (!(link %in% valid_links)) {
+    stop("'link' must be one of: logit, probit, cauchit, cloglog, identity, log, sqrt, 1/mu^2, inverse", call. = FALSE)
   }
   family <- binomial(link = link)
   ## response
   y <- model.response(model_frame, "any")
-  if (is.null(y)) stop("response variable not found")
+  if (is.null(y)) stop("response variable not found", call. = FALSE)
   if (is.factor(y)) {
     y <- as.numeric(y != levels(y)[1L])
   } else if (is.character(y)) {
@@ -88,37 +88,37 @@ geewa_binary <- function(formula,
   if (is.null(weights)) {
     weights <- rep.int(1, length(y))
   } else {
-    if (!is.numeric(weights)) stop("'weights' should be a numeric vector")
-    if (any(!is.finite(weights))) stop("'weights' must be finite")
-    if (any(weights <= 0)) stop("'weights' must be strictly positive")
+    if (!is.numeric(weights)) stop("'weights' must be a numeric vector", call. = FALSE)
+    if (any(!is.finite(weights))) stop("'weights' must be finite", call. = FALSE)
+    if (any(weights <= 0)) stop("'weights' must be strictly positive", call. = FALSE)
   }
-  if (length(weights) != length(y)) stop("'weights' and the response must have the same length")
+  if (length(weights) != length(y)) stop("'weights' and the response must have the same length", call. = FALSE)
   ## binomial matrix response: combine trials with user weights
   if (is.matrix(y) && ncol(y) == 2L) {
     trials <- rowSums(y)
-    if (any(trials <= 0)) stop("for binomial matrix responses, row sums (trials) must be positive")
+    if (any(trials <= 0)) stop("for binomial matrix responses, row sums (trials) must be positive", call. = FALSE)
     weights <- weights * trials
     y <- y[, 1L] / trials
   }
   y <- as.numeric(y)
-  if (any(!is.finite(y))) stop("response variable contains non-finite values")
+  if (any(!is.finite(y))) stop("response variable contains non-finite values", call. = FALSE)
   ## id (recode to 1..N)
   id_raw <- model.extract(model_frame, "id")
-  if (is.null(id_raw)) stop("'id' not found")
-  if (anyNA(id_raw)) stop("'id' cannot contain missing values")
+  if (is.null(id_raw)) stop("'id' not found", call. = FALSE)
+  if (anyNA(id_raw)) stop("'id' cannot contain missing values", call. = FALSE)
   id <- as.numeric(factor(id_raw))
-  if (length(id) != length(y)) stop("response variable and 'id' are not of same length")
+  if (length(id) != length(y)) stop("response variable and 'id' are not of same length", call. = FALSE)
   ## repeated (recode to 1..T within-cluster if missing)
   repeated <- model.extract(model_frame, "repeated")
   if (is.null(repeated)) {
     repeated <- ave(id, id, FUN = seq_along)
   } else {
-    if (anyNA(repeated)) stop("'repeated' cannot contain missing values")
+    if (anyNA(repeated)) stop("'repeated' cannot contain missing values", call. = FALSE)
     repeated <- as.numeric(factor(repeated))
   }
-  if (length(repeated) != length(y)) stop("response variable and 'repeated' are not of same length")
+  if (length(repeated) != length(y)) stop("response variable and 'repeated' are not of same length", call. = FALSE)
   if (any(unlist(lapply(split(repeated, id), duplicated)))) {
-    stop("'repeated' does not have unique values per 'id'")
+    stop("'repeated' does not have unique values per 'id'", call. = FALSE)
   }
   ## offset
   offset <- extract_geer_offset(model_frame, y_length = length(y))
@@ -145,29 +145,29 @@ geewa_binary <- function(formula,
   maxiter <- control$maxiter
   tolerance <- control$tolerance
   ## method
-  methods <- c("gee",
-               "brgee-naive", "brgee-robust", "brgee-empirical",
-               "bcgee-naive", "bcgee-robust", "bcgee-empirical",
-               "pgee-jeffreys")
+  valid_methods <- c("gee",
+                     "brgee-naive", "brgee-robust", "brgee-empirical",
+                     "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+                     "pgee-jeffreys")
   method <- as.character(method)
-  if (!isTRUE(method %in% methods)) {
-    stop("'method' should be one of: gee, brgee-naive, brgee-robust, brgee-empirical, bcgee-naive, bcgee-robust, bcgee-empirical, pgee-jeffreys")
+  if (!(method %in% valid_methods)) {
+    stop("'method' must be one of: gee, brgee-naive, brgee-robust, brgee-empirical, bcgee-naive, bcgee-robust, bcgee-empirical, pgee-jeffreys", call. = FALSE)
   }
   ## initial beta
-  beta_zero <- compute_start_values_geewa_binary(
+  beta_zero <- compute_geer_binary_start_values(
     model_matrix = model_matrix,
     y = y,
+    family = family,
     weights = weights,
     offset = offset,
-    family = family,
     beta_start = beta_start,
     control_glm = control_glm,
     tolerance = tolerance
   )
   ## odds ratios structure
-  orstrs <- c("independence", "exchangeable", "unstructured", "fixed")
-  if (!isTRUE(orstr %in% orstrs)) {
-    stop("'orstr' should be one of: independence, exchangeable, unstructured, fixed")
+  valid_orstrs <- c("independence", "exchangeable", "unstructured", "fixed")
+  if (!(orstr %in% valid_orstrs)) {
+    stop("'orstr' must be one of: independence, exchangeable, unstructured, fixed", call. = FALSE)
   }
   if (identical(orstr, "independence")) {
     adding_constant <- NULL
@@ -175,10 +175,10 @@ geewa_binary <- function(formula,
   } else if (identical(orstr, "fixed")) {
     adding_constant <- NULL
     pairs_no <- choose(max(repeated), 2)
-    if (!is.numeric(alpha_vector)) stop("'alpha_vector' must be a numeric vector")
-    if (length(alpha_vector) != pairs_no) stop("'alpha_vector' must be of length ", pairs_no)
+    if (!is.numeric(alpha_vector)) stop("'alpha_vector' must be a numeric vector", call. = FALSE)
+    if (length(alpha_vector) != pairs_no) stop("'alpha_vector' must be of length ", pairs_no, call. = FALSE)
     if (any(!is.finite(alpha_vector)) || any(alpha_vector <= 0)) {
-      stop("'alpha_vector' must be finite and strictly positive when 'orstr = fixed'")
+      stop("'alpha_vector' must be finite and strictly positive when 'orstr = fixed'", call. = FALSE)
     }
   } else {
     adding_constant <- control$or_adding
@@ -195,7 +195,7 @@ geewa_binary <- function(formula,
   geesolver_fit <- fit_bingee_or(
     y, model_matrix, id, repeated, weights, link,
     beta_zero, offset, maxiter, tolerance,
-    control$step_maxit, control$step_multi,
+    control$step_maxiter, control$step_multiplier,
     control$jeffreys_power, method, alpha_vector
   )
   ## second pass for bias-corrected estimators
@@ -210,11 +210,11 @@ geewa_binary <- function(formula,
       )
       method <- method_original
     } else {
-      stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge")
+      stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge", call. = FALSE)
     }
   }
   ## output
-  fit <- finalize_geer_fit(
+  fit <- build_geer_output(
     geesolver_fit = geesolver_fit,
     xnames = xnames,
     qr_model_matrix = qr_model_matrix,

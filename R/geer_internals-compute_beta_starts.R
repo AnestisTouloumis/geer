@@ -1,13 +1,13 @@
-compute_start_values_geewa <- function(model_matrix,
-                                        y,
-                                        family,
-                                        weights,
-                                        offset,
-                                        method,
-                                        link,
-                                        beta_start,
-                                        control,
-                                        control_glm) {
+compute_geer_start_values <- function(model_matrix,
+                                      y,
+                                      family,
+                                      weights,
+                                      offset,
+                                      method,
+                                      link,
+                                      beta_start,
+                                      control,
+                                      control_glm) {
   if (!is.null(beta_start)) {
     beta_start <- as.numeric(beta_start)
     p <- ncol(model_matrix)
@@ -71,14 +71,14 @@ compute_start_values_geewa <- function(model_matrix,
   stop("cannot compute starting values; please supply 'beta_start'", call. = FALSE)
 }
 
-compute_start_values_geewa_binary <- function(model_matrix,
-                                              y,
-                                              weights,
-                                              offset,
-                                              family,
-                                              beta_start,
-                                              control_glm,
-                                              tolerance) {
+compute_geer_binary_start_values <- function(model_matrix,
+                                             y,
+                                             family,
+                                             weights,
+                                             offset,
+                                             beta_start,
+                                             control_glm,
+                                             tolerance) {
   if (!is.null(beta_start)) {
     beta_start <- as.numeric(beta_start)
     p <- ncol(model_matrix)

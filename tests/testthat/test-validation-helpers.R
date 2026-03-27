@@ -65,8 +65,8 @@ test_that("validate_step_count rejects invalid step values", {
   )
 })
 
-test_that("normalize_test_options drops pmethod for non-working tests", {
-  out <- normalize_test_options("wald", "robust", "rao-scott")
+test_that("normalize_geer_test_options drops pmethod for non-working tests", {
+  out <- normalize_geer_test_options("wald", "robust", "rao-scott")
 
   expect_type(out, "list")
   expect_identical(out$test, "wald")
@@ -74,8 +74,8 @@ test_that("normalize_test_options drops pmethod for non-working tests", {
   expect_null(out$pmethod)
 })
 
-test_that("normalize_test_options keeps pmethod for working tests", {
-  out <- normalize_test_options("working-score", "robust", "satterthwaite")
+test_that("normalize_geer_test_options keeps pmethod for working tests", {
+  out <- normalize_geer_test_options("working-score", "robust", "satterthwaite")
 
   expect_type(out, "list")
   expect_identical(out$test, "working-score")

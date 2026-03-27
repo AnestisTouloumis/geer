@@ -182,20 +182,20 @@ geewa <- function(formula,
   mcall <- match.call(expand.dots = FALSE)
   model_frame <- build_geer_model_frame(mcall, env = parent.frame())
   ## family
-  allowed_families <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian", "quasi")
+  valid_families <- c("gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian", "quasi")
   if (is.character(family)) family <- get(family, mode = "function", envir = parent.frame())
   if (is.function(family)) family <- family()
-  if (!isTRUE(family$family %in% allowed_families)) {
-    stop("'family' should be one of: gaussian, poisson, binomial, Gamma, inverse.gaussian, quasi")
+  if (!(family$family %in% valid_families)) {
+    stop("'family' must be one of: gaussian, poisson, binomial, Gamma, inverse.gaussian, quasi", call. = FALSE)
   }
-  allowed_links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log", "sqrt", "1/mu^2", "inverse")
+  valid_links <- c("logit", "probit", "cauchit", "cloglog", "identity", "log", "sqrt", "1/mu^2", "inverse")
   link <- as.character(family$link)
-  if (!isTRUE(link %in% allowed_links)) {
-    stop("'link' should be one of: logit, probit, cauchit, cloglog, identity, log, sqrt, 1/mu^2, inverse")
+  if (!(link %in% valid_links)) {
+    stop("'link' must be one of: logit, probit, cauchit, cloglog, identity, log, sqrt, 1/mu^2, inverse", call. = FALSE)
   }
   ## response
   y <- model.response(model_frame, "any")
-  if (is.null(y)) stop("response variable not found")
+  if (is.null(y)) stop("response variable not found", call. = FALSE)
   if (identical(family$family, "binomial")) {
     if (is.factor(y)) {
       y <- as.numeric(y != levels(y)[1L])
@@ -209,37 +209,37 @@ geewa <- function(formula,
   if (is.null(weights)) {
     weights <- rep.int(1, length(y))
   } else {
-    if (!is.numeric(weights)) stop("'weights' should be a numeric vector")
-    if (any(!is.finite(weights))) stop("'weights' must be finite")
-    if (any(weights <= 0)) stop("'weights' must be strictly positive")
+    if (!is.numeric(weights)) stop("'weights' must be a numeric vector", call. = FALSE)
+    if (any(!is.finite(weights))) stop("'weights' must be finite", call. = FALSE)
+    if (any(weights <= 0)) stop("'weights' must be strictly positive", call. = FALSE)
   }
-  if (length(weights) != length(y)) stop("'weights' and the response must have the same length")
+  if (length(weights) != length(y)) stop("'weights' and the response must have the same length", call. = FALSE)
   ## binomial matrix response
   if (identical(family$family, "binomial") && is.matrix(y) && ncol(y) == 2L) {
     trials <- rowSums(y)
-    if (any(trials <= 0)) stop("for binomial matrix responses, row sums (trials) must be positive")
+    if (any(trials <= 0)) stop("for binomial matrix responses, row sums (trials) must be positive", call. = FALSE)
     weights <- weights * trials
     y <- y[, 1L] / trials
   }
   y <- as.numeric(y)
-  if (any(!is.finite(y))) stop("response variable contains non-finite values")
+  if (any(!is.finite(y))) stop("response variable contains non-finite values", call. = FALSE)
   ## id
   id_raw <- model.extract(model_frame, "id")
-  if (is.null(id_raw)) stop("'id' not found")
-  if (anyNA(id_raw)) stop("'id' cannot contain missing values")
+  if (is.null(id_raw)) stop("'id' not found", call. = FALSE)
+  if (anyNA(id_raw)) stop("'id' cannot contain missing values", call. = FALSE)
   id <- as.numeric(factor(id_raw))
-  if (length(id) != length(y)) stop("response variable and 'id' are not of same length")
+  if (length(id) != length(y)) stop("response variable and 'id' are not of same length", call. = FALSE)
   ## repeated
   repeated <- model.extract(model_frame, "repeated")
   if (is.null(repeated)) {
     repeated <- ave(id, id, FUN = seq_along)
   } else {
-    if (anyNA(repeated)) stop("'repeated' cannot contain missing values")
+    if (anyNA(repeated)) stop("'repeated' cannot contain missing values", call. = FALSE)
     repeated <- as.numeric(factor(repeated))
   }
-  if (length(repeated) != length(y)) stop("response variable and 'repeated' are not of same length")
+  if (length(repeated) != length(y)) stop("response variable and 'repeated' are not of same length", call. = FALSE)
   if (any(unlist(lapply(split(repeated, id), duplicated)))) {
-    stop("'repeated' does not have unique values per 'id'")
+    stop("'repeated' does not have unique values per 'id'", call. = FALSE)
   }
   ## offset
   offset <- extract_geer_offset(model_frame, y_length = length(y))
@@ -266,16 +266,16 @@ geewa <- function(formula,
   maxiter <- control$maxiter
   tolerance <- control$tolerance
   ## method
-  methods <- c("gee",
-               "brgee-naive", "brgee-robust", "brgee-empirical",
-               "bcgee-naive", "bcgee-robust", "bcgee-empirical",
-               "pgee-jeffreys")
+  valid_methods <- c("gee",
+                     "brgee-naive", "brgee-robust", "brgee-empirical",
+                     "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+                     "pgee-jeffreys")
   method <- as.character(method)
-  if (!isTRUE(method %in% methods)) {
-    stop("'method' should be one of: gee, brgee-naive, brgee-robust, brgee-empirical, bcgee-naive, bcgee-robust, bcgee-empirical, pgee-jeffreys")
+  if (!(method %in% valid_methods)) {
+    stop("'method' must be one of: gee, brgee-naive, brgee-robust, brgee-empirical, bcgee-naive, bcgee-robust, bcgee-empirical, pgee-jeffreys", call. = FALSE)
   }
   ## initial beta
-  beta_zero <- compute_start_values_geewa(
+  beta_zero <- compute_geer_start_values(
     model_matrix = model_matrix,
     y = y,
     family = family,
@@ -292,33 +292,33 @@ geewa <- function(formula,
   if (phi_fixed) {
     phi_value <- as.numeric(phi_value)
     if (length(phi_value) != 1L || !is.finite(phi_value) || phi_value <= 0) {
-      stop("'phi_value' must be a single positive number when 'phi_fixed = TRUE'")
+      stop("'phi_value' must be a single positive number when 'phi_fixed = TRUE'", call. = FALSE)
     }
   } else {
     phi_value <- 1
   }
 
   ## correlation structure
-  corstrs <- c("independence", "exchangeable", "ar1", "m-dependent", "unstructured", "fixed")
-  if (!isTRUE(corstr %in% corstrs)) {
-    stop("'corstr' should be one of: independence, exchangeable, ar1, m-dependent, unstructured, fixed")
+  valid_corstrs <- c("independence", "exchangeable", "ar1", "m-dependent", "unstructured", "fixed")
+  if (!(corstr %in% valid_corstrs)) {
+    stop("'corstr' must be one of: independence, exchangeable, ar1, m-dependent, unstructured, fixed", call. = FALSE)
   }
 
   if (!identical(corstr, "m-dependent")) Mv <- 1
-  if (identical(corstr, "m-dependent") && ((Mv <= 0) || Mv %% 1 != 0)) stop("Mv must be a positive integer number")
+  if (identical(corstr, "m-dependent") && ((Mv <= 0) || Mv %% 1 != 0)) stop("Mv must be a positive integer number", call. = FALSE)
   if (!identical(corstr, "fixed")) {
     alpha_vector <- 0
     alpha_fixed <- 0
   } else {
-    if (is.null(alpha_vector)) stop("'alpha_vector' should be provided when 'corstr == fixed'")
+    if (is.null(alpha_vector)) stop("'alpha_vector' must be provided when 'corstr == fixed'", call. = FALSE)
     alpha_vector <- as.numeric(alpha_vector)
     repeated_max <- max(repeated)
     if (length(alpha_vector) != choose(repeated_max, 2)) {
-      stop("'alpha_vector' must be a numeric vector of length ", choose(repeated_max, 2))
+      stop("'alpha_vector' must be a numeric vector of length ", choose(repeated_max, 2), call. = FALSE)
     }
     if (any(eigen(get_correlation_matrix(corstr, alpha_vector, repeated_max),
                   symmetric = TRUE, only.values = TRUE)$values <= 0)) {
-      stop("fixed working correlation matrix is not positive definite")
+      stop("fixed working correlation matrix is not positive definite", call. = FALSE)
     }
     alpha_fixed <- 1
   }
@@ -348,8 +348,8 @@ geewa <- function(formula,
   geesolver_fit <- fit_geesolver_cc(
     y, model_matrix, id, repeated, weights,
     link, family$family, beta_zero, offset,
-    maxiter, tolerance, control$step_maxit,
-    control$step_multi, control$jeffreys_power,
+    maxiter, tolerance, control$step_maxiter,
+    control$step_multiplier, control$jeffreys_power,
     method, subtract_p, alpha_vector, alpha_fixed,
     corstr, Mv, phi_value, phi_fixed
   )
@@ -367,40 +367,40 @@ geewa <- function(formula,
       )
       method <- method_original
     } else {
-      stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge")
+      stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge", call. = FALSE)
     }
   }
   ## output
-  fit <- finalize_geer_fit(
-      geesolver_fit = geesolver_fit,
-      xnames = xnames,
-      qr_model_matrix = qr_model_matrix,
-      family = family,
-      weights = weights,
-      y = y,
-      model_matrix = model_matrix,
-      model_frame = model_frame,
-      id = id,
-      repeated = repeated,
-      call = call,
-      data = data,
-      model_terms = model_terms,
-      control = control,
-      method = method_original,
-      association_structure = corstr
-    )
-    fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
-    if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
-      fit$converged <- TRUE
-    }
+  fit <- build_geer_output(
+    geesolver_fit = geesolver_fit,
+    xnames = xnames,
+    qr_model_matrix = qr_model_matrix,
+    family = family,
+    weights = weights,
+    y = y,
+    model_matrix = model_matrix,
+    model_frame = model_frame,
+    id = id,
+    repeated = repeated,
+    call = call,
+    data = data,
+    model_terms = model_terms,
+    control = control,
+    method = method_original,
+    association_structure = corstr
+  )
+  fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
+  if (method_original %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+    fit$converged <- TRUE
+  }
 
-    fit$alpha <- if (identical(corstr, "independence")) 0 else as.numeric(geesolver_fit$alpha)
+  fit$alpha <- if (identical(corstr, "independence")) 0 else as.numeric(geesolver_fit$alpha)
 
-    if (corstr %in% c("unstructured", "fixed")) {
-      pairs_matrix <- combn(max(repeated), 2)
-      alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
-      names(fit$alpha) <- alpha_names
-    }
+  if (corstr %in% c("unstructured", "fixed")) {
+    pairs_matrix <- combn(max(repeated), 2)
+    alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
+    names(fit$alpha) <- alpha_names
+  }
   if (!fit$converged) warning("geewa: algorithm did not converge", call. = FALSE)
   eps <- 10 * .Machine$double.eps
   if (identical(family$family, "binomial")) {
@@ -415,8 +415,8 @@ geewa <- function(formula,
   }
   if (!identical(corstr, "independence")) {
     corr <- get_correlation_matrix(corstr, fit$alpha, max(repeated))
-    ev <- eigen(corr, symmetric = TRUE, only.values = TRUE)$values
-    if (any(ev <= 0)) {
+    eigenvalues <- eigen(corr, symmetric = TRUE, only.values = TRUE)$values
+    if (any(eigenvalues <= 0)) {
       warning("geewa: working correlation matrix is not positive definite", call. = FALSE)
     }
   }

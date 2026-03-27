@@ -40,7 +40,6 @@ coef.geer <- function(object, ...) {
 }
 
 
-
 #' @title
 #' Confidence Intervals for Model Parameters from a \code{geer} Object
 #'
@@ -100,10 +99,10 @@ confint.geer <- function(object,
   if (anyNA(parm) || !all(parm %in% beta_names)) {
     stop("invalid 'parm' specification", call. = FALSE)
   }
-  alpha <- (1 - level) / 2
-  alpha <- c(alpha, 1 - alpha)
-  pct <- format_perc(alpha, 3)
-  percentiles <- qnorm(alpha)
+  conf_probs <- (1 - level) / 2
+  conf_probs <- c(conf_probs, 1 - conf_probs)
+  pct <- format_percent(conf_probs, 3)
+  percentiles <- qnorm(conf_probs)
   ans <- matrix(
     NA_real_,
     nrow = length(parm),
@@ -115,6 +114,7 @@ confint.geer <- function(object,
   ans[] <- beta[parm] + standard_errors %o% percentiles
   ans
 }
+
 
 #' @title
 #' Extract Variance-Covariance Matrix from a \code{geer} Object
@@ -182,13 +182,11 @@ vcov.geer <- function(object,
     robust = object$robust_covariance,
     naive = object$naive_covariance,
     `bias-corrected` = object$bias_corrected_covariance,
-    `df-adjusted` = {
-      sample_size <- object$clusters_no
-      p <- ncol(object$robust_covariance)
-      if (sample_size <= p) {
-        stop("clusters_no must be > number of coefficients", call. = FALSE)
-      }
-      (sample_size / (sample_size - p)) * object$robust_covariance
-    }
+    `df-adjusted` = compute_df_adjusted_covariance(
+      robust_covariance = object$robust_covariance,
+      clusters_no = object$clusters_no,
+      coef_no = ncol(object$robust_covariance),
+      context = "vcov"
+    )
   )
 }

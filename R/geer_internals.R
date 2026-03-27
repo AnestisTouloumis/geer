@@ -1,11 +1,11 @@
-format_perc <- function(probs, digits = 2, check = FALSE) {
+format_percent <- function(probs, digits = 2, check = FALSE) {
   if (!is.numeric(probs)) {
     stop("'probs' must be numeric", call. = FALSE)
   }
   if (anyNA(probs) || any(!is.finite(probs))) {
     stop("'probs' must contain only finite numeric values", call. = FALSE)
   }
-  if (!is_pos_int_scalar(digits)) {
+  if (!is_positive_integer_scalar(digits)) {
     stop("'digits' must be a positive integer", call. = FALSE)
   }
   if (!is.logical(check) || length(check) != 1L || is.na(check)) {
@@ -25,7 +25,7 @@ format_perc <- function(probs, digits = 2, check = FALSE) {
 }
 
 
-is_pos_scalar <- function(x) {
+is_positive_scalar <- function(x) {
   is.numeric(x) &&
     length(x) == 1L &&
     !is.na(x) &&
@@ -34,8 +34,8 @@ is_pos_scalar <- function(x) {
 }
 
 
-is_pos_int_scalar <- function(x, tol = .Machine$double.eps^0.5) {
-  is_pos_scalar(x) && abs(x - round(x)) <= tol
+is_positive_integer_scalar <- function(x, tol = geer_integer_tol) {
+  is_positive_scalar(x) && abs(x - round(x)) <= tol
 }
 
 
@@ -80,7 +80,7 @@ check_choice <- function(x, choices, name) {
   }
   if (!(x %in% choices)) {
     stop(
-      sprintf("'%s' should be one of: %s", name, paste(choices, collapse = ", ")),
+      sprintf("'%s' must be one of: %s", name, paste(choices, collapse = ", ")),
       call. = FALSE
     )
   }
@@ -88,7 +88,7 @@ check_choice <- function(x, choices, name) {
 }
 
 
-test_label <- function(test) {
+format_test_label <- function(test) {
   out <- switch(
     test,
     wald = "Wald",

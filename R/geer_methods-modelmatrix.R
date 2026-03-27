@@ -47,12 +47,11 @@
 #' model.matrix(fit)
 #'
 #' @export
-model.matrix.geer <-	function(object,...){
+model.matrix.geer <- function(object, ...) {
   object <- check_geer_object(object)
-  ans <- model.matrix(
+  model.matrix(
     object = object$terms,
     data = object$data,
     contrasts.arg = object$contrasts
-    )
-  ans
+  )
 }

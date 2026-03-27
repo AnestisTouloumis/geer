@@ -38,22 +38,22 @@ geer_control <- function(tolerance = 1e-06,
                          step_maxiter = 10,
                          step_multiplier = 1,
                          jeffreys_power = 0.5) {
-  if (!is_pos_scalar(tolerance)) {
+  if (!is_positive_scalar(tolerance)) {
     stop("'tolerance' must be a positive number", call. = FALSE)
   }
-  if (!is_pos_int_scalar(maxiter)) {
+  if (!is_positive_integer_scalar(maxiter)) {
     stop("'maxiter' must be a positive integer", call. = FALSE)
   }
-  if (!is_pos_scalar(or_adding)) {
+  if (!is_positive_scalar(or_adding)) {
     stop("'or_adding' must be a positive number", call. = FALSE)
   }
-  if (!is_pos_int_scalar(step_maxiter)) {
+  if (!is_positive_integer_scalar(step_maxiter)) {
     stop("'step_maxiter' must be a positive integer", call. = FALSE)
   }
-  if (!is_pos_int_scalar(step_multiplier)) {
+  if (!is_positive_integer_scalar(step_multiplier)) {
     stop("'step_multiplier' must be a positive integer", call. = FALSE)
   }
-  if (!is_pos_scalar(jeffreys_power)) {
+  if (!is_positive_scalar(jeffreys_power)) {
     stop("'jeffreys_power' must be a positive number", call. = FALSE)
   }
   list(

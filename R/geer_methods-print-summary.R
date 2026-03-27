@@ -28,7 +28,6 @@ print.geer <- function(x, ...) {
 }
 
 
-
 #' @title
 #' Summarize a \code{geer} Object
 #'
@@ -84,6 +83,7 @@ summary.geer <- function(object,
   class(res) <- "summary.geer"
   res
 }
+
 
 #' @title
 #' Print a \code{summary.geer} Object

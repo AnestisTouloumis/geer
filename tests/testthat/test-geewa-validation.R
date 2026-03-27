@@ -9,7 +9,7 @@ test_that("geewa rejects unsupported correlation structures and methods", {
       family = poisson("log"),
       corstr = "toeplitz"
     ),
-    "'corstr' should be one of"
+    "'corstr' must be one of"
   )
 
   expect_error(
@@ -20,7 +20,7 @@ test_that("geewa rejects unsupported correlation structures and methods", {
       family = poisson("log"),
       method = "em-gee"
     ),
-    "'method' should be one of"
+    "'method' must be one of"
   )
 })
 
@@ -45,7 +45,7 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
       family = poisson("log"),
       corstr = "fixed"
     ),
-    "'alpha_vector' should be provided"
+    "'alpha_vector' must be provided"
   )
 })
 

@@ -99,7 +99,7 @@ geecriteria <- function(object,
       warning("models do not have the same number of observations", call. = FALSE)
     }
   }
-  out_list <- lapply(models, compute_criteria, cov_type = cov_type, digits = NULL)
+  out_list <- lapply(models, compute_gee_criteria, cov_type = cov_type, digits = NULL)
   ans <- do.call(rbind, out_list)
   numeric_cols <- c("QIC", "CIC", "RJC", "QICu", "GESSC", "GPC")
   ans[, numeric_cols] <- lapply(ans[, numeric_cols, drop = FALSE], round, digits = digits)

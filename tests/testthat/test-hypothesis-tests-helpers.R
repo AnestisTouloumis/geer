@@ -110,25 +110,25 @@ test_that("check_nested_models returns the smaller and larger model in the right
   added_terms <- setdiff(names(coef(fit_bin_full)), names(coef(fit_bin_trt)))
   expected_index <- match(added_terms, names(coef(fit_bin_full)))
 
-  expect_identical(names(coef(res1$obj0)), names(coef(fit_bin_trt)))
-  expect_identical(names(coef(res1$obj1)), names(coef(fit_bin_full)))
+  expect_identical(names(coef(res1$object0)), names(coef(fit_bin_trt)))
+  expect_identical(names(coef(res1$object1)), names(coef(fit_bin_full)))
   expect_identical(sort(res1$index), sort(expected_index))
 
-  expect_identical(names(coef(res2$obj0)), names(coef(fit_bin_trt)))
-  expect_identical(names(coef(res2$obj1)), names(coef(fit_bin_full)))
+  expect_identical(names(coef(res2$object0)), names(coef(fit_bin_trt)))
+  expect_identical(names(coef(res2$object1)), names(coef(fit_bin_full)))
   expect_identical(sort(res2$index), sort(expected_index))
 })
 
-test_that("lcsumchisq computes Rao-Scott and Satterthwaite approximations correctly", {
+test_that("compute_chisq_mixture computes Rao-Scott and Satterthwaite approximations correctly", {
   x <- c(1, 2, 3)
   test_stat <- 10
 
-  rs <- lcsumchisq(x, test_stat, pmethod = "rao-scott")
+  rs <- compute_chisq_mixture(x, test_stat, pmethod = "rao-scott")
   expect_equal(rs$test_df, 3)
   expect_equal(rs$test_stat, test_stat / mean(x))
   expect_equal(rs$test_p, 1 - stats::pchisq(rs$test_stat, df = rs$test_df))
 
-  sat <- lcsumchisq(x, test_stat, pmethod = "satterthwaite")
+  sat <- compute_chisq_mixture(x, test_stat, pmethod = "satterthwaite")
   x_bar <- mean(x)
   cv2 <- sum((x - x_bar)^2) / (length(x) * x_bar^2)
   expected_df <- length(x) / (1 + cv2)
@@ -140,18 +140,18 @@ test_that("lcsumchisq computes Rao-Scott and Satterthwaite approximations correc
   expect_equal(sat$test_p, expected_p)
 })
 
-test_that("lcsumchisq rejects invalid inputs", {
-  expect_error(lcsumchisq(c(1, 2), NA_real_), "test_stat")
-  expect_error(lcsumchisq(numeric(), 1), "non-empty")
-  expect_error(lcsumchisq(c(0, 0), 1), "invalid eigenvalues")
+test_that("compute_chisq_mixture rejects invalid inputs", {
+  expect_error(compute_chisq_mixture(c(1, 2), NA_real_), "test_stat")
+  expect_error(compute_chisq_mixture(numeric(), 1), "non-empty")
+  expect_error(compute_chisq_mixture(c(0, 0), 1), "invalid eigenvalues")
 })
 
-test_that("get_score_components returns expected matrix components for nested geewa fits", {
+test_that("compute_score_components returns expected matrix components for nested geewa fits", {
   coeffs_test <- coef(fit_bin_full)
   coeffs_test[setdiff(names(coeffs_test), names(coef(fit_bin_trt)))] <- 0
   coeffs_test[names(coef(fit_bin_trt))] <- coef(fit_bin_trt)
 
-  sc <- get_score_components(fit_bin_trt, fit_bin_full, coeffs_test)
+  sc <- compute_score_components(fit_bin_trt, fit_bin_full, coeffs_test)
 
   expect_type(sc, "list")
   expect_true(all(c("score_vector", "naive_covariance", "robust_covariance", "bc_covariance") %in% names(sc)))
@@ -193,8 +193,8 @@ test_that("working_wald_test returns a valid result for nested models", {
   expect_test_result(res)
 })
 
-test_that("working_lr_test returns a valid result and checks phi consistency", {
-  res <- working_lr_test(
+test_that("working_lrt_test returns a valid result and checks phi consistency", {
+  res <- working_lrt_test(
     fit_bin_trt,
     fit_bin_full,
     cov_type = "robust",
@@ -206,7 +206,7 @@ test_that("working_lr_test returns a valid result and checks phi consistency", {
   fit_bad_phi <- fit_bin_full
   fit_bad_phi$phi <- fit_bad_phi$phi + 1
   expect_error(
-    working_lr_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
+    working_lrt_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
     "dispersion parameters differ"
   )
 })
@@ -239,8 +239,8 @@ test_that("working_score_test returns a valid result for supported covariance ty
   expect_test_result(res_bc)
 })
 
-test_that("anova_geerlist returns an anova table for multiple nested models", {
-  out <- anova_geerlist(
+test_that("compute_anova_geer_list returns an anova table for multiple nested models", {
+  out <- compute_anova_geer_list(
     list(fit_bin_null, fit_bin_trt, fit_bin_full),
     test = "wald",
     cov_type = "robust",
@@ -253,9 +253,9 @@ test_that("anova_geerlist returns an anova table for multiple nested models", {
   expect_true(all(c("Resid. Df", "Df", "Chi", "Pr(>Chi)") %in% names(out)))
 })
 
-test_that("anova_geerlist filters non-independence models for working-lrt and still returns a result", {
+test_that("compute_anova_geer_list filters non-independence models for working-lrt and still returns a result", {
   expect_warning(
-    out <- anova_geerlist(
+    out <- compute_anova_geer_list(
       list(fit_bin_trt, fit_bin_full_exch),
       test = "working-lrt",
       cov_type = "robust",

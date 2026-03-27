@@ -44,15 +44,15 @@ check_nested_models <- function(object0, object1) {
     stop("models must be nested", call. = FALSE)
   }
   list(
-    obj0 = smaller_model,
-    obj1 = larger_model,
+    object0 = smaller_model,
+    object1 = larger_model,
     index = index
   )
 }
 
 
 ## shared test helpers
-.validate_test_index <- function(index, context) {
+check_test_index <- function(index, context) {
   test_df <- length(index)
   if (test_df < 1L) {
     stop(sprintf("%s failed: no parameters to test (empty index set)", context),
@@ -62,7 +62,7 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-.validate_test_statistic <- function(test_stat, context, tol = 1e-10) {
+check_test_statistic <- function(test_stat, context, tol = 1e-10) {
   if (!is.finite(test_stat)) {
     stop(sprintf("%s failed: non-finite test statistic", context), call. = FALSE)
   }
@@ -77,10 +77,10 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-.df_adjust_covariance <- function(robust_covariance,
-                                  clusters_no,
-                                  coef_no,
-                                  context) {
+compute_df_adjusted_covariance <- function(robust_covariance,
+                                           clusters_no,
+                                           coef_no,
+                                           context) {
   if (!is.finite(clusters_no) || length(clusters_no) != 1L) {
     stop(sprintf("%s failed: invalid clusters_no", context), call. = FALSE)
   }
@@ -97,7 +97,7 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-.compute_mixture_eigenvalues <- function(naive_mat, robust_mat, context) {
+compute_mixture_eigenvalues <- function(naive_mat, robust_mat, context) {
   eigenvalues <- tryCatch(
     eigen(solve(naive_mat, robust_mat), only.values = TRUE)$values,
     error = function(e) {
@@ -111,7 +111,7 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-.model_sample_size <- function(object) {
+get_model_sample_size <- function(object) {
   if (!is.null(object$obs_no)) {
     return(as.integer(object$obs_no))
   }
@@ -119,12 +119,12 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-.is_geewa_fit <- function(object) {
+is_geewa_fit <- function(object) {
   identical(as.character(object$call[[1L]]), "geewa")
 }
 
 
-.get_or_alpha <- function(object) {
+get_or_alpha <- function(object) {
   if (length(object$alpha) == 1L) {
     rep(object$alpha, choose(max(as.integer(object$repeated)), 2))
   } else {
@@ -134,7 +134,7 @@ check_nested_models <- function(object0, object1) {
 
 
 ## chi-square mixture approximations
-lcsumchisq <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) {
+compute_chisq_mixture <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) {
   pmethod <- match.arg(pmethod)
   x <- Re(x)
   if (!is.numeric(test_stat) || length(test_stat) != 1L || !is.finite(test_stat)) {
@@ -163,34 +163,34 @@ lcsumchisq <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) 
 
 
 ## score components
-get_score_components <- function(obj0, obj1, test_coefficients) {
-  if (.is_geewa_fit(obj1)) {
+compute_score_components <- function(object0, object1, test_coefficients) {
+  if (is_geewa_fit(object1)) {
     score_vector <- estimating_equations_gee_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      test_coefficients, obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
+      object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
+      object1$family$link, object1$family$family,
+      test_coefficients, object0$fitted.values, object0$linear.predictors,
+      object1$association_structure, object1$alpha, object1$phi
     )
 
     covariance <- get_covariance_matrices_cc(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link, obj1$family$family,
-      obj0$fitted.values, obj0$linear.predictors,
-      obj1$association_structure, obj1$alpha, obj1$phi
+      object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
+      object1$family$link, object1$family$family,
+      object0$fitted.values, object0$linear.predictors,
+      object1$association_structure, object1$alpha, object1$phi
     )
   } else {
-    association_alpha <- .get_or_alpha(obj1)
+    association_alpha <- get_or_alpha(object1)
 
     score_vector <- estimating_equations_gee_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      test_coefficients, obj0$fitted.values, obj0$linear.predictors,
+      object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
+      object1$family$link,
+      test_coefficients, object0$fitted.values, object0$linear.predictors,
       association_alpha
     )
     covariance <- get_covariance_matrices_or(
-      obj1$y, obj1$x, obj1$id, obj1$repeated, obj1$prior.weights,
-      obj1$family$link,
-      obj0$fitted.values, obj0$linear.predictors,
+      object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
+      object1$family$link,
+      object0$fitted.values, object0$linear.predictors,
       association_alpha
     )
   }
@@ -208,12 +208,11 @@ wald_test <- function(object0, object1,
                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
-  obj1 <- nested_models$obj1
+  obj1 <- nested_models$object1
   index <- nested_models$index
-  test_df <- .validate_test_index(index, "Wald test")
+  test_df <- check_test_index(index, "Wald test")
   test_coefficients <- as.numeric(obj1$coefficients[index])
-  cov_mat <- vcov(obj1, cov_type = cov_type)
-  cov_test <- cov_mat[index, index, drop = FALSE]
+  cov_test <- vcov(obj1, cov_type = cov_type)[index, index, drop = FALSE]
   test_stat <- tryCatch(
     as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
     error = function(e) {
@@ -221,7 +220,7 @@ wald_test <- function(object0, object1,
            call. = FALSE)
     }
   )
-  test_stat <- .validate_test_statistic(test_stat, "Wald test")
+  test_stat <- check_test_statistic(test_stat, "Wald test")
   test_p <- 1 - pchisq(test_stat, df = test_df)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
@@ -234,13 +233,13 @@ working_wald_test <- function(object0, object1,
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
-  obj1 <- nested_models$obj1
+  obj1 <- nested_models$object1
   index <- nested_models$index
-  .validate_test_index(index, "Working Wald test")
+  check_test_index(index, "Working Wald test")
   test_coefficients <- as.numeric(obj1$coefficients[index])
   naive_mat <- vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
-  stat_test <- tryCatch(
+  test_stat <- tryCatch(
     as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
     error = function(e) {
       stop(
@@ -249,29 +248,29 @@ working_wald_test <- function(object0, object1,
       )
     }
   )
-  stat_test <- .validate_test_statistic(stat_test, "Working Wald test")
+  test_stat <- check_test_statistic(test_stat, "Working Wald test")
   robust_mat <- vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
-  eigen_test <- .compute_mixture_eigenvalues(
+  eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
     robust_mat = rob_test,
     context = "Working Wald test"
   )
-  lcsumchisq(eigen_test, stat_test, pmethod)
+  compute_chisq_mixture(eigen_test, test_stat, pmethod)
 }
 
 
 ## working likelihood ratio test
-working_lr_test <- function(object0, object1,
+working_lrt_test <- function(object0, object1,
                             cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
                             pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
-  obj0 <- nested_models$obj0
-  obj1 <- nested_models$obj1
+  obj0 <- nested_models$object0
+  obj1 <- nested_models$object1
   index <- nested_models$index
-  .validate_test_index(index, "Working LR test")
+  check_test_index(index, "Working LR test")
   phi_tol <- sqrt(.Machine$double.eps) * max(abs(obj0$phi), abs(obj1$phi), 1)
   if (abs(obj0$phi - obj1$phi) > phi_tol) {
     stop("Working LR test failed: dispersion parameters differ between models",
@@ -287,18 +286,18 @@ working_lr_test <- function(object0, object1,
   }
   ll_obj0 <- compute_quasi_loglikelihood(obj0)
   ll_obj1 <- compute_quasi_loglikelihood(obj1)
-  stat_test <- -2 * (ll_obj0 - ll_obj1)
-  stat_test <- .validate_test_statistic(stat_test, "Working LR test")
+  test_stat <- -2 * (ll_obj0 - ll_obj1)
+  test_stat <- check_test_statistic(test_stat, "Working LR test")
   naive_mat <- vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
   robust_mat <- vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
-  eigen_test <- .compute_mixture_eigenvalues(
+  eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
     robust_mat = rob_test,
     context = "Working LR test"
   )
-  lcsumchisq(eigen_test, stat_test, pmethod)
+  compute_chisq_mixture(eigen_test, test_stat, pmethod)
 }
 
 
@@ -307,29 +306,29 @@ score_test <- function(object0, object1,
                        cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
-  obj0 <- nested_models$obj0
-  obj1 <- nested_models$obj1
+  obj0 <- nested_models$object0
+  obj1 <- nested_models$object1
   index <- nested_models$index
-  test_df <- .validate_test_index(index, "Score test")
+  test_df <- check_test_index(index, "Score test")
   test_coefficients <- obj1$coefficients
   test_coefficients[index] <- 0
   test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- get_score_components(obj0, obj1, test_coefficients)
+  sc <- compute_score_components(obj0, obj1, test_coefficients)
   score_vector <- sc$score_vector
   cov_test <- switch(
     cov_type,
     robust = sc$robust_covariance[index, index, drop = FALSE],
     naive = sc$naive_covariance[index, index, drop = FALSE],
     `bias-corrected` = sc$bc_covariance[index, index, drop = FALSE],
-    `df-adjusted` = .df_adjust_covariance(
+    `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = sc$robust_covariance[index, index, drop = FALSE],
       clusters_no = obj1$clusters_no,
       coef_no = length(coef(obj1)),
       context = "Score test"
     )
   )
-  naive_cov <- sc$naive_covariance
-  mid <- naive_cov[index, , drop = FALSE] %*% score_vector
+  naive_mat <- sc$naive_covariance
+  mid <- naive_mat[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(
     solve(cov_test, mid),
     error = function(e) {
@@ -337,47 +336,47 @@ score_test <- function(object0, object1,
            call. = FALSE)
     }
   )
-  test_stat <- as.numeric((t(score_vector) %*% naive_cov[, index, drop = FALSE]) %*% sol)
-  test_stat <- .validate_test_statistic(test_stat, "Score test")
+  test_stat <- as.numeric((t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol)
+  test_stat <- check_test_statistic(test_stat, "Score test")
   test_p <- 1 - pchisq(test_stat, df = test_df)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
-## working score test -------------------------------------------------------
+## working score test
 working_score_test <- function(object0, object1,
                                cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
                                pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
-  obj0 <- nested_models$obj0
-  obj1 <- nested_models$obj1
+  obj0 <- nested_models$object0
+  obj1 <- nested_models$object1
   index <- nested_models$index
-  .validate_test_index(index, "Working score test")
+  check_test_index(index, "Working score test")
   test_coefficients <- as.numeric(obj1$coefficients)
   names(test_coefficients) <- names(obj1$coefficients)
   test_coefficients[index] <- 0
   test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- get_score_components(obj0, obj1, test_coefficients)
+  sc <- compute_score_components(obj0, obj1, test_coefficients)
   score_vector <- sc$score_vector
-  cov_test <- sc$naive_covariance
-  rob_test <- switch(
+  naive_mat <- sc$naive_covariance
+  robust_mat <- switch(
     cov_type,
     robust = sc$robust_covariance,
     naive = sc$naive_covariance,
     `bias-corrected` = sc$bc_covariance,
-    `df-adjusted` = .df_adjust_covariance(
+    `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = sc$robust_covariance,
       clusters_no = obj1$clusters_no,
       coef_no = length(coef(obj1)),
       context = "Working score test"
     )
   )
-  cov_ii <- cov_test[index, index, drop = FALSE]
-  mid <- cov_test[index, , drop = FALSE] %*% score_vector
+  cov_test <- naive_mat[index, index, drop = FALSE]
+  mid <- naive_mat[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(
-    solve(cov_ii, mid),
+    solve(cov_test, mid),
     error = function(e) {
       stop(
         "Working score test failed: naive covariance submatrix is singular or invalid",
@@ -385,19 +384,19 @@ working_score_test <- function(object0, object1,
       )
     }
   )
-  score_stat <- as.numeric((t(score_vector) %*% cov_test[, index, drop = FALSE]) %*% sol)
-  score_stat <- .validate_test_statistic(score_stat, "Working score test")
-  eigen_test <- .compute_mixture_eigenvalues(
-    naive_mat = cov_ii,
-    robust_mat = rob_test[index, index, drop = FALSE],
+  test_stat <- as.numeric((t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol)
+  test_stat <- check_test_statistic(test_stat, "Working score test")
+  eigen_test <- compute_mixture_eigenvalues(
+    naive_mat = cov_test,
+    robust_mat = robust_mat[index, index, drop = FALSE],
     context = "Working score test"
   )
-  lcsumchisq(eigen_test, score_stat, pmethod)
+  compute_chisq_mixture(eigen_test, test_stat, pmethod)
 }
 
 
 ## anova for a list of geer fits
-anova_geerlist <- function(object, ..., test, cov_type, pmethod) {
+compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   response_vector <- vapply(
     object,
     function(x) paste(deparse(formula(x)[[2L]]), collapse = " "),
@@ -454,7 +453,7 @@ anova_geerlist <- function(object, ..., test, cov_type, pmethod) {
       call. = FALSE
     )
   }
-  sample_size_vector <- vapply(object, .model_sample_size, integer(1))
+  sample_size_vector <- vapply(object, get_model_sample_size, integer(1))
   if (any(sample_size_vector != sample_size_vector[1L])) {
     stop("models were not all fitted to the same size of dataset", call. = FALSE)
   }
@@ -477,7 +476,7 @@ anova_geerlist <- function(object, ..., test, cov_type, pmethod) {
     `Pr(>Chi)` = NA_real_,
     check.names = FALSE
   )
-  test_type <- test_label(test)
+  test_type <- format_test_label(test)
   for (i in 2:models_no) {
     value <- switch(
       test,
@@ -485,7 +484,7 @@ anova_geerlist <- function(object, ..., test, cov_type, pmethod) {
       score = score_test(object[[i - 1L]], object[[i]], cov_type),
       `working-wald` = working_wald_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
       `working-score` = working_score_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
-      `working-lrt` = working_lr_test(object[[i - 1L]], object[[i]], cov_type, pmethod)
+      `working-lrt` = working_lrt_test(object[[i - 1L]], object[[i]], cov_type, pmethod)
     )
     table[i, -1L] <- c(value$test_df, value$test_stat, value$test_p)
   }

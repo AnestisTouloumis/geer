@@ -22,7 +22,7 @@ extract_geer_offset <- function(model_frame, y_length) {
     offset <- rep.int(0, y_length)
   } else {
     if (!is.numeric(offset)) {
-      stop("'offset' should be a numeric vector", call. = FALSE)
+      stop("'offset' must be a numeric vector", call. = FALSE)
     }
     if (length(offset) == 1L) {
       offset <- rep.int(as.numeric(offset), y_length)

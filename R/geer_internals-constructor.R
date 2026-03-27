@@ -13,11 +13,11 @@ new_geer <- function(x) {
     "min_cluster_size", "max_cluster_size"
   )
 
-  missing <- setdiff(required, names(x))
-  if (length(missing) > 0L) {
+  missing_components <- setdiff(required, names(x))
+  if (length(missing_components) > 0L) {
     stop(
       "Input is missing required components: ",
-      paste(missing, collapse = ", "),
+      paste(missing_components, collapse = ", "),
       call. = FALSE
     )
   }
@@ -63,12 +63,12 @@ validate_geer <- function(x) {
     "method",
     "df.residual"
   )
-  missing_fields <- setdiff(required, names(x))
-  if (length(missing_fields)) {
+  missing_components <- setdiff(required, names(x))
+  if (length(missing_components) > 0L) {
     stop(
       sprintf(
         "invalid 'geer' object: missing required component(s): %s",
-        paste(missing_fields, collapse = ", ")
+        paste(missing_components, collapse = ", ")
       ),
       call. = FALSE
     )
@@ -110,7 +110,7 @@ validate_geer <- function(x) {
   if ("obs_no" %in% names(x)) {
     if (!is.numeric(x$obs_no) || length(x$obs_no) != 1L ||
         !is.finite(x$obs_no) || x$obs_no < 0 ||
-        abs(x$obs_no - round(x$obs_no)) > sqrt(.Machine$double.eps)) {
+        abs(x$obs_no - round(x$obs_no)) > geer_integer_tol) {
       stop("'obs_no' must be a single non-negative integer", call. = FALSE)
     }
 
@@ -174,7 +174,7 @@ validate_geer <- function(x) {
   if ("rank" %in% names(x)) {
     if (!is.numeric(x$rank) || length(x$rank) != 1L ||
         !is.finite(x$rank) || x$rank < 0 ||
-        abs(x$rank - round(x$rank)) > sqrt(.Machine$double.eps)) {
+        abs(x$rank - round(x$rank)) > geer_integer_tol) {
       stop("'rank' must be a single non-negative integer", call. = FALSE)
     }
   }
@@ -212,7 +212,7 @@ validate_geer <- function(x) {
   if ("clusters_no" %in% names(x)) {
     if (!is.numeric(x$clusters_no) || length(x$clusters_no) != 1L ||
         !is.finite(x$clusters_no) || x$clusters_no < 1 ||
-        abs(x$clusters_no - round(x$clusters_no)) > sqrt(.Machine$double.eps)) {
+        abs(x$clusters_no - round(x$clusters_no)) > geer_integer_tol) {
       stop("'clusters_no' must be a single positive integer", call. = FALSE)
     }
 
@@ -224,7 +224,7 @@ validate_geer <- function(x) {
   if ("min_cluster_size" %in% names(x)) {
     if (!is.numeric(x$min_cluster_size) || length(x$min_cluster_size) != 1L ||
         !is.finite(x$min_cluster_size) || x$min_cluster_size < 1 ||
-        abs(x$min_cluster_size - round(x$min_cluster_size)) > sqrt(.Machine$double.eps)) {
+        abs(x$min_cluster_size - round(x$min_cluster_size)) > geer_integer_tol) {
       stop("'min_cluster_size' must be a single positive integer", call. = FALSE)
     }
   }
@@ -232,7 +232,7 @@ validate_geer <- function(x) {
   if ("max_cluster_size" %in% names(x)) {
     if (!is.numeric(x$max_cluster_size) || length(x$max_cluster_size) != 1L ||
         !is.finite(x$max_cluster_size) || x$max_cluster_size < 1 ||
-        abs(x$max_cluster_size - round(x$max_cluster_size)) > sqrt(.Machine$double.eps)) {
+        abs(x$max_cluster_size - round(x$max_cluster_size)) > geer_integer_tol) {
       stop("'max_cluster_size' must be a single positive integer", call. = FALSE)
     }
   }

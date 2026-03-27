@@ -67,7 +67,7 @@
     Df = NA_real_,
     Chi = NA_real_,
     `Pr(>Chi)` = NA_real_,
-    CIC = extract_cic(object, cov_type)
+    CIC = compute_gee_cic(object, cov_type)
   )
   list(
     steps = steps,
@@ -277,32 +277,27 @@
 
 
 ## backward elimination
-step_p_backward <- function(object,
-                            scope,
-                            test,
-                            cov_type,
-                            pmethod,
-                            pvalue,
-                            steps) {
+.step_p_run_backward <- function(object,
+                                 scope,
+                                 test,
+                                 cov_type,
+                                 pmethod,
+                                 pvalue,
+                                 steps) {
   model_terms <- stats::terms(object)
   scope_factors <- .step_p_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
   factors_add <- scope_factors$add
-
   init <- .step_p_init_models(object, cov_type, steps)
   steps <- init$steps
   models <- init$models
   models_no <- init$models_no
-
   obs_no <- object$obs_no
   fitted_model <- object
-
   while (steps > 0L) {
     steps <- steps - 1L
-
     ffac <- attr(model_terms, "factors")
     fscope <- stats::factor.scope(ffac, list(add = factors_add, drop = factors_drop))
-
     candidate <- .step_p_backward_candidate(
       fitted_model = fitted_model,
       fscope = fscope,
@@ -311,14 +306,11 @@ step_p_backward <- function(object,
       pmethod = pmethod,
       pvalue = pvalue
     )
-
     if (is.null(candidate)) {
       break
     }
-
     fitted_model <- .step_p_update_fit(fitted_model, candidate$change, obs_no)
     model_terms <- stats::terms(fitted_model)
-
     out <- .step_p_append_model(
       models = models,
       models_no = models_no,
@@ -326,24 +318,23 @@ step_p_backward <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = extract_cic(fitted_model, cov_type)
+      cic = compute_gee_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no
   }
-
   .step_p_results(models = models[seq_len(models_no)], fit = fitted_model, object = object)
 }
 
 
 ## forward selection
-step_p_forward <- function(object,
-                           scope,
-                           test,
-                           cov_type,
-                           pmethod,
-                           pvalue,
-                           steps) {
+.step_p_run_forward <- function(object,
+                                scope,
+                                test,
+                                cov_type,
+                                pmethod,
+                                pvalue,
+                                steps) {
   model_terms <- stats::terms(object)
   scope_factors <- .step_p_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
@@ -378,7 +369,7 @@ step_p_forward <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = extract_cic(fitted_model, cov_type)
+      cic = compute_gee_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no
@@ -388,14 +379,14 @@ step_p_forward <- function(object,
 
 
 ## both
-step_p_both <- function(object,
-                        scope,
-                        test,
-                        cov_type,
-                        pmethod,
-                        p_enter,
-                        p_remove,
-                        steps) {
+.step_p_run_both <- function(object,
+                             scope,
+                             test,
+                             cov_type,
+                             pmethod,
+                             p_enter,
+                             p_remove,
+                             steps) {
   model_terms <- stats::terms(object)
 
   scope_factors <- .step_p_scope_factors(object, scope, model_terms)
@@ -412,7 +403,7 @@ step_p_both <- function(object,
     steps <- steps - 1L
     ffac <- attr(model_terms, "factors")
     fscope <- stats::factor.scope(ffac, list(add = factors_add, drop = factors_drop))
-    back <- .step_p_backward_candidate(
+    candidate <- .step_p_backward_candidate(
       fitted_model = fitted_model,
       fscope = fscope,
       test = test,
@@ -420,7 +411,6 @@ step_p_both <- function(object,
       pmethod = pmethod,
       pvalue = p_remove
     )
-    candidate <- back
     if (is.null(candidate)) {
       candidate <- .step_p_forward_candidate(
         fitted_model = fitted_model,
@@ -446,7 +436,7 @@ step_p_both <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = extract_cic(fitted_model, cov_type)
+      cic = compute_gee_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no

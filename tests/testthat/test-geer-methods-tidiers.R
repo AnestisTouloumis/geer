@@ -4,7 +4,7 @@ count_fit <- fit_geewa_pois_exch
 binary_fit <- fit_geewa_bin_exch
 
 test_that("tidy.geer rejects invalid inputs", {
-  expect_error(tidy.geer(list()), "'x' must be a 'geer' object")
+  expect_error(tidy.geer(list()), "'object' must be of 'geer' class")
   expect_error(tidy(count_fit, conf.int = NA), "'conf.int' must be")
   expect_error(
     tidy(count_fit, conf.int = TRUE, conf.level = 0),
@@ -67,7 +67,7 @@ test_that("tidy.geer works for geewa_binary fits", {
 })
 
 test_that("glance.geer rejects non-geer input", {
-  expect_error(glance.geer(list()), "'x' must be a 'geer' object")
+  expect_error(glance.geer(list()), "'object' must be of 'geer' class")
 })
 
 test_that("glance.geer returns a one-row summary with expected fields", {

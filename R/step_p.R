@@ -87,16 +87,15 @@
 #' )
 #'
 #' @export
-step_p <-
-  function(object,
-           scope,
-           direction = c("backward", "forward", "both"),
-           p_enter = 0.15,
-           p_remove = 0.15,
-           test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-           pmethod = c("rao-scott", "satterthwaite"),
-           steps = 1000) {
+step_p <- function(object,
+                   scope,
+                   direction = c("backward", "forward", "both"),
+                   p_enter = 0.15,
+                   p_remove = 0.15,
+                   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
+                   cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                   pmethod = c("rao-scott", "satterthwaite"),
+                   steps = 1000) {
     object <- check_geer_object(object)
     direction <- match_direction_type(direction[1L])
     step_args <- validate_step_thresholds(
@@ -106,7 +105,7 @@ step_p <-
     p_enter <- step_args$p_enter
     p_remove <- step_args$p_remove
     steps <- validate_step_count(steps)
-    opts <- normalize_test_options(
+    opts <- normalize_geer_test_options(
       test = test[1L],
       cov_type = cov_type[1L],
       pmethod = pmethod[1L],
@@ -116,9 +115,9 @@ step_p <-
     cov_type <- opts$cov_type
     pmethod <- opts$pmethod
     scope_value <- if (missing(scope)) NULL else scope
-    ans <- switch(
+    switch(
       direction,
-      backward = step_p_backward(
+      backward = .step_p_run_backward(
         object = object,
         scope = scope_value,
         test = test,
@@ -127,7 +126,7 @@ step_p <-
         pvalue = p_remove,
         steps = steps
       ),
-      forward = step_p_forward(
+      forward = .step_p_run_forward(
         object = object,
         scope = scope_value,
         test = test,
@@ -136,7 +135,7 @@ step_p <-
         pvalue = p_enter,
         steps = steps
       ),
-      both = step_p_both(
+      both = .step_p_run_both(
         object = object,
         scope = scope_value,
         test = test,
@@ -147,5 +146,4 @@ step_p <-
         steps = steps
       )
     )
-    ans
   }

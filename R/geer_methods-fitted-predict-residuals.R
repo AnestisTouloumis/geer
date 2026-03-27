@@ -25,12 +25,10 @@
 #' head(fitted(fit))
 #'
 #' @export
-#'
 fitted.geer <- function(object, ...){
   object <- check_geer_object(object)
   object$fitted.values
 }
-
 
 
 #' @title
@@ -135,9 +133,9 @@ predict.geer <- function(object,
   if (!is.data.frame(newdata)) {
     newdata <- as.data.frame(newdata)
   }
-  tt <- delete.response(object$terms)
-  mf <- model.frame(tt, newdata, xlev = object$xlevels, na.action = na.pass)
-  design_matrix <- model.matrix(tt, mf, contrasts.arg = object$contrasts)
+  pred_terms <- delete.response(object$terms)
+  mf <- model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = na.pass)
+  design_matrix <- model.matrix(pred_terms, mf, contrasts.arg = object$contrasts)
   if (is.null(colnames(design_matrix))) {
     stop("prediction model matrix must have column names", call. = FALSE)
   }
@@ -172,7 +170,6 @@ predict.geer <- function(object,
   ans <- list(fit = eta_vector, se.fit = se)
   ans
 }
-
 
 
 #' @title
@@ -230,14 +227,14 @@ residuals.geer <- function(object,
   type <- match.arg(type)
   y <- object$y
   mu <- object$fitted.values
-  w <- object$prior.weights
+  weights <- object$prior.weights
   ans <- switch(
     type,
     working = object$residuals,
-    pearson = as.numeric(get_pearson_residuals(object$family$family, y, mu, w)),
+    pearson = as.numeric(get_pearson_residuals(object$family$family, y, mu, weights)),
     deviance = {
       if (object$df.residual > 0) {
-        dr <- sqrt(pmax(object$family$dev.resids(y, mu, w), 0))
+        dr <- sqrt(pmax(object$family$dev.resids(y, mu, weights), 0))
         sign_term <- ifelse(y > mu, 1, ifelse(y < mu, -1, 0))
         dr * sign_term
       } else {
@@ -247,7 +244,3 @@ residuals.geer <- function(object,
   )
   ans
 }
-
-
-
-

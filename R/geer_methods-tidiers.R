@@ -78,9 +78,7 @@ tidy.geer <- function(x,
                       cov_type = c("robust", "bias-corrected",
                                    "df-adjusted", "naive"),
                       ...) {
-  if (!inherits(x, "geer")) {
-    stop("'x' must be a 'geer' object", call. = FALSE)
-  }
+  object <- check_geer_object(x)
   cov_type <- match.arg(cov_type)
   if (!is.logical(conf.int) || length(conf.int) != 1L || is.na(conf.int)) {
     stop("'conf.int' must be a single logical value", call. = FALSE)
@@ -93,37 +91,37 @@ tidy.geer <- function(x,
       is.na(exponentiate)) {
     stop("'exponentiate' must be a single logical value", call. = FALSE)
   }
-  if (exponentiate && !x$family$link %in% c("log", "logit", "cloglog")) {
+  if (exponentiate && !object$family$link %in% c("log", "logit", "cloglog")) {
     warning(
       "'exponentiate = TRUE' is typically most meaningful for log, logit, or cloglog links",
       call. = FALSE
     )
   }
-  beta <- coef(x)
-  covariance_matrix <- vcov(x, cov_type = cov_type)
-  se <- sqrt(pmax(0, diag(covariance_matrix)))
-  zstat <- rep(NA_real_, length(beta))
+  beta <- coef(object)
+  vcov_matrix <- vcov(object, cov_type = cov_type)
+  se <- sqrt(pmax(0, diag(vcov_matrix)))
+  z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
-  zstat[ok] <- beta[ok] / se[ok]
+  z_stat[ok] <- beta[ok] / se[ok]
   pval <- rep(NA_real_, length(beta))
-  pval[ok] <- 2 * pnorm(abs(zstat[ok]), lower.tail = FALSE)
+  pval[ok] <- 2 * pnorm(abs(z_stat[ok]), lower.tail = FALSE)
   ans <- data.frame(
     term = names(beta),
     estimate = unname(beta),
     std.error = unname(se),
-    statistic = unname(zstat),
+    statistic = unname(z_stat),
     p.value = unname(pval),
     stringsAsFactors = FALSE
   )
   if (conf.int) {
-    ci <- confint(x, level = conf.level, cov_type = cov_type)
+    ci <- confint(object, level = conf.level, cov_type = cov_type)
     ans$conf.low <- unname(ci[, 1L])
     ans$conf.high <- unname(ci[, 2L])
   }
   if (exponentiate) {
     ans$estimate <- exp(ans$estimate)
     if (conf.int) {
-      ans$conf.low  <- exp(ans$conf.low)
+      ans$conf.low <- exp(ans$conf.low)
       ans$conf.high <- exp(ans$conf.high)
     }
   }
@@ -185,7 +183,6 @@ tidy.geer <- function(x,
 #' @return
 #' A one-row data frame containing model-level summary information.
 #'
-#'
 #' @references
 #' Pan W. (2001) Akaike's information criterion in generalized estimating
 #' equations. \emph{Biometrics} \bold{57}, 120--125.
@@ -226,33 +223,31 @@ tidy.geer <- function(x,
 #'
 #' @export
 glance.geer <- function(x, ...) {
-  if (!inherits(x, "geer")) {
-    stop("'x' must be a 'geer' object", call. = FALSE)
-  }
+  object <- check_geer_object(x)
   crit <- tryCatch(
-    compute_criteria(x, cov_type = "robust", digits = 15L),
+    compute_gee_criteria(object, cov_type = "robust", digits = 15L),
     error = function(e) NULL
   )
   qic <- if (is.null(crit)) NA_real_ else crit$QIC
   qicu <- if (is.null(crit)) NA_real_ else crit$QICu
   cic <- if (is.null(crit)) NA_real_ else crit$CIC
   ans <- data.frame(
-    family = x$family$family,
-    link = x$family$link,
-    method = x$method,
-    corstr = x$association_structure,
-    nobs = x$obs_no,
-    nclusters = x$clusters_no,
-    min.cluster.size = x$min_cluster_size,
-    max.cluster.size = x$max_cluster_size,
-    npar = length(x$coefficients),
-    df.residual = x$df.residual,
-    phi = x$phi,
+    family = object$family$family,
+    link = object$family$link,
+    method = object$method,
+    corstr = object$association_structure,
+    nobs = object$obs_no,
+    nclusters = object$clusters_no,
+    min.cluster.size = object$min_cluster_size,
+    max.cluster.size = object$max_cluster_size,
+    npar = length(object$coefficients),
+    df.residual = object$df.residual,
+    phi = object$phi,
     QIC = qic,
     QICu = qicu,
     CIC = cic,
-    converged = x$converged,
-    niter = x$iter,
+    converged = object$converged,
+    niter = object$iter,
     stringsAsFactors = FALSE
   )
   if (requireNamespace("tibble", quietly = TRUE)) {

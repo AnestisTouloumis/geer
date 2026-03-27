@@ -1,13 +1,4 @@
-.compute_or_alpha <- function(object) {
-  if (length(object$alpha) == 1L) {
-    rep(object$alpha, choose(max(as.integer(object$repeated)), 2))
-  } else {
-    object$alpha
-  }
-}
-
-
-.compute_association_params_no <- function(object) {
+compute_n_association_parameters <- function(object) {
   if (identical(object$association_structure, "independence")) {
     0L
   } else if (object$association_structure %in% c("exchangeable", "ar1")) {
@@ -18,7 +9,7 @@
 }
 
 
-.get_independence_naive_inverse <- function(object) {
+compute_independence_naive_inverse <- function(object) {
   get_naive_matrix_inverse_independence(
     object$y,
     object$x,
@@ -35,28 +26,28 @@
 compute_quasi_loglikelihood <- function(object) {
   y <- object$y
   mu <- object$fitted.values
-  wt <- object$prior.weights
-  mdis <- object$family$family
+  weights <- object$prior.weights
+  family_name <- object$family$family
   phi <- object$phi
   eps <- sqrt(.Machine$double.eps)
   ans <- switch(
-    mdis,
-    gaussian = -sum(wt * (y - mu)^2) / 2,
+    family_name,
+    gaussian = -sum(weights * (y - mu)^2) / 2,
     binomial = {
       mu_safe <- pmin(pmax(mu, eps), 1 - eps)
-      sum(wt * (y * stats::qlogis(mu_safe) + log1p(-mu_safe)))
+      sum(weights * (y * stats::qlogis(mu_safe) + log1p(-mu_safe)))
     },
     poisson = {
       mu_safe <- pmax(mu, eps)
-      sum(wt * (y * log(mu_safe) - mu_safe))
+      sum(weights * (y * log(mu_safe) - mu_safe))
     },
     Gamma = {
       mu_safe <- pmax(mu, eps)
-      -sum(wt * (y / mu_safe + log(mu_safe)))
+      -sum(weights * (y / mu_safe + log(mu_safe)))
     },
     inverse.gaussian = {
       mu_safe <- pmax(mu, eps)
-      -sum(wt * (mu_safe - 0.5 * y) / mu_safe^2)
+      -sum(weights * (mu_safe - 0.5 * y) / mu_safe^2)
     },
     stop("distribution not recognized", call. = FALSE)
   )
@@ -65,9 +56,9 @@ compute_quasi_loglikelihood <- function(object) {
 
 
 ## compute all criteria
-compute_criteria <- function(object, cov_type, digits = NULL) {
+compute_gee_criteria <- function(object, cov_type, digits = NULL) {
   quasi_loglikelihood <- compute_quasi_loglikelihood(object)
-  sc_wc_stats <- if (identical(as.character(object$call[[1L]]), "geewa")) {
+  sc_wc_stats <- if (is_geewa_fit(object)) {
     get_gee_criteria_sc_cw(
       object$y,
       object$id,
@@ -85,16 +76,16 @@ compute_criteria <- function(object, cov_type, digits = NULL) {
       object$id,
       object$repeated,
       object$fitted.values,
-      .compute_or_alpha(object),
+      get_or_alpha(object),
       object$prior.weights
     )
   }
   sc_wc_stats <- unlist(sc_wc_stats, use.names = FALSE)
   naive_covariance <- vcov(object, cov_type = "naive")
   beta_covariance <- vcov(object, cov_type = cov_type)
-  independence_inverse <- .get_independence_naive_inverse(object)
+  independence_inverse <- compute_independence_naive_inverse(object)
   p <- length(object$coefficients)
-  association_params_no <- .compute_association_params_no(object)
+  association_params_no <- compute_n_association_parameters(object)
   gessc <- sc_wc_stats[[1L]] / (object$obs_no - p - association_params_no)
   gpc <- sc_wc_stats[[2L]]
   qic_u <- 2 * (p - quasi_loglikelihood)
@@ -109,9 +100,9 @@ compute_criteria <- function(object, cov_type, digits = NULL) {
       )
     }
   )
-  c1 <- sum(diag(q_matrix)) / p
-  c2 <- sum(q_matrix * t(q_matrix)) / p
-  rjc <- sqrt((1 - c1)^2 + (1 - c2)^2)
+  rjc_trace <- sum(diag(q_matrix)) / p
+  rjc_frobenius <- sum(q_matrix * t(q_matrix)) / p
+  rjc <- sqrt((1 - rjc_trace)^2 + (1 - rjc_frobenius)^2)
   ans <- data.frame(
     QIC = qic,
     CIC = cic,
@@ -131,8 +122,8 @@ compute_criteria <- function(object, cov_type, digits = NULL) {
 
 
 ## extract only CIC criterion
-extract_cic <- function(object, cov_type) {
-  independence_inverse <- .get_independence_naive_inverse(object)
+compute_gee_cic <- function(object, cov_type) {
+  independence_inverse <- compute_independence_naive_inverse(object)
   beta_covariance <- vcov(object, cov_type = cov_type)
   sum(independence_inverse * beta_covariance)
 }
