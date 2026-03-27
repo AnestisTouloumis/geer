@@ -137,16 +137,6 @@ validate_geer <- function(x) {
     stop("'call' must contain a formula component", call. = FALSE)
   }
 
-  if (!identical(x$formula, x$call$formula)) {
-    stop("'formula' and 'call$formula' must be identical", call. = FALSE)
-  }
-
-  term_labels_terms <- attr(x$terms, "term.labels")
-  term_labels_call <- tryCatch(
-    attr(stats::terms(x$call$formula), "term.labels"),
-    error = function(e) NULL
-  )
-
   if (!identical(
     paste(deparse(x$formula), collapse = ""),
     paste(deparse(x$call$formula), collapse = "")
