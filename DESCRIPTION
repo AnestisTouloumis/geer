@@ -13,7 +13,6 @@ License: GPL-2 | GPL-3
 Imports:
     brglm2,
     generics,
-    methods,
     Rcpp (>= 1.0.9)
 LinkingTo: 
     Rcpp,

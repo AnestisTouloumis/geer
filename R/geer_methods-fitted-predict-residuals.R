@@ -25,7 +25,7 @@
 #' head(fitted(fit))
 #'
 #' @export
-fitted.geer <- function(object, ...){
+fitted.geer <- function(object, ...) {
   object <- check_geer_object(object)
   object$fitted.values
 }
@@ -107,7 +107,7 @@ predict.geer <- function(object,
   se.fit <- isTRUE(se.fit)
   coef_names <- names(object$coefficients)
   if (is.null(coef_names) || !length(coef_names)) {
-    stop("'object$coefficients' must be named", call. = FALSE)
+    stop("'coefficients' must be named", call. = FALSE)
   }
   if (is.null(newdata)) {
     eta_vector <- object$linear.predictors

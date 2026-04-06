@@ -164,7 +164,7 @@ The length of \code{id} and of \code{repeated} or \code{weights} (when
 provided) should be the same as the number of observations.
 }
 \examples{
-data("respiratory")
+data("respiratory", package = "geer")
 respiratory2 <- respiratory[respiratory$center == "C2", ]
 fitted_model <- geewa_binary(
   formula = status ~ baseline + treatment * gender + visit * age,
@@ -174,7 +174,7 @@ fitted_model <- geewa_binary(
 )
 summary(fitted_model, cov_type = "bias-corrected")
 
-data("cholecystectomy")
+data("cholecystectomy", package = "geer")
 fitted_model_gee <- geewa_binary(
   formula = pain ~ treatment + gender + age,
   id = id, data = cholecystectomy, link = "logit",

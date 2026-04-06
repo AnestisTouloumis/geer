@@ -207,7 +207,7 @@ test_that("working_lrt_test returns a valid result and checks phi consistency", 
   fit_bad_phi$phi <- fit_bad_phi$phi + 1
   expect_error(
     working_lrt_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
-    "dispersion parameters differ"
+    "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models"
   )
 })
 
@@ -254,17 +254,13 @@ test_that("compute_anova_geer_list returns an anova table for multiple nested mo
 })
 
 test_that("compute_anova_geer_list filters non-independence models for working-lrt and still returns a result", {
-  expect_warning(
-    out <- compute_anova_geer_list(
+  expect_error(
+    compute_anova_geer_list(
       list(fit_bin_trt, fit_bin_full_exch),
       test = "working-lrt",
       cov_type = "robust",
       pmethod = "rao-scott"
     ),
-    "association structure differs from independence"
+    "the modified working LRT requires all models to use an independence working structure"
   )
-
-  expect_s3_class(out, "anova")
-  expect_true(is.data.frame(out))
-  expect_true(nrow(out) >= 1L)
 })

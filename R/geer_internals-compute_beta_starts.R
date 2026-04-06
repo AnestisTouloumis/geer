@@ -17,16 +17,14 @@ compute_geer_start_values <- function(model_matrix,
     return(beta_start)
   }
   control_glm <- do.call("brglm_control", control_glm)
-  if (link != "identity" && !identical(family$family, "quasi")) {
-    if (method %in% c("gee", "bcgee-naive", "bcgee-robust", "bcgee-empirical",
-                      "brgee-robust", "brgee-empirical")) {
+  if (link != "identity" && !(family$family %in% c("quasi", "quasibinomial", "quasipoisson"))) {
+    if (method %in% c("gee", "bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
       type <- "ML"
-    } else if (identical(method, "pgee-jeffreys")) {
-      type <- "MPL_Jeffreys"
-    } else {
+    } else if (identical(method, "brgee-naive")) {
       type <- "AS_mean"
+    } else {
+      type <- "MPL_Jeffreys"
     }
-
     glmfit <- try(
       brglmFit(
         x = model_matrix,
@@ -51,9 +49,9 @@ compute_geer_start_values <- function(model_matrix,
       glm.fit(
         x = model_matrix,
         y = y,
-        family = family,
         weights = weights,
         offset = offset,
+        family = family,
         control = list(
           epsilon = control$tolerance,
           maxit = control_glm$maxit,
@@ -76,9 +74,11 @@ compute_geer_binary_start_values <- function(model_matrix,
                                              family,
                                              weights,
                                              offset,
+                                             method,
                                              beta_start,
                                              control_glm,
-                                             tolerance) {
+                                             tolerance,
+                                             jeffreys_power) {
   if (!is.null(beta_start)) {
     beta_start <- as.numeric(beta_start)
     p <- ncol(model_matrix)
@@ -86,6 +86,13 @@ compute_geer_binary_start_values <- function(model_matrix,
       stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
     }
     return(beta_start)
+  }
+  if (method %in% c("gee", "bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+    type <- "ML"
+  } else if (identical(method, "brgee-naive")) {
+    type <- "AS_mean"
+  } else {
+    type <- "MPL_Jeffreys"
   }
   control_glm <- do.call("brglm_control", control_glm)
   glmfit <- try(
@@ -98,10 +105,11 @@ compute_geer_binary_start_values <- function(model_matrix,
       control = list(
         epsilon = tolerance,
         maxit = control_glm$maxit,
-        type = "AS_mean",
+        type = type,
         trace = FALSE,
         slowit = control_glm$slowit,
-        max_step_factor = control_glm$max_step_factor
+        max_step_factor = control_glm$max_step_factor,
+        a = jeffreys_power
       )
     ),
     silent = TRUE

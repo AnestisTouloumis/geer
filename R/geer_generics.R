@@ -1,9 +1,8 @@
-#' @export
 geer <- function(x, ...) {
   UseMethod("geer")
 }
 
-#' @export
+#' @exportS3Method
 geer.default <- function(x, ...) {
   x <- new_geer(x)
   validate_geer(x)

@@ -64,12 +64,6 @@ test_that("check_single_numeric rejects invalid inputs", {
 })
 
 
-test_that("check_positive_numeric accepts positive values and rejects non-positive ones", {
-  expect_no_error(check_positive_numeric(0.1, "x"))
-  expect_error(check_positive_numeric(0, "x"), "'x' must be positive")
-  expect_error(check_positive_numeric(-1, "x"), "'x' must be positive")
-})
-
 
 test_that("check_probability validates probabilities on open and closed intervals", {
   expect_no_error(check_probability(0.5, "p"))

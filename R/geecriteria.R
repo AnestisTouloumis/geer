@@ -12,7 +12,7 @@
 #'
 #'
 #' @inheritParams anova.geer
-#' @param cov_type Character string specifying the covariance estimator used in
+#' @param cov_type character string specifying the covariance estimator used in
 #'        the covariance-based criteria. Options are \code{"robust"},
 #'        \code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
 #'        The default is \code{"robust"}.
@@ -103,7 +103,7 @@ geecriteria <- function(object,
   ans <- do.call(rbind, out_list)
   numeric_cols <- c("QIC", "CIC", "RJC", "QICu", "GESSC", "GPC")
   ans[, numeric_cols] <- lapply(ans[, numeric_cols, drop = FALSE], round, digits = digits)
-  ans[, "Parameters"] <- round(ans[, "Parameters"], digits = 0)
+  ans[, "Parameters"] <- as.integer(ans[, "Parameters"])
   if (length(models) > 1L && nrow(ans) == length(models)) {
     call_expr <- match.call(expand.dots = FALSE)
     exprs <- c(list(call_expr[[2L]]), as.list(call_expr$...))

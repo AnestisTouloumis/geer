@@ -313,9 +313,9 @@ anova.geer <-
     if (length(dotargs)) {
       dotargs <- lapply(dotargs, check_geer_object)
       return(compute_anova_geer_list(c(list(object), dotargs),
-                             test = test,
-                             cov_type = cov_type,
-                             pmethod = pmethod))
+                                     test = test,
+                                     cov_type = cov_type,
+                                     pmethod = pmethod))
     }
     terms <- attr(object$terms, "term.labels")
     intercept <- attr(object$terms, "intercept")
@@ -324,16 +324,19 @@ anova.geer <-
     nvars <- max(c(0, varseq))
     object_list <- list()
     if (intercept == 1) {
-      object_list[[1]] <- update(object, formula = . ~ 1)
+      object_list[[1]] <- update(object, formula = . ~ 1, data = object$data)
       for (i in seq_len(nvars)) {
         object_list[[i + 1]] <- update(object_list[[i]],
-                                       formula = paste(". ~ . + ", terms[i]))
+                                       formula = paste(". ~ . + ", terms[i]),
+                                       data = object$data)
       }
     } else {
-      object_list[[1]] <- update(object, formula = paste(". ~ -1 + ", terms[1]))
+      object_list[[1]] <- update(object, formula = paste(". ~ -1 + ", terms[1]),
+                                 data = object$data)
       for (i in seq_len(nvars - 1)) {
         object_list[[i + 1]] <- update(object_list[[i]],
-                                       formula = paste(". ~ . + ", terms[i + 1]))
+                                       formula = paste(". ~ . + ", terms[i + 1]),
+                                       data = object$data)
       }
     }
     resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))

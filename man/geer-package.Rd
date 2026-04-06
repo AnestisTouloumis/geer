@@ -2,25 +2,16 @@
 % Please edit documentation in R/geer_package.R
 \docType{package}
 \name{geer-package}
-\alias{geer-package}
-\alias{tidy}
 \alias{geer}
+\alias{geer-package}
 \title{GEE Solver in R}
-\usage{
-tidy(x, ...)
-}
 \description{
 Solving generalized estimating equations while implementing bias-reducing,
 bias-corrected and penalized estimators.
-
-Generalized Estimating Equations (GEE) solver for estimating the regression coefficients of a marginal model with repeated or clustered responses. Bias-reducing and penalized GEE approaches are also implemented.
 }
 \author{
 Anestis Touloumis
 
 Maintainer: Anestis Touloumis \email{A.Touloumis@brighton.ac.uk}
-
-\strong{Maintainer}: Anestis Touloumis \email{A.Touloumis@brighton.ac.uk} (\href{https://orcid.org/0000-0002-5965-1639}{ORCID})
-
 }
-\keyword{internal}
+\keyword{package}

@@ -35,12 +35,12 @@ print.geer <- function(x, ...) {
 #' Produce a coefficient table and basic model summary information for a fitted
 #' \code{geer} object.
 #'
-#' @param object A fitted model object of class \code{geer}.
-#' @param cov_type Character string specifying the covariance estimator used to
+#' @param object a fitted model object of class \code{geer}.
+#' @param cov_type character string specifying the covariance estimator used to
 #'        compute standard errors, z-statistics, and p-values. Options are
 #'        \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-#'        \code{"naive"}. Default is \code{robust}.
-#' @param ... Additional arguments passed to or from other methods. Currently
+#'        \code{"naive"}. Default is \code{"robust"}.
+#' @param ... additional arguments passed to or from other methods. Currently
 #'        unused.
 #'
 #' @return

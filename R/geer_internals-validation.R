@@ -54,12 +54,6 @@ check_probability_open <- function(x, name) {
 }
 
 
-check_probability_closed <- function(x, name) {
-  check_probability(x, name, open = FALSE)
-  invisible(x)
-}
-
-
 match_choice_with_default <- function(x,
                                       choices,
                                       name,

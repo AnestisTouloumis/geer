@@ -31,7 +31,6 @@ build_geer_output <- function(geesolver_fit,
   fit$na.action <- attr(model_frame, "na.action")
   fit$id <- as.numeric(id)
   fit$repeated <- as.numeric(repeated)
-  fit$converged <- FALSE
   fit$call <- call
   fit$formula <- fit$call$formula
   fit$terms <- model_terms
@@ -55,5 +54,5 @@ build_geer_output <- function(geesolver_fit,
   cluster_sizes <- vapply(split(repeated, id), length, integer(1))
   fit$min_cluster_size <- min(cluster_sizes)
   fit$max_cluster_size <- max(cluster_sizes)
-  new_geer(fit)
+  fit
 }

@@ -262,8 +262,8 @@ working_wald_test <- function(object0, object1,
 
 ## working likelihood ratio test
 working_lrt_test <- function(object0, object1,
-                            cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
-                            pmethod = c("rao-scott", "satterthwaite")) {
+                             cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                             pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
@@ -271,12 +271,9 @@ working_lrt_test <- function(object0, object1,
   obj1 <- nested_models$object1
   index <- nested_models$index
   check_test_index(index, "Working LR test")
-  phi_tol <- sqrt(.Machine$double.eps) * max(abs(obj0$phi), abs(obj1$phi), 1)
-  if (abs(obj0$phi - obj1$phi) > phi_tol) {
-    stop("Working LR test failed: dispersion parameters differ between models",
-         call. = FALSE)
-  }
   if (obj1$family$family %in% c("poisson", "binomial")) {
+    ## phi is fixed at 1 for these families; use a practical tolerance
+    phi_tol <- 1e-6
     if (abs(obj0$phi - 1) > phi_tol || abs(obj1$phi - 1) > phi_tol) {
       stop(
         "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models",
@@ -420,19 +417,9 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
       character(1)
     )
     independence_vector <- association_vector == "independence"
-
-    if (all(!independence_vector)) {
-      stop("the modified working LRT requires independence working models",
-           call. = FALSE)
-    }
-
     if (!all(independence_vector)) {
-      removed <- unique(association_vector[!independence_vector])
-      object <- object[independence_vector]
-      warning(
-        "models with association structure ",
-        paste(removed, collapse = ", "),
-        " removed because association structure differs from independence",
+      stop(
+        "the modified working LRT requires all models to use an independence working structure",
         call. = FALSE
       )
     }

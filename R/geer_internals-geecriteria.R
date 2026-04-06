@@ -49,7 +49,7 @@ compute_quasi_loglikelihood <- function(object) {
       mu_safe <- pmax(mu, eps)
       -sum(weights * (mu_safe - 0.5 * y) / mu_safe^2)
     },
-    stop("distribution not recognized", call. = FALSE)
+    stop("'family' is not a recognized distribution", call. = FALSE)
   )
   ans / phi
 }
@@ -114,8 +114,9 @@ compute_gee_criteria <- function(object, cov_type, digits = NULL) {
   )
   if (!is.null(digits)) {
     digits <- check_nonnegative_integerish(digits, "digits")
-    ans[, 1:6] <- apply(ans[, 1:6, drop = FALSE], 2, round, digits = digits)
-    ans[, 7] <- round(ans[, 7], digits = 0)
+    numeric_cols <- c("QIC", "CIC", "RJC", "QICu", "GESSC", "GPC")
+    ans[, numeric_cols] <- lapply(ans[, numeric_cols, drop = FALSE], round, digits = digits)
+    ans[, "Parameters"] <- as.integer(ans[, "Parameters"])
   }
   ans
 }

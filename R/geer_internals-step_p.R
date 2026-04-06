@@ -20,7 +20,7 @@
   for (nm in c("lower", "upper")) {
     x <- scope[[nm]]
     if (!is.null(x) && !inherits(x, "formula") && !is.character(x)) {
-      stop(sprintf("scope$%s must be NULL, a formula, or a character vector", nm),
+      stop(sprintf("'scope$%s' must be NULL, a formula, or a character vector", nm),
            call. = FALSE)
     }
   }

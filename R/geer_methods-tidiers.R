@@ -1,3 +1,11 @@
+#' @importFrom generics tidy
+#' @export
+generics::tidy
+
+#' @importFrom generics glance
+#' @export
+generics::glance
+
 #' @title
 #' Tidy a \code{geer} Object
 #'

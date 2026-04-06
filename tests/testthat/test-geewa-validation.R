@@ -34,7 +34,7 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
       corstr = "m-dependent",
       Mv = 0
     ),
-    "Mv must be a positive integer"
+    "'Mv' must be a positive integer"
   )
 
   expect_error(

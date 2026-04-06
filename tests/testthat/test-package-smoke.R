@@ -8,7 +8,6 @@ test_that("package exports the core public API", {
 
   expect_true(all(c(
     "geecriteria",
-    "geer",
     "geer_control",
     "geewa",
     "geewa_binary",

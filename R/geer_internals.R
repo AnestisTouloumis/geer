@@ -47,15 +47,6 @@ check_single_numeric <- function(x, name) {
 }
 
 
-check_positive_numeric <- function(x, name) {
-  check_single_numeric(x, name)
-  if (x <= 0) {
-    stop(sprintf("'%s' must be positive", name), call. = FALSE)
-  }
-  invisible(x)
-}
-
-
 check_probability <- function(x, name, open = TRUE) {
   if (!is.logical(open) || length(open) != 1L || is.na(open)) {
     stop("'open' must be a single logical value", call. = FALSE)
