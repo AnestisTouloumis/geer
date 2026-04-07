@@ -53,7 +53,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_gee_cc
-arma::vec update_beta_gee_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
+arma::vec update_beta_gee_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_update_beta_gee_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -68,7 +68,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     rcpp_result_gen = Rcpp::wrap(update_beta_gee_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
@@ -76,7 +76,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_naive_cc
-arma::vec update_beta_naive_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
+arma::vec update_beta_naive_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_update_beta_naive_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -91,7 +91,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     rcpp_result_gen = Rcpp::wrap(update_beta_naive_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
@@ -99,7 +99,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_robust_cc
-arma::vec update_beta_robust_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
+arma::vec update_beta_robust_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_update_beta_robust_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -114,7 +114,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     rcpp_result_gen = Rcpp::wrap(update_beta_robust_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
@@ -122,7 +122,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_empirical_cc
-arma::vec update_beta_empirical_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
+arma::vec update_beta_empirical_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_update_beta_empirical_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -137,7 +137,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     rcpp_result_gen = Rcpp::wrap(update_beta_empirical_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
@@ -145,7 +145,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_jeffreys_cc
-arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const double& jeffreys_power);
+arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi, const double& jeffreys_power);
 RcppExport SEXP _geer_update_beta_jeffreys_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP jeffreys_powerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -160,7 +160,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const double& >::type jeffreys_power(jeffreys_powerSEXP);
@@ -169,7 +169,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_cc
-arma::vec update_beta_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi, const double& jeffreys_power, const char* method);
+arma::vec update_beta_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi, const double& jeffreys_power, const char* method);
 RcppExport SEXP _geer_update_beta_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -184,7 +184,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const double& >::type jeffreys_power(jeffreys_powerSEXP);
@@ -194,7 +194,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_geesolver_cc
-Rcpp::List fit_geesolver_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const char * family, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char * method, int use_params, arma::vec alpha_vector, const int& alpha_fixed, const char * correlation_structure, const int& mdependence, double phi, const int& phi_fixed);
+Rcpp::List fit_geesolver_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char* method, int use_params, arma::vec alpha_vector, const int& alpha_fixed, const char* correlation_structure, const int& mdependence, double phi, const int& phi_fixed);
 RcppExport SEXP _geer_fit_geesolver_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP offsetSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP step_maxiterSEXP, SEXP step_multiplierSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP, SEXP use_paramsSEXP, SEXP alpha_vectorSEXP, SEXP alpha_fixedSEXP, SEXP correlation_structureSEXP, SEXP mdependenceSEXP, SEXP phiSEXP, SEXP phi_fixedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -204,8 +204,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< arma::vec >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const int& >::type maxiter(maxiterSEXP);
@@ -213,11 +213,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type step_maxiter(step_maxiterSEXP);
     Rcpp::traits::input_parameter< const int& >::type step_multiplier(step_multiplierSEXP);
     Rcpp::traits::input_parameter< const double& >::type jeffreys_power(jeffreys_powerSEXP);
-    Rcpp::traits::input_parameter< const char * >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const char* >::type method(methodSEXP);
     Rcpp::traits::input_parameter< int >::type use_params(use_paramsSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const int& >::type alpha_fixed(alpha_fixedSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const int& >::type mdependence(mdependenceSEXP);
     Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const int& >::type phi_fixed(phi_fixedSEXP);
@@ -226,7 +226,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_gee_or
-arma::vec update_beta_gee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+arma::vec update_beta_gee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_update_beta_gee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -236,7 +236,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -246,7 +246,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_naive_or
-arma::vec update_beta_naive_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+arma::vec update_beta_naive_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_update_beta_naive_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -256,7 +256,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -266,7 +266,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_robust_or
-arma::vec update_beta_robust_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+arma::vec update_beta_robust_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_update_beta_robust_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -276,7 +276,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -285,28 +285,8 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// update_beta_robust2_or
-arma::vec update_beta_robust2_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_update_beta_robust2_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(update_beta_robust2_or(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector));
-    return rcpp_result_gen;
-END_RCPP
-}
 // update_beta_empirical_or
-arma::vec update_beta_empirical_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+arma::vec update_beta_empirical_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_update_beta_empirical_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -316,7 +296,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -326,7 +306,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_jeffreys_or
-arma::vec update_beta_jeffreys_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector, const double& jeffreys_power);
+arma::vec update_beta_jeffreys_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector, const double& jeffreys_power);
 RcppExport SEXP _geer_update_beta_jeffreys_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP, SEXP jeffreys_powerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -336,7 +316,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -347,7 +327,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // update_beta_or
-arma::vec update_beta_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector, const double& jeffreys_power, const char* method);
+arma::vec update_beta_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& beta_vector, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector, const double& jeffreys_power, const char* method);
 RcppExport SEXP _geer_update_beta_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -357,7 +337,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
@@ -369,7 +349,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_bingee_or
-Rcpp::List fit_bingee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char * method, const arma::vec& alpha_vector);
+Rcpp::List fit_bingee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, arma::vec beta_vector, const arma::vec& offset, const int& maxiter, const double& tolerance, const int& step_maxiter, const int& step_multiplier, const double& jeffreys_power, const char* method, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_fit_bingee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP beta_vectorSEXP, SEXP offsetSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP step_maxiterSEXP, SEXP step_multiplierSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -379,7 +359,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type beta_vector(beta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const int& >::type maxiter(maxiterSEXP);
@@ -387,7 +367,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int& >::type step_maxiter(step_maxiterSEXP);
     Rcpp::traits::input_parameter< const int& >::type step_multiplier(step_multiplierSEXP);
     Rcpp::traits::input_parameter< const double& >::type jeffreys_power(jeffreys_powerSEXP);
-    Rcpp::traits::input_parameter< const char * >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const char* >::type method(methodSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(fit_bingee_or(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector));
     return rcpp_result_gen;
@@ -1078,7 +1058,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_update_beta_gee_or", (DL_FUNC) &_geer_update_beta_gee_or, 10},
     {"_geer_update_beta_naive_or", (DL_FUNC) &_geer_update_beta_naive_or, 10},
     {"_geer_update_beta_robust_or", (DL_FUNC) &_geer_update_beta_robust_or, 10},
-    {"_geer_update_beta_robust2_or", (DL_FUNC) &_geer_update_beta_robust2_or, 10},
     {"_geer_update_beta_empirical_or", (DL_FUNC) &_geer_update_beta_empirical_or, 10},
     {"_geer_update_beta_jeffreys_or", (DL_FUNC) &_geer_update_beta_jeffreys_or, 11},
     {"_geer_update_beta_or", (DL_FUNC) &_geer_update_beta_or, 12},

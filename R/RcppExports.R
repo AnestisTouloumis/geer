@@ -49,10 +49,6 @@ update_beta_robust_or <- function(y_vector, model_matrix, id_vector, repeated_ve
     .Call(`_geer_update_beta_robust_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
 }
 
-update_beta_robust2_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_robust2_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
 update_beta_empirical_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
     .Call(`_geer_update_beta_empirical_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
 }

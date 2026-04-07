@@ -2,6 +2,7 @@
 #include "clusterutils.h"
 #include <algorithm>
 #include <cmath>
+#include "utils.h"
 
 namespace {
 inline arma::uword upper_triangular_pairs(const arma::uword n) {
@@ -172,11 +173,9 @@ arma::mat get_v_matrix_inverse_or(const arma::vec& mu_vector,
   const arma::mat v_matrix =
     get_v_matrix_or(mu_vector, odds_ratios_vector, weights_vector);
 
-  arma::mat ans;
-  const bool ok = arma::inv(ans, v_matrix, arma::inv_opts::allow_approx);
-  if (!ok) {
-    Rcpp::stop("get_v_matrix_inverse_or: matrix inversion failed.");
-  }
+  const arma::mat ans =
+    solve_chol_or_lu_mat(v_matrix,
+                         arma::eye(v_matrix.n_rows, v_matrix.n_cols));
   return ans;
 }
 //==============================================================================
