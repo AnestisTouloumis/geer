@@ -1029,36 +1029,36 @@ BEGIN_RCPP
 END_RCPP
 }
 // variance
-arma::vec variance(const char * family, const arma::vec& mu_vector);
+arma::vec variance(const char* family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variance(SEXP familySEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(variance(family, mu_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // variancemu
-arma::vec variancemu(const char * family, const arma::vec& mu_vector);
+arma::vec variancemu(const char* family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variancemu(SEXP familySEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(variancemu(family, mu_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // variancemu2
-arma::vec variancemu2(const char * family, const arma::vec& mu_vector);
+arma::vec variancemu2(const char* family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variancemu2(SEXP familySEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(variancemu2(family, mu_vector));
     return rcpp_result_gen;

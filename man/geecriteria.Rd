@@ -16,7 +16,7 @@ geecriteria(
 
 \item{...}{additional objects representing models of the same class \code{geer}.}
 
-\item{cov_type}{Character string specifying the covariance estimator used in
+\item{cov_type}{character string specifying the covariance estimator used in
 the covariance-based criteria. Options are \code{"robust"},
 \code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
 The default is \code{"robust"}.}

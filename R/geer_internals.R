@@ -12,7 +12,7 @@ format_percent <- function(probs, digits = 2, check = FALSE) {
     stop("'check' must be a single logical value", call. = FALSE)
   }
   if (check && any(probs < 0 | probs > 1)) {
-    warning("Some probabilities are outside [0, 1]", call. = FALSE)
+    warning("some probabilities are outside [0, 1]", call. = FALSE)
   }
   formatted <- formatC(
     100 * probs,

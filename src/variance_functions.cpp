@@ -1,66 +1,82 @@
-#include <RcppArmadillo.h>
-using namespace Rcpp;
+#include "family_utils.h"
+#include "variance_functions.h"
 
 
 //============================ variance ========================================
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::vec variance(const char * family,
-                   const arma::vec & mu_vector) {
+arma::vec variance(const char* family,
+                   const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  if(std::strcmp(family, "gaussian") == 0){
+  switch (parse_family(family)) {
+  case FamilyCode::gaussian:
     ans.fill(1.0);
-  }else if(std::strcmp(family, "binomial") == 0){
+    break;
+  case FamilyCode::binomial:
     ans = mu_vector % (1.0 - mu_vector);
-  }else if(std::strcmp(family, "poisson") == 0){
+    break;
+  case FamilyCode::poisson:
     ans = mu_vector;
-  }else if(std::strcmp(family, "Gamma") == 0){
-    ans = pow(mu_vector, 2.0);
-  }else if(std::strcmp(family, "inverse.gaussian") == 0){
-    ans = pow(mu_vector, 3.0);
+    break;
+  case FamilyCode::gamma:
+    ans = arma::square(mu_vector);
+    break;
+  case FamilyCode::inverse_gaussian:
+    ans = mu_vector % mu_vector % mu_vector;
+    break;
   }
-  return(ans);
+  return ans;
 }
 //==============================================================================
 
 
 //============================ derivative variance wrt mean ====================
 // [[Rcpp::export]]
-arma::vec variancemu(const char * family,
-                     const arma::vec & mu_vector) {
+arma::vec variancemu(const char* family,
+                     const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  if(std::strcmp(family, "gaussian") == 0){
+  switch (parse_family(family)) {
+  case FamilyCode::gaussian:
     ans.fill(0.0);
-  }else if(std::strcmp(family, "poisson") == 0){
+    break;
+  case FamilyCode::poisson:
     ans.fill(1.0);
-  }else if(std::strcmp(family, "binomial") == 0){
+    break;
+  case FamilyCode::binomial:
     ans = 1.0 - 2.0 * mu_vector;
-  }else if(std::strcmp(family, "Gamma") == 0){
+    break;
+  case FamilyCode::gamma:
     ans = 2.0 * mu_vector;
-  }else if(std::strcmp(family, "inverse.gaussian") == 0){
-    ans = 3.0 * pow(mu_vector, 2.0);
+    break;
+  case FamilyCode::inverse_gaussian:
+    ans = 3.0 * arma::square(mu_vector);
+    break;
   }
-  return(ans);
+  return ans;
 }
 //==============================================================================
 
 
 //============================ second derivative variance wrt mean =============
 // [[Rcpp::export]]
-arma::vec variancemu2(const char * family,
-                      const arma::vec & mu_vector) {
+arma::vec variancemu2(const char* family,
+                      const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  if(std::strcmp(family, "gaussian") == 0){
+  switch (parse_family(family)) {
+  case FamilyCode::gaussian:
+  case FamilyCode::poisson:
     ans.fill(0.0);
-  }else if(std::strcmp(family, "poisson") == 0){
-    ans.fill(0.0);
-  }else if(std::strcmp(family, "binomial") == 0){
+    break;
+  case FamilyCode::binomial:
     ans.fill(-2.0);
-  }else if(std::strcmp(family, "Gamma") == 0){
+    break;
+  case FamilyCode::gamma:
     ans.fill(2.0);
-  }else if(std::strcmp(family, "inverse.gaussian") == 0){
+    break;
+  case FamilyCode::inverse_gaussian:
     ans = 6.0 * mu_vector;
+    break;
   }
-  return(ans);
+  return ans;
 }
 //==============================================================================

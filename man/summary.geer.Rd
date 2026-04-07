@@ -11,14 +11,14 @@
 )
 }
 \arguments{
-\item{object}{A fitted model object of class \code{geer}.}
+\item{object}{a fitted model object of class \code{geer}.}
 
-\item{cov_type}{Character string specifying the covariance estimator used to
+\item{cov_type}{character string specifying the covariance estimator used to
 compute standard errors, z-statistics, and p-values. Options are
 \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-\code{"naive"}. Default is \code{robust}.}
+\code{"naive"}. Default is \code{"robust"}.}
 
-\item{...}{Additional arguments passed to or from other methods. Currently
+\item{...}{additional arguments passed to or from other methods. Currently
 unused.}
 }
 \value{
