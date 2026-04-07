@@ -446,167 +446,145 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// arma2vec
-Rcpp::NumericVector arma2vec(const arma::vec& x);
-RcppExport SEXP _geer_arma2vec(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(arma2vec(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// vec2arma
-arma::vec vec2arma(const Rcpp::NumericVector& x);
-RcppExport SEXP _geer_vec2arma(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(vec2arma(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // linkfun_rcpp
-Rcpp::NumericVector linkfun_rcpp(const char * link, const Rcpp::NumericVector& mu_vector);
+Rcpp::NumericVector linkfun_rcpp(const char* link, const Rcpp::NumericVector& mu_vector);
 RcppExport SEXP _geer_linkfun_rcpp(SEXP linkSEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(linkfun_rcpp(link, mu_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // linkfun
-arma::vec linkfun(const char * link, const arma::vec& mu_vector);
+arma::vec linkfun(const char* link, const arma::vec& mu_vector);
 RcppExport SEXP _geer_linkfun(SEXP linkSEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(linkfun(link, mu_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // linkinv_rcpp
-Rcpp::NumericVector linkinv_rcpp(const char * link, const Rcpp::NumericVector& eta_vector);
+Rcpp::NumericVector linkinv_rcpp(const char* link, const Rcpp::NumericVector& eta_vector);
 RcppExport SEXP _geer_linkinv_rcpp(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(linkinv_rcpp(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // linkinv
-arma::vec linkinv(const char * link, const Rcpp::NumericVector& eta_vector);
+arma::vec linkinv(const char* link, const arma::vec& eta_vector);
 RcppExport SEXP _geer_linkinv(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(linkinv(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta_rcpp
-Rcpp::NumericVector mueta_rcpp(const char * link, const Rcpp::NumericVector& eta_vector);
+Rcpp::NumericVector mueta_rcpp(const char* link, const Rcpp::NumericVector& eta_vector);
 RcppExport SEXP _geer_mueta_rcpp(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta_rcpp(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta
-arma::vec mueta(const char * link, const arma::vec& eta_vector);
+arma::vec mueta(const char* link, const arma::vec& eta_vector);
 RcppExport SEXP _geer_mueta(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta2_rcpp
-Rcpp::NumericVector mueta2_rcpp(const char * link, const Rcpp::NumericVector& eta_vector);
+Rcpp::NumericVector mueta2_rcpp(const char* link, const Rcpp::NumericVector& eta_vector);
 RcppExport SEXP _geer_mueta2_rcpp(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta2_rcpp(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta2
-arma::vec mueta2(const char * link, const arma::vec& eta_vector);
+arma::vec mueta2(const char* link, const arma::vec& eta_vector);
 RcppExport SEXP _geer_mueta2(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta2(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta3_rcpp
-Rcpp::NumericVector mueta3_rcpp(const char * link, const Rcpp::NumericVector& eta_vector);
+Rcpp::NumericVector mueta3_rcpp(const char* link, const Rcpp::NumericVector& eta_vector);
 RcppExport SEXP _geer_mueta3_rcpp(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta3_rcpp(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // mueta3
-arma::vec mueta3(const char * link, const arma::vec& eta_vector);
+arma::vec mueta3(const char* link, const arma::vec& eta_vector);
 RcppExport SEXP _geer_mueta3(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(mueta3(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // valideta
-Rcpp::LogicalVector valideta(const char * link, const Rcpp::NumericVector& eta_vector);
+bool valideta(const char* link, const Rcpp::NumericVector& eta_vector);
 RcppExport SEXP _geer_valideta(SEXP linkSEXP, SEXP eta_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type eta_vector(eta_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(valideta(link, eta_vector));
     return rcpp_result_gen;
 END_RCPP
 }
 // validmu
-Rcpp::LogicalVector validmu(const char * family, const Rcpp::NumericVector& mu_vector);
+bool validmu(const char* family, const Rcpp::NumericVector& mu_vector);
 RcppExport SEXP _geer_validmu(SEXP familySEXP, SEXP mu_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type mu_vector(mu_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(validmu(family, mu_vector));
     return rcpp_result_gen;
@@ -1028,6 +1006,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// arma2vec
+Rcpp::NumericVector arma2vec(const arma::vec& x);
+RcppExport SEXP _geer_arma2vec(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma2vec(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vec2arma
+arma::vec vec2arma(const Rcpp::NumericVector& x);
+RcppExport SEXP _geer_vec2arma(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(vec2arma(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // variance
 arma::vec variance(const char* family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variance(SEXP familySEXP, SEXP mu_vectorSEXP) {
@@ -1086,8 +1086,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_naive_matrix_inverse_independence", (DL_FUNC) &_geer_get_naive_matrix_inverse_independence, 8},
     {"_geer_get_gee_criteria_sc_cw", (DL_FUNC) &_geer_get_gee_criteria_sc_cw, 9},
     {"_geer_get_gee_criteria_sc_cw_or", (DL_FUNC) &_geer_get_gee_criteria_sc_cw_or, 6},
-    {"_geer_arma2vec", (DL_FUNC) &_geer_arma2vec, 1},
-    {"_geer_vec2arma", (DL_FUNC) &_geer_vec2arma, 1},
     {"_geer_linkfun_rcpp", (DL_FUNC) &_geer_linkfun_rcpp, 2},
     {"_geer_linkfun", (DL_FUNC) &_geer_linkfun, 2},
     {"_geer_linkinv_rcpp", (DL_FUNC) &_geer_linkinv_rcpp, 2},
@@ -1130,6 +1128,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_v_matrix_mu_or", (DL_FUNC) &_geer_get_v_matrix_mu_or, 3},
     {"_geer_estimating_equations_gee_cc", (DL_FUNC) &_geer_estimating_equations_gee_cc, 13},
     {"_geer_estimating_equations_gee_or", (DL_FUNC) &_geer_estimating_equations_gee_or, 10},
+    {"_geer_arma2vec", (DL_FUNC) &_geer_arma2vec, 1},
+    {"_geer_vec2arma", (DL_FUNC) &_geer_vec2arma, 1},
     {"_geer_variance", (DL_FUNC) &_geer_variance, 2},
     {"_geer_variancemu", (DL_FUNC) &_geer_variancemu, 2},
     {"_geer_variancemu2", (DL_FUNC) &_geer_variancemu2, 2},

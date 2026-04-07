@@ -1,313 +1,369 @@
-#include <RcppArmadillo.h>
-using namespace Rcpp;
+#include "link_functions.h"
+#include "family_utils.h"
+#include "link_utils.h"
+#include "utils.h"
 
+#include <cfloat>
 
-//============================ arma to vec =====================================
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-Rcpp::NumericVector arma2vec(const arma::vec & x) {
-  Rcpp::NumericVector ans = Rcpp::NumericVector(x.begin(), x.end());
-  return(ans);
+namespace {
+
+inline bool all_finite(const Rcpp::NumericVector& x) {
+  return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x)));
 }
-//==============================================================================
 
+  inline bool all_positive_finite(const Rcpp::NumericVector& x) {
+    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x > 0.0)));
+  }
 
-//============================ vec to arma =====================================
-// [[Rcpp::export]]
-arma::vec vec2arma(const Rcpp::NumericVector & x) {
-  arma::vec ans = Rcpp::as<arma::vec>(x);
-  return(ans);
-}
-//==============================================================================
+  inline bool all_nonzero_finite(const Rcpp::NumericVector& x) {
+    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x != 0.0)));
+  }
+
+  inline bool all_open_unit_interval(const Rcpp::NumericVector& x) {
+    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x > 0.0) & (x < 1.0)));
+  }
+
+  inline Rcpp::NumericVector clamp_probabilities(const Rcpp::NumericVector& x) {
+    return Rcpp::pmax(Rcpp::pmin(x, 1.0 - DBL_EPSILON), DBL_EPSILON);
+  }
+
+  inline Rcpp::NumericVector logistic_mu(const Rcpp::NumericVector& eta_vector) {
+    const Rcpp::NumericVector eta_clipped =
+      Rcpp::pmin(Rcpp::pmax(eta_vector, -30.0), 30.0);
+    const Rcpp::NumericVector ans = 1.0 / (1.0 + exp(-eta_clipped));
+    return clamp_probabilities(ans);
+  }
+
+}  // namespace
 
 
 //============================ link function - rcpp ============================
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-Rcpp::NumericVector linkfun_rcpp(const char * link,
-                                 const Rcpp::NumericVector & mu_vector) {
-  Rcpp::NumericVector ans;
-  if(std::strcmp(link, "logit") == 0){
-    ans = Rcpp::qlogis(mu_vector, 0.0, 1.0, true, false);
-  }else if(std::strcmp(link, "probit") == 0){
-    ans = Rcpp::qnorm(mu_vector, 0.0, 1.0, true, false);
-  }else if(std::strcmp(link, "cauchit") == 0){
-    ans = Rcpp::qcauchy(mu_vector, 0.0, 1.0, true, false);
-  }else if(std::strcmp(link, "cloglog") == 0){
-    ans = log(-log(1.0 - mu_vector));
-  }else if(std::strcmp(link, "identity") == 0){
-    ans = mu_vector;
-  }else if(std::strcmp(link, "log") == 0){
-    ans = log(mu_vector);
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans = sqrt(mu_vector);
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = 1.0 / (mu_vector * mu_vector);
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = 1.0 / mu_vector;
-  }else{
-    Rcpp::stop("invalid link \n");
+Rcpp::NumericVector linkfun_rcpp(const char* link,
+                                 const Rcpp::NumericVector& mu_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit:
+    return Rcpp::qlogis(mu_vector, 0.0, 1.0, true, false);
+
+  case LinkCode::probit:
+    return Rcpp::qnorm(mu_vector, 0.0, 1.0, true, false);
+
+  case LinkCode::cauchit:
+    return Rcpp::qcauchy(mu_vector, 0.0, 1.0, true, false);
+
+  case LinkCode::cloglog:
+    return log(-log(1.0 - mu_vector));
+
+  case LinkCode::identity:
+    return mu_vector;
+
+  case LinkCode::log:
+    return log(mu_vector);
+
+  case LinkCode::sqrt:
+    return sqrt(mu_vector);
+
+  case LinkCode::inverse_mu_squared:
+    return 1.0 / (mu_vector * mu_vector);
+
+  case LinkCode::inverse:
+    return 1.0 / mu_vector;
   }
-  return(ans);
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================  link function - arma ===========================
 // [[Rcpp::export]]
-arma::vec linkfun(const char * link,
-                  const arma::vec & mu_vector) {
-  arma::vec ans = vec2arma(linkfun_rcpp(link, arma2vec(mu_vector)));
-  return(ans);
+arma::vec linkfun(const char* link,
+                  const arma::vec& mu_vector) {
+  return vec2arma(linkfun_rcpp(link, arma2vec(mu_vector)));
 }
 //==============================================================================
 
 
 //============================ link inverse - rcpp =============================
 // [[Rcpp::export]]
-Rcpp::NumericVector linkinv_rcpp(const char * link,
-                                 const Rcpp::NumericVector & eta_vector) {
-  Rcpp::NumericVector ans;
-  if(std::strcmp(link, "logit") == 0){
-    Rcpp::NumericVector threshold(eta_vector.size());
-    threshold.fill(30.0);
-    Rcpp::NumericVector exp_eta_vector =
-      Rcpp::ifelse(abs(eta_vector) < threshold, exp(eta_vector), eta_vector);
-    exp_eta_vector =
-      Rcpp::ifelse(eta_vector > threshold, 1/DBL_EPSILON, exp_eta_vector);
-    exp_eta_vector =
-      Rcpp::ifelse(eta_vector < -threshold, DBL_EPSILON, exp_eta_vector);
-    ans = exp_eta_vector / (1.0 + exp_eta_vector);
-  }else if(std::strcmp(link, "probit") == 0){
-    Rcpp::NumericVector machine_eps(eta_vector.size());
-    machine_eps.fill(DBL_EPSILON);
-    Rcpp::NumericVector threshold = -Rcpp::qnorm(machine_eps, 0.0, 1.0, true, false);
-    Rcpp::NumericVector eta_vector_new =
+Rcpp::NumericVector linkinv_rcpp(const char* link,
+                                 const Rcpp::NumericVector& eta_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit:
+    return logistic_mu(eta_vector);
+
+  case LinkCode::probit: {
+    const double threshold = -R::qnorm(DBL_EPSILON, 0.0, 1.0, true, false);
+    const Rcpp::NumericVector eta_clipped =
       Rcpp::pmin(Rcpp::pmax(eta_vector, -threshold), threshold);
-    ans = Rcpp::pnorm(eta_vector_new, 0.0, 1.0, true, false);
-  }else if(std::strcmp(link, "cauchit") == 0){
-    Rcpp::NumericVector machine_eps(eta_vector.size());
-    machine_eps.fill(DBL_EPSILON);
-    Rcpp::NumericVector threshold = -Rcpp::qcauchy(machine_eps, 0.0, 1.0, true, false);
-    Rcpp::NumericVector eta_vector_new =
-      Rcpp::pmin(Rcpp::pmax(eta_vector, -threshold), threshold);
-    ans = Rcpp::pcauchy(eta_vector_new, 0.0, 1.0, true, false);
-  }else if(std::strcmp(link, "cloglog") == 0){
-    Rcpp::NumericVector ans_old = 1.0 - exp(-exp(eta_vector));
-    ans = Rcpp::pmax(Rcpp::pmin(ans_old, 1.0 - DBL_EPSILON), DBL_EPSILON);
-  }else if(std::strcmp(link, "identity") == 0){
-    ans = eta_vector;
-  }else if(std::strcmp(link, "log") == 0){
-    ans = Rcpp::pmax(exp(eta_vector), DBL_EPSILON);
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans = pow(eta_vector, 2.0);
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = 1.0 / sqrt(eta_vector);
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = 1.0 / eta_vector;
-  }else{
-    Rcpp::stop("invalid link \n");
+    return Rcpp::pnorm(eta_clipped, 0.0, 1.0, true, false);
   }
-  return(ans);
+
+  case LinkCode::cauchit: {
+    const double threshold = -R::qcauchy(DBL_EPSILON, 0.0, 1.0, true, false);
+    const Rcpp::NumericVector eta_clipped =
+      Rcpp::pmin(Rcpp::pmax(eta_vector, -threshold), threshold);
+    return Rcpp::pcauchy(eta_clipped, 0.0, 1.0, true, false);
+  }
+
+  case LinkCode::cloglog: {
+    const Rcpp::NumericVector eta_clipped = Rcpp::pmin(eta_vector, 700.0);
+    const Rcpp::NumericVector ans = 1.0 - exp(-exp(eta_clipped));
+    return clamp_probabilities(ans);
+  }
+
+  case LinkCode::identity:
+    return eta_vector;
+
+  case LinkCode::log:
+    return Rcpp::pmax(exp(Rcpp::pmin(eta_vector, 700.0)), DBL_EPSILON);
+
+  case LinkCode::sqrt:
+    return eta_vector * eta_vector;
+
+  case LinkCode::inverse_mu_squared:
+    return 1.0 / sqrt(eta_vector);
+
+  case LinkCode::inverse:
+    return 1.0 / eta_vector;
+  }
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================ link inverse - arma =============================
 // [[Rcpp::export]]
-arma::vec linkinv(const char * link,
-                  const Rcpp::NumericVector & eta_vector) {
-  arma::vec ans = vec2arma(linkinv_rcpp(link, arma2vec(eta_vector)));
-  return(ans);
+arma::vec linkinv(const char* link,
+                  const arma::vec& eta_vector) {
+  return vec2arma(linkinv_rcpp(link, arma2vec(eta_vector)));
 }
 //==============================================================================
 
 
 //============================ mu eta - first derivative - rcpp ================
 // [[Rcpp::export]]
-Rcpp::NumericVector mueta_rcpp(const char * link,
-                               const Rcpp::NumericVector & eta_vector) {
-  Rcpp::NumericVector ans(eta_vector.size());
-  if(std::strcmp(link, "logit") == 0){
-    Rcpp::NumericVector threshold(eta_vector.size());
-    threshold.fill(30.0);
-    NumericVector one_plus_exp_vector = 1.0 + exp(eta_vector);
-    ans = Rcpp::ifelse(Rcpp::abs(eta_vector) >= threshold,
-                       DBL_EPSILON,
-                       exp(eta_vector)/pow(one_plus_exp_vector, 2.0));
-  }else if(std::strcmp(link, "probit") == 0){
-    ans = Rcpp::pmax(Rcpp::dnorm(eta_vector, 0.0, 1.0, false), DBL_EPSILON);
-  }else if(std::strcmp(link, "cauchit") == 0){
-    ans = Rcpp::pmax(Rcpp::dcauchy(eta_vector, 0.0, 1.0, false), DBL_EPSILON);
-  }else if(std::strcmp(link, "cloglog") == 0){
-    Rcpp::NumericVector eta_vector_new = Rcpp::pmin(eta_vector, 700.0);
-    ans = Rcpp::pmax(exp(eta_vector_new - exp(eta_vector_new)), DBL_EPSILON);
-  }else if(std::strcmp(link, "identity") == 0){
-    ans.fill(1.0);
-  }else if(std::strcmp(link, "log") == 0){
-    ans =  Rcpp::pmax(exp(eta_vector), DBL_EPSILON);
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans = 2.0 * eta_vector;
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = -0.5 / pow(eta_vector, 1.5);
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = -1.0 / pow(eta_vector, 2.0);
-  }else{
-    Rcpp::stop("invalid link \n");
+Rcpp::NumericVector mueta_rcpp(const char* link,
+                               const Rcpp::NumericVector& eta_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit: {
+    const Rcpp::NumericVector mu_vector = logistic_mu(eta_vector);
+    return Rcpp::pmax(mu_vector * (1.0 - mu_vector), DBL_EPSILON);
   }
-  return(ans);
+
+  case LinkCode::probit:
+    return Rcpp::pmax(Rcpp::dnorm(eta_vector, 0.0, 1.0, false), DBL_EPSILON);
+
+  case LinkCode::cauchit:
+    return Rcpp::pmax(Rcpp::dcauchy(eta_vector, 0.0, 1.0, false), DBL_EPSILON);
+
+  case LinkCode::cloglog: {
+    const Rcpp::NumericVector eta_clipped = Rcpp::pmin(eta_vector, 700.0);
+    return Rcpp::pmax(exp(eta_clipped - exp(eta_clipped)), DBL_EPSILON);
+  }
+
+  case LinkCode::identity: {
+    Rcpp::NumericVector ans(eta_vector.size());
+    ans.fill(1.0);
+    return ans;
+  }
+
+  case LinkCode::log:
+    return Rcpp::pmax(exp(Rcpp::pmin(eta_vector, 700.0)), DBL_EPSILON);
+
+  case LinkCode::sqrt:
+    return 2.0 * eta_vector;
+
+  case LinkCode::inverse_mu_squared:
+    return -0.5 / pow(eta_vector, 1.5);
+
+  case LinkCode::inverse:
+    return -1.0 / pow(eta_vector, 2.0);
+  }
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================ mu eta - first derivative - arma ================
 // [[Rcpp::export]]
-arma::vec mueta(const char * link,
-                const arma::vec & eta_vector) {
-  arma::vec ans = vec2arma(mueta_rcpp(link, arma2vec(eta_vector)));
-  return(ans);
+arma::vec mueta(const char* link,
+                const arma::vec& eta_vector) {
+  return vec2arma(mueta_rcpp(link, arma2vec(eta_vector)));
 }
 //==============================================================================
 
 
 //============================ mu eta - second derivative - rcpp ===============
 // [[Rcpp::export]]
-Rcpp::NumericVector mueta2_rcpp(const char * link,
-                                const Rcpp::NumericVector & eta_vector) {
-  Rcpp::NumericVector ans(eta_vector.size());
-  if(std::strcmp(link, "logit") == 0){
-    ans = (1.0 - 2.0 * linkinv_rcpp("logit", eta_vector)) * mueta_rcpp("logit", eta_vector);
-  }else if(std::strcmp(link, "probit") == 0){
-    ans = -eta_vector * mueta_rcpp("probit", eta_vector);
-  }else if(std::strcmp(link, "cauchit") == 0){
-    ans = - 2.0 * (eta_vector/(pow(eta_vector, 2.0) + 1.0)) * mueta_rcpp("cauchit", eta_vector);
-  }else if(std::strcmp(link, "cloglog") == 0){
-    ans = mueta_rcpp("cloglog", eta_vector) * (1.0 - exp(eta_vector));
-  }else if(std::strcmp(link, "identity") == 0){
-    ans.fill(0);
-  }else if(std::strcmp(link, "log") == 0){
-    ans = Rcpp::pmax(exp(eta_vector), DBL_EPSILON);
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans.fill(2.0);
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = 0.75 / pow(eta_vector, 2.5);
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = 2.0 / pow(eta_vector, 3.0);
-  }else{
-    Rcpp::stop("invalid link \n");
+Rcpp::NumericVector mueta2_rcpp(const char* link,
+                                const Rcpp::NumericVector& eta_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit: {
+    const Rcpp::NumericVector mu_vector = logistic_mu(eta_vector);
+    const Rcpp::NumericVector mu_eta_vector =
+      Rcpp::pmax(mu_vector * (1.0 - mu_vector), DBL_EPSILON);
+    return (1.0 - 2.0 * mu_vector) * mu_eta_vector;
   }
-  return(ans);
+
+  case LinkCode::probit:
+    return -eta_vector * mueta_rcpp("probit", eta_vector);
+
+  case LinkCode::cauchit:
+    return -2.0 * (eta_vector / (pow(eta_vector, 2.0) + 1.0)) *
+      mueta_rcpp("cauchit", eta_vector);
+
+  case LinkCode::cloglog: {
+    const Rcpp::NumericVector eta_clipped = Rcpp::pmin(eta_vector, 700.0);
+    return mueta_rcpp("cloglog", eta_vector) * (1.0 - exp(eta_clipped));
+  }
+
+  case LinkCode::identity: {
+    Rcpp::NumericVector ans(eta_vector.size());
+    ans.fill(0.0);
+    return ans;
+  }
+
+  case LinkCode::log:
+    return Rcpp::pmax(exp(Rcpp::pmin(eta_vector, 700.0)), DBL_EPSILON);
+
+  case LinkCode::sqrt: {
+    Rcpp::NumericVector ans(eta_vector.size());
+    ans.fill(2.0);
+    return ans;
+  }
+
+  case LinkCode::inverse_mu_squared:
+    return 0.75 / pow(eta_vector, 2.5);
+
+  case LinkCode::inverse:
+    return 2.0 / pow(eta_vector, 3.0);
+  }
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================ mu eta - second derivative - arma ===============
 // [[Rcpp::export]]
-arma::vec mueta2(const char * link,
-                 const arma::vec & eta_vector){
-  arma::vec ans = vec2arma(mueta2_rcpp(link, arma2vec(eta_vector)));
-  return(ans);
+arma::vec mueta2(const char* link,
+                 const arma::vec& eta_vector) {
+  return vec2arma(mueta2_rcpp(link, arma2vec(eta_vector)));
 }
 //==============================================================================
 
 
 //============================ mu eta - third derivative - rcpp ================
 // [[Rcpp::export]]
-Rcpp::NumericVector mueta3_rcpp(const char * link,
-                                const Rcpp::NumericVector & eta_vector) {
-  Rcpp::NumericVector ans(eta_vector.size());
-  if(std::strcmp(link, "logit") == 0){
-    Rcpp::NumericVector mueta_logis = mueta_rcpp("logit", eta_vector);
-    ans = mueta_logis *
-      ((exp(2.0) - 4.0) * mueta_logis +
-      pow(1 - linkinv_rcpp("logit", eta_vector), 2.0));
-  }else if(std::strcmp(link, "probit") == 0){
-    ans = mueta_rcpp("probit", eta_vector) * (pow(eta_vector, 2.0) - 1.0);
-  }else if(std::strcmp(link, "cauchit") == 0){
-    ans = (6.0 * pow(eta_vector, 2.0) - 2.0) / pow(pow(eta_vector, 2.0) + 1.0, 2.0) *
-      mueta_rcpp("cauchit", eta_vector);
-  }else if(std::strcmp(link, "cloglog") == 0){
-    Rcpp::NumericVector eta_vector_new = Rcpp::pmin(eta_vector, 700.0);
-    Rcpp::NumericVector exp_eta_vector = exp(eta_vector_new);
-    ans = mueta_rcpp("cloglog", eta_vector) *
-      (exp(2) * exp_eta_vector + 1.0 - 3.0 * exp_eta_vector);
-  }else if(std::strcmp(link, "identity") == 0){
-    ans.fill(0);
-  }else if(std::strcmp(link, "log") == 0){
-    ans = Rcpp::pmax(exp(eta_vector), DBL_EPSILON);
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans.fill(0);
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = - 1.875 / pow(eta_vector, 3.5);
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = - 6.0 / pow(eta_vector, 4.0);
-  }else{
-    Rcpp::stop("invalid link \n");
+Rcpp::NumericVector mueta3_rcpp(const char* link,
+                                const Rcpp::NumericVector& eta_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit: {
+    const Rcpp::NumericVector mu_vector = logistic_mu(eta_vector);
+    const Rcpp::NumericVector mu_eta_vector =
+      Rcpp::pmax(mu_vector * (1.0 - mu_vector), DBL_EPSILON);
+    return mu_eta_vector * (1.0 - 6.0 * mu_vector + 6.0 * pow(mu_vector, 2.0));
   }
-  return(ans);
+
+  case LinkCode::probit:
+    return mueta_rcpp("probit", eta_vector) * (pow(eta_vector, 2.0) - 1.0);
+
+  case LinkCode::cauchit:
+    return ((6.0 * pow(eta_vector, 2.0) - 2.0) /
+            pow(pow(eta_vector, 2.0) + 1.0, 2.0)) *
+              mueta_rcpp("cauchit", eta_vector);
+
+  case LinkCode::cloglog: {
+    const Rcpp::NumericVector eta_clipped = Rcpp::pmin(eta_vector, 350.0);
+    const Rcpp::NumericVector exp_eta_vector = exp(eta_clipped);
+    const Rcpp::NumericVector exp_2eta_vector = exp(2.0 * eta_clipped);
+    return mueta_rcpp("cloglog", eta_vector) *
+      (1.0 - 3.0 * exp_eta_vector + exp_2eta_vector);
+  }
+
+  case LinkCode::identity: {
+    Rcpp::NumericVector ans(eta_vector.size());
+    ans.fill(0.0);
+    return ans;
+  }
+
+  case LinkCode::log:
+    return Rcpp::pmax(exp(Rcpp::pmin(eta_vector, 700.0)), DBL_EPSILON);
+
+  case LinkCode::sqrt: {
+    Rcpp::NumericVector ans(eta_vector.size());
+    ans.fill(0.0);
+    return ans;
+  }
+
+  case LinkCode::inverse_mu_squared:
+    return -1.875 / pow(eta_vector, 3.5);
+
+  case LinkCode::inverse:
+    return -6.0 / pow(eta_vector, 4.0);
+  }
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================ mu eta - third derivative - arma ================
 // [[Rcpp::export]]
-arma::vec mueta3(const char * link,
-                 const arma::vec & eta_vector) {
-  arma::vec ans = vec2arma(mueta3_rcpp(link, arma2vec(eta_vector)));
-  return(ans);
+arma::vec mueta3(const char* link,
+                 const arma::vec& eta_vector) {
+  return vec2arma(mueta3_rcpp(link, arma2vec(eta_vector)));
 }
 //==============================================================================
 
 
 //============================ valid eta =======================================
 // [[Rcpp::export]]
-Rcpp::LogicalVector valideta(const char * link,
-                             const Rcpp::NumericVector & eta_vector) {
-  Rcpp::LogicalVector ans;
-  if(std::strcmp(link, "logit") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "probit") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "cauchit") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "cloglog") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "identity") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "log") == 0){
-    ans = true;
-  }else if(std::strcmp(link, "sqrt") == 0){
-    ans = is_true(all(Rcpp::is_finite(eta_vector) & (eta_vector > 0)));
-  }else if(std::strcmp(link, "1/mu^2") == 0){
-    ans = is_true(all(Rcpp::is_finite(eta_vector) & (eta_vector > 0)));
-  }else if(std::strcmp(link, "inverse") == 0){
-    ans = is_true(all(Rcpp::is_finite(eta_vector) & (eta_vector != 0)));
-  }else{
-    Rcpp::stop("invalid link \n");
+bool valideta(const char* link,
+              const Rcpp::NumericVector& eta_vector) {
+  switch (parse_link(link)) {
+  case LinkCode::logit:
+  case LinkCode::probit:
+  case LinkCode::cauchit:
+  case LinkCode::cloglog:
+  case LinkCode::identity:
+  case LinkCode::log:
+    return all_finite(eta_vector);
+
+  case LinkCode::sqrt:
+  case LinkCode::inverse_mu_squared:
+    return all_positive_finite(eta_vector);
+
+  case LinkCode::inverse:
+    return all_nonzero_finite(eta_vector);
   }
-  return (ans);
+
+  Rcpp::stop("Unsupported link.");
 }
 //==============================================================================
 
 
 //============================ valid mu ========================================
 // [[Rcpp::export]]
-Rcpp::LogicalVector validmu(const char * family,
-                            const Rcpp::NumericVector & mu_vector) {
-  Rcpp::LogicalVector ans;
-  if(std::strcmp(family, "gaussian") == 0){
-    ans = true;
-  }else if(std::strcmp(family, "binomial") == 0){
-    ans =
-      is_true(all(Rcpp::is_finite(mu_vector) & (mu_vector > 0) & (mu_vector < 1)));
-  }else if(std::strcmp(family, "poisson") == 0){
-    ans = is_true(all(Rcpp::is_finite(mu_vector) & (mu_vector > 0)));
-  }else if(std::strcmp(family, "Gamma") == 0){
-    ans = is_true(all(Rcpp::is_finite(mu_vector) & (mu_vector > 0)));
-  }else if(std::strcmp(family, "inverse.gaussian") == 0){
-    ans = true;
-  }else{
-    Rcpp::stop("invalid family \n");
+bool validmu(const char* family,
+             const Rcpp::NumericVector& mu_vector) {
+  switch (parse_family(family)) {
+  case FamilyCode::gaussian:
+    return all_finite(mu_vector);
+
+  case FamilyCode::binomial:
+    return all_open_unit_interval(mu_vector);
+
+  case FamilyCode::poisson:
+  case FamilyCode::gamma:
+  case FamilyCode::inverse_gaussian:
+    return all_positive_finite(mu_vector);
   }
-  return(ans);
+
+  Rcpp::stop("Unsupported family.");
 }
 //==============================================================================

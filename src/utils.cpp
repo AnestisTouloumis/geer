@@ -1,6 +1,24 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 
+//============================ arma to vec =====================================
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+Rcpp::NumericVector arma2vec(const arma::vec & x) {
+  Rcpp::NumericVector ans = Rcpp::NumericVector(x.begin(), x.end());
+  return(ans);
+  }
+
+//==============================================================================
+
+
+//============================ vec to arma =====================================
+// [[Rcpp::export]]
+arma::vec vec2arma(const Rcpp::NumericVector & x) {
+  arma::vec ans = Rcpp::as<arma::vec>(x);
+  return(ans);
+  }
+//==============================================================================
 
 //============================ subset matrix x[1:y, 1:y] =======================
 // [[Rcpp::depends(RcppArmadillo)]]

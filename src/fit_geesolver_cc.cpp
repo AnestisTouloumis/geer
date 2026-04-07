@@ -879,10 +879,10 @@ Rcpp::List fit_geesolver_cc(const arma::vec & y_vector,
   arma::vec stepsize_vector_inner = arma::zeros(params_no);
   arma::vec criterion_vector_inner = arma::zeros(maxiter);
   arma::vec eta_vector = model_matrix * beta_vector + offset;
-  if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
+  if (!valideta(link, arma2vec(eta_vector)))
     Rcpp::stop("invalid initial linear predictor: please another set of initial values for beta!!");
   arma::vec mu_vector = linkinv(link, arma2vec(eta_vector));
-  if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
+  if (!validmu(family, arma2vec(mu_vector)))
     Rcpp::stop("invalid initial fitted values: please another set of initial values for beta!!");
   arma::vec pearson_residuals_vector =
     get_pearson_residuals(family,
@@ -922,10 +922,10 @@ Rcpp::List fit_geesolver_cc(const arma::vec & y_vector,
       beta_vector_new_inner =
         beta_vector_inner + step_multiplier * pow(0.5, j - 1) * stepsize_vector_inner;
       eta_vector = model_matrix * beta_vector_new_inner + offset;
-      if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
+      if (!valideta(link, arma2vec(eta_vector)))
         Rcpp::stop("invalid linear predictor - please another set of initial values for beta!!");
       mu_vector = linkinv(link, arma2vec(eta_vector));
-      if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
+      if (!validmu(family, arma2vec(mu_vector)))
         Rcpp::stop("invalid fitted values - please another set of initial values for beta!!");
       pearson_residuals_vector = get_pearson_residuals(family,
                                                        y_vector,
@@ -963,10 +963,10 @@ Rcpp::List fit_geesolver_cc(const arma::vec & y_vector,
     criterion_vector(i-1) = norm(stepsize_vector_inner, "inf");
     beta_vector = beta_vector_new;
     eta_vector = model_matrix * beta_vector_new + offset;
-    if(Rcpp::is_false(all(valideta(link, arma2vec(eta_vector)))))
+    if (!valideta(link, arma2vec(eta_vector)))
       Rcpp::stop("invalid linear predictor - please another set of initial values for beta!!");
     mu_vector = linkinv(link, arma2vec(eta_vector));
-    if(Rcpp::is_false(all(validmu(family, arma2vec(mu_vector)))))
+    if (!validmu(family, arma2vec(mu_vector)))
       Rcpp::stop("invalid fitted values - please another set of initial values for beta!!");
     beta_hat_matrix = join_rows(beta_hat_matrix, beta_vector_new);
     pearson_residuals_vector = get_pearson_residuals(family,

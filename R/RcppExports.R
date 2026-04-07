@@ -81,14 +81,6 @@ get_gee_criteria_sc_cw_or <- function(y_vector, id_vector, repeated_vector, mu_v
     .Call(`_geer_get_gee_criteria_sc_cw_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector)
 }
 
-arma2vec <- function(x) {
-    .Call(`_geer_arma2vec`, x)
-}
-
-vec2arma <- function(x) {
-    .Call(`_geer_vec2arma`, x)
-}
-
 linkfun_rcpp <- function(link, mu_vector) {
     .Call(`_geer_linkfun_rcpp`, link, mu_vector)
 }
@@ -255,6 +247,14 @@ estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repea
 
 estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
     .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
+}
+
+arma2vec <- function(x) {
+    .Call(`_geer_arma2vec`, x)
+}
+
+vec2arma <- function(x) {
+    .Call(`_geer_vec2arma`, x)
 }
 
 variance <- function(family, mu_vector) {
