@@ -808,7 +808,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_marginalized_odds_ratios
-Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double& adding_constant, Rcpp::String or_structure);
+Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double& adding_constant, const Rcpp::String& or_structure);
 RcppExport SEXP _geer_get_marginalized_odds_ratios(SEXP response_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP adding_constantSEXP, SEXP or_structureSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -818,20 +818,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type adding_constant(adding_constantSEXP);
-    Rcpp::traits::input_parameter< Rcpp::String >::type or_structure(or_structureSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::String& >::type or_structure(or_structureSEXP);
     rcpp_result_gen = Rcpp::wrap(get_marginalized_odds_ratios(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_subject_specific_odds_ratios
-arma::vec get_subject_specific_odds_ratios(arma::vec repeated_vector_i, int cluster_size_max, arma::vec odds_ratios_vector);
+arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i, const int& cluster_size_max, const arma::vec& odds_ratios_vector);
 RcppExport SEXP _geer_get_subject_specific_odds_ratios(SEXP repeated_vector_iSEXP, SEXP cluster_size_maxSEXP, SEXP odds_ratios_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type repeated_vector_i(repeated_vector_iSEXP);
-    Rcpp::traits::input_parameter< int >::type cluster_size_max(cluster_size_maxSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type odds_ratios_vector(odds_ratios_vectorSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector_i(repeated_vector_iSEXP);
+    Rcpp::traits::input_parameter< const int& >::type cluster_size_max(cluster_size_maxSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type odds_ratios_vector(odds_ratios_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(get_subject_specific_odds_ratios(repeated_vector_i, cluster_size_max, odds_ratios_vector));
     return rcpp_result_gen;
 END_RCPP
@@ -902,14 +902,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_bivariate_distribution_murowcol
-double get_bivariate_distribution_murowcol(double row_prob, double col_prob, double odds_ratio);
+double get_bivariate_distribution_murowcol(const double& row_prob, const double& col_prob, const double& odds_ratio);
 RcppExport SEXP _geer_get_bivariate_distribution_murowcol(SEXP row_probSEXP, SEXP col_probSEXP, SEXP odds_ratioSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type row_prob(row_probSEXP);
-    Rcpp::traits::input_parameter< double >::type col_prob(col_probSEXP);
-    Rcpp::traits::input_parameter< double >::type odds_ratio(odds_ratioSEXP);
+    Rcpp::traits::input_parameter< const double& >::type row_prob(row_probSEXP);
+    Rcpp::traits::input_parameter< const double& >::type col_prob(col_probSEXP);
+    Rcpp::traits::input_parameter< const double& >::type odds_ratio(odds_ratioSEXP);
     rcpp_result_gen = Rcpp::wrap(get_bivariate_distribution_murowcol(row_prob, col_prob, odds_ratio));
     return rcpp_result_gen;
 END_RCPP
