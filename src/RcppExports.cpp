@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // get_covariance_matrices_cc
-Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const char * family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char * correlation_structure, const arma::vec& alpha_vector, const double& phi);
+Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double& phi);
 RcppExport SEXP _geer_get_covariance_matrices_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -22,11 +22,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     rcpp_result_gen = Rcpp::wrap(get_covariance_matrices_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
@@ -34,7 +34,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_covariance_matrices_or
-Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char * link, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
 RcppExport SEXP _geer_get_covariance_matrices_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -44,7 +44,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    Rcpp::traits::input_parameter< const char * >::type link(linkSEXP);
+    Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
