@@ -591,12 +591,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_pearson_residuals
-arma::vec get_pearson_residuals(const char * family, const arma::vec& y_vector, const arma::vec& mu_vector, const arma::vec& weights_vector);
+arma::vec get_pearson_residuals(const char* family, const arma::vec& y_vector, const arma::vec& mu_vector, const arma::vec& weights_vector);
 RcppExport SEXP _geer_get_pearson_residuals(SEXP familySEXP, SEXP y_vectorSEXP, SEXP mu_vectorSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const char* >::type family(familySEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
@@ -692,12 +692,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_alpha_hat
-arma::vec get_alpha_hat(const char * correlation_structure, const arma::vec& pearson_residuals_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const double& phi, const int& params_no, const int& mdependence);
+arma::vec get_alpha_hat(const char* correlation_structure, const arma::vec& pearson_residuals_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const double& phi, const int& params_no, const int& mdependence);
 RcppExport SEXP _geer_get_alpha_hat(SEXP correlation_structureSEXP, SEXP pearson_residuals_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP params_noSEXP, SEXP mdependenceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type pearson_residuals_vector(pearson_residuals_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
@@ -709,48 +709,48 @@ BEGIN_RCPP
 END_RCPP
 }
 // correlation_independence
-arma::mat correlation_independence(const int& dimension);
+arma::mat correlation_independence(const arma::uword dimension);
 RcppExport SEXP _geer_correlation_independence(SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_independence(dimension));
     return rcpp_result_gen;
 END_RCPP
 }
 // correlation_exchangeable
-arma::mat correlation_exchangeable(const arma::vec& alpha_vector, const int& dimension);
+arma::mat correlation_exchangeable(const arma::vec& alpha_vector, const arma::uword dimension);
 RcppExport SEXP _geer_correlation_exchangeable(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_exchangeable(alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
 }
 // correlation_ar1
-arma::mat correlation_ar1(const arma::vec& alpha_vector, const int& dimension);
+arma::mat correlation_ar1(const arma::vec& alpha_vector, const arma::uword dimension);
 RcppExport SEXP _geer_correlation_ar1(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_ar1(alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
 }
 // correlation_mdependent
-arma::mat correlation_mdependent(const arma::vec& alpha_vector, const int& dimension);
+arma::mat correlation_mdependent(const arma::vec& alpha_vector, const arma::uword dimension);
 RcppExport SEXP _geer_correlation_mdependent(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_mdependent(alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
@@ -767,26 +767,26 @@ BEGIN_RCPP
 END_RCPP
 }
 // correlation_unstructured
-arma::mat correlation_unstructured(const arma::vec& alpha_vector, const int& dimension);
+arma::mat correlation_unstructured(const arma::vec& alpha_vector, const arma::uword dimension);
 RcppExport SEXP _geer_correlation_unstructured(SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(correlation_unstructured(alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
 }
 // get_correlation_matrix
-arma::mat get_correlation_matrix(const char * correlation_structure, const arma::vec& alpha_vector, const int& dimension);
+arma::mat get_correlation_matrix(const char* correlation_structure, const arma::vec& alpha_vector, const arma::uword dimension);
 RcppExport SEXP _geer_get_correlation_matrix(SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const char * >::type correlation_structure(correlation_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    Rcpp::traits::input_parameter< const int& >::type dimension(dimensionSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
     rcpp_result_gen = Rcpp::wrap(get_correlation_matrix(correlation_structure, alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP

@@ -21,15 +21,12 @@ inline void kron_self_matrix_into(arma::mat& kron_d_matrix_d_matrix_i,
                                   const arma::mat& d_matrix_i) {
   const arma::uword m = d_matrix_i.n_rows;
   const arma::uword p = d_matrix_i.n_cols;
-
   if (kron_d_matrix_d_matrix_i.n_rows != m * m ||
       kron_d_matrix_d_matrix_i.n_cols != p * p) {
     kron_d_matrix_d_matrix_i.set_size(m * m, p * p);
   }
-
   for (arma::uword j = 0; j < p; ++j) {
     const double* Dj = d_matrix_i.colptr(j);
-
     for (arma::uword k = 0; k < p; ++k) {
       const double* Dk = d_matrix_i.colptr(k);
       const arma::uword col_out = j * p + k;
