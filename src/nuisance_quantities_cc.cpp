@@ -8,36 +8,36 @@
 #include <cmath>
 
 namespace {
-
 inline bool is_contiguous_1based(const arma::vec& r) {
   if (r.n_elem <= 1) {
     return true;
   }
-
   for (arma::uword i = 1; i < r.n_elem; ++i) {
     if (r[i] != r[i - 1] + 1.0) {
       return false;
     }
   }
-
   return true;
 }
-
   inline void clamp_alpha_vector(arma::vec& alpha_vector) {
     const double upper_bound = 1.0 - 10.0 * DBL_EPSILON;
     const double lower_bound = 10.0 * DBL_EPSILON - 1.0;
-
     for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
+      if (alpha_vector[i] >= 1.0 || alpha_vector[i] <= -1.0) {
+        Rcpp::stop(
+          "estimated correlation parameter is outside (-1, 1) "
+          "(alpha[%d] = %.6g); check model specification or data.",
+          static_cast<int>(i + 1), alpha_vector[i]
+        );
+      }
       if (alpha_vector[i] >= upper_bound) {
         alpha_vector[i] = upper_bound;
-      }
-      if (alpha_vector[i] <= lower_bound) {
+      } else if (alpha_vector[i] <= lower_bound) {
         alpha_vector[i] = lower_bound;
       }
     }
   }
-
-}  // namespace
+}
 
 
 //============================ pearson residuals ===============================
@@ -64,14 +64,11 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
   if (denominator <= 0.0) {
     Rcpp::stop("get_phi_hat: non-positive denominator.");
   }
-
   double ans =
     arma::accu(arma::square(pearson_residuals_vector)) / denominator;
-
   if (ans < DBL_EPSILON) {
     ans = 10.0 * DBL_EPSILON;
   }
-
   return ans;
 }
 //==============================================================================
@@ -85,33 +82,34 @@ double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
                               const int& params_no) {
   double num = 0.0;
   double den = 0.0;
-
   const auto clusters = clusters_from_sorted_id(id_vector);
-
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
     const arma::vec pearson_residuals_vector_i =
       pearson_residuals_vector.subvec(a, b);
     const arma::uword cluster_size_i = cl.end - cl.start;
-
     for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
       for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
         num += pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
       }
     }
-
     den += static_cast<double>(cluster_size_i) *
       static_cast<double>(cluster_size_i - 1) * 0.5;
   }
-
-  return num / ((den - static_cast<double>(params_no)) * phi);
+  const double denominator = (den - static_cast<double>(params_no)) * phi;
+  if (denominator <= 0.0) {
+    Rcpp::stop(
+      "alpha_hat_exchangeable: non-positive denominator -- "
+      "too few observation pairs relative to the number of parameters."
+    );
+  }
+  return num / denominator;
 }
 //==============================================================================
 
 
 //============================ ar1 alpha hat ===================================
-// [[Rcpp::export]]
 double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
                      const arma::vec& id_vector,
                      const arma::vec& repeated_vector,
@@ -119,9 +117,7 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
                      const int& params_no) {
   double num = 0.0;
   double den = 0.0;
-
   const auto clusters = clusters_from_sorted_id(id_vector);
-
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
@@ -129,7 +125,6 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
       pearson_residuals_vector.subvec(a, b);
     const arma::vec repeated_vector_i = repeated_vector.subvec(a, b);
     const arma::uword cluster_size_i = cl.end - cl.start;
-
     for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
       if (repeated_vector_i[j + 1] - repeated_vector_i[j] == 1.0) {
         num += pearson_residuals_vector_i[j] * pearson_residuals_vector_i[j + 1];
@@ -137,8 +132,14 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
       }
     }
   }
-
-  return num / ((den - static_cast<double>(params_no)) * phi);
+  const double denominator_ar1 = (den - static_cast<double>(params_no)) * phi;
+  if (denominator_ar1 <= 0.0) {
+    Rcpp::stop(
+      "alpha_hat_ar1: non-positive denominator -- "
+      "too few consecutive observation pairs relative to the number of parameters."
+    );
+  }
+  return num / denominator_ar1;
 }
 //==============================================================================
 
@@ -153,12 +154,9 @@ arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
   const arma::uword time_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   const arma::uword time_pairs = time_max * (time_max - 1) / 2;
-
   arma::vec num(time_pairs, arma::fill::zeros);
   arma::vec den(time_pairs, arma::fill::zeros);
-
   const auto clusters = clusters_from_sorted_id(id_vector);
-
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
@@ -166,26 +164,29 @@ arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
     const arma::vec pearson_residuals_vector_i =
       pearson_residuals_vector.subvec(a, b);
     const arma::uword cluster_size_i = cl.end - cl.start;
-
     for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
       const arma::uword index_j =
         static_cast<arma::uword>(repeated_vector_i[j]);
       const arma::uword combn_j = index_j * (index_j + 1) / 2;
-
       for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
         const arma::uword index_k =
           static_cast<arma::uword>(repeated_vector_i[k]);
         const arma::uword time_index =
           time_max * (index_j - 1) + index_k - combn_j;
-
         num[time_index - 1] +=
           pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
         den[time_index - 1] += 1.0;
       }
     }
   }
-
-  return num / ((den - static_cast<double>(params_no)) * phi);
+  const arma::vec denominator_unstr = (den - static_cast<double>(params_no)) * phi;
+  if (arma::any(denominator_unstr <= 0.0)) {
+    Rcpp::stop(
+      "alpha_hat_unstructured: non-positive denominator for one or more time pairs -- "
+      "too few observations relative to the number of parameters."
+    );
+  }
+  return num / denominator_unstr;
 }
 //==============================================================================
 
@@ -200,9 +201,7 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
                                const int& mdependence) {
   arma::vec num(mdependence, arma::fill::zeros);
   arma::vec den(mdependence, arma::fill::zeros);
-
   const auto clusters = clusters_from_sorted_id(id_vector);
-
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
@@ -210,11 +209,9 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
     const arma::vec pearson_residuals_vector_i =
       pearson_residuals_vector.subvec(a, b);
     const arma::uword cluster_size_i = cl.end - cl.start;
-
     for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
       const arma::uword index_j =
         static_cast<arma::uword>(repeated_vector_i[j]);
-
       for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
         const arma::uword index_k =
           static_cast<arma::uword>(repeated_vector_i[k]);
@@ -228,8 +225,14 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
       }
     }
   }
-
-  return num / ((den - static_cast<double>(params_no)) * phi);
+  const arma::vec denominator_mdep = (den - static_cast<double>(params_no)) * phi;
+  if (arma::any(denominator_mdep <= 0.0)) {
+    Rcpp::stop(
+      "alpha_hat_mdependent: non-positive denominator for one or more lags -- "
+      "too few observations relative to the number of parameters."
+    );
+  }
+  return num / denominator_mdep;
 }
 //==============================================================================
 
@@ -243,12 +246,9 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
                              const int& params_no) {
   const arma::uword time_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
-
   arma::vec num(time_max - 1, arma::fill::zeros);
   arma::vec den(time_max - 1, arma::fill::zeros);
-
   const auto clusters = clusters_from_sorted_id(id_vector);
-
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
@@ -256,24 +256,27 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
     const arma::vec pearson_residuals_vector_i =
       pearson_residuals_vector.subvec(a, b);
     const arma::uword cluster_size_i = cl.end - cl.start;
-
     for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
       const arma::uword index_j =
         static_cast<arma::uword>(repeated_vector_i[j]);
-
       for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
         const arma::uword index_k =
           static_cast<arma::uword>(repeated_vector_i[k]);
         const arma::uword lag = index_k - index_j;
-
         num[lag - 1] +=
           pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
         den[lag - 1] += 1.0;
       }
     }
   }
-
-  return num / ((den - static_cast<double>(params_no)) * phi);
+  const arma::vec denominator_toep = (den - static_cast<double>(params_no)) * phi;
+  if (arma::any(denominator_toep <= 0.0)) {
+    Rcpp::stop(
+      "alpha_hat_toeplitz: non-positive denominator for one or more lags -- "
+      "too few observations relative to the number of parameters."
+    );
+  }
+  return num / denominator_toep;
 }
 //==============================================================================
 

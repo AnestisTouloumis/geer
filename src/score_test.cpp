@@ -24,7 +24,7 @@ arma::vec estimating_equations_gee_cc(const arma::vec & y_vector,
                                       const double & phi) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
-  int repeated_max = max(repeated_vector);
+  arma::uword repeated_max = static_cast<arma::uword>(max(repeated_vector));
   arma::mat ans = arma::zeros(params_no);
   arma::mat correlation_matrix =
     get_correlation_matrix(correlation_structure,
@@ -67,7 +67,7 @@ arma::vec estimating_equations_gee_or(const arma::vec & y_vector,
                                       const arma::vec & alpha_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
-  int repeated_max = max(repeated_vector);
+  arma::uword repeated_max = static_cast<arma::uword>(max(repeated_vector));
   arma::mat ans = arma::zeros(params_no);
   arma::vec delta_vector = mueta(link, eta_vector);
   arma::vec s_vector = y_vector - mu_vector;

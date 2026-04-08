@@ -1,9 +1,9 @@
 #include "utils.h"
+#include <cmath>
 
 
 //============================ arma to vec =====================================
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
 Rcpp::NumericVector arma2vec(const arma::vec& x) {
   return Rcpp::NumericVector(x.begin(), x.end());
 }
@@ -11,7 +11,6 @@ Rcpp::NumericVector arma2vec(const arma::vec& x) {
 
 
 //============================ vec to arma =====================================
-// [[Rcpp::export]]
 arma::vec vec2arma(const Rcpp::NumericVector& x) {
   return Rcpp::as<arma::vec>(x);
 }
@@ -152,6 +151,33 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
                      arma::solve_opts::allow_ugly);
 }
 //==============================================================================
+
+
+//============================ symmetrize if close to symmetric ================
+void symmetrize_if_close(arma::mat& A, double rel_tol) {
+  const double scale = std::max(1.0, arma::abs(A).max());
+  double max_asym = 0.0;
+  const arma::uword n = A.n_rows;
+  for (arma::uword i = 0; i < n; ++i) {
+    for (arma::uword j = i + 1; j < n; ++j) {
+      const double d = std::abs(A(i, j) - A(j, i));
+      if (d > max_asym) {
+        max_asym = d;
+      }
+    }
+  }
+  if (max_asym > rel_tol * scale) {
+    Rcpp::warning(
+      "Fisher information matrix analogue has non-trivial asymmetry (%.2e); "
+      "check for numerical issues.",
+      max_asym / scale
+    );
+  }
+  A = 0.5 * (A + A.t());
+}
+//==============================================================================
+
+
 
 
 //============================ lambda from matrix blocks =======================

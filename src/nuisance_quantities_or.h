@@ -11,7 +11,7 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
                                                  const double& adding_constant,
                                                  const Rcpp::String& or_structure);
 arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
-                                           const int& cluster_size_max,
+                                           const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector);
 double get_bivariate_distribution(const double& row_prob,
                                   const double& col_prob,

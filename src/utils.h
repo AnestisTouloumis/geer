@@ -17,6 +17,7 @@ arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y);
 arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y);
 arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
                                         const arma::mat& lambda_matrix);
+void symmetrize_if_close(arma::mat& A, double rel_tol = 1e-10);
 inline void kron_self_matrix_into(arma::mat& kron_d_matrix_d_matrix_i,
                                   const arma::mat& d_matrix_i) {
   const arma::uword m = d_matrix_i.n_rows;

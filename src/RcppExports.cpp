@@ -610,21 +610,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// alpha_hat_ar1
-double alpha_hat_ar1(const arma::vec& pearson_residuals_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const double& phi, const int& params_no);
-RcppExport SEXP _geer_alpha_hat_ar1(SEXP pearson_residuals_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP params_noSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type pearson_residuals_vector(pearson_residuals_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
-    Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< const int& >::type params_no(params_noSEXP);
-    rcpp_result_gen = Rcpp::wrap(alpha_hat_ar1(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no));
-    return rcpp_result_gen;
-END_RCPP
-}
 // alpha_hat_unstructured
 arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const double& phi, const int& params_no);
 RcppExport SEXP _geer_alpha_hat_unstructured(SEXP pearson_residuals_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP phiSEXP, SEXP params_noSEXP) {
@@ -804,13 +789,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_subject_specific_odds_ratios
-arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i, const int& cluster_size_max, const arma::vec& odds_ratios_vector);
+arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i, const arma::uword cluster_size_max, const arma::vec& odds_ratios_vector);
 RcppExport SEXP _geer_get_subject_specific_odds_ratios(SEXP repeated_vector_iSEXP, SEXP cluster_size_maxSEXP, SEXP odds_ratios_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector_i(repeated_vector_iSEXP);
-    Rcpp::traits::input_parameter< const int& >::type cluster_size_max(cluster_size_maxSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type cluster_size_max(cluster_size_maxSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type odds_ratios_vector(odds_ratios_vectorSEXP);
     rcpp_result_gen = Rcpp::wrap(get_subject_specific_odds_ratios(repeated_vector_i, cluster_size_max, odds_ratios_vector));
     return rcpp_result_gen;
@@ -986,28 +971,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// arma2vec
-Rcpp::NumericVector arma2vec(const arma::vec& x);
-RcppExport SEXP _geer_arma2vec(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(arma2vec(x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// vec2arma
-arma::vec vec2arma(const Rcpp::NumericVector& x);
-RcppExport SEXP _geer_vec2arma(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(vec2arma(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // variance
 arma::vec variance(const char* family, const arma::vec& mu_vector);
 RcppExport SEXP _geer_variance(SEXP familySEXP, SEXP mu_vectorSEXP) {
@@ -1080,7 +1043,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 4},
     {"_geer_get_phi_hat", (DL_FUNC) &_geer_get_phi_hat, 2},
     {"_geer_alpha_hat_exchangeable", (DL_FUNC) &_geer_alpha_hat_exchangeable, 4},
-    {"_geer_alpha_hat_ar1", (DL_FUNC) &_geer_alpha_hat_ar1, 5},
     {"_geer_alpha_hat_unstructured", (DL_FUNC) &_geer_alpha_hat_unstructured, 5},
     {"_geer_alpha_hat_mdependent", (DL_FUNC) &_geer_alpha_hat_mdependent, 6},
     {"_geer_alpha_hat_toeplitz", (DL_FUNC) &_geer_alpha_hat_toeplitz, 5},
@@ -1107,8 +1069,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_v_matrix_mu_or", (DL_FUNC) &_geer_get_v_matrix_mu_or, 3},
     {"_geer_estimating_equations_gee_cc", (DL_FUNC) &_geer_estimating_equations_gee_cc, 13},
     {"_geer_estimating_equations_gee_or", (DL_FUNC) &_geer_estimating_equations_gee_or, 10},
-    {"_geer_arma2vec", (DL_FUNC) &_geer_arma2vec, 1},
-    {"_geer_vec2arma", (DL_FUNC) &_geer_vec2arma, 1},
     {"_geer_variance", (DL_FUNC) &_geer_variance, 2},
     {"_geer_variancemu", (DL_FUNC) &_geer_variancemu, 2},
     {"_geer_variancemu2", (DL_FUNC) &_geer_variancemu2, 2},

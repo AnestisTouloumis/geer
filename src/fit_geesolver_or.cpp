@@ -5,27 +5,9 @@
 #include "nuisance_quantities_or.h"
 #include "covariance_matrices.h"
 #include "clusterutils.h"
+#include "method_dispatch.h"
 #include <algorithm>
 #include <cmath>
-
-namespace {
-inline void symmetrize_if_close(arma::mat& A, const double rel_tol = 1e-10) {
-  const double scale = std::max(1.0, arma::abs(A).max());
-  double max_asym = 0.0;
-  const arma::uword n = A.n_rows;
-  for (arma::uword i = 0; i < n; ++i) {
-    for (arma::uword j = i + 1; j < n; ++j) {
-      const double d = std::abs(A(i, j) - A(j, i));
-      if (d > max_asym) {
-        max_asym = d;
-      }
-    }
-  }
-  if (max_asym <= rel_tol * scale) {
-    A = 0.5 * (A + A.t());
-  }
-}
-}
 
 
 //============================ update beta - gee OR ============================
@@ -41,7 +23,7 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
                              const arma::vec& eta_vector,
                              const arma::vec& alpha_vector) {
   const arma::uword params_no = model_matrix.n_cols;
-  const int repeated_max = static_cast<int>(arma::max(repeated_vector));
+  const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   const arma::vec delta_vector = mueta(link, eta_vector);
@@ -113,7 +95,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
                                const arma::vec& eta_vector,
                                const arma::vec& alpha_vector) {
   const arma::uword params_no = model_matrix.n_cols;
-  const int repeated_max = static_cast<int>(arma::max(repeated_vector));
+  const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat lambda_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
@@ -223,7 +205,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                 const arma::vec& eta_vector,
                                 const arma::vec& alpha_vector) {
   const arma::uword params_no = model_matrix.n_cols;
-  const int repeated_max = static_cast<int>(arma::max(repeated_vector));
+  const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat partial_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
@@ -353,7 +335,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                                    const arma::vec& eta_vector,
                                    const arma::vec& alpha_vector) {
   const arma::uword params_no = model_matrix.n_cols;
-  const int repeated_max = static_cast<int>(arma::max(repeated_vector));
+  const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat partial_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
@@ -575,7 +557,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                   const arma::vec& alpha_vector,
                                   const double& jeffreys_power) {
   const arma::uword params_no = model_matrix.n_cols;
-  const int repeated_max = static_cast<int>(arma::max(repeated_vector));
+  const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse_derivative(params_no * params_no,
@@ -655,7 +637,8 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                          const arma::vec& alpha_vector,
                          const double& jeffreys_power,
                          const char* method) {
-  if (std::strcmp(method, "gee") == 0) {
+  switch (method_code(method)) {
+  case M_GEE:
     return update_beta_gee_or(y_vector,
                               model_matrix,
                               id_vector,
@@ -666,8 +649,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                               mu_vector,
                               eta_vector,
                               alpha_vector);
-  }
-  if (std::strcmp(method, "brgee-naive") == 0) {
+  case M_BR_NAIVE:
     return update_beta_naive_or(y_vector,
                                 model_matrix,
                                 id_vector,
@@ -678,8 +660,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                                 mu_vector,
                                 eta_vector,
                                 alpha_vector);
-  }
-  if (std::strcmp(method, "brgee-robust") == 0) {
+  case M_BR_ROBUST:
     return update_beta_robust_or(y_vector,
                                  model_matrix,
                                  id_vector,
@@ -690,8 +671,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                                  mu_vector,
                                  eta_vector,
                                  alpha_vector);
-  }
-  if (std::strcmp(method, "brgee-empirical") == 0) {
+  case M_BR_EMPIRICAL:
     return update_beta_empirical_or(y_vector,
                                     model_matrix,
                                     id_vector,
@@ -702,8 +682,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                                     mu_vector,
                                     eta_vector,
                                     alpha_vector);
-  }
-  if (std::strcmp(method, "pgee-jeffreys") == 0) {
+  case M_PGEE_JEFFREYS:
     return update_beta_jeffreys_or(y_vector,
                                    model_matrix,
                                    id_vector,

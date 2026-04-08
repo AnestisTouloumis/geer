@@ -137,10 +137,6 @@ alpha_hat_exchangeable <- function(pearson_residuals_vector, id_vector, phi, par
     .Call(`_geer_alpha_hat_exchangeable`, pearson_residuals_vector, id_vector, phi, params_no)
 }
 
-alpha_hat_ar1 <- function(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no) {
-    .Call(`_geer_alpha_hat_ar1`, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no)
-}
-
 alpha_hat_unstructured <- function(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no) {
     .Call(`_geer_alpha_hat_unstructured`, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no)
 }
@@ -243,14 +239,6 @@ estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repea
 
 estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
     .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-arma2vec <- function(x) {
-    .Call(`_geer_arma2vec`, x)
-}
-
-vec2arma <- function(x) {
-    .Call(`_geer_vec2arma`, x)
 }
 
 variance <- function(family, mu_vector) {

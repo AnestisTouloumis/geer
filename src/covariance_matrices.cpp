@@ -7,26 +7,6 @@
 #include "utils.h"
 
 
-namespace {
-inline void symmetrize_if_close(arma::mat& A, const double rel_tol = 1e-10) {
-  const double scale = std::max(1.0, arma::abs(A).max());
-  double max_asym = 0.0;
-  const arma::uword n = A.n_rows;
-  for (arma::uword i = 0; i < n; ++i) {
-    for (arma::uword j = i + 1; j < n; ++j) {
-      const double d = std::abs(A(i, j) - A(j, i));
-      if (d > max_asym) {
-        max_asym = d;
-      }
-    }
-  }
-  if (max_asym <= rel_tol * scale) {
-    A = 0.5 * (A + A.t());
-  }
-}
-}  // namespace
-
-
 //============================ covariance matrices -- cc =======================
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]

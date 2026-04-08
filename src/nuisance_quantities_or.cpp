@@ -84,12 +84,10 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
 //============================ subject specific odds ratios ====================
 // [[Rcpp::export]]
 arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
-                                           const int& cluster_size_max,
+                                           const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size_i = repeated_vector_i.n_elem;
   const arma::uword pairs_no_i = upper_triangular_pairs(cluster_size_i);
-  const arma::uword cluster_size_max_u =
-    static_cast<arma::uword>(cluster_size_max);
   arma::vec ans(pairs_no_i, arma::fill::zeros);
   arma::uword k = 0;
   for (arma::uword i = 0; i + 1 < cluster_size_i; ++i) {
@@ -99,7 +97,7 @@ arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
       const arma::uword col_index =
         static_cast<arma::uword>(repeated_vector_i[j]) - 1;
       const arma::uword pos =
-        upper_triangular_pair_index(row_index, col_index, cluster_size_max_u);
+        upper_triangular_pair_index(row_index, col_index, cluster_size_max);
 
       ans[k] = odds_ratios_vector[pos];
       ++k;

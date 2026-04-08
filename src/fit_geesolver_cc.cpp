@@ -6,28 +6,9 @@
 #include "variance_functions.h"
 #include "covariance_matrices.h"
 #include "clusterutils.h"
+#include "method_dispatch.h"
 #include <algorithm>
 #include <cmath>
-
-
-namespace {
-inline void symmetrize_if_close(arma::mat& A, const double rel_tol = 1e-10) {
-  const double scale = std::max(1.0, arma::abs(A).max());
-  double max_asym = 0.0;
-  const arma::uword n = A.n_rows;
-  for (arma::uword i = 0; i < n; ++i) {
-    for (arma::uword j = i + 1; j < n; ++j) {
-      const double d = std::abs(A(i, j) - A(j, i));
-      if (d > max_asym) {
-        max_asym = d;
-      }
-    }
-  }
-  if (max_asym <= rel_tol * scale) {
-    A = 0.5 * (A + A.t());
-  }
-}
-}
 
 
 //============================ update beta - gee ===============================
@@ -858,7 +839,8 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                          const double& phi,
                          const double& jeffreys_power,
                          const char* method) {
-  if (std::strcmp(method, "gee") == 0) {
+  switch (method_code(method)) {
+  case M_GEE:
     return update_beta_gee_cc(y_vector,
                               model_matrix,
                               id_vector,
@@ -872,8 +854,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                               correlation_structure,
                               alpha_vector,
                               phi);
-  }
-  if (std::strcmp(method, "brgee-naive") == 0) {
+  case M_BR_NAIVE:
     return update_beta_naive_cc(y_vector,
                                 model_matrix,
                                 id_vector,
@@ -887,8 +868,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                                 correlation_structure,
                                 alpha_vector,
                                 phi);
-  }
-  if (std::strcmp(method, "brgee-robust") == 0) {
+  case M_BR_ROBUST:
     return update_beta_robust_cc(y_vector,
                                  model_matrix,
                                  id_vector,
@@ -902,8 +882,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                                  correlation_structure,
                                  alpha_vector,
                                  phi);
-  }
-  if (std::strcmp(method, "brgee-empirical") == 0) {
+  case M_BR_EMPIRICAL:
     return update_beta_empirical_cc(y_vector,
                                     model_matrix,
                                     id_vector,
@@ -917,8 +896,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                                     correlation_structure,
                                     alpha_vector,
                                     phi);
-  }
-  if (std::strcmp(method, "pgee-jeffreys") == 0) {
+  case M_PGEE_JEFFREYS:
     return update_beta_jeffreys_cc(y_vector,
                                    model_matrix,
                                    id_vector,
@@ -993,17 +971,16 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
   if (phi_fixed == 0) {
     phi = get_phi_hat(pearson_residuals_vector, use_params);
   }
-
+  if (alpha_fixed == 0) {
+    alpha_vector = get_alpha_hat(correlation_structure,
+                                 pearson_residuals_vector,
+                                 id_vector,
+                                 repeated_vector,
+                                 phi,
+                                 use_params,
+                                 mdependence);
+  }
   for (int i = 1; i < maxiter + 1; ++i) {
-    if (alpha_fixed == 0) {
-      alpha_vector = get_alpha_hat(correlation_structure,
-                                   pearson_residuals_vector,
-                                   id_vector,
-                                   repeated_vector,
-                                   phi,
-                                   use_params,
-                                   mdependence);
-    }
     stepsize_vector =
       update_beta_cc(y_vector,
                      model_matrix,
@@ -1104,6 +1081,15 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             weights_vector);
     if (phi_fixed == 0) {
       phi = get_phi_hat(pearson_residuals_vector, use_params);
+    }
+    if (alpha_fixed == 0) {
+      alpha_vector = get_alpha_hat(correlation_structure,
+                                   pearson_residuals_vector,
+                                   id_vector,
+                                   repeated_vector,
+                                   phi,
+                                   use_params,
+                                   mdependence);
     }
     if (criterion_vector(i - 1) <= tolerance) {
       break;

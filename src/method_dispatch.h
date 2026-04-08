@@ -6,7 +6,6 @@ enum MethodCode {
   M_GEE = 0,
   M_BR_NAIVE,
   M_BR_ROBUST,
-  M_BR_ROBUST2,
   M_BR_EMPIRICAL,
   M_PGEE_JEFFREYS
 };
@@ -19,7 +18,6 @@ inline MethodCode method_code(const char* method) {
   case 'b':
     if (std::strcmp(method, "brgee-naive") == 0) return M_BR_NAIVE;
     if (std::strcmp(method, "brgee-robust") == 0) return M_BR_ROBUST;
-    if (std::strcmp(method, "brgee-robust2") == 0) return M_BR_ROBUST2;
     if (std::strcmp(method, "brgee-empirical") == 0) return M_BR_EMPIRICAL;
     break;
   case 'p':
