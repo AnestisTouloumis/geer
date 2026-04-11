@@ -1,3 +1,4 @@
+#define ARMA_WARN_LEVEL 1
 #include "nuisance_quantities_cc.h"
 
 #include "clusterutils.h"
@@ -65,7 +66,6 @@ arma::vec get_pearson_residuals(const char* family,
 
 
 //============================ phi hat =========================================
-// [[Rcpp::export]]
 double get_phi_hat(const arma::vec& pearson_residuals_vector,
                    const int& params_no) {
   const double n = static_cast<double>(pearson_residuals_vector.n_elem);
@@ -85,7 +85,6 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
 
 
 //============================ exchangeable alpha hat ==========================
-// [[Rcpp::export]]
 double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
                               const arma::vec& id_vector,
                               const double& phi,
@@ -155,7 +154,6 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
 
 
 //============================ unstructured alpha hat ==========================
-// [[Rcpp::export]]
 arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
                                  const arma::vec& id_vector,
                                  const arma::vec& repeated_vector,
@@ -202,7 +200,6 @@ arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
 
 
 //============================ m-dependent alpha hat ===========================
-// [[Rcpp::export]]
 arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
                                const arma::vec& id_vector,
                                const arma::vec& repeated_vector,
@@ -248,7 +245,6 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
 
 
 //============================ toeplitz alpha hat ==============================
-// [[Rcpp::export]]
 arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
                              const arma::vec& id_vector,
                              const arma::vec& repeated_vector,
@@ -292,7 +288,6 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
 
 
 //============================ alpha hat =======================================
-// [[Rcpp::export]]
 arma::vec get_alpha_hat(const char* correlation_structure,
                         const arma::vec& pearson_residuals_vector,
                         const arma::vec& id_vector,
@@ -347,7 +342,6 @@ arma::vec get_alpha_hat(const char* correlation_structure,
 
 
 //============================ independence ====================================
-// [[Rcpp::export]]
 arma::mat correlation_independence(const arma::uword dimension) {
   return arma::eye(dimension, dimension);
 }
@@ -355,7 +349,6 @@ arma::mat correlation_independence(const arma::uword dimension) {
 
 
 //============================ exchangeable ====================================
-// [[Rcpp::export]]
 arma::mat correlation_exchangeable(const arma::vec& alpha_vector,
                                    const arma::uword dimension) {
   arma::mat ans(dimension, dimension);
@@ -367,7 +360,6 @@ arma::mat correlation_exchangeable(const arma::vec& alpha_vector,
 
 
 //============================ ar1 =============================================
-// [[Rcpp::export]]
 arma::mat correlation_ar1(const arma::vec& alpha_vector,
                           const arma::uword dimension) {
   arma::vec ans(dimension, arma::fill::zeros);
@@ -383,7 +375,6 @@ arma::mat correlation_ar1(const arma::vec& alpha_vector,
 
 
 //============================ m-dependent =====================================
-// [[Rcpp::export]]
 arma::mat correlation_mdependent(const arma::vec& alpha_vector,
                                  const arma::uword dimension) {
   const arma::uword k = alpha_vector.n_elem;
@@ -404,7 +395,6 @@ arma::mat correlation_mdependent(const arma::vec& alpha_vector,
 
 
 //============================ toeplitz ========================================
-// [[Rcpp::export]]
 arma::mat correlation_toeplitz(const arma::vec& alpha_vector) {
   arma::vec toeplitz_vector(alpha_vector.n_elem + 1, arma::fill::zeros);
   toeplitz_vector[0] = 1.0;
@@ -418,7 +408,6 @@ arma::mat correlation_toeplitz(const arma::vec& alpha_vector) {
 
 
 //============================ unstructured ====================================
-// [[Rcpp::export]]
 arma::mat correlation_unstructured(const arma::vec& alpha_vector,
                                    const arma::uword dimension) {
   arma::mat ans_lt = arma::eye(dimension, dimension);
@@ -471,13 +460,11 @@ arma::mat get_v_matrix_cc(FamilyCode fc,
   const arma::vec sd_vector =
     arma::sqrt(variance(fc, mu_vector) / weights_vector);
   const arma::uword m = sd_vector.n_elem;
-
   if (m == 1) {
     arma::mat ans(1, 1);
     ans(0, 0) = phi * sd_vector[0] * sd_vector[0];
     return ans;
   }
-
   arma::mat ans;
   if (is_contiguous_1based(repeated_vector)) {
     const arma::uword r0 = static_cast<arma::uword>(repeated_vector[0]) - 1;
@@ -497,7 +484,6 @@ arma::mat get_v_matrix_cc(FamilyCode fc,
 
 
 //============================ subject-specific weight matrix (char*) ==========
-// [[Rcpp::export]]
 arma::mat get_v_matrix_cc(const char* family,
                           const arma::vec& mu_vector,
                           const arma::vec& repeated_vector,

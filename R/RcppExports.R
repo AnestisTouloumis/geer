@@ -9,56 +9,8 @@ get_covariance_matrices_or <- function(y_vector, model_matrix, id_vector, repeat
     .Call(`_geer_get_covariance_matrices_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 
-update_beta_gee_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_update_beta_gee_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-update_beta_naive_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_update_beta_naive_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-update_beta_robust_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_update_beta_robust_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-update_beta_empirical_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_update_beta_empirical_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-update_beta_jeffreys_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, jeffreys_power) {
-    .Call(`_geer_update_beta_jeffreys_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, jeffreys_power)
-}
-
-update_beta_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, jeffreys_power, method) {
-    .Call(`_geer_update_beta_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi, jeffreys_power, method)
-}
-
 fit_geesolver_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed) {
     .Call(`_geer_fit_geesolver_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed)
-}
-
-update_beta_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_naive_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_naive_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_robust_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_robust_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_empirical_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_update_beta_empirical_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-update_beta_jeffreys_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, jeffreys_power) {
-    .Call(`_geer_update_beta_jeffreys_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, jeffreys_power)
-}
-
-update_beta_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, jeffreys_power, method) {
-    .Call(`_geer_update_beta_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector, jeffreys_power, method)
 }
 
 fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {
@@ -77,179 +29,23 @@ get_gee_criteria_sc_cw_or <- function(y_vector, id_vector, repeated_vector, mu_v
     .Call(`_geer_get_gee_criteria_sc_cw_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector)
 }
 
-linkfun_rcpp <- function(link, mu_vector) {
-    .Call(`_geer_linkfun_rcpp`, link, mu_vector)
-}
-
-linkfun <- function(link, mu_vector) {
-    .Call(`_geer_linkfun`, link, mu_vector)
-}
-
-linkinv_rcpp <- function(link, eta_vector) {
-    .Call(`_geer_linkinv_rcpp`, link, eta_vector)
-}
-
-linkinv <- function(link, eta_vector) {
-    .Call(`_geer_linkinv`, link, eta_vector)
-}
-
-mueta_rcpp <- function(link, eta_vector) {
-    .Call(`_geer_mueta_rcpp`, link, eta_vector)
-}
-
-mueta <- function(link, eta_vector) {
-    .Call(`_geer_mueta`, link, eta_vector)
-}
-
-mueta2_rcpp <- function(link, eta_vector) {
-    .Call(`_geer_mueta2_rcpp`, link, eta_vector)
-}
-
-mueta2 <- function(link, eta_vector) {
-    .Call(`_geer_mueta2`, link, eta_vector)
-}
-
-mueta3_rcpp <- function(link, eta_vector) {
-    .Call(`_geer_mueta3_rcpp`, link, eta_vector)
-}
-
-mueta3 <- function(link, eta_vector) {
-    .Call(`_geer_mueta3`, link, eta_vector)
-}
-
-valideta <- function(link, eta_vector) {
-    .Call(`_geer_valideta`, link, eta_vector)
-}
-
-validmu <- function(family, mu_vector) {
-    .Call(`_geer_validmu`, family, mu_vector)
-}
-
 get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
     .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
-}
-
-get_phi_hat <- function(pearson_residuals_vector, params_no) {
-    .Call(`_geer_get_phi_hat`, pearson_residuals_vector, params_no)
-}
-
-alpha_hat_exchangeable <- function(pearson_residuals_vector, id_vector, phi, params_no) {
-    .Call(`_geer_alpha_hat_exchangeable`, pearson_residuals_vector, id_vector, phi, params_no)
-}
-
-alpha_hat_unstructured <- function(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no) {
-    .Call(`_geer_alpha_hat_unstructured`, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no)
-}
-
-alpha_hat_mdependent <- function(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no, mdependence) {
-    .Call(`_geer_alpha_hat_mdependent`, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no, mdependence)
-}
-
-alpha_hat_toeplitz <- function(pearson_residuals_vector, id_vector, repeated_vector, phi, params_no) {
-    .Call(`_geer_alpha_hat_toeplitz`, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no)
-}
-
-get_alpha_hat <- function(correlation_structure, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no, mdependence) {
-    .Call(`_geer_get_alpha_hat`, correlation_structure, pearson_residuals_vector, id_vector, repeated_vector, phi, params_no, mdependence)
-}
-
-correlation_independence <- function(dimension) {
-    .Call(`_geer_correlation_independence`, dimension)
-}
-
-correlation_exchangeable <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_exchangeable`, alpha_vector, dimension)
-}
-
-correlation_ar1 <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_ar1`, alpha_vector, dimension)
-}
-
-correlation_mdependent <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_mdependent`, alpha_vector, dimension)
-}
-
-correlation_toeplitz <- function(alpha_vector) {
-    .Call(`_geer_correlation_toeplitz`, alpha_vector)
-}
-
-correlation_unstructured <- function(alpha_vector, dimension) {
-    .Call(`_geer_correlation_unstructured`, alpha_vector, dimension)
 }
 
 get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
     .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
 }
 
-get_v_matrix_cc <- function(family, mu_vector, repeated_vector, phi, cor_matrix, weights_vector) {
-    .Call(`_geer_get_v_matrix_cc`, family, mu_vector, repeated_vector, phi, cor_matrix, weights_vector)
-}
-
 get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure) {
     .Call(`_geer_get_marginalized_odds_ratios`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
 }
 
-get_subject_specific_odds_ratios <- function(repeated_vector_i, cluster_size_max, odds_ratios_vector) {
-    .Call(`_geer_get_subject_specific_odds_ratios`, repeated_vector_i, cluster_size_max, odds_ratios_vector)
+estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_estimating_equations_gee_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
 }
 
-get_bivariate_distribution <- function(row_prob, col_prob, odds_ratio) {
-    .Call(`_geer_get_bivariate_distribution`, row_prob, col_prob, odds_ratio)
-}
-
-get_v_matrix_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_v_matrix_or`, mu_vector, odds_ratios_vector, weights_vector)
-}
-
-get_v_matrix_inverse_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_v_matrix_inverse_or`, mu_vector, odds_ratios_vector, weights_vector)
-}
-
-get_bivariate_distribution_murow <- function(row_prob, col_prob, odds_ratio) {
-    .Call(`_geer_get_bivariate_distribution_murow`, row_prob, col_prob, odds_ratio)
-}
-
-get_bivariate_distribution_murow2 <- function(row_prob, col_prob, odds_ratio) {
-    .Call(`_geer_get_bivariate_distribution_murow2`, row_prob, col_prob, odds_ratio)
-}
-
-get_bivariate_distribution_murowcol <- function(row_prob, col_prob, odds_ratio) {
-    .Call(`_geer_get_bivariate_distribution_murowcol`, row_prob, col_prob, odds_ratio)
-}
-
-get_g_matrix <- function(mu_vector, odds_ratios_vector) {
-    .Call(`_geer_get_g_matrix`, mu_vector, odds_ratios_vector)
-}
-
-get_bivariate_distribution_mu <- function(mu_vector, odds_ratios_vector) {
-    .Call(`_geer_get_bivariate_distribution_mu`, mu_vector, odds_ratios_vector)
-}
-
-get_g_matrix_mu <- function(mu_vector, odds_ratios_vector) {
-    .Call(`_geer_get_g_matrix_mu`, mu_vector, odds_ratios_vector)
-}
-
-get_v_matrix_mu_or <- function(mu_vector, odds_ratios_vector, weights_vector) {
-    .Call(`_geer_get_v_matrix_mu_or`, mu_vector, odds_ratios_vector, weights_vector)
-}
-
-estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_estimating_equations_gee_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, mu_vector, eta_vector, alpha_vector)
-}
-
-variance <- function(family, mu_vector) {
-    .Call(`_geer_variance`, family, mu_vector)
-}
-
-variancemu <- function(family, mu_vector) {
-    .Call(`_geer_variancemu`, family, mu_vector)
-}
-
-variancemu2 <- function(family, mu_vector) {
-    .Call(`_geer_variancemu2`, family, mu_vector)
+estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 

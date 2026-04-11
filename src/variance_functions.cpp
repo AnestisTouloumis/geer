@@ -1,3 +1,4 @@
+#define ARMA_WARN_LEVEL 1
 #include "family_utils.h"
 #include "variance_functions.h"
 
@@ -28,8 +29,6 @@ arma::vec variance(FamilyCode fc, const arma::vec& mu_vector) {
 
 
 //============================ variance (char*) =================================
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
 arma::vec variance(const char* family, const arma::vec& mu_vector) {
   return variance(parse_family(family), mu_vector);
 }
@@ -62,7 +61,6 @@ arma::vec variancemu(FamilyCode fc, const arma::vec& mu_vector) {
 
 
 //============================ derivative variance wrt mean (char*) ============
-// [[Rcpp::export]]
 arma::vec variancemu(const char* family, const arma::vec& mu_vector) {
   return variancemu(parse_family(family), mu_vector);
 }
@@ -93,7 +91,6 @@ arma::vec variancemu2(FamilyCode fc, const arma::vec& mu_vector) {
 
 
 //============================ second derivative variance wrt mean (char*) =====
-// [[Rcpp::export]]
 arma::vec variancemu2(const char* family, const arma::vec& mu_vector) {
   return variancemu2(parse_family(family), mu_vector);
 }

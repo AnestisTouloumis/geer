@@ -168,7 +168,7 @@ compute_score_components <- function(object0, object1, test_coefficients) {
     score_vector <- estimating_equations_gee_cc(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
       object1$family$link, object1$family$family,
-      test_coefficients, object0$fitted.values, object0$linear.predictors,
+      object0$fitted.values, object0$linear.predictors,
       object1$association_structure, object1$alpha, object1$phi
     )
 
@@ -184,7 +184,7 @@ compute_score_components <- function(object0, object1, test_coefficients) {
     score_vector <- estimating_equations_gee_or(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
       object1$family$link,
-      test_coefficients, object0$fitted.values, object0$linear.predictors,
+      object0$fitted.values, object0$linear.predictors,
       association_alpha
     )
     covariance <- get_covariance_matrices_or(

@@ -4,9 +4,8 @@
 #include <RcppArmadillo.h>
 
 Rcpp::NumericVector arma2vec(const arma::vec& x);
-arma::vec vec2arma(const Rcpp::NumericVector& x);
 arma::mat subset_matrix(const arma::mat& x, const arma::vec& y);
-arma::mat kappa_matrix(arma::uword dimension);
+arma::mat kappa_matrix(const arma::uword dimension);
 arma::mat kronecker_left_identity_kappa(const arma::mat& x);
 arma::mat kronecker_identity_right_kappa(const arma::mat& x);
 arma::mat kappa_right(const arma::mat& x);

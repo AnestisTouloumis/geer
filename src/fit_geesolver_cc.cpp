@@ -9,13 +9,10 @@
 #include "covariance_matrices.h"
 #include "clusterutils.h"
 #include "method_dispatch.h"
-#include <algorithm>
 #include <cmath>
 
 
 //============================ update beta - gee ===============================
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
 arma::vec update_beta_gee_cc(const arma::vec& y_vector,
                              const arma::mat& model_matrix,
                              const arma::vec& id_vector,
@@ -96,7 +93,6 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
 
 
 //============================ update beta - naive =============================
-// [[Rcpp::export]]
 arma::vec update_beta_naive_cc(const arma::vec& y_vector,
                                const arma::mat& model_matrix,
                                const arma::vec& id_vector,
@@ -124,121 +120,120 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
   const arma::vec variance_vector = variance(fc, mu_vector);
   const arma::vec alpha_star_vector =
     -0.5 * variancemu(fc, mu_vector) / variance_vector;
-    const arma::vec alpha_star_plus_delta_star_vector =
+  const arma::vec alpha_star_plus_delta_star_vector =
     alpha_star_vector + delta_star_vector;
-    const arma::vec s_vector = y_vector - mu_vector;
-    const arma::mat correlation_matrix =
-      get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
-    const auto clusters = clusters_from_sorted_id(id_vector);
-    arma::mat d_matrix_i;
-    arma::mat v_matrix_i;
-    arma::mat v_matrix_inverse_d_matrix_i;
-    arma::mat d_matrix_trans_v_matrix_inverse_i;
-    arma::mat v_matrix_inverse_alpha_plus_delta_star_diag_i;
-    arma::mat v_matrix_inverse_delta_star_diag_i;
-    arma::mat kron_d_matrix_d_matrix_i;
-    arma::mat alpha_star_plus_delta_star_matrix_i;
-    arma::mat delta_star_matrix_i;
-    for (const auto& cl : clusters) {
-      const arma::uword a = cl.start;
-      const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      const arma::subview_col<double> delta_vector_i = delta_vector.subvec(a, b);
-      const arma::subview_col<double> s_vector_i = s_vector.subvec(a, b);
-      const arma::subview_col<double> delta_star_vector_i =
-        delta_star_vector.subvec(a, b);
-      const arma::subview_col<double> alpha_star_plus_delta_star_vector_i =
-        alpha_star_plus_delta_star_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
-      d_matrix_i = model_matrix.rows(a, b);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(fc,
-                                   mu_vector.subvec(a, b),
-                                   repeated_vector.subvec(a, b),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(a, b));
+  const arma::vec s_vector = y_vector - mu_vector;
+  const arma::mat correlation_matrix =
+    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  arma::mat d_matrix_i;
+  arma::mat v_matrix_i;
+  arma::mat v_matrix_inverse_d_matrix_i;
+  arma::mat d_matrix_trans_v_matrix_inverse_i;
+  arma::mat v_matrix_inverse_alpha_plus_delta_star_diag_i;
+  arma::mat v_matrix_inverse_delta_star_diag_i;
+  arma::mat kron_d_matrix_d_matrix_i;
+  arma::mat alpha_star_plus_delta_star_matrix_i;
+  arma::mat delta_star_matrix_i;
+  for (const auto& cl : clusters) {
+    const arma::uword a = cl.start;
+    const arma::uword b = cl.end - 1;
+    const arma::uword m = cl.end - cl.start;
+    const arma::subview_col<double> delta_vector_i = delta_vector.subvec(a, b);
+    const arma::subview_col<double> s_vector_i = s_vector.subvec(a, b);
+    const arma::subview_col<double> delta_star_vector_i =
+      delta_star_vector.subvec(a, b);
+    const arma::subview_col<double> alpha_star_plus_delta_star_vector_i =
+      alpha_star_plus_delta_star_vector.subvec(a, b);
+    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+      d_matrix_i.set_size(m, params_no);
+    }
+    d_matrix_i = model_matrix.rows(a, b);
+    d_matrix_i.each_col() %= delta_vector_i;
+    v_matrix_i = get_v_matrix_cc(fc,
+                                 mu_vector.subvec(a, b),
+                                 repeated_vector.subvec(a, b),
+                                 phi,
+                                 correlation_matrix,
+                                 weights_vector.subvec(a, b));
 
-      if (v_matrix_inverse_d_matrix_i.n_rows != m ||
-          v_matrix_inverse_d_matrix_i.n_cols != params_no) {
-        v_matrix_inverse_d_matrix_i.set_size(m, params_no);
-      }
-      const bool ok_d = arma::solve(v_matrix_inverse_d_matrix_i,
-                                    v_matrix_i,
-                                    d_matrix_i,
-                                    arma::solve_opts::likely_sympd);
-      if (!ok_d) {
-        Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} D_i.");
-      }
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
-      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-      u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
-      if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
-          alpha_star_plus_delta_star_matrix_i.n_cols != m) {
-        alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      alpha_star_plus_delta_star_matrix_i.zeros();
-      alpha_star_plus_delta_star_matrix_i.diag() =
-        alpha_star_plus_delta_star_vector_i;
-      if (delta_star_matrix_i.n_rows != m || delta_star_matrix_i.n_cols != m) {
-        delta_star_matrix_i.set_size(m, m);
-      }
-      delta_star_matrix_i.zeros();
-      delta_star_matrix_i.diag() = delta_star_vector_i;
-      if (v_matrix_inverse_alpha_plus_delta_star_diag_i.n_rows != m ||
-          v_matrix_inverse_alpha_plus_delta_star_diag_i.n_cols != m) {
-        v_matrix_inverse_alpha_plus_delta_star_diag_i.set_size(m, m);
-      }
-      const bool ok_alpha = arma::solve(v_matrix_inverse_alpha_plus_delta_star_diag_i,
-                                        v_matrix_i,
-                                        alpha_star_plus_delta_star_matrix_i,
-                                        arma::solve_opts::likely_sympd);
-      if (!ok_alpha) {
-        Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} diag(alpha* + delta*).");
-      }
-      if (v_matrix_inverse_delta_star_diag_i.n_rows != m ||
-          v_matrix_inverse_delta_star_diag_i.n_cols != m) {
-        v_matrix_inverse_delta_star_diag_i.set_size(m, m);
-      }
-      const bool ok_delta = arma::solve(v_matrix_inverse_delta_star_diag_i,
-                                        v_matrix_i,
-                                        delta_star_matrix_i,
-                                        arma::solve_opts::likely_sympd);
-      if (!ok_delta) {
-        Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} diag(delta*).");
-      }
-      kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
-      lambda_matrix +=
-        kron_d_matrix_d_matrix_i.t() *
-        (kappa_right(v_matrix_inverse_alpha_plus_delta_star_diag_i.t()) -
-        kronecker_identity_right_kappa(v_matrix_inverse_alpha_plus_delta_star_diag_i) -
-        kronecker_left_identity_kappa(v_matrix_inverse_delta_star_diag_i)) *
-        d_matrix_i;
+    if (v_matrix_inverse_d_matrix_i.n_rows != m ||
+        v_matrix_inverse_d_matrix_i.n_cols != params_no) {
+      v_matrix_inverse_d_matrix_i.set_size(m, params_no);
     }
-    symmetrize_if_close(naive_matrix_inverse, 1e-10);
-    const arma::vec lambda_vector =
-      lambda_from_blocks_chol_or_lu(naive_matrix_inverse, lambda_matrix);
-    arma::vec update_step(params_no, arma::fill::zeros);
-    const bool ok_step = arma::solve(update_step,
-                                     naive_matrix_inverse,
-                                     u_vector + lambda_vector,
-                                     arma::solve_opts::likely_sympd);
-    if (!ok_step) {
-      Rcpp::stop("update_beta_naive_cc: failed to solve for the beta update.");
+    const bool ok_d = arma::solve(v_matrix_inverse_d_matrix_i,
+                                  v_matrix_i,
+                                  d_matrix_i,
+                                  arma::solve_opts::likely_sympd);
+    if (!ok_d) {
+      Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} D_i.");
     }
-    return beta_vector + update_step;
+    if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
+        d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
+      d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
+    }
+    d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+    naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+    u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+    if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
+        alpha_star_plus_delta_star_matrix_i.n_cols != m) {
+      alpha_star_plus_delta_star_matrix_i.set_size(m, m);
+    }
+    alpha_star_plus_delta_star_matrix_i.zeros();
+    alpha_star_plus_delta_star_matrix_i.diag() =
+      alpha_star_plus_delta_star_vector_i;
+    if (delta_star_matrix_i.n_rows != m || delta_star_matrix_i.n_cols != m) {
+      delta_star_matrix_i.set_size(m, m);
+    }
+    delta_star_matrix_i.zeros();
+    delta_star_matrix_i.diag() = delta_star_vector_i;
+    if (v_matrix_inverse_alpha_plus_delta_star_diag_i.n_rows != m ||
+        v_matrix_inverse_alpha_plus_delta_star_diag_i.n_cols != m) {
+      v_matrix_inverse_alpha_plus_delta_star_diag_i.set_size(m, m);
+    }
+    const bool ok_alpha = arma::solve(v_matrix_inverse_alpha_plus_delta_star_diag_i,
+                                      v_matrix_i,
+                                      alpha_star_plus_delta_star_matrix_i,
+                                      arma::solve_opts::likely_sympd);
+    if (!ok_alpha) {
+      Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} diag(alpha* + delta*).");
+    }
+    if (v_matrix_inverse_delta_star_diag_i.n_rows != m ||
+        v_matrix_inverse_delta_star_diag_i.n_cols != m) {
+      v_matrix_inverse_delta_star_diag_i.set_size(m, m);
+    }
+    const bool ok_delta = arma::solve(v_matrix_inverse_delta_star_diag_i,
+                                      v_matrix_i,
+                                      delta_star_matrix_i,
+                                      arma::solve_opts::likely_sympd);
+    if (!ok_delta) {
+      Rcpp::stop("update_beta_naive_cc: failed to solve V_i^{-1} diag(delta*).");
+    }
+    kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
+    lambda_matrix +=
+      kron_d_matrix_d_matrix_i.t() *
+      (kappa_right(v_matrix_inverse_alpha_plus_delta_star_diag_i.t()) -
+      kronecker_identity_right_kappa(v_matrix_inverse_alpha_plus_delta_star_diag_i) -
+      kronecker_left_identity_kappa(v_matrix_inverse_delta_star_diag_i)) *
+      d_matrix_i;
+  }
+  symmetrize_if_close(naive_matrix_inverse, 1e-10);
+  const arma::vec lambda_vector =
+    lambda_from_blocks_chol_or_lu(naive_matrix_inverse, lambda_matrix);
+  arma::vec update_step(params_no, arma::fill::zeros);
+  const bool ok_step = arma::solve(update_step,
+                                   naive_matrix_inverse,
+                                   u_vector + lambda_vector,
+                                   arma::solve_opts::likely_sympd);
+  if (!ok_step) {
+    Rcpp::stop("update_beta_naive_cc: failed to solve for the beta update.");
+  }
+  return beta_vector + update_step;
 }
 //==============================================================================
 
 
 //============================ update beta - robust  ===========================
-// [[Rcpp::export]]
 arma::vec update_beta_robust_cc(const arma::vec& y_vector,
                                 const arma::mat& model_matrix,
                                 const arma::vec& id_vector,
@@ -450,7 +445,6 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
 
 
 //============================ update beta - empirical =========================
-// [[Rcpp::export]]
 arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
                                    const arma::mat& model_matrix,
                                    const arma::vec& id_vector,
@@ -687,7 +681,6 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
 
 
 //============================ update beta - jeffreys ==========================
-// [[Rcpp::export]]
 arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
                                   const arma::mat& model_matrix,
                                   const arma::vec& id_vector,
@@ -835,7 +828,6 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
 
 
 //============================ update beta =====================================
-// [[Rcpp::export]]
 arma::vec update_beta_cc(const arma::vec& y_vector,
                          const arma::mat& model_matrix,
                          const arma::vec& id_vector,
@@ -930,6 +922,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
 
 
 //=========================== fitting function =================================
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const arma::mat& model_matrix,

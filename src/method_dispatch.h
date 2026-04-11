@@ -1,7 +1,7 @@
 #pragma once
 #include <RcppArmadillo.h>
+#include <cstring>
 
-// Fast method dispatch (O(1) after first char check)
 enum MethodCode {
   M_GEE = 0,
   M_BR_NAIVE,

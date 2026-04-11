@@ -1,3 +1,4 @@
+#define ARMA_WARN_LEVEL 1
 #include "nuisance_quantities_or.h"
 #include "clusterutils.h"
 #include <algorithm>
@@ -17,6 +18,7 @@ inline arma::uword upper_triangular_pairs(const arma::uword n) {
 
 
 //============================ estimate marginalized odds ratio structure ======
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector,
                                                  const arma::vec& id_vector,
@@ -81,7 +83,6 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
 
 
 //============================ subject specific odds ratios ====================
-// [[Rcpp::export]]
 arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
                                            const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector) {
@@ -108,7 +109,6 @@ arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
 
 
 //============================ bivariate distribution ==========================
-// [[Rcpp::export]]
 double get_bivariate_distribution(const double& row_prob,
                                   const double& col_prob,
                                   const double& odds_ratio) {
@@ -135,7 +135,6 @@ double get_bivariate_distribution(const double& row_prob,
 
 
 //============================ v matrix ========================================
-// [[Rcpp::export]]
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,
                           const arma::vec& odds_ratios_vector,
                           const arma::vec& weights_vector) {
@@ -163,7 +162,6 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
 
 
 //============================ inverse weight matrix ===========================
-// [[Rcpp::export]]
 arma::mat get_v_matrix_inverse_or(const arma::vec& mu_vector,
                                   const arma::vec& odds_ratios_vector,
                                   const arma::vec& weights_vector) {
@@ -179,7 +177,6 @@ arma::mat get_v_matrix_inverse_or(const arma::vec& mu_vector,
 
 
 //============================ first derivative wrt row probability ============
-// [[Rcpp::export]]
 double get_bivariate_distribution_murow(const double& row_prob,
                                         const double& col_prob,
                                         const double& odds_ratio) {
@@ -196,7 +193,6 @@ double get_bivariate_distribution_murow(const double& row_prob,
 
 
 //============================ second derivative wrt row probability ===========
-// [[Rcpp::export]]
 double get_bivariate_distribution_murow2(const double& row_prob,
                                          const double& col_prob,
                                          const double& odds_ratio) {
@@ -213,7 +209,6 @@ double get_bivariate_distribution_murow2(const double& row_prob,
 
 
 //============================ second derivative wrt row-col probabilities =====
-// [[Rcpp::export]]
 double get_bivariate_distribution_murowcol(const double& row_prob,
                                            const double& col_prob,
                                            const double& odds_ratio) {
@@ -230,7 +225,6 @@ double get_bivariate_distribution_murowcol(const double& row_prob,
 
 
 //============================ derivatives g_matrix ============================
-// [[Rcpp::export]]
 arma::mat get_g_matrix(const arma::vec& mu_vector,
                        const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size = mu_vector.n_elem;
@@ -259,7 +253,6 @@ arma::mat get_g_matrix(const arma::vec& mu_vector,
 
 
 //============================ joint probability distribution derivative =======
-// [[Rcpp::export]]
 arma::mat get_bivariate_distribution_mu(const arma::vec& mu_vector,
                                         const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size = mu_vector.n_elem;
@@ -291,7 +284,6 @@ arma::mat get_bivariate_distribution_mu(const arma::vec& mu_vector,
 
 
 //============================ derivative of g matrix ==========================
-// [[Rcpp::export]]
 arma::mat get_g_matrix_mu(const arma::vec& mu_vector,
                           const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size = mu_vector.n_elem;
@@ -323,7 +315,6 @@ arma::mat get_g_matrix_mu(const arma::vec& mu_vector,
 
 
 //============================ derivative of weight matrix =====================
-// [[Rcpp::export]]
 arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
                              const arma::vec& odds_ratios_vector,
                              const arma::vec& weights_vector) {

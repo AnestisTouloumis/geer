@@ -2,9 +2,8 @@
 #define FAMILY_UTILS_H
 
 #include <RcppArmadillo.h>
-#include <string>
+#include <string_view>
 
-//============================ family parser ===================================
 enum class FamilyCode {
   gaussian,
   binomial,
@@ -13,26 +12,14 @@ enum class FamilyCode {
   inverse_gaussian
 };
 
-
 inline FamilyCode parse_family(const char* family) {
-  const std::string fam(family);
-  if (fam == "gaussian") {
-    return FamilyCode::gaussian;
-  }
-  if (fam == "binomial") {
-    return FamilyCode::binomial;
-  }
-  if (fam == "poisson") {
-    return FamilyCode::poisson;
-  }
-  if (fam == "Gamma") {
-    return FamilyCode::gamma;
-  }
-  if (fam == "inverse.gaussian") {
-    return FamilyCode::inverse_gaussian;
-  }
-  Rcpp::stop("Unsupported family.");
+  const std::string_view fam(family);
+  if (fam == "gaussian")         return FamilyCode::gaussian;
+  if (fam == "binomial")         return FamilyCode::binomial;
+  if (fam == "poisson")          return FamilyCode::poisson;
+  if (fam == "Gamma")            return FamilyCode::gamma;
+  if (fam == "inverse.gaussian") return FamilyCode::inverse_gaussian;
+  Rcpp::stop("Unsupported family: %s", family);
 }
-//==============================================================================
 
 #endif

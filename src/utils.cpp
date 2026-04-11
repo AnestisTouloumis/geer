@@ -1,3 +1,4 @@
+#define ARMA_WARN_LEVEL 1
 #include "utils.h"
 #include <cmath>
 
@@ -5,13 +6,6 @@
 //============================ arma to vec =====================================
 Rcpp::NumericVector arma2vec(const arma::vec& x) {
   return Rcpp::NumericVector(x.begin(), x.end());
-}
-//==============================================================================
-
-
-//============================ vec to arma =====================================
-arma::vec vec2arma(const Rcpp::NumericVector& x) {
-  return Rcpp::as<arma::vec>(x);
 }
 //==============================================================================
 
@@ -28,7 +22,6 @@ arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
 //============================ kappa matrix ====================================
 arma::mat kappa_matrix(const arma::uword dimension) {
   arma::mat ans(dimension * dimension, dimension, arma::fill::zeros);
-
   for (arma::uword j = 0; j < dimension; ++j) {
     ans(j * dimension + j, j) = 1.0;
   }
@@ -41,14 +34,12 @@ arma::mat kappa_matrix(const arma::uword dimension) {
 arma::mat kronecker_left_identity_kappa(const arma::mat& x) {
   const arma::uword dimension = x.n_rows;
   arma::mat ans(dimension * dimension, dimension, arma::fill::zeros);
-
   for (arma::uword j = 0; j < dimension; ++j) {
     const arma::uword base = j * dimension;
     for (arma::uword i = 0; i < dimension; ++i) {
       ans(base + i, i) = x(j, i);
     }
   }
-
   return ans;
 }
 //==============================================================================
@@ -58,11 +49,9 @@ arma::mat kronecker_left_identity_kappa(const arma::mat& x) {
 arma::mat kronecker_identity_right_kappa(const arma::mat& x) {
   const arma::uword dimension = x.n_rows;
   arma::mat ans(dimension * dimension, dimension, arma::fill::zeros);
-
   for (arma::uword j = 0; j < dimension; ++j) {
     ans.submat(j * dimension, j, (j + 1) * dimension - 1, j) = x.col(j);
   }
-
   return ans;
 }
 //==============================================================================
@@ -72,11 +61,9 @@ arma::mat kronecker_identity_right_kappa(const arma::mat& x) {
 arma::mat kappa_right(const arma::mat& x) {
   const arma::uword dimension = x.n_rows;
   arma::mat ans(dimension * dimension, dimension, arma::fill::zeros);
-
   const arma::uvec rows =
     arma::regspace<arma::uvec>(0, dimension - 1) * (dimension + 1);
   ans.rows(rows) = x;
-
   return ans;
 }
 //==============================================================================
@@ -111,8 +98,10 @@ arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y) {
   arma::mat chol_upper;
   if (arma::chol(chol_upper, X)) {
     const arma::vec forward =
-      arma::solve(arma::trimatl(chol_upper.t()), y);
-    return arma::solve(arma::trimatu(chol_upper), forward);
+      arma::solve(arma::trimatl(chol_upper.t()), y,
+                  arma::solve_opts::no_approx);
+    return arma::solve(arma::trimatu(chol_upper), forward,
+                       arma::solve_opts::no_approx);
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
@@ -141,9 +130,13 @@ arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y) {
 arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
   arma::mat chol_upper;
   if (arma::chol(chol_upper, X)) {
+    // Cholesky succeeded: X is positive-definite so triangular solves
+    // cannot fail — no explicit check needed.
     const arma::mat forward =
-      arma::solve(arma::trimatl(chol_upper.t()), Y);
-    return arma::solve(arma::trimatu(chol_upper), forward);
+      arma::solve(arma::trimatl(chol_upper.t()), Y,
+                  arma::solve_opts::no_approx);
+    return arma::solve(arma::trimatu(chol_upper), forward,
+                       arma::solve_opts::no_approx);
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
@@ -171,16 +164,7 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
 //============================ symmetrize if close to symmetric ================
 void symmetrize_if_close(arma::mat& A, double rel_tol) {
   const double scale = std::max(1.0, arma::abs(A).max());
-  double max_asym = 0.0;
-  const arma::uword n = A.n_rows;
-  for (arma::uword i = 0; i < n; ++i) {
-    for (arma::uword j = i + 1; j < n; ++j) {
-      const double d = std::abs(A(i, j) - A(j, i));
-      if (d > max_asym) {
-        max_asym = d;
-      }
-    }
-  }
+  const double max_asym = arma::abs(A - A.t()).max();
   if (max_asym > rel_tol * scale) {
     Rcpp::warning(
       "Fisher information matrix analogue has non-trivial asymmetry (%.2e); "
@@ -203,9 +187,11 @@ arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
     for (arma::uword r = 0; r < p; ++r) {
       const arma::mat block = lambda_matrix.rows(r * p, (r + 1) * p - 1);
       const arma::mat forward =
-        arma::solve(arma::trimatl(chol_upper.t()), block);
+        arma::solve(arma::trimatl(chol_upper.t()), block,
+                    arma::solve_opts::no_approx);
       const arma::mat solved =
-        arma::solve(arma::trimatu(chol_upper), forward);
+        arma::solve(arma::trimatu(chol_upper), forward,
+                    arma::solve_opts::no_approx);
       lambda_vector[r] = -0.5 * arma::trace(solved);
     }
     return lambda_vector;

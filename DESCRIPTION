@@ -24,6 +24,8 @@ Depends:
 LazyData: true
 Suggests: 
     covr,
+    emmeans (>= 2.0.0), 
+    estimability,
     testthat (>= 3.0.0),
     tibble
 Config/testthat/edition: 3

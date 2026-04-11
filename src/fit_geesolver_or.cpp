@@ -7,12 +7,10 @@
 #include "covariance_matrices.h"
 #include "clusterutils.h"
 #include "method_dispatch.h"
-#include <algorithm>
 #include <cmath>
 
 
 //============================ update beta - gee OR ============================
-// [[Rcpp::export]]
 arma::vec update_beta_gee_or(const arma::vec& y_vector,
                              const arma::mat& model_matrix,
                              const arma::vec& id_vector,
@@ -85,7 +83,6 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
 
 
 //============================ update beta - naive OR ==========================
-// [[Rcpp::export]]
 arma::vec update_beta_naive_or(const arma::vec& y_vector,
                                const arma::mat& model_matrix,
                                const arma::vec& id_vector,
@@ -196,7 +193,6 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
 
 
 //============================ update beta - robust OR =========================
-// [[Rcpp::export]]
 arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                 const arma::mat& model_matrix,
                                 const arma::vec& id_vector,
@@ -327,7 +323,6 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
 
 
 //============================ update beta - empirical OR ======================
-// [[Rcpp::export]]
 arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                                    const arma::mat& model_matrix,
                                    const arma::vec& id_vector,
@@ -549,7 +544,6 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
 
 
 //============================ update beta - jeffreys OR =======================
-// [[Rcpp::export]]
 arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                   const arma::mat& model_matrix,
                                   const arma::vec& id_vector,
@@ -630,7 +624,6 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
 
 
 //============================ update beta - or ================================
-// [[Rcpp::export]]
 arma::vec update_beta_or(const arma::vec& y_vector,
                          const arma::mat& model_matrix,
                          const arma::vec& id_vector,
@@ -707,6 +700,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
 
 
 //=========================== fitting function =================================
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::List fit_bingee_or(const arma::vec& y_vector,
                          const arma::mat& model_matrix,

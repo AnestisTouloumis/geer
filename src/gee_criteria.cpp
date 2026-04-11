@@ -4,105 +4,126 @@
 #include "variance_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "nuisance_quantities_or.h"
+#include "clusterutils.h"
 #include "utils.h"
 
 //============================ naive matrix inverse - independence =============
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::mat get_naive_matrix_inverse_independence(const arma::vec & y_vector,
-                                                const arma::mat & model_matrix,
-                                                const arma::vec & id_vector,
+arma::mat get_naive_matrix_inverse_independence(const arma::vec& y_vector,
+                                                const arma::mat& model_matrix,
+                                                const arma::vec& id_vector,
                                                 const char* link,
                                                 const char* family,
-                                                const arma::vec & mu_vector,
-                                                const arma::vec & eta_vector,
-                                                const double & phi,
-                                                const arma::vec & weights_vector) {
-  int params_no = model_matrix.n_cols;
-  int sample_size = max(id_vector);
-  arma::mat ans = arma::zeros(params_no, params_no);
-  arma::vec delta_vector = mueta(link, eta_vector);
-  arma::vec variance_vector = variance(family, mu_vector);
-  for(int i=1; i < sample_size + 1; i++){
-    arma::uvec id_vector_i = find(id_vector == i);
-    arma::mat d_matrix_i = arma::diagmat(delta_vector(id_vector_i)) *
-      model_matrix.rows(id_vector_i);
-    arma::mat alpha_matrix_inverse =
-      arma::diagmat(weights_vector(id_vector_i) / variance_vector(id_vector_i));
-    ans += trans(d_matrix_i) * alpha_matrix_inverse * d_matrix_i;
+                                                const arma::vec& mu_vector,
+                                                const arma::vec& eta_vector,
+                                                const double& phi,
+                                                const arma::vec& weights_vector) {
+  const arma::uword params_no = model_matrix.n_cols;
+  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec variance_vector = variance(family, mu_vector);
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  arma::mat ans(params_no, params_no, arma::fill::zeros);
+  arma::mat d_matrix_i;
+  for (const auto& cl : clusters) {
+    const arma::uword a = cl.start;
+    const arma::uword b = cl.end - 1;
+    const arma::uword m = cl.end - cl.start;
+    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+      d_matrix_i.set_size(m, params_no);
+    }
+    d_matrix_i = model_matrix.rows(a, b);
+    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+    const arma::vec scale_i =
+      weights_vector.subvec(a, b) / variance_vector.subvec(a, b);
+    arma::mat d_scaled_i = d_matrix_i;
+    d_scaled_i.each_col() %= scale_i;
+    ans += d_matrix_i.t() * d_scaled_i;
   }
-  return ans/phi;
+  return ans / phi;
 }
 //==============================================================================
 
 
 //============================ get_sc_criteria =================================
 // [[Rcpp::export]]
-Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
-                                  const arma::vec & id_vector,
-                                  const arma::vec & repeated_vector,
-                                  const char * family,
-                                  const arma::vec & mu_vector,
-                                  const char * correlation_structure,
-                                  const arma::vec & alpha_vector,
-                                  const double & phi,
-                                  const arma::vec & weights_vector) {
-  double sample_size = max(id_vector);
-  arma::vec sc_criterion = arma::zeros(1, 1);
-  double sum_log_det_working_covariance_matrices = 0;
-  arma::vec s_vector = y_vector - mu_vector;
-  arma::mat correlation_matrix_full =
-    get_correlation_matrix(correlation_structure,
-                           alpha_vector,
-                           static_cast<arma::uword>(max(repeated_vector)));
-  for(int i=1; i < sample_size + 1; i++){
-    arma::uvec id_vector_i = find(id_vector == i);
-    arma::vec s_vector_i = s_vector(id_vector_i);
-    arma::mat working_covariance_matrix_i =
+Rcpp::List get_gee_criteria_sc_cw(const arma::vec& y_vector,
+                                  const arma::vec& id_vector,
+                                  const arma::vec& repeated_vector,
+                                  const char* family,
+                                  const arma::vec& mu_vector,
+                                  const char* correlation_structure,
+                                  const arma::vec& alpha_vector,
+                                  const double& phi,
+                                  const arma::vec& weights_vector) {
+  const arma::uword repeated_max =
+    static_cast<arma::uword>(arma::max(repeated_vector));
+  const arma::mat correlation_matrix =
+    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+  const arma::vec s_vector = y_vector - mu_vector;
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  double sc_criterion = 0.0;
+  double sum_log_det = 0.0;
+  for (const auto& cl : clusters) {
+    const arma::uword a = cl.start;
+    const arma::uword b = cl.end - 1;
+    const arma::vec s_vector_i = s_vector.subvec(a, b);
+    const arma::mat v_matrix_i =
       get_v_matrix_cc(family,
-                      mu_vector(id_vector_i),
-                      repeated_vector(id_vector_i),
+                      mu_vector.subvec(a, b),
+                      repeated_vector.subvec(a, b),
                       phi,
-                      correlation_matrix_full,
-                      weights_vector(id_vector_i));
-    sc_criterion += trans(s_vector_i) * solve(working_covariance_matrix_i,
-                          s_vector_i);
-    sum_log_det_working_covariance_matrices += log(det(working_covariance_matrix_i));
+                      correlation_matrix,
+                      weights_vector.subvec(a, b));
+    sc_criterion +=
+      arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
+    double ld;
+    arma::log_det_sympd(ld, v_matrix_i);
+    sum_log_det += ld;
   }
-  Rcpp::List ans;
-  ans["sc"] = sc_criterion;
-  ans["gp"] = -0.5 * (sc_criterion + sum_log_det_working_covariance_matrices);
-  return ans;
+  return Rcpp::List::create(
+    Rcpp::Named("sc") = sc_criterion,
+    Rcpp::Named("gp") = -0.5 * (sc_criterion + sum_log_det)
+  );
 }
 //==============================================================================
 
 
-//============================ covariance matrices with odds ratios ============
+//============================ sc criteria with odds ratios ====================
 // [[Rcpp::export]]
-Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
-                                     const arma::vec & id_vector,
-                                     const arma::vec & repeated_vector,
-                                     const arma::vec & mu_vector,
-                                     const arma::vec & alpha_vector,
-                                     const arma::vec & weights_vector) {
-  double sample_size = max(id_vector);
-  arma::vec sc_criterion = arma::zeros(1, 1);
-  double sum_log_det_working_covariance_matrices = 0;
-  arma::vec s_vector = y_vector - mu_vector;
-  for(int i=1; i < sample_size + 1; i++){
-    arma::uvec id_vector_i = find(id_vector == i);
-    arma::vec mu_vector_i = mu_vector(id_vector_i);
-    arma::vec s_vector_i = s_vector(id_vector_i);
-    arma::mat working_covariance_matrix_i =
-      get_v_matrix_inverse_or(mu_vector_i,
-                              get_subject_specific_odds_ratios(repeated_vector(id_vector_i),
-                                                               static_cast<arma::uword>(max(repeated_vector)),
-                                                               alpha_vector),
-                              weights_vector(id_vector_i));
-    sc_criterion += trans(s_vector_i) * working_covariance_matrix_i * s_vector_i;
-    sum_log_det_working_covariance_matrices -= log(det(working_covariance_matrix_i));
+Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec& y_vector,
+                                     const arma::vec& id_vector,
+                                     const arma::vec& repeated_vector,
+                                     const arma::vec& mu_vector,
+                                     const arma::vec& alpha_vector,
+                                     const arma::vec& weights_vector) {
+  const arma::uword repeated_max =
+    static_cast<arma::uword>(arma::max(repeated_vector));
+  const arma::vec s_vector = y_vector - mu_vector;
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  double sc_criterion = 0.0;
+  double sum_log_det = 0.0;
+  for (const auto& cl : clusters) {
+    const arma::uword a = cl.start;
+    const arma::uword b = cl.end - 1;
+    const arma::vec s_vector_i = s_vector.subvec(a, b);
+    const arma::vec odds_ratios_vector_i =
+      get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
+                                       repeated_max,
+                                       alpha_vector);
+    const arma::mat v_matrix_i =
+      get_v_matrix_or(mu_vector.subvec(a, b),
+                      odds_ratios_vector_i,
+                      weights_vector.subvec(a, b));
+    sc_criterion +=
+      arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
+    double ld;
+    arma::log_det_sympd(ld, v_matrix_i);
+    sum_log_det += ld;
   }
-  Rcpp::List ans;
-  ans["sc"] = sc_criterion;
-  ans["gp"] = -0.5 * (sc_criterion + sum_log_det_working_covariance_matrices);
-  return ans;
+  return Rcpp::List::create(
+    Rcpp::Named("sc") = sc_criterion,
+    Rcpp::Named("gp") = -0.5 * (sc_criterion + sum_log_det)
+  );
 }
+//==============================================================================

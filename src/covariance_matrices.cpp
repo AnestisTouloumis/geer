@@ -14,14 +14,14 @@ static Rcpp::List compute_sandwich(arma::mat& naive_matrix_inverse,
                                    const double obs_no_total,
                                    const arma::uword params_no) {
   symmetrize_if_close(naive_matrix_inverse, 1e-10);
-  const arma::mat naive_matrix =
-    solve_chol_or_lu_mat(naive_matrix_inverse,
-                         arma::eye(params_no, params_no));
-  const arma::mat naive_matrix_meat_matrix =
-    solve_chol_or_lu_mat(naive_matrix_inverse, meat_matrix);
+  const arma::mat rhs =
+    arma::join_rows(arma::eye(params_no, params_no), meat_matrix);
+  const arma::mat solved = solve_chol_or_lu_mat(naive_matrix_inverse, rhs);
+  const arma::mat naive_matrix = solved.cols(0, params_no - 1);
+  const arma::mat naive_matrix_meat_matrix = solved.cols(params_no,
+                                                         2 * params_no - 1);
   const arma::mat robust_matrix =
-    solve_chol_or_lu_mat(naive_matrix_inverse,
-                         naive_matrix_meat_matrix.t());
+    solve_chol_or_lu_mat(naive_matrix_inverse, naive_matrix_meat_matrix.t());
   const double kappa =
     ((obs_no_total - 1.0) / (obs_no_total - static_cast<double>(params_no))) *
     (sample_size / (sample_size - 1.0));
@@ -44,7 +44,6 @@ static Rcpp::List compute_sandwich(arma::mat& naive_matrix_inverse,
 
 
 //============================ covariance matrices -- cc =======================
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                       const arma::mat& model_matrix,
@@ -58,9 +57,8 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
                                       const double& phi) {
-  // NOTE: id_vector must contain consecutive integers 1..K with no gaps;
-  // this is enforced by the R-side normalisation in extract_geer_id_repeated().
-  const double sample_size = arma::max(id_vector);
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  const double sample_size  = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
   const double obs_no_total = static_cast<double>(model_matrix.n_rows);
   const arma::uword repeated_max =
@@ -71,12 +69,11 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
-  const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
-  arma::vec u_vector_i(params_no, arma::fill::zeros);
+  arma::vec u_vector_i;
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
@@ -129,9 +126,8 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
                                       const arma::vec& mu_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
-  // NOTE: id_vector must contain consecutive integers 1..K with no gaps;
-  // this is enforced by the R-side normalisation in extract_geer_id_repeated().
-  const double sample_size = arma::max(id_vector);
+  const auto clusters = clusters_from_sorted_id(id_vector);
+  const double sample_size  = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
   const double obs_no_total = static_cast<double>(model_matrix.n_rows);
   const arma::uword repeated_max =
@@ -140,12 +136,11 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
   const arma::vec delta_vector = mueta(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
-  arma::vec u_vector_i(params_no, arma::fill::zeros);
+  arma::vec u_vector_i;
   for (const auto& cl : clusters) {
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;

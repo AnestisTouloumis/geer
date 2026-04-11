@@ -1,0 +1,7 @@
+devtools::load_all()
+devtools::test()
+source("./todelete/extract-correlation.R")
+source("./todelete/benchmark-gee.R")
+source("./todelete/benchmark-geepack.R")
+source("./todelete/benchmark-glmtoolbox.R")
+source("./todelete/benchmark-BCgee.R")
