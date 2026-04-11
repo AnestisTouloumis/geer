@@ -1,6 +1,7 @@
 #include "nuisance_quantities_cc.h"
 
 #include "clusterutils.h"
+#include "family_utils.h"
 #include "utils.h"
 #include "variance_functions.h"
 
@@ -40,16 +41,25 @@ inline bool is_contiguous_1based(const arma::vec& r) {
 }
 
 
-//============================ pearson residuals ===============================
+//============================ pearson residuals (enum) ========================
+arma::vec get_pearson_residuals(FamilyCode fc,
+                                const arma::vec& y_vector,
+                                const arma::vec& mu_vector,
+                                const arma::vec& weights_vector) {
+  const arma::vec scale = arma::sqrt(weights_vector / variance(fc, mu_vector));
+  return (y_vector - mu_vector) % scale;
+}
+//==============================================================================
+
+
+//============================ pearson residuals (char*) =======================
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec get_pearson_residuals(const char* family,
                                 const arma::vec& y_vector,
                                 const arma::vec& mu_vector,
                                 const arma::vec& weights_vector) {
-  const arma::vec variance_vector = variance(family, mu_vector);
-  const arma::vec scale = arma::sqrt(weights_vector / variance_vector);
-  return (y_vector - mu_vector) % scale;
+  return get_pearson_residuals(parse_family(family), y_vector, mu_vector, weights_vector);
 }
 //==============================================================================
 
@@ -451,16 +461,15 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
 //==============================================================================
 
 
-//============================ subject-specific weight matrix ==================
-// [[Rcpp::export]]
-arma::mat get_v_matrix_cc(const char* family,
+//============================ subject-specific weight matrix (enum) ===========
+arma::mat get_v_matrix_cc(FamilyCode fc,
                           const arma::vec& mu_vector,
                           const arma::vec& repeated_vector,
                           const double& phi,
                           const arma::mat& cor_matrix,
                           const arma::vec& weights_vector) {
-  const arma::vec variance_vector = variance(family, mu_vector);
-  const arma::vec sd_vector = arma::sqrt(variance_vector / weights_vector);
+  const arma::vec sd_vector =
+    arma::sqrt(variance(fc, mu_vector) / weights_vector);
   const arma::uword m = sd_vector.n_elem;
 
   if (m == 1) {
@@ -483,5 +492,23 @@ arma::mat get_v_matrix_cc(const char* family,
   ans *= phi;
 
   return ans;
+}
+//==============================================================================
+
+
+//============================ subject-specific weight matrix (char*) ==========
+// [[Rcpp::export]]
+arma::mat get_v_matrix_cc(const char* family,
+                          const arma::vec& mu_vector,
+                          const arma::vec& repeated_vector,
+                          const double& phi,
+                          const arma::mat& cor_matrix,
+                          const arma::vec& weights_vector) {
+  return get_v_matrix_cc(parse_family(family),
+                         mu_vector,
+                         repeated_vector,
+                         phi,
+                         cor_matrix,
+                         weights_vector);
 }
 //==============================================================================

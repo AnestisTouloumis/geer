@@ -18,7 +18,8 @@ compute_independence_naive_inverse <- function(object) {
     object$family$family,
     object$fitted.values,
     object$linear.predictors,
-    object$phi
+    object$phi,
+    object$prior.weights
   )
 }
 

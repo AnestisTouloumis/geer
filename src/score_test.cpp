@@ -7,7 +7,6 @@
 #include "utils.h"
 
 //============================ estimating equations - cc =======================
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec estimating_equations_gee_cc(const arma::vec & y_vector,
                                       const arma::mat & model_matrix,

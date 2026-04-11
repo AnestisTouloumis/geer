@@ -3,6 +3,8 @@
 #include "nuisance_quantities_cc.h"
 #include "utils.h"
 #include "link_functions.h"
+#include "link_utils.h"
+#include "family_utils.h"
 #include "variance_functions.h"
 #include "covariance_matrices.h"
 #include "clusterutils.h"
@@ -27,6 +29,8 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
                              const char* correlation_structure,
                              const arma::vec& alpha_vector,
                              const double& phi) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -34,7 +38,7 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   const arma::mat correlation_matrix =
     get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -52,7 +56,7 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
     }
     d_matrix_i = model_matrix.rows(a, b);
     d_matrix_i.each_col() %= delta_vector_i;
-    v_matrix_i = get_v_matrix_cc(family,
+    v_matrix_i = get_v_matrix_cc(fc,
                                  mu_vector.subvec(a, b),
                                  repeated_vector.subvec(a, b),
                                  phi,
@@ -106,18 +110,20 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
                                const char* correlation_structure,
                                const arma::vec& alpha_vector,
                                const double& phi) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat lambda_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
-  const arma::vec variance_vector = variance(family, mu_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
+  const arma::vec variance_vector = variance(fc, mu_vector);
   const arma::vec alpha_star_vector =
-    -0.5 * variancemu(family, mu_vector) / variance_vector;
+    -0.5 * variancemu(fc, mu_vector) / variance_vector;
     const arma::vec alpha_star_plus_delta_star_vector =
     alpha_star_vector + delta_star_vector;
     const arma::vec s_vector = y_vector - mu_vector;
@@ -148,7 +154,7 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
       }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family,
+      v_matrix_i = get_v_matrix_cc(fc,
                                    mu_vector.subvec(a, b),
                                    repeated_vector.subvec(a, b),
                                    phi,
@@ -246,6 +252,8 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
                                 const char* correlation_structure,
                                 const arma::vec& alpha_vector,
                                 const double& phi) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -258,12 +266,12 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
                                       arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
-  const arma::vec variance_vector = variance(family, mu_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
+  const arma::vec variance_vector = variance(fc, mu_vector);
   const arma::vec alpha_star_vector =
-    -0.5 * variancemu(family, mu_vector) / variance_vector;
+    -0.5 * variancemu(fc, mu_vector) / variance_vector;
     const arma::vec alpha_star_plus_delta_star_vector =
     alpha_star_vector + delta_star_vector;
     const arma::vec s_vector = y_vector - mu_vector;
@@ -298,7 +306,7 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
       }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family,
+      v_matrix_i = get_v_matrix_cc(fc,
                                    mu_vector.subvec(a, b),
                                    repeated_vector.subvec(a, b),
                                    phi,
@@ -456,6 +464,8 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
                                    const char* correlation_structure,
                                    const arma::vec& alpha_vector,
                                    const double& phi) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -469,21 +479,21 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
   arma::mat observed_fisher_info_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
   const arma::vec s_vector = y_vector - mu_vector;
-  const arma::vec delta_vector = mueta(link, eta_vector);
-  const arma::vec mueta2_vector = mueta2(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
+  const arma::vec mueta2_vector = mueta2(lc, eta_vector);
   const arma::vec delta_star_vector =
     mueta2_vector / arma::square(delta_vector);
   const arma::vec delta_tilde_star_vector =
-    (delta_vector % mueta3(link, eta_vector) -
+    (delta_vector % mueta3(lc, eta_vector) -
     2.0 * arma::square(mueta2_vector)) /
       arma::square(arma::square(delta_vector));
-  const arma::vec variance_vector = variance(family, mu_vector);
-  const arma::vec variancemu_vector = variancemu(family, mu_vector);
+  const arma::vec variance_vector = variance(fc, mu_vector);
+  const arma::vec variancemu_vector = variancemu(fc, mu_vector);
   const arma::vec alpha_star_vector =
     -0.5 * variancemu_vector / variance_vector;
     const arma::vec alpha_tilde_star_vector =
     0.5 * (arma::square(variancemu_vector) / variance_vector -
-    variancemu2(family, mu_vector)) / variance_vector;
+    variancemu2(fc, mu_vector)) / variance_vector;
     const arma::vec alpha_star_plus_delta_star_vector =
       alpha_star_vector + delta_star_vector;
     const arma::mat correlation_matrix =
@@ -520,7 +530,7 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
 
-      v_matrix_i = get_v_matrix_cc(family,
+      v_matrix_i = get_v_matrix_cc(fc,
                                    mu_vector.subvec(a, b),
                                    repeated_vector.subvec(a, b),
                                    phi,
@@ -657,7 +667,7 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
       return ans;
     };
     const arma::mat fisher_inv_meat = solve_observed_fisher_matrix(meat_matrix);
-    robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t()).t();
+    robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t());
     for (arma::uword param_idx = 0; param_idx < params_no; ++param_idx) {
       const arma::uword block_start = param_idx * params_no;
       const arma::uword block_end = (param_idx + 1) * params_no - 1;
@@ -692,18 +702,20 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
                                   const arma::vec& alpha_vector,
                                   const double& phi,
                                   const double& jeffreys_power) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   arma::mat lambda_matrix(params_no * params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
-  const arma::vec variance_vector = variance(family, mu_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
+  const arma::vec variance_vector = variance(fc, mu_vector);
   const arma::vec alpha_star_vector =
-    -0.5 * variancemu(family, mu_vector) / variance_vector;
+    -0.5 * variancemu(fc, mu_vector) / variance_vector;
     const arma::vec alpha_star_plus_delta_star_vector =
     alpha_star_vector + delta_star_vector;
     const arma::vec s_vector = y_vector - mu_vector;
@@ -732,7 +744,7 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
       }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family,
+      v_matrix_i = get_v_matrix_cc(fc,
                                    mu_vector.subvec(a, b),
                                    repeated_vector.subvec(a, b),
                                    phi,
@@ -941,6 +953,8 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const int& mdependence,
                             double phi,
                             const int& phi_fixed) {
+  const LinkCode lc = parse_link(link);
+  const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   use_params *= static_cast<int>(params_no);
   arma::vec beta_vector_new = beta_vector;
@@ -956,14 +970,14 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
       "invalid initial linear predictor: please another set of initial values for beta!!"
     );
   }
-  arma::vec mu_vector = linkinv(link, eta_vector);
+  arma::vec mu_vector = linkinv(lc, eta_vector);
   if (!validmu(family, arma2vec(mu_vector))) {
     Rcpp::stop(
       "invalid initial fitted values: please another set of initial values for beta!!"
     );
   }
   arma::vec pearson_residuals_vector =
-    get_pearson_residuals(family,
+    get_pearson_residuals(fc,
                           y_vector,
                           mu_vector,
                           weights_vector);
@@ -997,6 +1011,14 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                      phi,
                      jeffreys_power,
                      method) - beta_vector;
+    // Step-length control: monotone step-size rule (Ortega & Rheinboldt).
+    // Accept the halved step if the resulting Newton step norm is strictly
+    // smaller than the norm at the original iterate.  GEE has no log-
+    // likelihood, so a merit-function (Armijo) line search is not available;
+    // this norm-reduction criterion is the standard substitute used in geepack
+    // and glmtoolbox.  criterion_inner is intentionally held fixed at the
+    // original step norm throughout the inner loop — every candidate is
+    // compared against that baseline, not against the previous candidate.
     double criterion_inner = arma::norm(stepsize_vector, "inf");
     beta_vector_inner = beta_vector;
     beta_vector_new = beta_vector;
@@ -1011,14 +1033,14 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
           "invalid linear predictor - please another set of initial values for beta!!"
         );
       }
-      mu_vector = linkinv(link, eta_vector);
+      mu_vector = linkinv(lc, eta_vector);
       if (!validmu(family, arma2vec(mu_vector))) {
         Rcpp::stop(
           "invalid fitted values - please another set of initial values for beta!!"
         );
       }
       pearson_residuals_vector =
-        get_pearson_residuals(family,
+        get_pearson_residuals(fc,
                               y_vector,
                               mu_vector,
                               weights_vector);
@@ -1067,7 +1089,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
         "invalid linear predictor - please another set of initial values for beta!!"
       );
     }
-    mu_vector = linkinv(link, eta_vector);
+    mu_vector = linkinv(lc, eta_vector);
     if (!validmu(family, arma2vec(mu_vector))) {
       Rcpp::stop(
         "invalid fitted values - please another set of initial values for beta!!"
@@ -1075,7 +1097,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
     }
     beta_hat_matrix = arma::join_rows(beta_hat_matrix, beta_vector);
     pearson_residuals_vector =
-      get_pearson_residuals(family,
+      get_pearson_residuals(fc,
                             y_vector,
                             mu_vector,
                             weights_vector);

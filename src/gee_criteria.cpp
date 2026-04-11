@@ -5,10 +5,8 @@
 #include "nuisance_quantities_cc.h"
 #include "nuisance_quantities_or.h"
 #include "utils.h"
-using namespace Rcpp;
 
 //============================ naive matrix inverse - independence =============
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::mat get_naive_matrix_inverse_independence(const arma::vec & y_vector,
                                                 const arma::mat & model_matrix,
@@ -17,7 +15,8 @@ arma::mat get_naive_matrix_inverse_independence(const arma::vec & y_vector,
                                                 const char* family,
                                                 const arma::vec & mu_vector,
                                                 const arma::vec & eta_vector,
-                                                const double & phi) {
+                                                const double & phi,
+                                                const arma::vec & weights_vector) {
   int params_no = model_matrix.n_cols;
   int sample_size = max(id_vector);
   arma::mat ans = arma::zeros(params_no, params_no);
@@ -28,7 +27,7 @@ arma::mat get_naive_matrix_inverse_independence(const arma::vec & y_vector,
     arma::mat d_matrix_i = arma::diagmat(delta_vector(id_vector_i)) *
       model_matrix.rows(id_vector_i);
     arma::mat alpha_matrix_inverse =
-      arma::diagmat(1/variance_vector(id_vector_i));
+      arma::diagmat(weights_vector(id_vector_i) / variance_vector(id_vector_i));
     ans += trans(d_matrix_i) * alpha_matrix_inverse * d_matrix_i;
   }
   return ans/phi;
@@ -37,7 +36,7 @@ arma::mat get_naive_matrix_inverse_independence(const arma::vec & y_vector,
 
 
 //============================ get_sc_criteria =================================
-// [[Rcpp::export()]]
+// [[Rcpp::export]]
 Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
                                   const arma::vec & id_vector,
                                   const arma::vec & repeated_vector,
@@ -54,7 +53,7 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
   arma::mat correlation_matrix_full =
     get_correlation_matrix(correlation_structure,
                            alpha_vector,
-                           max(repeated_vector));
+                           static_cast<arma::uword>(max(repeated_vector)));
   for(int i=1; i < sample_size + 1; i++){
     arma::uvec id_vector_i = find(id_vector == i);
     arma::vec s_vector_i = s_vector(id_vector_i);
@@ -78,7 +77,7 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec & y_vector,
 
 
 //============================ covariance matrices with odds ratios ============
-// [[Rcpp::export()]]
+// [[Rcpp::export]]
 Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec & y_vector,
                                      const arma::vec & id_vector,
                                      const arma::vec & repeated_vector,

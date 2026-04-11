@@ -2,13 +2,10 @@
 #include "variance_functions.h"
 
 
-//============================ variance ========================================
-// [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::export]]
-arma::vec variance(const char* family,
-                   const arma::vec& mu_vector) {
+//============================ variance (enum) ==================================
+arma::vec variance(FamilyCode fc, const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  switch (parse_family(family)) {
+  switch (fc) {
   case FamilyCode::gaussian:
     ans.fill(1.0);
     break;
@@ -30,12 +27,19 @@ arma::vec variance(const char* family,
 //==============================================================================
 
 
-//============================ derivative variance wrt mean ====================
+//============================ variance (char*) =================================
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-arma::vec variancemu(const char* family,
-                     const arma::vec& mu_vector) {
+arma::vec variance(const char* family, const arma::vec& mu_vector) {
+  return variance(parse_family(family), mu_vector);
+}
+//==============================================================================
+
+
+//============================ derivative variance wrt mean (enum) =============
+arma::vec variancemu(FamilyCode fc, const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  switch (parse_family(family)) {
+  switch (fc) {
   case FamilyCode::gaussian:
     ans.fill(0.0);
     break;
@@ -57,12 +61,18 @@ arma::vec variancemu(const char* family,
 //==============================================================================
 
 
-//============================ second derivative variance wrt mean =============
+//============================ derivative variance wrt mean (char*) ============
 // [[Rcpp::export]]
-arma::vec variancemu2(const char* family,
-                      const arma::vec& mu_vector) {
+arma::vec variancemu(const char* family, const arma::vec& mu_vector) {
+  return variancemu(parse_family(family), mu_vector);
+}
+//==============================================================================
+
+
+//============================ second derivative variance wrt mean (enum) ======
+arma::vec variancemu2(FamilyCode fc, const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
-  switch (parse_family(family)) {
+  switch (fc) {
   case FamilyCode::gaussian:
   case FamilyCode::poisson:
     ans.fill(0.0);
@@ -78,5 +88,13 @@ arma::vec variancemu2(const char* family,
     break;
   }
   return ans;
+}
+//==============================================================================
+
+
+//============================ second derivative variance wrt mean (char*) =====
+// [[Rcpp::export]]
+arma::vec variancemu2(const char* family, const arma::vec& mu_vector) {
+  return variancemu2(parse_family(family), mu_vector);
 }
 //==============================================================================

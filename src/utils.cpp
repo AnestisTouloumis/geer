@@ -3,7 +3,6 @@
 
 
 //============================ arma to vec =====================================
-// [[Rcpp::depends(RcppArmadillo)]]
 Rcpp::NumericVector arma2vec(const arma::vec& x) {
   return Rcpp::NumericVector(x.begin(), x.end());
 }
@@ -115,17 +114,25 @@ arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y) {
       arma::solve(arma::trimatl(chol_upper.t()), y);
     return arma::solve(arma::trimatu(chol_upper), forward);
   }
-
   arma::mat lu_lower, lu_upper, permutation_matrix;
-  arma::lu(lu_lower, lu_upper, permutation_matrix, X);
-
+  if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
+    Rcpp::stop("solve_chol_or_lu_vec: LU factorisation failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
   const arma::vec permuted_rhs = permutation_matrix * y;
-  const arma::vec forward =
-    arma::solve(arma::trimatl(lu_lower), permuted_rhs,
-                arma::solve_opts::allow_ugly);
-
-  return arma::solve(arma::trimatu(lu_upper), forward,
-                     arma::solve_opts::allow_ugly);
+  arma::vec forward;
+  if (!arma::solve(forward, arma::trimatl(lu_lower), permuted_rhs,
+                   arma::solve_opts::no_approx)) {
+    Rcpp::stop("solve_chol_or_lu_vec: LU forward solve failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
+  arma::vec ans;
+  if (!arma::solve(ans, arma::trimatu(lu_upper), forward,
+                   arma::solve_opts::no_approx)) {
+    Rcpp::stop("solve_chol_or_lu_vec: LU back solve failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
+  return ans;
 }
 //==============================================================================
 
@@ -138,17 +145,25 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
       arma::solve(arma::trimatl(chol_upper.t()), Y);
     return arma::solve(arma::trimatu(chol_upper), forward);
   }
-
   arma::mat lu_lower, lu_upper, permutation_matrix;
-  arma::lu(lu_lower, lu_upper, permutation_matrix, X);
-
+  if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
+    Rcpp::stop("solve_chol_or_lu_mat: LU factorisation failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
   const arma::mat permuted_rhs = permutation_matrix * Y;
-  const arma::mat forward =
-    arma::solve(arma::trimatl(lu_lower), permuted_rhs,
-                arma::solve_opts::allow_ugly);
-
-  return arma::solve(arma::trimatu(lu_upper), forward,
-                     arma::solve_opts::allow_ugly);
+  arma::mat forward;
+  if (!arma::solve(forward, arma::trimatl(lu_lower), permuted_rhs,
+                   arma::solve_opts::no_approx)) {
+    Rcpp::stop("solve_chol_or_lu_mat: LU forward solve failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
+  arma::mat ans;
+  if (!arma::solve(ans, arma::trimatu(lu_upper), forward,
+                   arma::solve_opts::no_approx)) {
+    Rcpp::stop("solve_chol_or_lu_mat: LU back solve failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
+  return ans;
 }
 //==============================================================================
 
@@ -178,8 +193,6 @@ void symmetrize_if_close(arma::mat& A, double rel_tol) {
 //==============================================================================
 
 
-
-
 //============================ lambda from matrix blocks =======================
 arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
                                         const arma::mat& lambda_matrix) {
@@ -198,16 +211,25 @@ arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
     return lambda_vector;
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
-  arma::lu(lu_lower, lu_upper, permutation_matrix, A);
+  if (!arma::lu(lu_lower, lu_upper, permutation_matrix, A)) {
+    Rcpp::stop("lambda_from_blocks_chol_or_lu: LU factorisation failed -- "
+                 "matrix is singular or numerically unstable.");
+  }
   for (arma::uword r = 0; r < p; ++r) {
     const arma::mat block = lambda_matrix.rows(r * p, (r + 1) * p - 1);
     const arma::mat permuted_block = permutation_matrix * block;
-    const arma::mat forward =
-      arma::solve(arma::trimatl(lu_lower), permuted_block,
-                  arma::solve_opts::allow_ugly);
-    const arma::mat solved =
-      arma::solve(arma::trimatu(lu_upper), forward,
-                  arma::solve_opts::allow_ugly);
+    arma::mat forward;
+    if (!arma::solve(forward, arma::trimatl(lu_lower), permuted_block,
+                     arma::solve_opts::no_approx)) {
+      Rcpp::stop("lambda_from_blocks_chol_or_lu: LU forward solve failed -- "
+                   "matrix is singular or numerically unstable.");
+    }
+    arma::mat solved;
+    if (!arma::solve(solved, arma::trimatu(lu_upper), forward,
+                     arma::solve_opts::no_approx)) {
+      Rcpp::stop("lambda_from_blocks_chol_or_lu: LU back solve failed -- "
+                   "matrix is singular or numerically unstable.");
+    }
     lambda_vector[r] = -0.5 * arma::trace(solved);
   }
   return lambda_vector;

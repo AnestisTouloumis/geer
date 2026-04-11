@@ -1,6 +1,7 @@
 #define ARMA_WARN_LEVEL 1
 #include <RcppArmadillo.h>
 #include "link_functions.h"
+#include "link_utils.h"
 #include "utils.h"
 #include "nuisance_quantities_or.h"
 #include "covariance_matrices.h"
@@ -22,11 +23,12 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
                              const arma::vec& mu_vector,
                              const arma::vec& eta_vector,
                              const arma::vec& alpha_vector) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -94,14 +96,15 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
                                const arma::vec& mu_vector,
                                const arma::vec& eta_vector,
                                const arma::vec& alpha_vector) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat lambda_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -204,6 +207,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                 const arma::vec& mu_vector,
                                 const arma::vec& eta_vector,
                                 const arma::vec& alpha_vector) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
@@ -211,9 +215,9 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat naive_matrix_inverse(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -334,6 +338,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                                    const arma::vec& mu_vector,
                                    const arma::vec& eta_vector,
                                    const arma::vec& alpha_vector) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
@@ -341,13 +346,13 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat observed_fisher_info_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
-  const arma::vec mueta2_vector = mueta2(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
+  const arma::vec mueta2_vector = mueta2(lc, eta_vector);
   const arma::vec delta_star_vector =
     mueta2_vector / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::vec delta_tilde_star_vector =
-    (delta_vector % mueta3(link, eta_vector) - 2.0 * arma::square(mueta2_vector)) /
+    (delta_vector % mueta3(lc, eta_vector) - 2.0 * arma::square(mueta2_vector)) /
       arma::pow(delta_vector, 4.0);
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -524,7 +529,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
     return ans;
   };
   const arma::mat fisher_inv_meat = solve_observed_fisher_matrix(meat_matrix);
-  robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t()).t();
+  robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t());
   for (arma::uword r = 0; r < params_no; ++r) {
     const arma::mat first_block =
       partial_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
@@ -556,6 +561,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                   const arma::vec& eta_vector,
                                   const arma::vec& alpha_vector,
                                   const double& jeffreys_power) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
@@ -563,9 +569,9 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
   arma::mat naive_matrix_inverse_derivative(params_no * params_no,
                                             params_no,
                                             arma::fill::zeros);
-  const arma::vec delta_vector = mueta(link, eta_vector);
+  const arma::vec delta_vector = mueta(lc, eta_vector);
   const arma::vec delta_star_vector =
-    mueta2(link, eta_vector) / arma::square(delta_vector);
+    mueta2(lc, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat d_matrix_i;
@@ -717,6 +723,7 @@ Rcpp::List fit_bingee_or(const arma::vec& y_vector,
                          const double& jeffreys_power,
                          const char* method,
                          const arma::vec& alpha_vector) {
+  const LinkCode lc = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   arma::vec beta_vector_new = beta_vector;
   arma::mat beta_hat_matrix = beta_vector;
@@ -731,7 +738,7 @@ Rcpp::List fit_bingee_or(const arma::vec& y_vector,
       "invalid linear predictor - please another set of initial values for beta!!"
     );
   }
-  arma::vec mu_vector = linkinv(link, eta_vector);
+  arma::vec mu_vector = linkinv(lc, eta_vector);
   if (!validmu("binomial", arma2vec(mu_vector))) {
     Rcpp::stop(
       "invalid fitted values - please another set of initial values for beta!!"
@@ -751,6 +758,14 @@ Rcpp::List fit_bingee_or(const arma::vec& y_vector,
                      alpha_vector,
                      jeffreys_power,
                      method) - beta_vector;
+    // Step-length control: monotone step-size rule (Ortega & Rheinboldt).
+    // Accept the halved step if the resulting Newton step norm is strictly
+    // smaller than the norm at the original iterate.  GEE has no log-
+    // likelihood, so a merit-function (Armijo) line search is not available;
+    // this norm-reduction criterion is the standard substitute used in geepack
+    // and glmtoolbox.  criterion_inner is intentionally held fixed at the
+    // original step norm throughout the inner loop — every candidate is
+    // compared against that baseline, not against the previous candidate.
     double criterion_inner = arma::norm(stepsize_vector, "inf");
     beta_vector_inner = beta_vector;
     beta_vector_new = beta_vector;
@@ -765,7 +780,7 @@ Rcpp::List fit_bingee_or(const arma::vec& y_vector,
           "invalid initial linear predictor: please another set of initial values for beta!!"
         );
       }
-      mu_vector = linkinv(link, eta_vector);
+      mu_vector = linkinv(lc, eta_vector);
       if (!validmu("binomial", arma2vec(mu_vector))) {
         Rcpp::stop(
           "invalid fitted values - please another set of initial values for beta!!"
@@ -800,7 +815,7 @@ Rcpp::List fit_bingee_or(const arma::vec& y_vector,
         "invalid linear predictor - please another set of initial values for beta!!"
       );
     }
-    mu_vector = linkinv(link, eta_vector);
+    mu_vector = linkinv(lc, eta_vector);
     if (!validmu("binomial", arma2vec(mu_vector))) {
       Rcpp::stop(
         "invalid fitted values - please another set of initial values for beta!!"

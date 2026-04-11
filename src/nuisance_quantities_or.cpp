@@ -17,7 +17,6 @@ inline arma::uword upper_triangular_pairs(const arma::uword n) {
 
 
 //============================ estimate marginalized odds ratio structure ======
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector,
                                                  const arma::vec& id_vector,
