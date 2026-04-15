@@ -4,14 +4,40 @@
 \name{geer-package}
 \alias{geer}
 \alias{geer-package}
-\title{GEE Solver in R}
+\title{Generalized Estimating Equations in R}
 \description{
-Solving generalized estimating equations while implementing bias-reducing,
-bias-corrected and penalized estimators.
+Fits marginal models for independent, repeated, or clustered responses using
+Generalized Estimating Equations (GEE). Supported estimation methods include
+the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+Jeffreys-prior penalized GEE. Continuous and count responses are handled by
+\code{\link{geewa}}, while binary responses are handled by
+\code{\link{geewa_binary}} through an odds-ratio parameterization.
+}
+\references{
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
+
+Touloumis, A. (2026) Bias reduction in generalized estimating equations.
+Preprint.
+
+Touloumis, A. (2026) Jeffreys-prior penalized GEE for correlated binary
+data with an odds-ratio parameterization. Preprint.
+}
+\seealso{
+Main functions:
+\itemize{
+  \item \code{\link{geewa}} for continuous and count responses.
+  \item \code{\link{geewa_binary}} for binary responses via an odds-ratio
+  parameterization.
+  \item \code{\link{geer_control}} for convergence and fitting options.
+  \item \code{\link{geecriteria}} for model selection criteria.
+  \item \code{\link{summary.geer}}, \code{\link{tidy.geer}}, and
+  \code{\link{glance.geer}} for model summaries.
+  \item \code{\link{anova.geer}}, \code{\link{add1.geer}},
+  \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
+}
 }
 \author{
-Anestis Touloumis
-
-Maintainer: Anestis Touloumis \email{A.Touloumis@brighton.ac.uk}
+Anestis Touloumis \email{A.Touloumis@brighton.ac.uk}
 }
 \keyword{package}

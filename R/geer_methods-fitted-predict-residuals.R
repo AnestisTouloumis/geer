@@ -1,26 +1,29 @@
 #' @title
-#' Extract Model Fitted Values from a \code{geer} Object
+#' Extract Model Fitted Values from a geer Object
 #'
 #' @rdname fitted
 #' @aliases fitted fitted.values
 #' @method fitted geer
 #'
 #' @description
-#' Extract fitted values (mean response on the response scale) from a fitted
-#' \code{geer} model. \code{fitted.values()} is an alias for \code{fitted()}.
+#' Extracts the fitted mean values on the response scale from a fitted
+#' \code{geer} object. \code{fitted.values} is an alias for \code{fitted}.
 #'
 #' @inheritParams coef.geer
 #'
 #' @return
-#' A numeric vector of fitted values extracted from \code{object}.
+#' A numeric vector of fitted mean values on the response scale, of the same
+#' length as the number of observations used in fitting.
+#'
+#' @seealso \code{\link{residuals.geer}}, \code{\link{predict.geer}}.
 #'
 #' @examples
 #' data("leprosy", package = "geer")
 #' fit <- geewa(
 #'   formula = bacilli ~ factor(period) + factor(period):treatment,
 #'   family = poisson(link = "log"),
-#'   id = id,
-#'   data = leprosy
+#'   data = leprosy,
+#'   id = id
 #' )
 #' head(fitted(fit))
 #'
@@ -32,53 +35,61 @@ fitted.geer <- function(object, ...) {
 
 
 #' @title
-#' Predictions from a \code{geer} Object
+#' Predictions from a geer Object
 #'
 #' @aliases predict predict.geer
 #' @method predict geer
 #'
 #' @description
-#' Generate predictions, optionally with standard errors, from a fitted
-#' \code{geer} object.
+#' Generates predictions from a fitted \code{geer} object, optionally with
+#' approximate standard errors.
 #'
-#' @inheritParams add1.geer
-#' @param newdata optional data frame in which to look for variables used
-#'        for prediction. If omitted, predictions are made on the data used for
-#'        fitting.
-#' @param type type of prediction required. Options include the scale of the
-#'        linear predictors (\code{"link"}) and the scale of the response
-#'        variable (\code{"response"}). By default, the scale of the linear
-#'        predictors is used.
-#' @param se.fit logical indicating if standard errors are required.
-#'        Defaults to \code{FALSE}.
+#' @param object a fitted model object of class \code{"geer"}.
+#' @param newdata optional data frame in which to look for variables used for
+#'   prediction. If omitted, predictions are made on the data used for fitting.
+#' @param type character string specifying the scale of the predictions.
+#'   Options are \code{"link"} for the linear predictor scale and
+#'   \code{"response"} for the response scale. Defaults to \code{"link"}.
+#' @param cov_type character string specifying the covariance matrix estimator
+#'   used to compute approximate standard errors when \code{se.fit = TRUE}.
+#'   Options are the sandwich or robust estimator (\code{"robust"}), the
+#'   bias-corrected estimator (\code{"bias-corrected"}), the
+#'   degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+#'   model-based or naive estimator (\code{"naive"}). Defaults to
+#'   \code{"robust"}.
+#' @param se.fit logical indicating whether approximate standard errors are to
+#'   be returned. Defaults to \code{FALSE}.
+#' @param ... additional arguments passed to or from other methods.
 #'
 #' @details
 #' Predictions are obtained by computing the model matrix for \code{newdata}
-#' (or the original data if \code{newdata} is missing) and multiplying by the
-#' estimated coefficients. If \code{type = "response"}, predictions are
-#' transformed via the inverse link function.
+#' (or using the original fit when \code{newdata} is omitted) and multiplying
+#' by the estimated coefficients. If \code{type = "response"}, the linear
+#' predictor is transformed via the inverse link function.
 #'
-#' When \code{se.fit = TRUE}, approximate standard errors of predictions are
-#' computed using the model-based covariance matrix of the estimated
-#' coefficients.
-#'
-#' If \code{newdata} is omitted the predictions are based on the data used for
-#' the fit.
+#' When \code{se.fit = TRUE}, approximate standard errors are computed by the
+#' delta method using the covariance matrix specified by \code{cov_type}. On
+#' the response scale, standard errors are additionally scaled by the absolute
+#' derivative of the inverse link function.
 #'
 #' @return
-#' If \code{se.fit = FALSE}, a numeric vector of predictions.
-#' If \code{se.fit = TRUE}, a list with components \code{fit} and \code{se.fit}.
+#' If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
+#' specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
+#' \item{fit}{numeric vector of predictions.}
+#' \item{se.fit}{numeric vector of approximate standard errors of the
+#'   predictions.}
 #'
-#' @seealso
-#' \code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.
+#' @seealso \code{\link{fitted.geer}}, \code{\link{residuals.geer}},
+#'   \code{\link{geewa}}, \code{\link{geewa_binary}},
+#'   \code{\link[stats]{predict}}.
 #'
 #' @examples
-#' data("cerebrovascular")
+#' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
-#'   id = id,
 #'   data = cerebrovascular,
+#'   id = id,
 #'   orstr = "exchangeable"
 #' )
 #' head(predict(fit, type = "link"))
@@ -173,46 +184,40 @@ predict.geer <- function(object,
 
 
 #' @title
-#' Residuals from a \code{geer} Object
+#' Residuals from a geer Object
 #'
 #' @aliases resid residuals residuals.geer
 #' @method residuals geer
 #'
 #' @description
-#' Extract residuals of different types from a fitted \code{geer} object.
+#' Extracts residuals of different types from a fitted \code{geer} object.
 #'
 #' @inheritParams coef.geer
-#' @param type character indicating the type of residuals to return. Options
-#'        include the working residuals (\code{"working"}), the pearson
-#'        residuals (\code{"pearson"}) and the deviance residuals
-#'        (\code{"deviance"}). By default, the working residuals are returned.
+#' @param type character string specifying the type of residuals to return.
+#'   Options are \code{"working"} for raw residuals, \code{"pearson"} for
+#'   residuals standardized by the variance function, and \code{"deviance"}
+#'   for signed square roots of the deviance contributions. Defaults to
+#'   \code{"working"}.
 #'
 #' @details
-#' The residuals are computed according to the marginal distribution specified
-#' by \code{object$family$family}.
-#'
-#' \itemize{
-#'   \item Working residuals: raw differences between observed and fitted values.
-#'   \item Pearson residuals: standardized by the variance function of the
-#'         specified family.
-#'   \item Deviance residuals: signed square roots of the contribution of each
-#'         observation to the model deviance.
-#' }
+#' Residuals are computed using the marginal variance and deviance functions
+#' of the family specified in the fitted model.
 #'
 #' @return
-#' A numeric vector of residuals of the requested \code{type}.
+#' A numeric vector of residuals of the requested \code{type}, of the same
+#' length as the number of observations used in fitting.
 #'
-#' @seealso
-#' \code{\link{geewa}}, \code{\link{geewa_binary}},
-#' \code{\link[stats]{residuals}}
+#' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},
+#'   \code{\link{geewa}}, \code{\link{geewa_binary}},
+#'   \code{\link[stats]{residuals}}.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
-#'   id = id,
 #'   data = cerebrovascular,
+#'   id = id,
 #'   orstr = "exchangeable"
 #' )
 #' head(residuals(fit, type = "working"))

@@ -2,12 +2,12 @@
 % Please edit documentation in R/geer_methods-print-summary.R
 \name{print.geer}
 \alias{print.geer}
-\title{Print a \code{geer} Object}
+\title{Print a geer Object}
 \usage{
 \method{print}{geer}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{"geer"}.}
+\item{x}{a fitted model object of class \code{"geer"}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
@@ -15,6 +15,21 @@
 The input object \code{x} is returned invisibly.
 }
 \description{
-Print the stored call, estimated regression coefficients, and basic fitting
+Prints the call, estimated regression coefficients, and basic fitting
 information for a fitted \code{geer} object.
+}
+\examples{
+data("epilepsy", package = "geer")
+fit <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable"
+)
+print(fit)
+
+}
+\seealso{
+\code{\link{summary.geer}}, \code{\link{coef.geer}}.
 }

@@ -3,14 +3,15 @@
 \docType{data}
 \name{rinse}
 \alias{rinse}
-\title{Rinse}
+\title{Dental Plaque Mouth Rinse Trial}
 \format{
 A data frame with 218 rows and 8 columns:
 \describe{
   \item{id}{integer subject identifier.}
   \item{time}{integer follow-up month identifier.}
   \item{score}{numeric plaque score.}
-  \item{treatment}{factor indicating the type of rinse group with levels \code{A}, \code{B} and \code{placebo}.}
+  \item{treatment}{factor indicating rinse group with levels \code{A},
+    \code{B}, and \code{placebo}.}
   \item{baseline}{numeric plaque score at baseline.}
   \item{gender}{factor with levels \code{female} and \code{male}.}
   \item{age}{numeric age in years recorded at baseline.}
@@ -21,23 +22,28 @@ A data frame with 218 rows and 8 columns:
 rinse
 }
 \description{
-Data from a randomized clinical trial on the efficacy of mouth rinses in reducing dental plaque.
+Data from a randomized clinical trial on the efficacy of mouth rinses in
+reducing dental plaque.
 }
 \details{
-One hundred nine adults aged 18-55 with pre-existing dental plaque but without advanced
-periodontal disease were enrolled in a randomized, double-blinded clinical trial. Subjects
-were assigned to one of two novel mouth rinses (A or B) or to a control mouth rinse.
-Eligibility required at least 20 sound natural teeth and a mean plaque index of 2.0 or greater.
-Plaque was assessed at baseline, 3 months, and 6 months using the Turesky modification of the
-Quigley-Hein index. Four subjects had missing plaque scores. The trial aimed to evaluate the
-effectiveness of the three rinses in inhibiting dental plaque.
+One hundred nine adults aged 18--55 with pre-existing dental plaque but
+without advanced periodontal disease were enrolled in a randomized,
+double-blind clinical trial, yielding 218 observations (baseline plus
+up to two follow-up assessments per subject). Subjects were assigned to one
+of two novel mouth rinses (A or B) or to a control mouth rinse. Eligibility
+required at least 20 sound natural teeth and a mean plaque index of 2.0 or
+greater. Plaque was assessed at baseline, 3 months, and 6 months using the
+Turesky modification of the Quigley-Hein index. Four subjects had missing
+plaque scores. The trial aimed to evaluate the effectiveness of the three
+rinses in inhibiting dental plaque.
 }
 \examples{
-data("rinse")
+data("rinse", package = "geer")
 str(rinse)
 }
 \references{
-Hadgu A. and Koch G. (1999) Application of generalized estimating equations to a dental randomized clinical trial.
-\emph{Journal of Biopharmaceutical Statistics}, \strong{9}, 161--178.
+Hadgu, A. and Koch, G. (1999) Application of generalized estimating
+equations to a dental randomized clinical trial. \emph{Journal of
+Biopharmaceutical Statistics}, \bold{9}, 161--178.
 }
 \keyword{datasets}

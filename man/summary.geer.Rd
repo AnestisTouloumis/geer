@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer_methods-print-summary.R
 \name{summary.geer}
 \alias{summary.geer}
-\title{Summarize a \code{geer} Object}
+\title{Summarize a geer Object}
 \usage{
 \method{summary}{geer}(
   object,
@@ -11,21 +11,60 @@
 )
 }
 \arguments{
-\item{object}{a fitted model object of class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance estimator used to
 compute standard errors, z-statistics, and p-values. Options are
 \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-\code{"naive"}. Default is \code{"robust"}.}
+\code{"naive"}. Defaults to \code{"robust"}.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
 unused.}
 }
 \value{
-An object of class \code{"summary.geer"} containing the coefficient table
-and basic fitting information.
+An object of class \code{"summary.geer"}, a list with components:
+\item{coefficients}{a matrix with columns \code{Estimate},
+  \code{Std. Error}, \code{z value}, and \code{Pr(>|z|)}, with one row per
+  regression parameter.}
+\item{family}{the \code{\link[stats]{family}} object used.}
+\item{alpha}{the estimated or fixed association parameters.}
+\item{call}{the matched call.}
+\item{residuals}{the working residuals.}
+\item{iter}{the number of iterations used.}
+\item{converged}{logical indicating whether the algorithm converged.}
+\item{phi}{the estimated or fixed scale parameter.}
+\item{association_structure}{the name of the working association structure.}
+\item{method}{character string identifying the estimation method used.}
+\item{cov_type}{the covariance estimator used for standard errors.}
 }
 \description{
-Produce a coefficient table and basic model summary information for a fitted
-\code{geer} object.
+Produces a coefficient table and basic model summary information for a
+fitted \code{geer} object.
+}
+\examples{
+data("epilepsy", package = "geer")
+fit <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable"
+)
+summary(fit)
+summary(fit, cov_type = "bias-corrected")
+
+data("cerebrovascular", package = "geer")
+fit2 <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  data = cerebrovascular,
+  id = id,
+  orstr = "exchangeable"
+)
+summary(fit2)
+
+}
+\seealso{
+\code{\link{print.summary.geer}}, \code{\link{tidy.geer}},
+  \code{\link{glance.geer}}, \code{\link{vcov.geer}}.
 }

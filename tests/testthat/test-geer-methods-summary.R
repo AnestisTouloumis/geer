@@ -28,9 +28,9 @@ test_that("summary.geer respects the requested covariance type", {
 
 test_that("summary.geer handles zero standard errors without crashing", {
   fit <- fit_geewa_pois_exch
-  fit$naive_covariance[,] <- 0
-  fit$robust_covariance[,] <- 0
-  fit$bias_corrected_covariance[,] <- 0
+  fit$naive_covariance[, ] <- 0
+  fit$robust_covariance[, ] <- 0
+  fit$bias_corrected_covariance[, ] <- 0
 
   out <- summary(fit)
 

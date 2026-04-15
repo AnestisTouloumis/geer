@@ -4,7 +4,7 @@
 \alias{emmeans-support}
 \alias{recover_data.geer}
 \alias{emm_basis.geer}
-\title{emmeans Support for `geer` Objects}
+\title{emmeans Support for geer Objects}
 \usage{
 recover_data.geer(object, data = NULL, ...)
 
@@ -21,54 +21,59 @@ emm_basis.geer(
 )
 }
 \arguments{
-\item{object}{A fitted object of class `"geer"`.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{data}{Optional data frame used by `emmeans` to recover the predictors.}
+\item{data}{optional data frame used by \pkg{emmeans} to recover the
+model predictors.}
 
-\item{...}{Additional arguments passed through from \pkg{emmeans}.}
+\item{...}{additional arguments passed through from \pkg{emmeans}.}
 
-\item{trms}{The terms component supplied by `emmeans`.}
+\item{trms}{the terms component supplied by \pkg{emmeans}.}
 
-\item{xlev}{The factor levels supplied by `emmeans`.}
+\item{xlev}{the factor levels supplied by \pkg{emmeans}.}
 
-\item{grid}{The reference grid supplied by `emmeans`.}
+\item{grid}{the reference grid supplied by \pkg{emmeans}.}
 
-\item{vcov.method}{Covariance specification to use for `emmeans`
-calculations. This may be a character string naming one of the supported
-covariance estimators, or a covariance matrix or function accepted by
-`emmeans` through its `vcov.` mechanism.}
+\item{vcov.method}{covariance specification to use for \pkg{emmeans}
+calculations. This may be a character string specifying one of the
+supported covariance estimators (\code{"robust"},
+\code{"bias-corrected"}, \code{"df-adjusted"}, \code{"naive"}, or
+the alias \code{"model"} for \code{"naive"}), or a covariance matrix
+or function accepted by \pkg{emmeans} through its \code{vcov.}
+mechanism. Defaults to \code{"robust"}.}
 
-\item{cov_type}{Optional alias for `vcov.method`.}
+\item{cov_type}{optional alias for \code{vcov.method}.}
 
-\item{vcov.}{Optional covariance matrix or function supplied through the
-standard `emmeans` `vcov.` argument. When provided, it takes precedence
-over `vcov.method`.}
+\item{vcov.}{optional covariance matrix or function supplied through the
+standard \pkg{emmeans} \code{vcov.} argument. When provided, it
+takes precedence over \code{vcov.method}.}
 
-\item{misc}{Optional list passed through by `emmeans`.}
+\item{misc}{optional list passed through by \pkg{emmeans}.}
 }
 \value{
-`recover_data.geer()` returns a recovered predictor data set for use by
-\pkg{emmeans}. `emm_basis.geer()` returns the basis components required by
-\pkg{emmeans} to construct an `emmGrid` object.
+\code{recover_data.geer()} returns a recovered predictor data frame for use
+by \pkg{emmeans}. \code{emm_basis.geer()} returns the basis components
+required by \pkg{emmeans} to construct an \code{emmGrid} object.
 }
 \description{
-Methods that allow fitted `geer` objects to work with the
+Methods that allow fitted \code{geer} objects to work with the
 \pkg{emmeans} package.
 
 These functions are used internally by \pkg{emmeans} and are not usually
 called directly by end users. Once both packages are installed, functions
-such as `emmeans::emmeans()` and `emmeans::ref_grid()` can be applied to
-fitted `geer` objects.
+such as \code{emmeans::emmeans()} and \code{emmeans::ref_grid()} can be
+applied to fitted \code{geer} objects.
 
-By default, `emmeans` calculations for `geer` objects use the robust
-covariance matrix. Alternative covariance estimators may be requested via
-`vcov.method`, with supported character values
-`"robust"`, `"bias-corrected"`, `"df-adjusted"`, and `"naive"`.
-The alias `"model"` is also accepted for `"naive"`.
+By default, \pkg{emmeans} calculations for \code{geer} objects use the
+robust covariance matrix. Alternative covariance estimators may be
+requested via \code{vcov.method}, with supported character values
+\code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
+\code{"naive"}. The alias \code{"model"} is also accepted for
+\code{"naive"}.
 
 In line with the large-sample inference used elsewhere in \pkg{geer},
 these methods use asymptotic inference with degrees of freedom equal to
-`Inf`.
+\code{Inf}.
 }
 \examples{
 if (requireNamespace("emmeans", quietly = TRUE)) {
@@ -76,9 +81,9 @@ if (requireNamespace("emmeans", quietly = TRUE)) {
 
   fit <- geewa_binary(
     formula = ecg ~ treatment + factor(period),
-    id = id,
-    data = cerebrovascular,
     link = "logit",
+    data = cerebrovascular,
+    id = id,
     orstr = "exchangeable"
   )
 
@@ -87,4 +92,8 @@ if (requireNamespace("emmeans", quietly = TRUE)) {
   emmeans::emmeans(fit, ~ treatment, vcov.method = "naive")
 }
 
+}
+\seealso{
+\code{\link{vcov.geer}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}.
 }

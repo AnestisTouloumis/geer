@@ -4,30 +4,34 @@
 \alias{fitted.geer}
 \alias{fitted}
 \alias{fitted.values}
-\title{Extract Model Fitted Values from a \code{geer} Object}
+\title{Extract Model Fitted Values from a geer Object}
 \usage{
 \method{fitted}{geer}(object, ...)
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-A numeric vector of fitted values extracted from \code{object}.
+A numeric vector of fitted mean values on the response scale, of the same
+length as the number of observations used in fitting.
 }
 \description{
-Extract fitted values (mean response on the response scale) from a fitted
-\code{geer} model. \code{fitted.values()} is an alias for \code{fitted()}.
+Extracts the fitted mean values on the response scale from a fitted
+\code{geer} object. \code{fitted.values} is an alias for \code{fitted}.
 }
 \examples{
 data("leprosy", package = "geer")
 fit <- geewa(
   formula = bacilli ~ factor(period) + factor(period):treatment,
   family = poisson(link = "log"),
-  id = id,
-  data = leprosy
+  data = leprosy,
+  id = id
 )
 head(fitted(fit))
 
+}
+\seealso{
+\code{\link{residuals.geer}}, \code{\link{predict.geer}}.
 }

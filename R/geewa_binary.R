@@ -1,34 +1,103 @@
 #' @title
-#' Solving (Adjusted) GEE for Binary Responses
+#' Fitting (Adjusted) Generalized Estimating Equations for Binary Responses
 #'
 #' @inherit geewa description
 #'
 #' @inheritParams geewa
-#' @param link character specifying the link function. Options include
-#'        \code{logit}, \code{probit}, \code{cauchit}, \code{cloglog},
-#'        \code{identity}, \code{log}, \code{sqrt}, \code{1/mu^2} and
-#'        \code{inverse}. By default, \code{link = "logit"}.
-#' @param orstr character specifying the odds ratios structure.
-#'        Options include \code{"independence"}, \code{"exchangeable"},
-#'        \code{"unstructured"} and \code{"fixed"}. By default,
-#'        \code{orstr = "independence"}.
-#' @param alpha_vector numerical vector specifying odds ratios structure
-#'        when \code{orstr == "fixed"}. It is ignored for all other
-#'        possible values of \code{orstr}.
+#' @param link character string specifying the link function for the marginal mean
+#'        model. Options are \code{"logit"}, \code{"probit"},
+#'        \code{"cauchit"}, \code{"cloglog"}, \code{"identity"},
+#'        \code{"log"}, \code{"sqrt"}, \code{"1/mu^2"} and
+#'        \code{"inverse"}. Defaults to \code{"logit"}.
+#' @param orstr character string specifying the working odds-ratio structure for the
+#'        within-cluster association. Options are
+#'        \code{"independence"}, \code{"exchangeable"},
+#'        \code{"unstructured"} and \code{"fixed"}. Defaults to
+#'        \code{"independence"}.
+#' @param alpha_vector numeric vector of fixed odds-ratio parameters used only
+#'        when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
+#'        where \code{T = max(repeated)} after recoding, and all elements must
+#'        be finite and strictly positive. Ignored for all other values of
+#'        \code{orstr}.
 #'
-#' @inherit geewa details
+#' @details
+#' \code{method} specifies the estimation approach. If \code{method = "gee"},
+#' the standard GEE are solved with no adjustment. If \code{method} is one of
+#' \code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
+#' an adjustment vector is added to produce naive, robust or empirical
+#' bias-reducing estimators, respectively. If \code{method} is one of
+#' \code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
+#' the corresponding bias-corrected estimators are produced via a one-step
+#' correction applied to the converged GEE solution. If
+#' \code{method = "pgee-jeffreys"}, the GEE are penalized using a
+#' Jeffreys-prior penalty run to full convergence. If
+#' \code{method = "opgee-jeffreys"}, a single penalized scoring step is
+#' performed from the converged independence penalized solution (one-step
+#' approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
+#' scoring step is performed from the converged independence penalized solution
+#' (hybrid one-step approximation).
+#'
+#' The marginal mean model always uses a \code{binomial} family with the
+#' specified \code{link}. Within-cluster association is modeled through
+#' marginalized pairwise odds ratios rather than a correlation structure. The
+#' scale parameter is fixed at \code{phi = 1}.
+#'
+#' For the construction of the \code{formula} argument, see the documentation
+#' of \code{\link{glm}} and \code{\link{formula}}.
+#'
+#' The \code{data} must be in long format (one row per observation). See
+#' \code{\link{reshape}} for details on reshaping between long and wide formats.
+#'
+#' The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
+#' \eqn{N} is the number of clusters. Otherwise, the function recodes the
+#' given labels of \code{id} onto this set.
+#'
+#' The argument \code{repeated} can be safely omitted only if observations are
+#' already ordered within each cluster as intended. If \code{repeated} is not
+#' provided, it is created as \code{1, 2, ..., n_i} within each cluster
+#' \eqn{i}, using the current row order (before internal sorting). If
+#' \code{repeated} is provided, its labels are recoded to \code{1, ..., T} and
+#' must be unique within each cluster.
+#'
+#' The variables \code{id} and \code{repeated} do not need to be pre-sorted.
+#' Instead the function sorts observations in ascending order of \code{id}
+#' and \code{repeated}.
+#'
+#' A term of the form \code{offset(expression)} is allowed in the right-hand
+#' side of \code{formula}.
+#'
+#' The length of \code{id} and of \code{repeated} or \code{weights} (when
+#' provided) must equal the number of observations.
 #'
 #' @inherit geewa return
 #'
+#' @section Note on returned components:
+#' For \code{geewa_binary}, the \code{phi} component is always \code{1} and
+#' \code{alpha} contains the estimated (or fixed) working odds-ratio
+#' parameters, not correlation parameters. The \code{association_structure}
+#' component stores the value of \code{orstr}. Under
+#' \code{orstr = "independence"}, \code{alpha} is set to \code{1}.
+#'
+#' For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
+#' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
+#' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+#' returned object.
+#'
 #' @author Anestis Touloumis
+#'
+#' @seealso \code{\link{geewa}}, \code{\link{geer_control}},
+#'   \code{\link{summary.geer}}, \code{\link{geecriteria}}.
 #'
 #' @examples
 #' data("respiratory", package = "geer")
-#' respiratory2 <- respiratory[respiratory$center == "C2", ]
+#' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #' fitted_model <- geewa_binary(
 #'   formula = status ~ baseline + treatment * gender + visit * age,
-#'   id = id, repeated = visit, link = "probit",
-#'   data = respiratory2, orstr = "independence",
+#'   link = "probit",
+#'   data = respiratory2,
+#'   id = id,
+#'   repeated = visit,
+#'   orstr = "independence",
 #'   method = "pgee-jeffreys"
 #' )
 #' summary(fitted_model, cov_type = "bias-corrected")
@@ -36,23 +105,44 @@
 #' data("cholecystectomy", package = "geer")
 #' fitted_model_gee <- geewa_binary(
 #'   formula = pain ~ treatment + gender + age,
-#'   id = id, data = cholecystectomy, link = "logit",
-#'   orstr = "independence", method = "gee"
+#'   link = "logit",
+#'   data = cholecystectomy,
+#'   id = id,
+#'   orstr = "independence",
+#'   method = "gee"
 #' )
 #' summary(fitted_model_gee, cov_type = "bias-corrected")
+#'
 #' fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
 #' summary(fitted_model_brgee_robust, cov_type = "bias-corrected")
+#'
 #' fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
 #' summary(fitted_model_brgee_naive, cov_type = "bias-corrected")
+#'
 #' fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-empirical")
 #' summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
+#'
+#' fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
+#' summary(fitted_model_bcgee_robust, cov_type = "robust")
+#'
+#' ## Penalized GEE with exchangeable odds-ratio structure
+#' fitted_model_pgee <- geewa_binary(
+#'   formula = pain ~ treatment + gender + age,
+#'   link = "logit",
+#'   data = cholecystectomy,
+#'   id = id,
+#'   orstr = "exchangeable",
+#'   method = "pgee-jeffreys",
+#'   control = geer_control(jeffreys_power = 1)
+#' )
+#' summary(fitted_model_pgee, cov_type = "robust")
 #'
 #' @export
 geewa_binary <- function(formula,
                          link = "logit",
                          data = parent.frame(),
                          id,
-                         repeated = NULL,
+                         repeated,
                          control = geer_control(...),
                          orstr = "independence",
                          method = "gee",

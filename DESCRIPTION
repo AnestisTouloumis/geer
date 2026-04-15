@@ -1,6 +1,6 @@
 Package: geer
 Type: Package
-Title: Generalized Estimating Equations In R
+Title: Generalized Estimating Equations in R
 Version: 0.0.0.9999
 Authors@R:
     person(given = "Anestis",
@@ -8,7 +8,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "A.Touloumis@brighton.ac.uk",
            comment = c(ORCID = "0000-0002-5965-1639"))
-Description: Generalized Estimating Equations (GEE) solver for estimating the regression coefficients of a marginal model with repeated or clustered responses. Bias-reducing and penalized GEE approaches are also implemented.  
+Description: Generalized Estimating Equations (GEE) solver for estimating the regression coefficients of a marginal model with repeated or clustered responses. Bias-reducing and penalized GEE approaches are also implemented.
 License: GPL-2 | GPL-3
 Imports:
     brglm2,

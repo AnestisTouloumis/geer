@@ -3,7 +3,7 @@
 \name{confint.geer}
 \alias{confint.geer}
 \alias{confint}
-\title{Confidence Intervals for Model Parameters from a \code{geer} Object}
+\title{Confidence Intervals for Model Parameters from a geer Object}
 \usage{
 \method{confint}{geer}(
   object,
@@ -14,7 +14,7 @@
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{parm}{a specification of which parameters are to be given
     confidence intervals, either a vector of numbers or a vector of
@@ -22,28 +22,31 @@
 
 \item{level}{the confidence level required.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference on the regression parameters. Options are the sandwich
+or robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-A matrix (or vector) with columns giving lower and upper confidence
-  limits for each parameter. These will be labelled as (1-level)/2 and
-  1 - (1-level)/2 in \% (by default 2.5\% and 97.5\%).
+A matrix with columns giving lower and upper confidence limits for each
+parameter. The columns are labeled by the corresponding tail probabilities
+in percent, for example \code{"2.5\%"} and \code{"97.5\%"} when
+\code{level = 0.95}.
 }
 \description{
-Compute Wald-type confidence intervals for one or more regression parameters
-from a fitted \code{geer} model.
+Computes Wald-type confidence intervals for one or more regression
+parameters from a fitted \code{geer} object.
 }
 \details{
 Confidence intervals are computed as
-\eqn{\hat\beta \pm z_{1-\alpha/2}\,\mathrm{SE}(\hat\beta)},
-where standard errors are obtained from \code{vcov(object, cov_type = cov_type)}.
+\eqn{\hat{\beta} \pm z_{1-\alpha/2} \, \mathrm{SE}(\hat{\beta})},
+where standard errors are obtained from
+\code{vcov(object, cov_type = cov_type)}. The covariance estimator used is
+controlled by \code{cov_type}; see \code{\link{vcov.geer}} for details.
 The resulting intervals rely on the usual large-sample normal approximation.
 }
 \examples{
@@ -51,11 +54,16 @@ data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
-  id = id,
   data = cerebrovascular,
+  id = id,
   orstr = "exchangeable"
 )
 confint(fit)
 confint(fit, parm = "treatmentactive")
 confint(fit, cov_type = "naive")
+
+}
+\seealso{
+\code{\link{vcov.geer}}, \code{\link{coef.geer}},
+  \code{\link{tidy.geer}}.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/geecriteria.R
 \name{geecriteria}
 \alias{geecriteria}
-\title{Model Selection Criteria for \code{geer} Objects}
+\title{Model Selection Criteria for geer Objects}
 \usage{
 geecriteria(
   object,
@@ -12,63 +12,86 @@ geecriteria(
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional objects representing models of the same class \code{geer}.}
+\item{...}{additional fitted model objects of class \code{"geer"} to be
+included in the comparison.}
 
 \item{cov_type}{character string specifying the covariance estimator used in
 the covariance-based criteria. Options are \code{"robust"},
 \code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
-The default is \code{"robust"}.}
+Defaults to \code{"robust"}.}
 
-\item{digits}{Non-negative integer giving the number of decimal places used
-to round the reported criteria. The default is \code{2}.}
+\item{digits}{non-negative integer giving the number of decimal places used
+to round the reported criteria. Defaults to \code{2}.}
 }
 \value{
 A data frame with one row per fitted model and columns \code{QIC},
 \code{CIC}, \code{RJC}, \code{QICu}, \code{GESSC}, \code{GPC}, and
-\code{Parameters}.
+\code{Parameters}, as described in the Details section. When more than one
+model is supplied, row names are set to the deparsed model expressions.
 }
 \description{
-Compute commonly used criteria for comparing fitted \code{geer} models for
-marginal mean selection and working association structure selection.
+Computes model selection criteria for one or more fitted \code{geer} objects,
+supporting both marginal mean model comparison and working association
+structure selection.
 }
 \details{
 The reported criteria are:
 \describe{
-  \item{\code{QIC}}{Quasi Information Criterion for model comparison. Smaller
-    values are preferred.}
-  \item{\code{CIC}}{Correlation Information Criterion for selecting the
-    working association structure. Smaller values are preferred.}
+  \item{\code{QIC}}{Quasi Information Criterion for comparing marginal mean
+  models. Smaller values are preferred.}
+  \item{\code{CIC}}{Correlation Information Criterion, used here for
+  selecting the working association structure. Smaller values are preferred.}
   \item{\code{RJC}}{Rotnitzky and Jewell Criterion. Smaller values are
-    preferred.}
-  \item{\code{QICu}}{A variant of QIC primarily intended for comparing mean
-    models with different covariate sets. Smaller values are preferred.}
+  preferred.}
+  \item{\code{QICu}}{A variant of QIC primarily intended for comparing
+  marginal mean models with different covariate sets. Smaller values are
+  preferred.}
   \item{\code{GESSC}}{Generalized Error Sum of Squares Criterion. Smaller
-    values are preferred.}
-  \item{\code{GPC}}{Gaussian Pseudolikelihood Criterion. Larger values are
-    preferred.}
-  \item{\code{Parameters}}{Number of marginal mean-model regression
-    parameters.}
+  values are preferred.}
+  \item{\code{GPC}}{Gaussian Pseudolikelihood Criterion. Unlike the other
+  criteria, larger values are preferred, because GPC is a pseudolikelihood
+  measure rather than an information criterion.}
+  \item{\code{Parameters}}{Number of regression parameters in the marginal
+  mean model.}
 }
 
-The \code{cov_type} argument affects the covariance-based criteria,
-specifically \code{QIC}, \code{CIC}, and \code{RJC}. If several supplied
-models do not have the same number of observations, a warning is issued.
+The \code{cov_type} argument affects only the covariance-based criteria
+\code{QIC}, \code{CIC}, and \code{RJC}; the remaining criteria are
+unaffected.
+
+If the supplied models do not all have the same number of observations, a
+warning is issued.
 }
 \examples{
+## Single model
+data("epilepsy", package = "geer")
+fit <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable"
+)
+geecriteria(fit)
+
+## Compare working correlation structures
+fit_ind <- update(fit, corstr = "independence")
+fit_ar1 <- update(fit, corstr = "ar1")
+geecriteria(fit_ind, fit, fit_ar1)
+
+## Compare estimation methods
 data("cerebrovascular", package = "geer")
 fitted_gee <- geewa_binary(
   formula = ecg ~ period * treatment,
-  id = id,
-  data = cerebrovascular,
   link = "logit",
+  data = cerebrovascular,
+  id = id,
   orstr = "exchangeable",
   method = "gee"
 )
 fitted_brgee <- update(fitted_gee, method = "brgee-robust")
-
-## Compare two fits
 geecriteria(fitted_gee, fitted_brgee, cov_type = "robust")
 
 }
@@ -83,12 +106,16 @@ the quasi-least squares estimate of the correlation parameter.
 
 Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure
 identification in generalized estimating equations. \emph{Statistics in
-Medicine} \bold{28}, 642--658.
+Medicine}, \bold{28}, 642--658.
 
-Pan, W. (2001) Akaike's information criterion in generalized
-estimating equations. \emph{Biometrics} \bold{57}, 120--125.
+Pan, W. (2001) Akaike's information criterion in generalized estimating
+equations. \emph{Biometrics}, \bold{57}, 120--125.
 
 Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
 parameters in semiparametric generalized linear models for cluster correlated
-data. \emph{Biometrika} \bold{77}, 485--497.
+data. \emph{Biometrika}, \bold{77}, 485--497.
+}
+\seealso{
+\code{\link{glance.geer}}, \code{\link{anova.geer}},
+  \code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

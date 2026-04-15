@@ -3,35 +3,39 @@
 \docType{data}
 \name{leprosy}
 \alias{leprosy}
-\title{Leprosy}
+\title{Antibiotic Treatment for Leprosy Trial}
 \format{
 A data frame with 60 rows and 4 columns:
 \describe{
   \item{id}{integer subject identifier.}
-  \item{period}{factor period identifier with levels \code{pre} and \code{post}.}
-  \item{bacilli}{integer count of leprosy bacilli at six sites of the body.}
-  \item{treatment}{factor with levels \code{A}, \code{B} and \code{C} (C = placebo).}
+  \item{period}{factor period identifier with levels \code{pre} and
+    \code{post}.}
+  \item{bacilli}{integer count of leprosy bacilli at six body sites.}
+  \item{treatment}{factor with levels \code{A}, \code{B}, and \code{C},
+    where \code{C} denotes placebo.}
 }
 }
 \usage{
 leprosy
 }
 \description{
-Data from a randomized clinical trial on the efficacy of antibiotic treatments for leprosy
-in the Philippines.
+Data from a randomized clinical trial on the efficacy of antibiotic
+treatments for leprosy in the Philippines.
 }
 \details{
-Thirty subjects in the Philippines were enrolled in a randomized clinical trial. Subjects
-were assigned to receive treatment A, B, or C. Before treatment, the number of leprosy
-bacilli at six body sites was recorded. After treatment, bacilli counts were recorded again.
-The trial aimed to test whether antibiotic treatments A and B reduced bacilli abundance
-compared with placebo (treatment C).
+Thirty subjects in the Philippines were enrolled in a randomized clinical
+trial, yielding 60 observations (two periods per subject). Subjects were
+assigned to receive treatment A, B, or C (placebo). Before treatment, the
+number of leprosy bacilli at six body sites was recorded. After treatment,
+bacilli counts were recorded again. The trial aimed to assess whether
+treatments A and B reduced bacilli abundance compared with placebo.
 }
 \examples{
-data("leprosy")
+data("leprosy", package = "geer")
 str(leprosy)
 }
 \references{
-Snedecor, G.W. and Cochran W.G. (1967) \emph{Statistical Methods}. Ames, Iowa: Iowa State University Press.
+Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Ames,
+Iowa: Iowa State University Press.
 }
 \keyword{datasets}

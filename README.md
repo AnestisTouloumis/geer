@@ -1,66 +1,108 @@
 <!-- badges: start -->
-  [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
-  <!-- badges: end -->
-  <!-- badges: start -->
-  [![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
-  <!-- badges: end -->  
-  
+[![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
+<!-- badges: end -->
+
+## Overview
+
+`geer` fits marginal models for independent, repeated, or clustered
+responses using Generalized Estimating Equations (GEE). Supported
+estimation methods include the traditional GEE, bias-reducing GEE,
+bias-corrected GEE, and Jeffreys-prior penalized GEE. Continuous and
+count responses are handled by `geewa`, while binary responses are
+handled by `geewa_binary` through an odds-ratio parameterization.
 
 ## Installation
 
-You can install the development version of `geer`:
+You can install the development version of `geer` from GitHub:
 
 ``` r
-# install.packages('devtools')
+# install.packages("devtools")
 devtools::install_github("AnestisTouloumis/geer")
 ```
 
-The source code for the development version of `geer` is available on
-github at:
+## Usage
 
-- <https://github.com/AnestisTouloumis/geer>
-
-To use `geer`, you should load the package as follows:
+Load the package:
 
 ``` r
 library("geer")
 ```
 
-## Usage
+### Fitting models
 
-This package provides a generalized estimating equations (GEE) solver
-for fitting marginal regression models with or without an adjustment 
-vector.
+There are two core fitting functions:
 
-There are two core functions to fit GEE models:
+- `geewa()` for continuous and count responses (Gaussian, Poisson,
+  binomial, Gamma, inverse Gaussian, and quasi families).
+- `geewa_binary()` for binary responses via a marginalized odds-ratio
+  parameterization.
 
-- `geewa` for fitting GEE models with correlated responses. Options for
-  estimation process include the ordinary GEE, bias-reduced or -corrected
-  GEE and penalized GEE,
-- `geewa_binary` for fitting GEE models with correlated binary responses. Options for
-  estimation process include the ordinary GEE, bias-reduced or -corrected
-  GEE and penalized GEE.
+Both functions support the following estimation methods via the
+`method` argument:
 
-The main arguments in both functions are:
+| Method | Description |
+|---|---|
+| `"gee"` | Traditional GEE |
+| `"brgee-naive"`, `"brgee-robust"`, `"brgee-empirical"` | Bias-reducing GEE |
+| `"bcgee-naive"`, `"bcgee-robust"`, `"bcgee-empirical"` | Bias-corrected GEE |
+| `"pgee-jeffreys"` | Fully iterated Jeffreys-prior penalized GEE |
+| `"opgee-jeffreys"` | One-step penalized GEE |
+| `"hpgee-jeffreys"` | Hybrid one-step GEE |
 
-- an optional data frame (`data`),
-- a model formula (`formula`),
-- a cluster identifier variable (`id`),
-- an optional vector that identifies the order of the observations
-  within each cluster (`repeated`).
+Working correlation structures for `geewa()` are controlled by
+`corstr`: `"independence"`, `"exchangeable"`, `"ar1"`,
+`"m-dependent"`, `"unstructured"`, and `"fixed"`. Working odds-ratio
+structures for `geewa_binary()` are controlled by `orstr`:
+`"independence"`, `"exchangeable"`, `"unstructured"`, and `"fixed"`.
 
+Convergence and fitting options are set via `geer_control()`.
 
-There are also five useful utility functions:
+### Inference
 
-- `confint` for obtaining Wald–type confidence intervals for the
-  regression parameters using the standard errors of the sandwich
-  or of the bias-corrected or of the model–based covariance matrix.
-  The default option is the sandwich covariance matrix,
-- `waldts` for assessing the goodness-of-fit of two nested GEE models
-  based on a Wald test statistic,
-- `score_test` for assessing the goodness-of-fit of two nested GEE models
-  based on a score test statistic,
-- `vcov` for obtaining the sandwich, bias-corrected or model–based
-  covariance matrix of the regression parameters,
-- `gee_criteria` for reporting commonly used criteria to select
-  variables and/or association structure for GEE models.
+Standard S3 methods are available for fitted `geer` objects:
+
+- `summary()`, `print()` — coefficient table and model summary.
+- `coef()`, `vcov()`, `confint()` — estimates, covariance matrices,
+  and confidence intervals.
+- `fitted()`, `residuals()`, `predict()` — fitted values and
+  predictions.
+- `model.matrix()` — design matrix.
+- `tidy()`, `glance()` — tidy summaries following
+  [broom](https://broom.tidymodels.org/) conventions.
+
+The `cov_type` argument controls the covariance estimator used for
+inference: `"robust"` (sandwich, default), `"bias-corrected"`,
+`"df-adjusted"`, or `"naive"` (model-based).
+
+### Model building and selection
+
+- `anova()` — sequential or multi-model hypothesis test tables.
+- `add1()`, `drop1()` — single-term additions and deletions with
+  hypothesis tests and CIC.
+- `step_p()` — stepwise model selection by hypothesis testing.
+- `geecriteria()` — QIC, CIC, RJC, QICu, GESSC, and GPC model
+  selection criteria.
+
+### emmeans support
+
+Fitted `geer` objects are compatible with the
+[emmeans](https://cran.r-project.org/package=emmeans) package for
+estimated marginal means.
+
+## Datasets
+
+The package includes seven example datasets: `cerebrovascular`,
+`cholecystectomy`, `depression`, `epilepsy`, `leprosy`, `respiratory`,
+and `rinse`.
+
+## References
+
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+generalized linear models. *Biometrika*, **73**, 13--22.
+
+Touloumis, A. (2026) Bias reduction in generalized estimating
+equations. Preprint.
+
+Touloumis, A. (2026) Jeffreys-prior penalized GEE for correlated
+binary data with an odds-ratio parameterization. Preprint.

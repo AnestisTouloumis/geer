@@ -76,7 +76,7 @@ test_that("glance.geer returns a one-row summary with expected fields", {
   expect_s3_class(out, "data.frame")
   expect_equal(nrow(out), 1L)
   expect_true(all(c(
-    "family", "link", "method", "corstr",
+    "family", "link", "method", "wastr",
     "nobs", "nclusters", "min.cluster.size", "max.cluster.size",
     "npar", "df.residual", "phi",
     "QIC", "QICu", "CIC",
@@ -90,7 +90,7 @@ test_that("glance.geer summary fields match the fitted object", {
   expect_equal(out$family, count_fit$family$family)
   expect_equal(out$link, count_fit$family$link)
   expect_equal(out$method, count_fit$method)
-  expect_equal(out$corstr, count_fit$association_structure)
+  expect_equal(out$wastr, count_fit$association_structure)
   expect_equal(out$nobs, count_fit$obs_no)
   expect_equal(out$nclusters, count_fit$clusters_no)
   expect_equal(out$npar, length(coef(count_fit)))

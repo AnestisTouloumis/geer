@@ -1,15 +1,28 @@
 #' @title
-#' Print a \code{geer} Object
+#' Print a geer Object
 #'
 #' @description
-#' Print the stored call, estimated regression coefficients, and basic fitting
+#' Prints the call, estimated regression coefficients, and basic fitting
 #' information for a fitted \code{geer} object.
 #'
-#' @param x an object of class \code{"geer"}.
+#' @param x a fitted model object of class \code{"geer"}.
 #' @param ... additional arguments passed to or from other methods.
 #'
 #' @return
 #' The input object \code{x} is returned invisibly.
+#'
+#' @seealso \code{\link{summary.geer}}, \code{\link{coef.geer}}.
+#'
+#' @examples
+#' data("epilepsy", package = "geer")
+#' fit <- geewa(
+#'   formula = seizures ~ treatment + lnbaseline + lnage,
+#'   family = poisson(link = "log"),
+#'   data = epilepsy,
+#'   id = id,
+#'   corstr = "exchangeable"
+#' )
+#' print(fit)
 #'
 #' @export
 print.geer <- function(x, ...) {
@@ -29,23 +42,60 @@ print.geer <- function(x, ...) {
 
 
 #' @title
-#' Summarize a \code{geer} Object
+#' Summarize a geer Object
 #'
 #' @description
-#' Produce a coefficient table and basic model summary information for a fitted
-#' \code{geer} object.
+#' Produces a coefficient table and basic model summary information for a
+#' fitted \code{geer} object.
 #'
-#' @param object a fitted model object of class \code{geer}.
+#' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance estimator used to
-#'        compute standard errors, z-statistics, and p-values. Options are
-#'        \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-#'        \code{"naive"}. Default is \code{"robust"}.
+#'   compute standard errors, z-statistics, and p-values. Options are
+#'   \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
+#'   \code{"naive"}. Defaults to \code{"robust"}.
 #' @param ... additional arguments passed to or from other methods. Currently
-#'        unused.
+#'   unused.
 #'
 #' @return
-#' An object of class \code{"summary.geer"} containing the coefficient table
-#' and basic fitting information.
+#' An object of class \code{"summary.geer"}, a list with components:
+#' \item{coefficients}{a matrix with columns \code{Estimate},
+#'   \code{Std. Error}, \code{z value}, and \code{Pr(>|z|)}, with one row per
+#'   regression parameter.}
+#' \item{family}{the \code{\link[stats]{family}} object used.}
+#' \item{alpha}{the estimated or fixed association parameters.}
+#' \item{call}{the matched call.}
+#' \item{residuals}{the working residuals.}
+#' \item{iter}{the number of iterations used.}
+#' \item{converged}{logical indicating whether the algorithm converged.}
+#' \item{phi}{the estimated or fixed scale parameter.}
+#' \item{association_structure}{the name of the working association structure.}
+#' \item{method}{character string identifying the estimation method used.}
+#' \item{cov_type}{the covariance estimator used for standard errors.}
+#'
+#' @seealso \code{\link{print.summary.geer}}, \code{\link{tidy.geer}},
+#'   \code{\link{glance.geer}}, \code{\link{vcov.geer}}.
+#'
+#' @examples
+#' data("epilepsy", package = "geer")
+#' fit <- geewa(
+#'   formula = seizures ~ treatment + lnbaseline + lnage,
+#'   family = poisson(link = "log"),
+#'   data = epilepsy,
+#'   id = id,
+#'   corstr = "exchangeable"
+#' )
+#' summary(fit)
+#' summary(fit, cov_type = "bias-corrected")
+#'
+#' data("cerebrovascular", package = "geer")
+#' fit2 <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   data = cerebrovascular,
+#'   id = id,
+#'   orstr = "exchangeable"
+#' )
+#' summary(fit2)
 #'
 #' @export
 summary.geer <- function(object,
@@ -86,14 +136,32 @@ summary.geer <- function(object,
 
 
 #' @title
-#' Print a \code{summary.geer} Object
+#' Print a summary.geer Object
 #'
-#' @param x An object of class \code{summary.geer}.
-#' @param ... Additional arguments passed to or from other methods. Currently
-#'        unused.
+#' @description
+#' Prints the contents of a \code{summary.geer} object, including the call,
+#' estimation method, coefficient table, dispersion parameter, and working
+#' association structure.
+#'
+#' @param x an object of class \code{"summary.geer"}.
+#' @param ... additional arguments passed to or from other methods. Currently
+#'   unused.
 #'
 #' @return
 #' The input object \code{x} is returned invisibly.
+#'
+#' @seealso \code{\link{summary.geer}}, \code{\link{print.geer}}.
+#'
+#' @examples
+#' data("epilepsy", package = "geer")
+#' fit <- geewa(
+#'   formula = seizures ~ treatment + lnbaseline + lnage,
+#'   family = poisson(link = "log"),
+#'   data = epilepsy,
+#'   id = id,
+#'   corstr = "exchangeable"
+#' )
+#' print(summary(fit))
 #'
 #' @export
 print.summary.geer <- function(x, ...) {

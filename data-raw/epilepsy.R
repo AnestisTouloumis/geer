@@ -15,7 +15,7 @@ epilepsy <- rio::import(path) |>
         treatment == "placebo" ~ "placebo",
         treatment == "Progabide" ~ "progabide"
       )
-      ),
+    ),
     lnbaseline = log(as.numeric(base) / 4),
     lnage = log(as.numeric(age))
   )

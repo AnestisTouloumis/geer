@@ -113,4 +113,3 @@ test_that("emmeans support honors covariance aliases and custom matrices", {
   expect_equal(custom_method_df$emmean, custom_dot_df$emmean, tolerance = 1e-10)
   expect_equal(custom_method_df$SE, custom_dot_df$SE, tolerance = 1e-10)
 })
-

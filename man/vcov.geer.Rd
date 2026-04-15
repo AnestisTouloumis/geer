@@ -3,7 +3,7 @@
 \name{vcov.geer}
 \alias{vcov.geer}
 \alias{vcov}
-\title{Extract Variance-Covariance Matrix from a \code{geer} Object}
+\title{Extract Variance-Covariance Matrix from a geer Object}
 \usage{
 \method{vcov}{geer}(
   object,
@@ -12,61 +12,66 @@
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference on the regression parameters. Options are the sandwich
+or robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
 A square numeric matrix of estimated covariances between regression
 coefficients. Rows and columns are named according to the coefficient names
-returned by \code{\link[stats]{coef}}.
+returned by \code{\link{coef.geer}}.
 }
 \description{
-Extract the variance–covariance matrix of the regression parameters from a
-fitted \code{geer} object. The parameters correspond to those returned by
-\code{\link{coef}}.
+Extracts the variance-covariance matrix of the estimated regression
+parameters from a fitted \code{geer} object. The parameters correspond to
+those returned by \code{\link{coef.geer}}.
 }
 \details{
-The form of the covariance estimator is controlled by the argument
-\code{cov_type}:
-\itemize{
-  \item \code{"robust"} -- the sandwich (robust) covariance estimator
-    \cite{Liang and Zeger (1986)}
-  \item \code{"naive"} -- the model-based covariance estimator
-    \cite{Liang and Zeger (1986)}
-  \item \code{"df-adjusted"} -- the small-sample adjusted covariance matrix
-    \cite{MacKinnon (1985)}
-  \item \code{"bias-corrected"} -- the bias-corrected covariance estimator
-    \cite{Morel et al. (2003)}
+The form of the covariance estimator is controlled by \code{cov_type}:
+\describe{
+  \item{\code{"robust"}}{the sandwich (robust) covariance estimator
+  (Liang and Zeger, 1986).}
+  \item{\code{"naive"}}{the model-based covariance estimator
+  (Liang and Zeger, 1986).}
+  \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
+  estimator (MacKinnon, 1985).}
+  \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
+  (Morel et al., 2003).}
 }
 }
 \examples{
 data("cerebrovascular", package = "geer")
-fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
-                             id = id,
-                             data = cerebrovascular,
-                             link = "logit",
-                             orstr = "exchangeable")
-vcov(fitted_model)
-vcov(fitted_model, cov_type = "bias-corrected")
+fit <- geewa_binary(
+  formula = ecg ~ period + treatment,
+  link = "logit",
+  data = cerebrovascular,
+  id = id,
+  orstr = "exchangeable"
+)
+vcov(fit)
+vcov(fit, cov_type = "bias-corrected")
 
 }
 \references{
-Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using generalized
-linear models \emph{Biometrika} \bold{73}, 13-–22.
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 
-MacKinnon, J.G. (1985) Some heteroskedasticity-consistent
-covariance matrix estimators with improved finite sample properties.
-\emph{Journal of Econometrics} \bold{29}, 305–-325.
+MacKinnon, J.G. (1985) Some heteroskedasticity-consistent covariance matrix
+estimators with improved finite sample properties. \emph{Journal of
+Econometrics}, \bold{29}, 305--325.
 
-Morel, J.G., Bokossa, M.C. and Neerchal N.K. (2003) Small sample correction
-for the variance of GEE estimators. \emph{Biometrical Journal} \bold{45},
-395–-409.
+Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
+correction for the variance of GEE estimators. \emph{Biometrical Journal},
+\bold{45}, 395--409.
+}
+\seealso{
+\code{\link{coef.geer}}, \code{\link{confint.geer}},
+  \code{\link{summary.geer}}, \code{\link{tidy.geer}}.
 }

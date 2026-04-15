@@ -5,7 +5,7 @@
 \alias{add1}
 \alias{drop1.geer}
 \alias{drop1}
-\title{Add or Drop Single Terms to/from a Model from a \code{geer} Object}
+\title{Add or Drop Single Terms to or from a geer Model}
 \usage{
 \method{add1}{geer}(
   object,
@@ -26,89 +26,111 @@
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{scope}{a formula giving the terms to be considered for adding or
     dropping.}
 
-\item{test}{character indicating the hypothesis testing procedure. Options
-include the Wald test (\code{"wald"}), the generalized score test
+\item{test}{character string specifying the hypothesis testing procedure.
+Options are the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test (\code{"working-wald"}),
 the modified working score test (\code{"working-score"}), and the modified
 working likelihood ratio test (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference on the regression parameters. Options are the sandwich
+or robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the approximation used to compute the
-p-value for the modified working tests. Options include the Rao--Scott
+\item{pmethod}{character string specifying the approximation used to compute
+the p-value for the modified working tests. Options are the Rao--Scott
 approximation (\code{"rao-scott"}) and the Satterthwaite approximation
 (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
 An object of class \code{"anova"} summarizing the differences in fit
-  between the models.
+between the models. For \code{add1.geer()} and \code{drop1.geer()}, the
+table contains one row for the current model and one row for each admissible
+single-term addition or deletion. Columns include \code{Df} (degrees of
+freedom of the test), \code{CIC} (Correlation Information Criterion),
+\code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value).
 }
 \description{
-Compute all the single terms in the \code{scope} argument that can be
-  added to or dropped from the model, fit those models and compute a
-  table of the changes in fit.
+Computes all single terms in the \code{scope} argument that can be added to
+or dropped from a fitted \code{geer} model, fits the corresponding models,
+and returns a table summarizing the resulting changes in fit.
 }
 \details{
 For \code{add1.geer()}, \code{scope} must specify the candidate terms to be
-added. If no eligible terms are supplied, an error is returned. Model hierarchy
-is enforced: if a higher-order interaction is present, all of its lower-order
-main effects must also remain in the model. In scope formulas, \code{.} denotes
-the set of terms already included in the model.
+added. If no eligible terms are supplied, an error is returned. In scope
+formulas, \code{.} denotes the set of terms already included in the model.
+
+Model hierarchy is enforced: candidate additions and deletions must preserve
+marginality, so if a higher-order interaction is present, all of its
+lower-order component terms must also remain in the model.
 
 Details of the hypothesis tests controlled by \code{test} are given in
-\cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
-is valid only when the model is fitted under an \emph{independence} working
-association; otherwise, an error is returned.
+Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
+valid only when the model is fitted with an independence working association
+structure; otherwise an error is returned.
 
 When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-ignored, and \code{cov_type} specifies the covariance estimator used to
+ignored and \code{cov_type} specifies the covariance estimator used to
 compute the test statistic. For modified working tests, \code{cov_type}
 determines the covariance matrix used to form the coefficients of the sum of
 independent chi-squared random variables, and \code{pmethod} specifies the
-approximation used to obtain the p-value.
+approximation used to compute the p-value.
 
-The output table also includes the Correlation Information Criterion (CIC),
-a diagnostic for selecting the working correlation structure.
+The output table also includes the Correlation Information Criterion (CIC)
+for each candidate model, which can be used to guide selection of the
+working association structure.
 }
 \examples{
 data("respiratory", package = "geer")
-fitted_model <-
-  geewa(
-    formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
-    id = id, repeated = visit,
-    family = binomial(link = "probit"),
-    data = respiratory[respiratory$center == "C2", ],
-    corstr = "ar1",
-    method = "gee"
-  )
+respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
+
+fitted_model <- geewa(
+  formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+  family = binomial(link = "probit"),
+  data = respiratory2,
+  id = id,
+  repeated = visit,
+  corstr = "ar1",
+  method = "gee"
+)
 add1(
   fitted_model,
   scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
   test = "score"
 )
 
+data("respiratory", package = "geer")
+respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
+
+fitted_model <- geewa(
+  formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+  family = binomial(link = "probit"),
+  data = respiratory2,
+  id = id,
+  repeated = visit,
+  corstr = "ar1",
+  method = "gee"
+)
 drop1(fitted_model, test = "score")
 
 }
 \references{
-Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
-in semiparametric generalized linear models for cluster correlated data.
-\emph{Biometrika} \bold{77}, 485--497.
+Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
+parameters in semiparametric generalized linear models for cluster
+correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{anova}}, \code{\link{step}}, \code{\link{geewa}},
-          \code{\link{geewa_binary}}.
+\code{\link{anova.geer}}, \code{\link{step_p}},
+  \code{\link{geecriteria}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}.
 }

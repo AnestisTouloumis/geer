@@ -4,45 +4,39 @@
 \alias{residuals.geer}
 \alias{resid}
 \alias{residuals}
-\title{Residuals from a \code{geer} Object}
+\title{Residuals from a geer Object}
 \usage{
 \method{residuals}{geer}(object, type = c("working", "pearson", "deviance"), ...)
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{type}{character indicating the type of residuals to return. Options
-include the working residuals (\code{"working"}), the pearson
-residuals (\code{"pearson"}) and the deviance residuals
-(\code{"deviance"}). By default, the working residuals are returned.}
+\item{type}{character string specifying the type of residuals to return.
+Options are \code{"working"} for raw residuals, \code{"pearson"} for
+residuals standardized by the variance function, and \code{"deviance"}
+for signed square roots of the deviance contributions. Defaults to
+\code{"working"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-A numeric vector of residuals of the requested \code{type}.
+A numeric vector of residuals of the requested \code{type}, of the same
+length as the number of observations used in fitting.
 }
 \description{
-Extract residuals of different types from a fitted \code{geer} object.
+Extracts residuals of different types from a fitted \code{geer} object.
 }
 \details{
-The residuals are computed according to the marginal distribution specified
-by \code{object$family$family}.
-
-\itemize{
-  \item Working residuals: raw differences between observed and fitted values.
-  \item Pearson residuals: standardized by the variance function of the
-        specified family.
-  \item Deviance residuals: signed square roots of the contribution of each
-        observation to the model deviance.
-}
+Residuals are computed using the marginal variance and deviance functions
+of the family specified in the fitted model.
 }
 \examples{
 data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
-  id = id,
   data = cerebrovascular,
+  id = id,
   orstr = "exchangeable"
 )
 head(residuals(fit, type = "working"))
@@ -51,6 +45,7 @@ head(residuals(fit, type = "deviance"))
 
 }
 \seealso{
-\code{\link{geewa}}, \code{\link{geewa_binary}},
-\code{\link[stats]{residuals}}
+\code{\link{fitted.geer}}, \code{\link{predict.geer}},
+  \code{\link{geewa}}, \code{\link{geewa_binary}},
+  \code{\link[stats]{residuals}}.
 }

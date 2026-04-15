@@ -4,40 +4,45 @@
 \alias{coef.geer}
 \alias{coef}
 \alias{coefficients}
-\title{Extract Model Coefficients from a \code{geer} Object}
+\title{Extract Model Coefficients from a geer Object}
 \usage{
 \method{coef}{geer}(object, ...)
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-A named numeric vector of estimated regression coefficients.
+A named numeric vector of estimated regression coefficients. The names
+correspond to the columns of the model matrix.
 }
 \description{
-Extracts model coefficients from a \code{geer} object. The function
-\code{coefficients} is an alias.
+Extracts the estimated regression coefficients from a fitted \code{geer}
+object. \code{coefficients} is an alias for \code{coef}.
 }
 \examples{
 data("leprosy", package = "geer")
 fit <- geewa(
   formula = bacilli ~ factor(period) + factor(period):treatment,
   family = poisson(link = "log"),
-  id = id,
-  data = leprosy
+  data = leprosy,
+  id = id
 )
 coef(fit)
 names(coef(fit))
 
 data("cerebrovascular", package = "geer")
-fit2 <- geewa_binary(
+fit_bin <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
-  id = id,
-  data = cerebrovascular
+  data = cerebrovascular,
+  id = id
 )
-coef(fit2)
+coef(fit_bin)
 
+}
+\seealso{
+\code{\link{vcov.geer}}, \code{\link{confint.geer}},
+  \code{\link{summary.geer}}.
 }

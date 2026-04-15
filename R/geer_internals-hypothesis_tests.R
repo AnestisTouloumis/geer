@@ -2,20 +2,27 @@
 check_nested_models <- function(object0, object1) {
   object0 <- check_geer_object(object0, "object0")
   object1 <- check_geer_object(object1, "object1")
-  if (!is.null(object0$obs_no) && !is.null(object1$obs_no)) {
-    if (!identical(object0$obs_no, object1$obs_no)) {
-      stop("models were not fit on the same observations", call. = FALSE)
-    }
-  } else {
-    if (!identical(object0$y, object1$y)) {
-      stop("response variable differs between models", call. = FALSE)
-    }
-    if (!identical(object0$id, object1$id)) {
-      stop("cluster identifiers differ between models", call. = FALSE)
-    }
-    if (!identical(object0$repeated, object1$repeated)) {
-      stop("repeated indices differ between models", call. = FALSE)
-    }
+  if (!identical(object0$obs_no, object1$obs_no)) {
+    stop("models were not fit on the same number of observations", call. = FALSE)
+  }
+  if (!identical(object0$y, object1$y)) {
+    stop("response variable differs between models", call. = FALSE)
+  }
+  if (!identical(object0$id, object1$id)) {
+    stop("cluster identifiers differ between models", call. = FALSE)
+  }
+  if (!identical(object0$repeated, object1$repeated)) {
+    stop("repeated indices differ between models", call. = FALSE)
+  }
+  if (!identical(object0$prior.weights, object1$prior.weights)) {
+    stop("prior weights differ between models", call. = FALSE)
+  }
+  if (!identical(object0$offset, object1$offset)) {
+    stop("offset differs between models", call. = FALSE)
+  }
+  if (!identical(object0$family$family, object1$family$family) ||
+      !identical(object0$family$link, object1$family$link)) {
+    stop("family or link differs between models", call. = FALSE)
   }
   coef_names0 <- names(object0$coefficients)
   coef_names1 <- names(object1$coefficients)
@@ -27,14 +34,14 @@ check_nested_models <- function(object0, object1) {
   }
   if (length(coef_names0) < length(coef_names1)) {
     smaller_model <- object0
-    larger_model <- object1
+    larger_model  <- object1
     nms_small <- coef_names0
-    nms_big <- coef_names1
+    nms_big   <- coef_names1
   } else {
     smaller_model <- object1
-    larger_model <- object0
+    larger_model  <- object0
     nms_small <- coef_names1
-    nms_big <- coef_names0
+    nms_big   <- coef_names0
   }
   if (length(setdiff(nms_small, nms_big)) != 0L) {
     stop("models must be nested", call. = FALSE)

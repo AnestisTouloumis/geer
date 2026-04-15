@@ -3,13 +3,14 @@
 \docType{data}
 \name{depression}
 \alias{depression}
-\title{Depression}
+\title{Postnatal Depression Oestrogen Patch Trial}
 \format{
 A data frame with 366 rows and 5 columns:
 \describe{
   \item{id}{integer subject identifier.}
   \item{visit}{integer follow-up month identifier.}
-  \item{score}{numeric Edinburgh Postnatal Depression Scale (EPDS) score. Higher scores indicate greater depression.}
+  \item{score}{numeric Edinburgh Postnatal Depression Scale (EPDS) score.
+    Higher scores indicate greater depression.}
   \item{treatment}{factor with levels \code{placebo} and \code{oestrogen}.}
   \item{baseline}{numeric EPDS score at baseline.}
 }
@@ -21,21 +22,23 @@ A data frame with 366 rows and 5 columns:
 depression
 }
 \description{
-Data from a randomized clinical trial on the efficacy of oestrogen patches in treating
-postnatal depression.
+Data from a randomized clinical trial on the efficacy of oestrogen patches
+in treating postnatal depression.
 }
 \details{
-Sixty-one women with major depression were randomly assigned to a placebo control group
-or an oestrogen patch group. Before treatment, depressive symptoms were assessed with
-the EPDS. EPDS scores were then collected monthly for six months.
+Sixty-one women with major depression were randomly assigned to either a
+placebo control group or an oestrogen patch group, yielding 366
+observations (six monthly assessments per subject). Before treatment,
+depressive symptoms were assessed using the Edinburgh Postnatal Depression
+Scale (EPDS). EPDS scores were then collected monthly for six months.
 }
 \examples{
-data("depression")
+data("depression", package = "geer")
 str(depression)
 }
 \references{
-Gregoire A.J.P., Kumar R., Everitt B., Henderson A.F. and Studd J.W.W. (1996)
-Transdermal oestrogen for treatment of severe postnatal depression.
-\emph{The Lancet}, \strong{347}, 930--933.
+Gregoire, A.J.P., Kumar, R., Everitt, B., Henderson, A.F. and Studd, J.W.W.
+(1996) Transdermal oestrogen for treatment of severe postnatal depression.
+\emph{The Lancet}, \bold{347}, 930--933.
 }
 \keyword{datasets}

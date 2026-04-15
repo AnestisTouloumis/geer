@@ -2,69 +2,85 @@
 % Please edit documentation in R/geer_methods-tidiers.R
 \name{glance.geer}
 \alias{glance.geer}
-\title{Glance at a \code{geer} Object}
+\title{Glance at a geer Object}
 \usage{
 \method{glance}{geer}(x, ...)
 }
 \arguments{
 \item{x}{an object of class \code{"geer"}.}
 
-\item{...}{additional arguments passed to or from other methods (currently
-unused).}
+\item{...}{additional arguments passed to or from other methods. Currently
+unused.}
 }
 \value{
-A one-row data frame containing model-level summary information.
+A one-row data frame with columns as described in the Details section.
+When \pkg{tibble} is available, the result has class
+\code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
+\code{data.frame} is returned.
 }
 \description{
-Return a one-row model summary for a fitted \code{geer} object,
-following \pkg{broom} conventions.
+Produces a one-row summary for a fitted \code{geer} object, following
+\pkg{broom} conventions.
 }
 \details{
-The one-row data frame contains the following columns:
+The returned one-row data frame contains the following columns:
 \describe{
   \item{\code{family}}{name of the marginal response family.}
   \item{\code{link}}{name of the link function.}
-  \item{\code{method}}{estimation method, e.g. \code{"gee"},
-    \code{"brgee-robust"}, or \code{"pgee-jeffreys"}.}
-  \item{\code{corstr}}{working association structure.}
+  \item{\code{method}}{estimation method, for example \code{"gee"},
+  \code{"brgee-robust"}, \code{"pgee-jeffreys"},
+  \code{"opgee-jeffreys"}, or \code{"hpgee-jeffreys"}.}
+  \item{\code{wastr}}{stored working association structure. For
+  \code{geewa()} fits this corresponds to \code{corstr}; for
+  \code{geewa_binary()} fits it corresponds to \code{orstr}.}
   \item{\code{nobs}}{total number of observations \eqn{n^{\star}}.}
   \item{\code{nclusters}}{number of independent clusters \eqn{N}.}
   \item{\code{min.cluster.size}}{minimum cluster size.}
   \item{\code{max.cluster.size}}{maximum cluster size.}
-  \item{\code{npar}}{number of mean-model parameters \eqn{p}.}
+  \item{\code{npar}}{number of marginal mean-model parameters \eqn{p}.}
   \item{\code{df.residual}}{residual degrees of freedom
-    \eqn{n^{\star} - p}.}
-  \item{\code{phi}}{estimated (or fixed) dispersion parameter. Equal to
-    1 for the odds-ratio binary parameterisation.}
-  \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001) computed from
-    the robust sandwich covariance estimator. Lower is better.}
+  \eqn{n^{\star} - p}.}
+  \item{\code{phi}}{estimated or fixed dispersion parameter. This equals
+  \code{1} for the odds-ratio parameterization used by
+  \code{geewa_binary()}.}
+  \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001), computed from
+  the robust sandwich covariance estimator. Smaller values are preferred.}
   \item{\code{QICu}}{Covariate-selection variant of QIC (Pan, 2001).
-    Lower is better.}
-  \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009).
-    Lower is better.}
+  Smaller values are preferred.}
+  \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009),
+  used here to compare working association structures. Smaller values are
+  preferred.}
   \item{\code{converged}}{logical; \code{TRUE} if the fitting algorithm
-    converged.}
+  converged.}
   \item{\code{niter}}{number of iterations used.}
 }
 
-QIC, QICu and CIC are computed using the robust sandwich covariance
-matrix, consistent with \code{\link{geecriteria}}. If computation fails,
-the corresponding values are returned as \code{NA_real_}.
-
-When \pkg{tibble} is available the result has class
-\code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
-\code{data.frame} is returned.
+QIC, QICu, and CIC are computed using the robust sandwich covariance
+matrix, consistent with \code{\link{geecriteria}}. If computation fails, the
+corresponding values are returned as \code{NA_real_}. For the full set of
+model selection criteria, including RJC, GESSC, and GPC, see
+\code{\link{geecriteria}}.
 }
 \examples{
 data("epilepsy", package = "geer")
-fitmodel <- geewa(formula = seizures ~ treatment + lnbaseline + lnage,
-  data = epilepsy, id = id, family = poisson(link = "log"), corstr  = "exchangeable",
-  method  = "gee")
+fitmodel <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable",
+  method = "gee"
+)
 glance(fitmodel)
 
 data("cerebrovascular", package = "geer")
-fitbin <- geewa_binary(formula = ecg ~ treatment + factor(period),
-  id = id, data = cerebrovascular, link = "logit", orstr = "exchangeable")
+fitbin <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  data = cerebrovascular,
+  id = id,
+  orstr = "exchangeable"
+)
 glance(fitbin)
 
 \dontrun{
@@ -75,15 +91,16 @@ do.call(rbind, lapply(
   list(independence = fitind, exchangeable = fitmodel, ar1 = fitar1,
        unstructured = fitunst),
   glance
-))[, c("corstr", "QIC", "CIC", "niter")]}
+))[, c("wastr", "QIC", "CIC", "niter")]
+}
 
 }
 \references{
 Pan W. (2001) Akaike's information criterion in generalized estimating
-equations. \emph{Biometrics} \bold{57}, 120--125.
+equations. \emph{Biometrics}, \bold{57}, 120--125.
 
 Hin L.Y. and Wang Y.G. (2009) Working-correlation-structure identification
-in generalized estimating equations. \emph{Statistics in Medicine}
+in generalized estimating equations. \emph{Statistics in Medicine},
 \bold{28}, 642--658.
 
 Robinson D., Hayes A. and Couch S. (2024)

@@ -3,42 +3,46 @@
 \docType{data}
 \name{cholecystectomy}
 \alias{cholecystectomy}
-\title{Cholecystectomy}
+\title{Shoulder Pain After Laparoscopic Cholecystectomy Trial}
 \format{
 A data frame with 246 rows and 6 columns:
 \describe{
   \item{id}{integer subject identifier.}
   \item{time}{integer time identifier.}
-  \item{pain}{integer indicator for shoulder pain status, 0 = high pain, 1 = low pain.}
+  \item{pain}{integer indicator of shoulder pain status, 0 = high pain and
+    1 = low pain.}
   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
   \item{gender}{factor with levels \code{female} and \code{male}.}
   \item{age}{numeric age in years.}
 }
 }
 \source{
-Lumley T. (1996) Generalized estimating equations for ordinal data: A note on working
-correlation structures. \emph{Biometrics}, \strong{52}, 354--361.
+Lumley, T. (1996) Generalized estimating equations for ordinal data: a note
+on working correlation structures. \emph{Biometrics}, \bold{52}, 354--361.
 }
 \usage{
 cholecystectomy
 }
 \description{
-Data from a randomized clinical trial on shoulder pain after laparoscopic cholecystectomy.
+Data from a randomized clinical trial on shoulder pain after laparoscopic
+cholecystectomy.
 }
 \details{
-Forty-one subjects were enrolled in a randomized clinical trial of shoulder pain
-after laparoscopic cholecystectomy. Subjects were assigned to either the active
-group (with abdominal suction) or the placebo group (without abdominal suction).
-Shoulder pain was assessed on six occasions: morning and afternoon for three
-days postoperatively.
+Forty-one subjects were enrolled in a randomized clinical trial of shoulder
+pain after laparoscopic cholecystectomy, yielding 246 observations
+(six per subject). Subjects were assigned to either the active group (with
+abdominal suction) or the placebo group (without abdominal suction).
+Shoulder pain was assessed on six occasions: morning and afternoon on each
+of the first three postoperative days.
 }
 \examples{
-data("cholecystectomy")
+data("cholecystectomy", package = "geer")
 str(cholecystectomy)
 }
 \references{
-Jorgensen J.O., Gillies R.B., Hunt D.R., Caplehorn J.R.M. and Lumley T. (1995)
-A simple and effective way to reduce postoperative pain after laparoscopic cholecystectomy.
-\emph{Australian and New Zealand Journal of Surgery}, \strong{65}, 466--469.
+Jorgensen, J.O., Gillies, R.B., Hunt, D.R., Caplehorn, J.R.M. and Lumley, T.
+(1995) A simple and effective way to reduce postoperative pain after
+laparoscopic cholecystectomy. \emph{Australian and New Zealand Journal of
+Surgery}, \bold{65}, 466--469.
 }
 \keyword{datasets}

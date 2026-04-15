@@ -2,14 +2,14 @@
 % Please edit documentation in R/geewa_binary.R
 \name{geewa_binary}
 \alias{geewa_binary}
-\title{Solving (Adjusted) GEE for Binary Responses}
+\title{Fitting (Adjusted) Generalized Estimating Equations for Binary Responses}
 \usage{
 geewa_binary(
   formula,
   link = "logit",
   data = parent.frame(),
   id,
-  repeated = NULL,
+  repeated,
   control = geer_control(...),
   orstr = "independence",
   method = "gee",
@@ -26,150 +26,183 @@ geewa_binary(
 \code{response ~ predictors}: a symbolic description of the marginal
 model to be fitted.}
 
-\item{link}{character specifying the link function. Options include
-\code{logit}, \code{probit}, \code{cauchit}, \code{cloglog},
-\code{identity}, \code{log}, \code{sqrt}, \code{1/mu^2} and
-\code{inverse}. By default, \code{link = "logit"}.}
+\item{link}{character string specifying the link function for the marginal mean
+model. Options are \code{"logit"}, \code{"probit"},
+\code{"cauchit"}, \code{"cloglog"}, \code{"identity"},
+\code{"log"}, \code{"sqrt"}, \code{"1/mu^2"} and
+\code{"inverse"}. Defaults to \code{"logit"}.}
 
 \item{data}{optional data frame containing variables referenced in
-\code{formula}. The cluster identifiers \code{id} and \code{repeated}
-may be supplied either as columns in \code{data} or as separate vectors.}
+\code{formula}, \code{id} and \code{repeated}.}
 
-\item{id}{a vector identifying the clusters.}
+\item{id}{variable identifying the clusters.}
 
-\item{repeated}{optional vector identifying the order of observations
+\item{repeated}{optional variable identifying the order of observations
 within each cluster.}
 
-\item{control}{list specifying the control variables for the GEE solver
-and the power of the Jeffreys prior when
-\code{method = "pgee-jeffreys"}.}
+\item{control}{a \code{\link{geer_control}} list specifying convergence
+tolerance, maximum iterations, step-halving parameters, and the
+Jeffreys-prior power. Defaults to \code{geer_control()}.}
 
-\item{orstr}{character specifying the odds ratios structure.
-Options include \code{"independence"}, \code{"exchangeable"},
-\code{"unstructured"} and \code{"fixed"}. By default,
-\code{orstr = "independence"}.}
+\item{orstr}{character string specifying the working odds-ratio structure for the
+within-cluster association. Options are
+\code{"independence"}, \code{"exchangeable"},
+\code{"unstructured"} and \code{"fixed"}. Defaults to
+\code{"independence"}.}
 
-\item{method}{character specifying the (adjusted) GEE. Options include the
-traditional gee method (\code{"gee"}), bias-reduction methods
-(\code{"brgee-naive"}, \code{"brgee-robust"},
-\code{"brgee-empirical"}), bias-correction methods
-(\code{"bcgee-naive"}, \code{"bcgee-robust"},
-\code{"bcgee-empirical"}) and a penalized GEE method
-(\code{"pgee-jeffreys"}). By default, \code{method = "gee"}.}
+\item{method}{character specifying the estimation method. Options are:
+the traditional GEE (\code{"gee"}); bias-reducing methods
+(\code{"brgee-naive"}, \code{"brgee-robust"}, \code{"brgee-empirical"});
+bias-corrected methods (\code{"bcgee-naive"}, \code{"bcgee-robust"},
+\code{"bcgee-empirical"}); the fully iterated Jeffreys-prior penalized GEE
+(\code{"pgee-jeffreys"}); the one-step penalized GEE
+(\code{"opgee-jeffreys"}); and the hybrid one-step GEE
+(\code{"hpgee-jeffreys"}). By default, \code{method = "gee"}.}
 
 \item{weights}{optional numeric vector of observation weights. Must be finite
 and strictly positive. If not supplied, all weights are 1.}
 
-\item{beta_start}{numerical vector indicating the initial values of the
-regression parameters.}
+\item{beta_start}{optional numeric vector of starting values for the
+regression parameters. If \code{NULL} (the default), starting values
+are computed by fitting the corresponding GLM via
+\code{\link[stats]{glm}}.}
 
 \item{offset}{this can be used to specify an a priori known component to be
-included in the linear predictor during fitting. This should be NULL
-or a numeric vector of length equal to the number of cases.
-One or more offset terms can be included in the formula instead or
-as well, and if more than one is specified their sum is used.}
+included in the linear predictor during fitting. This should be
+\code{NULL} or a numeric vector of length equal to the number of
+observations. One or more offset terms can be included in the formula
+instead or as well, and if more than one is specified their sum is
+used.}
 
-\item{control_glm}{list of parameters for controlling the fitting process for
-the initial values of the parameter vector when these are not provided.}
+\item{control_glm}{optional list of control parameters passed to
+\code{\link[stats]{glm.control}} when computing GLM-based starting
+values. Ignored when \code{beta_start} is supplied.}
 
-\item{alpha_vector}{numerical vector specifying odds ratios structure
-when \code{orstr == "fixed"}. It is ignored for all other
-possible values of \code{orstr}.}
+\item{alpha_vector}{numeric vector of fixed odds-ratio parameters used only
+when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
+where \code{T = max(repeated)} after recoding, and all elements must
+be finite and strictly positive. Ignored for all other values of
+\code{orstr}.}
 
-\item{...}{further arguments passed to/or from other methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-Returns an object from the class \code{geer}, a list with components:
-\item{coefficients}{a named vector of coefficients.}
+An object of class \code{"geer"}, a list with components:
+\item{coefficients}{a named vector of estimated regression coefficients.}
 \item{residuals}{the working residuals.}
 \item{fitted.values}{the fitted mean values, obtained by transforming the
-     linear predictors by the inverse of the link function.}
+      linear predictors by the inverse of the link function.}
 \item{rank}{the numeric rank of the fitted model.}
 \item{family}{the \code{\link{family}} object used.}
-\item{linear.predictors}{the linear fit on link scale.}
+\item{linear.predictors}{the linear fit on the link scale.}
 \item{iter}{the number of iterations used.}
 \item{prior.weights}{the weights initially supplied, a vector of 1s if none
       were.}
 \item{df.residual}{the residual degrees of freedom.}
 \item{y}{the response vector.}
 \item{x}{the model matrix.}
-\item{id}{the \code{id} vector.}
-\item{repeated}{the \code{repeated} vector.}
+\item{id}{the recoded cluster identifier vector.}
+\item{repeated}{the recoded within-cluster ordering vector.}
 \item{converged}{logical indicating whether the algorithm converged.}
 \item{call}{the matched call.}
 \item{formula}{the formula supplied.}
 \item{terms}{the \code{\link{terms}} object used.}
 \item{data}{the data argument.}
 \item{offset}{the offset vector used.}
-\item{control}{the value of the control argument used.}
-\item{method}{the method that created the adjustment vector to the GEE, if
-      any.}
+\item{control}{the \code{\link{geer_control}} list used.}
+\item{method}{character string identifying the estimation method used.}
 \item{contrasts}{the contrasts used.}
 \item{xlevels}{a record of the levels of the factors used in fitting.}
-\item{naive_covariance}{the naive covariance matrix.}
-\item{robust_covariance}{the robust covariance matrix.}
+\item{naive_covariance}{the model-based (naive) covariance matrix.}
+\item{robust_covariance}{the sandwich (robust) covariance matrix.}
 \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
-\item{association_structure}{the name of the working assumption about the
-      association structure.}
-\item{alpha}{a vector of the association parameters.}
-\item{phi}{the scale parameter.}
-\item{obs_no}{the number of observations across clusters.}
+\item{association_structure}{the name of the working association structure.}
+\item{alpha}{a vector of the estimated working association parameters.}
+\item{phi}{the estimated or fixed scale parameter.}
+\item{obs_no}{the total number of observations.}
 \item{clusters_no}{the number of clusters.}
 \item{min_cluster_size}{the minimum cluster size.}
 \item{max_cluster_size}{the maximum cluster size.}
 }
 \description{
-Produces a(n) (adjusted) Generalized Estimating Equations (GEE) fit of the
-data. The estimation methods include the traditional GEE method,
-bias-reduction methods, bias-correction methods and a penalized GEE method.
+Fits a marginal model for independent, repeated, or clustered responses using
+Generalized Estimating Equations (GEE). Supported estimation methods include
+the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+Jeffreys-prior penalized GEE.
 }
 \details{
-\code{method} specifies the adjustment vector (if any) added to the ordinary
-generalized estimating equations. If \code{method = "gee"}, then the original
-GEE are solved, i.e. no adjustment vector is added. If
-\code{method = "brgee-naive"}, \code{method = "brgee-robust"} or
-\code{method = "brgee-empirical"}, then the GEE will be adjusted to
-produce naive, robust or empirical bias-reducing estimators, respectively.
-If \code{method = "bcgee-naive"}, \code{method = "bcgee-robust"} or
-\code{method = "bcgee-empirical"}, then the GEE will be adjusted to
-produce naive, robust or empirical bias-corrected estimators. If
-\code{method = "pgee-jeffreys"}, then the GEE will be penalized using a
-Jeffreys prior type penalty.
+\code{method} specifies the estimation approach. If \code{method = "gee"},
+the standard GEE are solved with no adjustment. If \code{method} is one of
+\code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
+an adjustment vector is added to produce naive, robust or empirical
+bias-reducing estimators, respectively. If \code{method} is one of
+\code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
+the corresponding bias-corrected estimators are produced via a one-step
+correction applied to the converged GEE solution. If
+\code{method = "pgee-jeffreys"}, the GEE are penalized using a
+Jeffreys-prior penalty run to full convergence. If
+\code{method = "opgee-jeffreys"}, a single penalized scoring step is
+performed from the converged independence penalized solution (one-step
+approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
+scoring step is performed from the converged independence penalized solution
+(hybrid one-step approximation).
 
-For the construction of the \code{formula} argument, see the documentation of
-\code{\link{glm}} and \code{\link{formula}}.
+The marginal mean model always uses a \code{binomial} family with the
+specified \code{link}. Within-cluster association is modeled through
+marginalized pairwise odds ratios rather than a correlation structure. The
+scale parameter is fixed at \code{phi = 1}.
+
+For the construction of the \code{formula} argument, see the documentation
+of \code{\link{glm}} and \code{\link{formula}}.
 
 The \code{data} must be in long format (one row per observation). See
 \code{\link{reshape}} for details on reshaping between long and wide formats.
 
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
-\eqn{N} is the sample size, i.e. the total number of clusters. Otherwise,
-the function recodes the given labels of \code{id} onto this set.
+\eqn{N} is the number of clusters. Otherwise, the function recodes the
+given labels of \code{id} onto this set.
 
 The argument \code{repeated} can be safely omitted only if observations are
 already ordered within each cluster as intended. If \code{repeated} is not
-provided, it is created as \code{1, 2, ..., n_i} within each cluster \eqn{i},
-using the current row order (before internal sorting). If \code{repeated} is
-provided, its labels are recoded to \code{1, ..., T} and must be unique within
-each cluster.
+provided, it is created as \code{1, 2, ..., n_i} within each cluster
+\eqn{i}, using the current row order (before internal sorting). If
+\code{repeated} is provided, its labels are recoded to \code{1, ..., T} and
+must be unique within each cluster.
 
 The variables \code{id} and \code{repeated} do not need to be pre-sorted.
 Instead the function sorts observations in ascending order of \code{id}
 and \code{repeated}.
 
-A term of the form \code{offset(expression)} is allowed in the right hand
+A term of the form \code{offset(expression)} is allowed in the right-hand
 side of \code{formula}.
 
 The length of \code{id} and of \code{repeated} or \code{weights} (when
-provided) should be the same as the number of observations.
+provided) must equal the number of observations.
 }
+\section{Note on returned components}{
+
+For \code{geewa_binary}, the \code{phi} component is always \code{1} and
+\code{alpha} contains the estimated (or fixed) working odds-ratio
+parameters, not correlation parameters. The \code{association_structure}
+component stores the value of \code{orstr}. Under
+\code{orstr = "independence"}, \code{alpha} is set to \code{1}.
+
+For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
+\code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
+\code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+returned object.
+}
+
 \examples{
 data("respiratory", package = "geer")
-respiratory2 <- respiratory[respiratory$center == "C2", ]
+respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 fitted_model <- geewa_binary(
   formula = status ~ baseline + treatment * gender + visit * age,
-  id = id, repeated = visit, link = "probit",
-  data = respiratory2, orstr = "independence",
+  link = "probit",
+  data = respiratory2,
+  id = id,
+  repeated = visit,
+  orstr = "independence",
   method = "pgee-jeffreys"
 )
 summary(fitted_model, cov_type = "bias-corrected")
@@ -177,17 +210,42 @@ summary(fitted_model, cov_type = "bias-corrected")
 data("cholecystectomy", package = "geer")
 fitted_model_gee <- geewa_binary(
   formula = pain ~ treatment + gender + age,
-  id = id, data = cholecystectomy, link = "logit",
-  orstr = "independence", method = "gee"
+  link = "logit",
+  data = cholecystectomy,
+  id = id,
+  orstr = "independence",
+  method = "gee"
 )
 summary(fitted_model_gee, cov_type = "bias-corrected")
+
 fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
 summary(fitted_model_brgee_robust, cov_type = "bias-corrected")
+
 fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
 summary(fitted_model_brgee_naive, cov_type = "bias-corrected")
+
 fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-empirical")
 summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
 
+fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
+summary(fitted_model_bcgee_robust, cov_type = "robust")
+
+## Penalized GEE with exchangeable odds-ratio structure
+fitted_model_pgee <- geewa_binary(
+  formula = pain ~ treatment + gender + age,
+  link = "logit",
+  data = cholecystectomy,
+  id = id,
+  orstr = "exchangeable",
+  method = "pgee-jeffreys",
+  control = geer_control(jeffreys_power = 1)
+)
+summary(fitted_model_pgee, cov_type = "robust")
+
+}
+\seealso{
+\code{\link{geewa}}, \code{\link{geer_control}},
+  \code{\link{summary.geer}}, \code{\link{geecriteria}}.
 }
 \author{
 Anestis Touloumis

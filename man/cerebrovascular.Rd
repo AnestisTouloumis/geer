@@ -3,13 +3,13 @@
 \docType{data}
 \name{cerebrovascular}
 \alias{cerebrovascular}
-\title{Cerebrovascular}
+\title{Cerebrovascular Deficiency Trial}
 \format{
 A data frame with 134 rows and 4 columns:
 \describe{
   \item{id}{integer subject identifier.}
   \item{period}{integer period identifier.}
-  \item{ecg}{integer indicator for ECG status, 0 = abnormal, 1 = normal.}
+  \item{ecg}{integer indicator of ECG status, 0 = abnormal and 1 = normal.}
   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
 }
 }
@@ -17,19 +17,22 @@ A data frame with 134 rows and 4 columns:
 cerebrovascular
 }
 \description{
-Data from a randomized two-period crossover trial on cerebrovascular deficiency.
+Data from a randomized two-period crossover trial on cerebrovascular
+deficiency.
 }
 \details{
-Sixty-seven subjects were enrolled in a two-period crossover trial. Subjects were
-randomly assigned to receive either placebo followed by active treatment or active
-treatment followed by placebo. ECG status was classified as normal or abnormal.
+Sixty-seven subjects were enrolled in a two-period crossover trial, yielding
+134 observations (two per subject). Subjects were randomly assigned to
+receive either placebo followed by active treatment, or active treatment
+followed by placebo. ECG status was classified as normal or abnormal at each
+period.
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 str(cerebrovascular)
 }
 \references{
-Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over Trials.}
-London: Chapman and Hall/CRC Press.
+Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
+Trials}. London: Chapman and Hall/CRC Press.
 }
 \keyword{datasets}

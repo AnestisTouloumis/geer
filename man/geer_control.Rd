@@ -2,7 +2,7 @@
 % Please edit documentation in R/geer_control.R
 \name{geer_control}
 \alias{geer_control}
-\title{Control Parameters for \code{geer} Model Fitting}
+\title{Control Parameters for geer Model Fitting}
 \usage{
 geer_control(
   tolerance = 1e-06,
@@ -14,38 +14,62 @@ geer_control(
 )
 }
 \arguments{
-\item{tolerance}{Strictly positive convergence tolerance. Default is
+\item{tolerance}{strictly positive convergence tolerance. Defaults to
 \code{1e-6}.}
 
-\item{maxiter}{Positive integer giving the maximum number of fitting
-iterations. Default is \code{500}.}
+\item{maxiter}{positive integer giving the maximum number of fitting
+iterations. Defaults to \code{500}.}
 
-\item{or_adding}{Strictly positive constant added to each cell of the full
-marginalized contingency table. Default is \code{0.5}.}
+\item{or_adding}{strictly positive continuity-correction constant added to
+each cell of the marginalized \eqn{2 \times 2} contingency tables used to
+estimate working odds ratios in \code{\link{geewa_binary}}. Defaults to
+\code{0.5}. Ignored by \code{\link{geewa}}.}
 
-\item{step_maxiter}{Positive integer giving the maximum number of step-halving
-attempts allowed within an iteration. Default is \code{10}.}
+\item{step_maxiter}{positive integer giving the maximum number of
+step-halving attempts allowed within an iteration. Defaults to \code{10}.}
 
-\item{step_multiplier}{Positive integer used to scale the proposed step before
-step-halving. Default is \code{1}.}
+\item{step_multiplier}{positive integer used to scale the proposed step
+before step-halving. Defaults to \code{1}.}
 
-\item{jeffreys_power}{Strictly positive constant giving the power of the
-Jeffreys-prior penalty. Default is \code{0.5}.}
+\item{jeffreys_power}{strictly positive constant giving the power of the
+Jeffreys-prior penalty. Defaults to \code{0.5}, which corresponds to the
+GEE analogue of the standard Jeffreys prior.}
 }
 \value{
-A named list suitable for use as the \code{control} argument to
-\code{geewa} or \code{geewa_binary}.
+A named list with elements \code{tolerance}, \code{maxiter},
+\code{or_adding}, \code{step_maxiter}, \code{step_multiplier}, and
+\code{jeffreys_power}, suitable for use as the \code{control} argument to
+\code{\link{geewa}} or \code{\link{geewa_binary}}.
 }
 \description{
-Create a list of control parameters for iterative fitting in
+Creates a list of control parameters for iterative fitting in
 \code{\link{geewa}} and \code{\link{geewa_binary}}. This function is used
 internally, but may also be supplied directly through the \code{control}
 argument of those functions.
 }
 \details{
-The \code{or_adding} argument is ignored by \code{\link{geewa}}.
+The \code{jeffreys_power} argument is used only when
+\code{method \%in\% c("pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys")}
+in \code{\link{geewa}} or \code{\link{geewa_binary}}.
+}
+\examples{
+## Default control parameters
+geer_control()
 
-The \code{jeffreys_power} argument is only used when
-\code{method = "pgee-jeffreys"} in \code{\link{geewa}} or
-\code{\link{geewa_binary}}.
+## Tighter convergence tolerance and fewer maximum iterations
+geer_control(tolerance = 1e-8, maxiter = 200)
+
+## Custom continuity correction for odds-ratio estimation
+geer_control(or_adding = 1)
+
+## Stronger Jeffreys-prior penalty for Jeffreys-type fits
+geer_control(jeffreys_power = 1)
+
+}
+\references{
+Touloumis, A. (2026) Jeffreys-prior penalized GEE for correlated binary
+data with an odds-ratio parameterization. Preprint.
+}
+\seealso{
+\code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

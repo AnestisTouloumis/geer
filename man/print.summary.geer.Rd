@@ -2,19 +2,36 @@
 % Please edit documentation in R/geer_methods-print-summary.R
 \name{print.summary.geer}
 \alias{print.summary.geer}
-\title{Print a \code{summary.geer} Object}
+\title{Print a summary.geer Object}
 \usage{
 \method{print}{summary.geer}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{summary.geer}.}
+\item{x}{an object of class \code{"summary.geer"}.}
 
-\item{...}{Additional arguments passed to or from other methods. Currently
+\item{...}{additional arguments passed to or from other methods. Currently
 unused.}
 }
 \value{
 The input object \code{x} is returned invisibly.
 }
 \description{
-Print a \code{summary.geer} Object
+Prints the contents of a \code{summary.geer} object, including the call,
+estimation method, coefficient table, dispersion parameter, and working
+association structure.
+}
+\examples{
+data("epilepsy", package = "geer")
+fit <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable"
+)
+print(summary(fit))
+
+}
+\seealso{
+\code{\link{summary.geer}}, \code{\link{print.geer}}.
 }

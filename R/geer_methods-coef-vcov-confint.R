@@ -1,37 +1,129 @@
 #' @title
-#' Extract Model Coefficients from a \code{geer} Object
+#' Extract Variance-Covariance Matrix from a geer Object
+#'
+#' @aliases vcov vcov.geer
+#' @method vcov geer
+#'
+#' @description
+#' Extracts the variance-covariance matrix of the estimated regression
+#' parameters from a fitted \code{geer} object. The parameters correspond to
+#' those returned by \code{\link{coef.geer}}.
+#'
+#' @param object a fitted model object of class \code{"geer"}.
+#' @param cov_type character string specifying the covariance matrix estimator
+#'   used for inference on the regression parameters. Options are the sandwich
+#'   or robust estimator (\code{"robust"}), the bias-corrected estimator
+#'   (\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+#'   (\code{"df-adjusted"}), and the model-based or naive estimator
+#'   (\code{"naive"}). Defaults to \code{"robust"}.
+#' @param ... additional arguments passed to or from other methods.
+#'
+#' @details
+#' The form of the covariance estimator is controlled by \code{cov_type}:
+#' \describe{
+#'   \item{\code{"robust"}}{the sandwich (robust) covariance estimator
+#'   (Liang and Zeger, 1986).}
+#'   \item{\code{"naive"}}{the model-based covariance estimator
+#'   (Liang and Zeger, 1986).}
+#'   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
+#'   estimator (MacKinnon, 1985).}
+#'   \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
+#'   (Morel et al., 2003).}
+#' }
+#'
+#' @return
+#' A square numeric matrix of estimated covariances between regression
+#' coefficients. Rows and columns are named according to the coefficient names
+#' returned by \code{\link{coef.geer}}.
+#'
+#' @references
+#' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+#' generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
+#'
+#' MacKinnon, J.G. (1985) Some heteroskedasticity-consistent covariance matrix
+#' estimators with improved finite sample properties. \emph{Journal of
+#' Econometrics}, \bold{29}, 305--325.
+#'
+#' Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
+#' correction for the variance of GEE estimators. \emph{Biometrical Journal},
+#' \bold{45}, 395--409.
+#'
+#' @seealso \code{\link{coef.geer}}, \code{\link{confint.geer}},
+#'   \code{\link{summary.geer}}, \code{\link{tidy.geer}}.
+#'
+#' @examples
+#' data("cerebrovascular", package = "geer")
+#' fit <- geewa_binary(
+#'   formula = ecg ~ period + treatment,
+#'   link = "logit",
+#'   data = cerebrovascular,
+#'   id = id,
+#'   orstr = "exchangeable"
+#' )
+#' vcov(fit)
+#' vcov(fit, cov_type = "bias-corrected")
+#'
+#' @export
+vcov.geer <- function(object,
+                      cov_type = c("robust", "bias-corrected",
+                                   "df-adjusted", "naive"),
+                      ...) {
+  object <- check_geer_object(object)
+  cov_type <- match.arg(cov_type)
+  switch(
+    cov_type,
+    robust = object$robust_covariance,
+    naive = object$naive_covariance,
+    `bias-corrected` = object$bias_corrected_covariance,
+    `df-adjusted` = compute_df_adjusted_covariance(
+      robust_covariance = object$robust_covariance,
+      clusters_no = object$clusters_no,
+      coef_no = ncol(object$robust_covariance),
+      context = "vcov"
+    )
+  )
+}
+
+
+#' @title
+#' Extract Model Coefficients from a geer Object
 #'
 #' @aliases coef.geer coef coefficients
 #' @method coef geer
 #'
 #' @description
-#' Extracts model coefficients from a \code{geer} object. The function
-#' \code{coefficients} is an alias.
+#' Extracts the estimated regression coefficients from a fitted \code{geer}
+#' object. \code{coefficients} is an alias for \code{coef}.
 #'
-#' @inheritParams add1.geer
+#' @param object a fitted model object of class \code{"geer"}.
+#' @param ... additional arguments passed to or from other methods.
 #'
 #' @return
-#' A named numeric vector of estimated regression coefficients.
+#' A named numeric vector of estimated regression coefficients. The names
+#' correspond to the columns of the model matrix.
+#'
+#' @seealso \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+#'   \code{\link{summary.geer}}.
 #'
 #' @examples
 #' data("leprosy", package = "geer")
 #' fit <- geewa(
 #'   formula = bacilli ~ factor(period) + factor(period):treatment,
 #'   family = poisson(link = "log"),
-#'   id = id,
-#'   data = leprosy
+#'   data = leprosy,
+#'   id = id
 #' )
 #' coef(fit)
 #' names(coef(fit))
 #'
 #' data("cerebrovascular", package = "geer")
-#' fit2 <- geewa_binary(
+#' fit_bin <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
-#'   id = id,
-#'   data = cerebrovascular
+#'   data = cerebrovascular,
+#'   id = id
 #' )
-#' coef(fit2)
+#' coef(fit_bin)
 #'
 #' @export
 coef.geer <- function(object, ...) {
@@ -41,39 +133,48 @@ coef.geer <- function(object, ...) {
 
 
 #' @title
-#' Confidence Intervals for Model Parameters from a \code{geer} Object
+#' Confidence Intervals for Model Parameters from a geer Object
 #'
 #' @aliases confint confint.geer
 #' @method confint geer
 #'
 #' @description
-#' Compute Wald-type confidence intervals for one or more regression parameters
-#' from a fitted \code{geer} model.
+#' Computes Wald-type confidence intervals for one or more regression
+#' parameters from a fitted \code{geer} object.
 #'
-#' @inheritParams add1.geer
+#' @inheritParams vcov.geer
 #' @inheritParams stats::confint
 #'
 #' @details
 #' Confidence intervals are computed as
-#' \eqn{\hat\beta \pm z_{1-\alpha/2}\,\mathrm{SE}(\hat\beta)},
-#' where standard errors are obtained from \code{vcov(object, cov_type = cov_type)}.
+#' \eqn{\hat{\beta} \pm z_{1-\alpha/2} \, \mathrm{SE}(\hat{\beta})},
+#' where standard errors are obtained from
+#' \code{vcov(object, cov_type = cov_type)}. The covariance estimator used is
+#' controlled by \code{cov_type}; see \code{\link{vcov.geer}} for details.
 #' The resulting intervals rely on the usual large-sample normal approximation.
 #'
-#' @inherit stats::confint.default return
+#' @return
+#' A matrix with columns giving lower and upper confidence limits for each
+#' parameter. The columns are labeled by the corresponding tail probabilities
+#' in percent, for example \code{"2.5\%"} and \code{"97.5\%"} when
+#' \code{level = 0.95}.
 #'
+#' @seealso \code{\link{vcov.geer}}, \code{\link{coef.geer}},
+#'   \code{\link{tidy.geer}}.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
-#'   id = id,
 #'   data = cerebrovascular,
+#'   id = id,
 #'   orstr = "exchangeable"
 #' )
 #' confint(fit)
 #' confint(fit, parm = "treatmentactive")
 #' confint(fit, cov_type = "naive")
+#'
 #' @export
 confint.geer <- function(object,
                          parm,
@@ -113,80 +214,4 @@ confint.geer <- function(object,
   standard_errors <- sqrt(pmax(diag(vcov_matrix), 0))[parm]
   ans[] <- beta[parm] + standard_errors %o% percentiles
   ans
-}
-
-
-#' @title
-#' Extract Variance-Covariance Matrix from a \code{geer} Object
-#'
-#' @aliases vcov vcov.geer
-#' @method vcov geer
-#'
-#' @description
-#' Extract the variance–covariance matrix of the regression parameters from a
-#' fitted \code{geer} object. The parameters correspond to those returned by
-#' \code{\link{coef}}.
-#'
-#' @inheritParams add1.geer
-#'
-#' @details
-#' The form of the covariance estimator is controlled by the argument
-#' \code{cov_type}:
-#' \itemize{
-#'   \item \code{"robust"} -- the sandwich (robust) covariance estimator
-#'     \cite{Liang and Zeger (1986)}
-#'   \item \code{"naive"} -- the model-based covariance estimator
-#'     \cite{Liang and Zeger (1986)}
-#'   \item \code{"df-adjusted"} -- the small-sample adjusted covariance matrix
-#'     \cite{MacKinnon (1985)}
-#'   \item \code{"bias-corrected"} -- the bias-corrected covariance estimator
-#'     \cite{Morel et al. (2003)}
-#' }
-#'
-#' @return
-#' A square numeric matrix of estimated covariances between regression
-#' coefficients. Rows and columns are named according to the coefficient names
-#' returned by \code{\link[stats]{coef}}.
-#'
-#' @references
-#' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using generalized
-#' linear models \emph{Biometrika} \bold{73}, 13-–22.
-#'
-#' MacKinnon, J.G. (1985) Some heteroskedasticity-consistent
-#' covariance matrix estimators with improved finite sample properties.
-#' \emph{Journal of Econometrics} \bold{29}, 305–-325.
-#'
-#' Morel, J.G., Bokossa, M.C. and Neerchal N.K. (2003) Small sample correction
-#' for the variance of GEE estimators. \emph{Biometrical Journal} \bold{45},
-#' 395–-409.
-#'
-#' @examples
-#' data("cerebrovascular", package = "geer")
-#' fitted_model <- geewa_binary(formula = ecg ~ period + treatment,
-#'                              id = id,
-#'                              data = cerebrovascular,
-#'                              link = "logit",
-#'                              orstr = "exchangeable")
-#' vcov(fitted_model)
-#' vcov(fitted_model, cov_type = "bias-corrected")
-#'
-#' @export
-vcov.geer <- function(object,
-                      cov_type = c("robust", "bias-corrected",
-                                   "df-adjusted", "naive"),
-                      ...) {
-  object <- check_geer_object(object)
-  cov_type <- match.arg(cov_type)
-  switch(
-    cov_type,
-    robust = object$robust_covariance,
-    naive = object$naive_covariance,
-    `bias-corrected` = object$bias_corrected_covariance,
-    `df-adjusted` = compute_df_adjusted_covariance(
-      robust_covariance = object$robust_covariance,
-      clusters_no = object$clusters_no,
-      coef_no = ncol(object$robust_covariance),
-      context = "vcov"
-    )
-  )
 }

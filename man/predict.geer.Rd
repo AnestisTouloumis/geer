@@ -3,7 +3,7 @@
 \name{predict.geer}
 \alias{predict.geer}
 \alias{predict}
-\title{Predictions from a \code{geer} Object}
+\title{Predictions from a geer Object}
 \usage{
 \method{predict}{geer}(
   object,
@@ -15,57 +15,57 @@
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{newdata}{optional data frame in which to look for variables used
-for prediction. If omitted, predictions are made on the data used for
-fitting.}
+\item{newdata}{optional data frame in which to look for variables used for
+prediction. If omitted, predictions are made on the data used for fitting.}
 
-\item{type}{type of prediction required. Options include the scale of the
-linear predictors (\code{"link"}) and the scale of the response
-variable (\code{"response"}). By default, the scale of the linear
-predictors is used.}
+\item{type}{character string specifying the scale of the predictions.
+Options are \code{"link"} for the linear predictor scale and
+\code{"response"} for the response scale. Defaults to \code{"link"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
-(\code{"df-adjusted"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"robust"}.}
+\item{cov_type}{character string specifying the covariance matrix estimator
+used to compute approximate standard errors when \code{se.fit = TRUE}.
+Options are the sandwich or robust estimator (\code{"robust"}), the
+bias-corrected estimator (\code{"bias-corrected"}), the
+degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+model-based or naive estimator (\code{"naive"}). Defaults to
+\code{"robust"}.}
 
-\item{se.fit}{logical indicating if standard errors are required.
-Defaults to \code{FALSE}.}
+\item{se.fit}{logical indicating whether approximate standard errors are to
+be returned. Defaults to \code{FALSE}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-If \code{se.fit = FALSE}, a numeric vector of predictions.
-If \code{se.fit = TRUE}, a list with components \code{fit} and \code{se.fit}.
+If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
+specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
+\item{fit}{numeric vector of predictions.}
+\item{se.fit}{numeric vector of approximate standard errors of the
+  predictions.}
 }
 \description{
-Generate predictions, optionally with standard errors, from a fitted
-\code{geer} object.
+Generates predictions from a fitted \code{geer} object, optionally with
+approximate standard errors.
 }
 \details{
 Predictions are obtained by computing the model matrix for \code{newdata}
-(or the original data if \code{newdata} is missing) and multiplying by the
-estimated coefficients. If \code{type = "response"}, predictions are
-transformed via the inverse link function.
+(or using the original fit when \code{newdata} is omitted) and multiplying
+by the estimated coefficients. If \code{type = "response"}, the linear
+predictor is transformed via the inverse link function.
 
-When \code{se.fit = TRUE}, approximate standard errors of predictions are
-computed using the model-based covariance matrix of the estimated
-coefficients.
-
-If \code{newdata} is omitted the predictions are based on the data used for
-the fit.
+When \code{se.fit = TRUE}, approximate standard errors are computed by the
+delta method using the covariance matrix specified by \code{cov_type}. On
+the response scale, standard errors are additionally scaled by the absolute
+derivative of the inverse link function.
 }
 \examples{
-data("cerebrovascular")
+data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
-  id = id,
   data = cerebrovascular,
+  id = id,
   orstr = "exchangeable"
 )
 head(predict(fit, type = "link"))
@@ -80,5 +80,7 @@ head(pred$se.fit)
 
 }
 \seealso{
-\code{\link{geewa}}, \code{\link{geewa_binary}}, \code{\link[stats]{predict}}.
+\code{\link{fitted.geer}}, \code{\link{residuals.geer}},
+  \code{\link{geewa}}, \code{\link{geewa_binary}},
+  \code{\link[stats]{predict}}.
 }

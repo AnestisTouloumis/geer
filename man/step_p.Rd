@@ -17,7 +17,7 @@ step_p(
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{scope}{
     defines the range of models examined in the stepwise search.
@@ -26,61 +26,68 @@ step_p(
     details for how to specify the formulae and how they are used.
   }
 
-\item{direction}{Character string specifying the direction of the stepwise
+\item{direction}{character string specifying the direction of the stepwise
 search: backward elimination (\code{"backward"}), forward selection
-(\code{"forward"}), or both (\code{"both"}). Default is
+(\code{"forward"}), or bidirectional (\code{"both"}). Defaults to
 \code{"backward"}.}
 
-\item{p_enter}{Numeric value between 0 and 1 giving the p-value threshold
-for adding a term during forward steps. Default is \code{0.15}.}
+\item{p_enter}{numeric value in \code{(0, 1)} giving the p-value threshold
+for adding a term during forward steps. Defaults to \code{0.15}.}
 
-\item{p_remove}{Numeric value between 0 and 1 giving the p-value threshold
-for removing a term during backward steps. Default is \code{0.15}.}
+\item{p_remove}{numeric value in \code{(0, 1)} giving the p-value threshold
+for removing a term during backward steps. Defaults to \code{0.15}.}
 
-\item{test}{character indicating the hypothesis testing procedure. Options
-include the Wald test (\code{"wald"}), the generalized score test
+\item{test}{character string specifying the hypothesis testing procedure.
+Options are the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test (\code{"working-wald"}),
 the modified working score test (\code{"working-score"}), and the modified
 working likelihood ratio test (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference on the regression parameters. Options are the sandwich
+or robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the approximation used to compute the
-p-value for the modified working tests. Options include the Rao--Scott
+\item{pmethod}{character string specifying the approximation used to compute
+the p-value for the modified working tests. Options are the Rao--Scott
 approximation (\code{"rao-scott"}) and the Satterthwaite approximation
 (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 
-\item{steps}{
-    the maximum number of steps to be considered.  The default is 1000
-    (essentially as many as required).  It is typically used to stop the
-    process early.
-  }
+\item{steps}{positive integer giving the maximum number of steps to perform.
+The algorithm stops earlier if no eligible move is found. Defaults to
+\code{1000}.}
 }
 \value{
-A fitted model object of class \code{geer} corresponding to the final selected
-model. The returned object includes an \code{anova} component summarizing the
-stepwise sequence of fitted models and the terms added or removed at each step.
+A fitted model object of class \code{"geer"} corresponding to the final
+selected model. The returned object also includes an \code{anova}
+component of class \code{c("anova", "data.frame")} summarizing the
+stepwise sequence. This table has one row per step with columns
+\code{Step} (the term added or removed), \code{Df} (degrees of freedom
+of the test), \code{Chi} (test statistic), \code{Pr(>Chi)} (p-value),
+and \code{CIC} (Correlation Information Criterion).
 }
 \description{
-Perform stepwise model selection for fitted \code{geer} models using
-repeated single-term additions with \code{\link{add1}} and/or single-term
-deletions with \code{\link{drop1}}, where candidate moves are evaluated
-using hypothesis tests.
+Performs stepwise model selection for a fitted \code{geer} object using
+repeated single-term additions (\code{\link{add1.geer}}) and deletions
+(\code{\link{drop1.geer}}), with candidate moves evaluated by hypothesis
+tests.
 }
 \details{
-\code{step_p} repeatedly calls \code{\link{add1}} and \code{\link{drop1}}.
+\code{step_p()} repeatedly calls \code{\link{add1.geer}} and
+\code{\link{drop1.geer}}.
 
 The set of models searched is determined by the \code{scope} argument. The
-right-hand side of its \code{lower} component is always retained in the model,
-and the right-hand side of its \code{upper} component defines the largest model
-that can be considered. If \code{scope} is a single formula, it specifies the
-\code{upper} component and the \code{lower} model is empty.
+right-hand side of its \code{lower} component is always retained in the
+model, and the right-hand side of its \code{upper} component defines the
+largest model that can be considered. If \code{scope} is a single formula,
+it specifies the \code{upper} component and the \code{lower} model is empty.
+
+Candidate additions and deletions respect model hierarchy: a move is allowed
+only if it preserves all lower-order component terms implied by any
+higher-order interactions in the model.
 
 If \code{scope} is omitted, the search is restricted to the terms in the
 initial model.
@@ -91,17 +98,17 @@ deletion is found. The algorithm stops when no candidate move satisfies the
 relevant p-value threshold, when the maximum number of steps is reached, or
 when an immediate add-remove cycle involving the same term would occur.
 
-Details about the testing procedures implied by the \code{test} argument can
-be found in \cite{Rotnitzky and Jewell (1990)}. The option
-\code{test = "working-lrt"} is only available for models fitted with an
-independence working association structure.
+Details of the hypothesis tests controlled by \code{test} are given in
+Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
+valid only when the model is fitted with an independence working association
+structure; otherwise an error is returned.
 
-When \code{test = "wald"} or \code{test = "score"}, the \code{pmethod} argument
-is ignored and \code{cov_type} specifies the covariance matrix estimate of the
-regression parameter estimator used to compute the test statistic. Otherwise,
-\code{cov_type} specifies the covariance matrix estimate used to compute the
-coefficients of the independent chi-squared random variables, and \code{pmethod}
-specifies the approximation used to compute the p-value.
+When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
+ignored and \code{cov_type} specifies the covariance estimator used to
+compute the test statistic. For modified working tests, \code{cov_type}
+determines the covariance matrix used to form the coefficients of the sum of
+independent chi-squared random variables, and \code{pmethod} specifies the
+approximation used to compute the p-value.
 }
 \examples{
 data("respiratory", package = "geer")
@@ -109,13 +116,22 @@ respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 
 full_fit <- geewa_binary(
   formula = status ~ (baseline + treatment + gender + visit + age)^2,
-  id = id, repeated = visit, link = "probit", data = respiratory2,
-  orstr = "independence", method = "pgee-jeffreys"
+  link = "probit",
+  data = respiratory2,
+  id = id,
+  repeated = visit,
+  orstr = "independence",
+  method = "pgee-jeffreys"
 )
 
 ## Backward elimination within the initial model terms
-step_p(full_fit, direction = "backward", test = "wald",
-       cov_type = "bias-corrected", p_remove = 0.10)
+step_p(
+  full_fit,
+  direction = "backward",
+  test = "wald",
+  cov_type = "bias-corrected",
+  p_remove = 0.10
+)
 
 ## Bidirectional selection with an explicit scope
 step_p(
@@ -134,10 +150,12 @@ step_p(
 
 }
 \references{
-Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
-in semiparametric generalized linear models for cluster correlated data.
-\emph{Biometrika} \bold{77}, 485--497.
+Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
+parameters in semiparametric generalized linear models for cluster
+correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{add1}}, \code{\link{drop1}}
+\code{\link{add1.geer}}, \code{\link{drop1.geer}},
+  \code{\link{anova.geer}}, \code{\link{geecriteria}},
+  \code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

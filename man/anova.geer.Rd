@@ -3,7 +3,7 @@
 \name{anova.geer}
 \alias{anova.geer}
 \alias{anova}
-\title{ANOVA Tables for \code{geer} Objects}
+\title{ANOVA Tables for geer Objects}
 \usage{
 \method{anova}{geer}(
   object,
@@ -14,55 +14,54 @@
 )
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional objects representing models of the same class \code{geer}.}
+\item{...}{additional fitted model objects of class \code{"geer"}, used for
+sequential model comparisons.}
 
-\item{test}{character indicating the hypothesis testing procedure. Options
-include the Wald test (\code{"wald"}), the generalized score test
+\item{test}{character string specifying the hypothesis testing procedure.
+Options are the Wald test (\code{"wald"}), the generalized score test
 (\code{"score"}), the modified working Wald test (\code{"working-wald"}),
 the modified working score test (\code{"working-score"}), and the modified
 working likelihood ratio test (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
-\item{cov_type}{character indicating the covariance matrix estimator used for
-inference on the regression parameters. Options include the sandwich or
-robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees of freedom adjusted estimator
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference on the regression parameters. Options are the sandwich
+or robust estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"robust"}.}
 
-\item{pmethod}{character indicating the approximation used to compute the
-p-value for the modified working tests. Options include the Rao--Scott
+\item{pmethod}{character string specifying the approximation used to compute
+the p-value for the modified working tests. Options are the Rao--Scott
 approximation (\code{"rao-scott"}) and the Satterthwaite approximation
 (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 }
 \value{
-An object of class \code{c("anova", "data.frame")} containing sequential
-hypothesis tests for terms in a single fitted model, or sequential
-comparisons between nested fitted models.
-
-\itemize{
-  \item With a single model, the table reports tests for terms added
-  sequentially (from first to last).
-  \item With multiple models, the table reports sequential tests comparing
-  each model to the previous one.
-}
+An object of class \code{c("anova", "data.frame")}. With a single model,
+the table reports tests for terms added sequentially (first to last). With
+multiple models, the table reports sequential comparisons between each
+consecutive pair of nested models. Columns include \code{Df} (degrees of
+freedom of the test), \code{Resid. Df} (residual degrees of freedom),
+\code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value). Unlike
+\code{\link{add1.geer}} and \code{\link{drop1.geer}}, no \code{CIC} column
+is included; use \code{\link{geecriteria}} for working association structure
+selection.
 }
 \description{
-Compute analysis of variance (ANOVA) tables for one or more fitted models of
-class \code{geer}. The table is based on hypothesis tests for regression
-terms in generalized estimating equation (GEE) models.
+Computes hypothesis test tables for one or more fitted \code{geer} objects,
+analogous to analysis-of-variance (ANOVA) tables for GEE models.
 }
 \details{
 Details of the hypothesis tests controlled by \code{test} are given in
-\cite{Rotnitzky and Jewell (1990)}. The option \code{test = "working-lrt"}
-is valid only when the model is fitted with an \emph{independence} working
-correlation structure; otherwise an error is returned.
+Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
+valid only when the model is fitted with an independence working association
+structure; otherwise an error is returned.
 
 When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-ignored. In this case, \code{cov_type} specifies the covariance estimator
-used in the test statistic. For modified working tests, \code{cov_type}
+ignored and \code{cov_type} specifies the covariance estimator used to
+compute the test statistic. For modified working tests, \code{cov_type}
 determines the covariance matrix used to form the coefficients of the sum of
 independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to compute the p-value.
@@ -77,9 +76,9 @@ data("cerebrovascular", package = "geer")
 ## Single-model ANOVA (sequential terms)
 fit_full <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
-  id = id,
-  data = cerebrovascular,
   link = "logit",
+  data = cerebrovascular,
+  id = id,
   orstr = "exchangeable"
 )
 anova(fit_full, test = "wald", cov_type = "robust")
@@ -87,20 +86,22 @@ anova(fit_full, test = "wald", cov_type = "robust")
 ## Two-model comparison (models must be nested)
 fit_null <- geewa_binary(
   formula = ecg ~ 1,
-  id = id,
-  data = cerebrovascular,
   link = "logit",
+  data = cerebrovascular,
+  id = id,
   orstr = "exchangeable"
 )
 anova(fit_null, fit_full, test = "wald", cov_type = "robust")
 
 }
 \references{
-Rotnitzky, A. and Jewell, P. (1990) Hypothesis testing of regression parameters
-in semiparametric generalized linear models for cluster correlated data.
-\emph{Biometrika} \bold{77}, 485--497.
+Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
+parameters in semiparametric generalized linear models for cluster
+correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{drop1}} for type II ANOVA, where each term is dropped one at a
-time while respecting model hierarchy.
+\code{\link{add1.geer}}, \code{\link{drop1.geer}} for type II
+  tests where each term is dropped one at a time while respecting model
+  hierarchy; \code{\link{step_p}} for stepwise model selection;
+  \code{\link{geecriteria}} for model comparison criteria.
 }

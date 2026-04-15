@@ -3,53 +3,62 @@
 \name{model.matrix.geer}
 \alias{model.matrix.geer}
 \alias{model.matrix}
-\title{Construct Design Matrices from a \code{geer} Object}
+\title{Construct Design Matrices from a geer Object}
 \usage{
 \method{model.matrix}{geer}(object, ...)
 }
 \arguments{
-\item{object}{an object representing a model of the class \code{geer}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional argument(s) passed to methods.}
+\item{...}{additional arguments passed to or from other methods.}
 }
 \value{
 A numeric design matrix for the marginal mean model represented by
 \code{object}.
 
-There is an attribute \code{"assign"}, an integer vector with an entry for
-each column in the matrix giving the term in the formula which gave rise to
-the column. Value 0 corresponds to the intercept, if present, and positive
-values correspond to terms in the order given by the \code{term.labels}
-attribute of \code{terms(object)}.
+The returned matrix has an \code{"assign"} attribute: an integer vector with
+one entry per column giving the index of the formula term that produced that
+column. A value of \code{0} corresponds to the intercept, if present.
+Positive values index terms in the order given by
+\code{attr(terms(object), "term.labels")}.
 
 If the model contains factor terms, the returned matrix may also have a
 \code{"contrasts"} attribute giving the contrasts used for those factors.
 }
 \description{
-Construct the design (model) matrix for the marginal mean model underlying a
-fitted \code{geer} object. Factor variables are expanded according to the
-contrasts used when fitting the model, and interaction terms are expanded
-accordingly.
+Constructs the design matrix for the marginal mean model underlying a fitted
+\code{geer} object.
 }
 \details{
-The design matrix is reconstructed from the terms object stored in
-\code{object$terms} and the data stored in \code{object$data}. Factor
-variables are expanded according to the contrasts used when fitting the
-model, and interaction terms are expanded accordingly.
+The design matrix is reconstructed from \code{object$terms} and
+\code{object$data}, with factor variables and interactions expanded using
+the contrasts recorded at fitting time.
 
 By convention, if the response variable also appears on the right-hand side
-of the formula it is dropped, although interactions involving that term are
+of the formula, it is dropped, although interactions involving that term are
 retained.
 }
 \examples{
 data("leprosy", package = "geer")
-fit <- geewa(formula = bacilli ~ factor(period) + factor(period):treatment,
-             family = poisson(link = "log"), id = id, data = leprosy)
+fit <- geewa(
+  formula = bacilli ~ factor(period) + factor(period):treatment,
+  family = poisson(link = "log"),
+  data = leprosy,
+  id = id
+)
 model.matrix(fit)
 
 data("cerebrovascular", package = "geer")
-fit <- geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit",
-                    id = id, data = cerebrovascular)
+fit <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  data = cerebrovascular,
+  id = id
+)
 model.matrix(fit)
 
+}
+\seealso{
+\code{\link{geewa}}, \code{\link{geewa_binary}},
+  \code{\link[stats]{model.matrix}}.
 }
