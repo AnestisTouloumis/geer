@@ -3,7 +3,7 @@
 #include "link_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "nuisance_quantities_or.h"
-#include "clusterutils.h"
+#include "cluster_utils.h"
 #include "utils.h"
 
 
@@ -20,8 +20,9 @@ static Rcpp::List compute_sandwich(arma::mat& naive_matrix_inverse,
   const arma::mat naive_matrix = solved.cols(0, params_no - 1);
   const arma::mat naive_matrix_meat_matrix = solved.cols(params_no,
                                                          2 * params_no - 1);
-  const arma::mat robust_matrix =
+  arma::mat robust_matrix =
     solve_chol_or_lu_mat(naive_matrix_inverse, naive_matrix_meat_matrix.t());
+  symmetrize_if_close(robust_matrix, 1e-10);
   const double kappa =
     ((obs_no_total - 1.0) / (obs_no_total - static_cast<double>(params_no))) *
     (sample_size / (sample_size - 1.0));
@@ -32,8 +33,9 @@ static Rcpp::List compute_sandwich(arma::mat& naive_matrix_inverse,
   double ksi =
     arma::trace(naive_matrix_meat_matrix) / static_cast<double>(params_no);
   if (ksi < 1.0) ksi = 1.0;
-  const arma::mat bc_matrix =
+  arma::mat bc_matrix =
     kappa * robust_matrix + lambda * ksi * naive_matrix;
+  symmetrize_if_close(bc_matrix, 1e-10);
   return Rcpp::List::create(
     Rcpp::Named("naive_covariance")  = naive_matrix,
     Rcpp::Named("robust_covariance") = robust_matrix,
@@ -89,17 +91,8 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                  phi,
                                  correlation_matrix,
                                  weights_vector.subvec(a, b));
-    if (v_matrix_inverse_d_matrix_i.n_rows != m ||
-        v_matrix_inverse_d_matrix_i.n_cols != params_no) {
-      v_matrix_inverse_d_matrix_i.set_size(m, params_no);
-    }
-    const bool ok_cluster = arma::solve(v_matrix_inverse_d_matrix_i,
-                                        v_matrix_i,
-                                        d_matrix_i,
-                                        arma::solve_opts::likely_sympd);
-    if (!ok_cluster) {
-      Rcpp::stop("get_covariance_matrices_cc: failed to solve V_i^{-1} D_i.");
-    }
+    v_matrix_inverse_d_matrix_i =
+      solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
     if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
         d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
       d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
@@ -157,17 +150,8 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
     v_matrix_i = get_v_matrix_or(mu_vector.subvec(a, b),
                                  odds_ratios_vector_i,
                                  weights_vector.subvec(a, b));
-    if (v_matrix_inverse_d_matrix_i.n_rows != m ||
-        v_matrix_inverse_d_matrix_i.n_cols != params_no) {
-      v_matrix_inverse_d_matrix_i.set_size(m, params_no);
-    }
-    const bool ok_cluster = arma::solve(v_matrix_inverse_d_matrix_i,
-                                        v_matrix_i,
-                                        d_matrix_i,
-                                        arma::solve_opts::likely_sympd);
-    if (!ok_cluster) {
-      Rcpp::stop("get_covariance_matrices_or: failed to solve V_i^{-1} D_i.");
-    }
+    v_matrix_inverse_d_matrix_i =
+      solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
     if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
         d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
       d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);

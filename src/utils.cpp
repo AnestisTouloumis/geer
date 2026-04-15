@@ -13,6 +13,12 @@ Rcpp::NumericVector arma2vec(const arma::vec& x) {
 //============================ subset matrix x[y, y] ===========================
 arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
   arma::uvec z = arma::conv_to<arma::uvec>::from(y);
+  if (z.min() < 1 || z.max() > x.n_rows) {
+    Rcpp::stop(
+      "subset_matrix: index out of range -- values must be in [1, %d].",
+      static_cast<int>(x.n_rows)
+    );
+  }
   z -= 1;
   return x.submat(z, z);
 }
@@ -82,13 +88,6 @@ arma::mat kronecker_sum_same(const arma::mat& x) {
 arma::mat kronecker_vector_identity(const arma::vec& x) {
   const arma::uword dimension = x.n_rows;
   return arma::kron(x, arma::eye(dimension, dimension));
-}
-//==============================================================================
-
-
-//============================ kronecker(x, Y) =================================
-arma::mat kronecker_vector_matrix(const arma::vec& x, const arma::mat& y) {
-  return arma::kron(x, y);
 }
 //==============================================================================
 

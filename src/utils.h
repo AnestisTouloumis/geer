@@ -9,9 +9,16 @@ arma::mat kappa_matrix(const arma::uword dimension);
 arma::mat kronecker_left_identity_kappa(const arma::mat& x);
 arma::mat kronecker_identity_right_kappa(const arma::mat& x);
 arma::mat kappa_right(const arma::mat& x);
+inline arma::mat kappa_right_diag(const arma::vec& v) {
+  const arma::uword m = v.n_elem;
+  arma::mat ans(m * m, m, arma::fill::zeros);
+  for (arma::uword i = 0; i < m; ++i) {
+    ans(i * (m + 1), i) = v[i];
+  }
+  return ans;
+}
 arma::mat kronecker_sum_same(const arma::mat& x);
 arma::mat kronecker_vector_identity(const arma::vec& x);
-arma::mat kronecker_vector_matrix(const arma::vec& x, const arma::mat& y);
 arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y);
 arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y);
 arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,

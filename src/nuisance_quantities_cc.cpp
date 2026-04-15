@@ -1,11 +1,9 @@
 #define ARMA_WARN_LEVEL 1
 #include "nuisance_quantities_cc.h"
-
-#include "clusterutils.h"
+#include "cluster_utils.h"
 #include "family_utils.h"
 #include "utils.h"
 #include "variance_functions.h"
-
 #include <cfloat>
 #include <cmath>
 
@@ -54,7 +52,6 @@ arma::vec get_pearson_residuals(FamilyCode fc,
 
 
 //============================ pearson residuals (char*) =======================
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec get_pearson_residuals(const char* family,
                                 const arma::vec& y_vector,
@@ -70,7 +67,6 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
                    const int& params_no) {
   const double n = static_cast<double>(pearson_residuals_vector.n_elem);
   const double denominator = n - static_cast<double>(params_no);
-
   if (denominator <= 0.0) {
     Rcpp::stop("get_phi_hat: non-positive denominator.");
   }
@@ -295,11 +291,11 @@ arma::vec get_alpha_hat(const char* correlation_structure,
                         const double& phi,
                         const int& params_no,
                         const int& mdependence) {
-  arma::vec ans;
-
   if (std::strcmp(correlation_structure, "independence") == 0) {
-    ans.reset();
-  } else if (std::strcmp(correlation_structure, "exchangeable") == 0) {
+    return arma::vec(); // no alpha parameters for independence
+  }
+  arma::vec ans;
+  if (std::strcmp(correlation_structure, "exchangeable") == 0) {
     ans.set_size(1);
     ans[0] = alpha_hat_exchangeable(pearson_residuals_vector,
                                     id_vector,
@@ -331,10 +327,15 @@ arma::vec get_alpha_hat(const char* correlation_structure,
                              repeated_vector,
                              phi,
                              params_no);
+  } else if (std::strcmp(correlation_structure, "fixed") == 0) {
+    Rcpp::stop(
+      "get_alpha_hat: correlation structure is \"fixed\" but alpha_fixed must "
+      "be 1 when using a fixed correlation -- alpha should not be re-estimated."
+    );
   } else {
-    Rcpp::stop("Unsupported correlation structure.");
+    Rcpp::stop("get_alpha_hat: unsupported correlation structure \"%s\".",
+               correlation_structure);
   }
-
   clamp_alpha_vector(ans);
   return ans;
 }
@@ -368,7 +369,6 @@ arma::mat correlation_ar1(const arma::vec& alpha_vector,
   for (arma::uword i = 1; i < dimension; ++i) {
     ans[i] = ans[i - 1] * alpha_vector[0];
   }
-
   return arma::toeplitz(ans);
 }
 //==============================================================================
@@ -388,15 +388,15 @@ arma::mat correlation_mdependent(const arma::vec& alpha_vector,
   if (k > 0) {
     toeplitz_vector.subvec(1, k) = alpha_vector;
   }
-
   return arma::toeplitz(toeplitz_vector);
 }
 //==============================================================================
 
 
 //============================ toeplitz ========================================
-arma::mat correlation_toeplitz(const arma::vec& alpha_vector) {
-  arma::vec toeplitz_vector(alpha_vector.n_elem + 1, arma::fill::zeros);
+arma::mat correlation_toeplitz(const arma::vec& alpha_vector,
+                               const arma::uword dimension) {
+  arma::vec toeplitz_vector(dimension, arma::fill::zeros);
   toeplitz_vector[0] = 1.0;
   if (!alpha_vector.is_empty()) {
     toeplitz_vector.subvec(1, alpha_vector.n_elem) = alpha_vector;
@@ -439,7 +439,7 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
     return correlation_unstructured(alpha_vector, dimension);
   }
   if (std::strcmp(correlation_structure, "toeplitz") == 0) {
-    return correlation_toeplitz(alpha_vector);
+    return correlation_toeplitz(alpha_vector, dimension);
   }
   if (std::strcmp(correlation_structure, "fixed") == 0) {
     return correlation_unstructured(alpha_vector, dimension);
@@ -473,11 +473,9 @@ arma::mat get_v_matrix_cc(FamilyCode fc,
   } else {
     ans = subset_matrix(cor_matrix, repeated_vector);
   }
-
   ans.each_col() %= sd_vector;
   ans.each_row() %= sd_vector.t();
   ans *= phi;
-
   return ans;
 }
 //==============================================================================

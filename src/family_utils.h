@@ -13,6 +13,9 @@ enum class FamilyCode {
 };
 
 inline FamilyCode parse_family(const char* family) {
+  if (family == nullptr) {
+    Rcpp::stop("Family must not be NULL.");
+  }
   const std::string_view fam(family);
   if (fam == "gaussian")         return FamilyCode::gaussian;
   if (fam == "binomial")         return FamilyCode::binomial;

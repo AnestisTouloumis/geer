@@ -1,13 +1,36 @@
 #define ARMA_WARN_LEVEL 1
 #include <RcppArmadillo.h>
+#include <cmath>
 #include "link_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "nuisance_quantities_or.h"
-#include "clusterutils.h"
+#include "cluster_utils.h"
 #include "utils.h"
 
+namespace {
+inline void validate_score_test_inputs(const arma::vec& y_vector,
+                                       const arma::mat& model_matrix,
+                                       const arma::vec& id_vector,
+                                       const arma::vec& repeated_vector,
+                                       const arma::vec& weights_vector,
+                                       const arma::vec& mu_vector,
+                                       const arma::vec& eta_vector) {
+  const arma::uword n = y_vector.n_elem;
+  if (n == 0) {
+    Rcpp::stop("Input vectors must not be empty.");
+  }
+  if (model_matrix.n_rows != n) {
+    Rcpp::stop("'model_matrix' must have the same number of rows as 'y_vector'.");
+  }
+  if (id_vector.n_elem != n || repeated_vector.n_elem != n ||
+      weights_vector.n_elem != n || mu_vector.n_elem != n ||
+      eta_vector.n_elem != n) {
+    Rcpp::stop("All observation-level inputs must have the same length.");
+  }
+}
+}
+
 //============================ estimating equations - cc =======================
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
                                       const arma::mat& model_matrix,
@@ -21,6 +44,17 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
                                       const double& phi) {
+  validate_score_test_inputs(y_vector,
+                             model_matrix,
+                             id_vector,
+                             repeated_vector,
+                             weights_vector,
+                             mu_vector,
+                             eta_vector);
+
+  if (!std::isfinite(phi) || phi <= 0.0) {
+    Rcpp::stop("'phi' must be finite and positive.");
+  }
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -35,11 +69,13 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
     const arma::uword a = cl.start;
     const arma::uword b = cl.end - 1;
     const arma::uword m = cl.end - cl.start;
+
     if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
       d_matrix_i.set_size(m, params_no);
     }
     d_matrix_i = model_matrix.rows(a, b);
     d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+
     const arma::mat v_matrix_i =
       get_v_matrix_cc(family,
                       mu_vector.subvec(a, b),
@@ -47,6 +83,7 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
                       phi,
                       correlation_matrix,
                       weights_vector.subvec(a, b));
+
     ans += d_matrix_i.t() *
       solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
   }
@@ -66,6 +103,13 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
                                       const arma::vec& mu_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
+  validate_score_test_inputs(y_vector,
+                             model_matrix,
+                             id_vector,
+                             repeated_vector,
+                             weights_vector,
+                             mu_vector,
+                             eta_vector);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -83,6 +127,7 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
     }
     d_matrix_i = model_matrix.rows(a, b);
     d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+
     const arma::vec odds_ratios_vector_i =
       get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
                                        repeated_max,
@@ -91,6 +136,7 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
       get_v_matrix_or(mu_vector.subvec(a, b),
                       odds_ratios_vector_i,
                       weights_vector.subvec(a, b));
+
     ans += d_matrix_i.t() *
       solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
   }

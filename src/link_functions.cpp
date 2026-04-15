@@ -1,3 +1,4 @@
+#define ARMA_WARN_LEVEL 1
 #include "link_functions.h"
 #include "family_utils.h"
 #include "link_utils.h"

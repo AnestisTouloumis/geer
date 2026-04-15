@@ -1,6 +1,6 @@
 #define ARMA_WARN_LEVEL 1
 #include "nuisance_quantities_or.h"
-#include "clusterutils.h"
+#include "cluster_utils.h"
 #include <algorithm>
 #include <cmath>
 #include "utils.h"
@@ -18,7 +18,6 @@ inline arma::uword upper_triangular_pairs(const arma::uword n) {
 
 
 //============================ estimate marginalized odds ratio structure ======
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector,
                                                  const arma::vec& id_vector,
@@ -113,14 +112,13 @@ double get_bivariate_distribution(const double& row_prob,
                                   const double& col_prob,
                                   const double& odds_ratio) {
   const double ans_independence = row_prob * col_prob;
-  const double tol = 1e-6;
-  if (row_prob > 1.0 - tol || col_prob > 1.0 - tol) {
-    return ans_independence;
-  }
-  if (row_prob < tol || col_prob < tol) {
-    return ans_independence;
-  }
-  if (odds_ratio == 1.0) {
+  const double tol = 1e-8;
+  if (row_prob > 1.0 - tol ||
+      col_prob > 1.0 - tol ||
+      row_prob < tol ||
+      col_prob < tol ||
+      std::abs(odds_ratio - 1.0) < tol
+      ) {
     return ans_independence;
   }
   const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);

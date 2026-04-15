@@ -4,11 +4,10 @@
 #include "variance_functions.h"
 #include "nuisance_quantities_cc.h"
 #include "nuisance_quantities_or.h"
-#include "clusterutils.h"
+#include "cluster_utils.h"
 #include "utils.h"
 
 //============================ naive matrix inverse - independence =============
-// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::mat get_naive_matrix_inverse_independence(const arma::vec& y_vector,
                                                 const arma::mat& model_matrix,
@@ -78,7 +77,16 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec& y_vector,
     sc_criterion +=
       arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
     double ld;
-    arma::log_det_sympd(ld, v_matrix_i);
+    double ld_sign;
+    arma::log_det(ld, ld_sign, v_matrix_i);
+    if (ld_sign <= 0.0) {
+      Rcpp::stop(
+        "get_gee_criteria_sc_cw: working covariance V_i is not positive "
+        "definite for cluster at index %d -- check correlation parameters "
+        "and model specification.",
+        static_cast<int>(cl.start)
+      );
+    }
     sum_log_det += ld;
   }
   return Rcpp::List::create(
@@ -118,7 +126,16 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec& y_vector,
     sc_criterion +=
       arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
     double ld;
-    arma::log_det_sympd(ld, v_matrix_i);
+    double ld_sign;
+    arma::log_det(ld, ld_sign, v_matrix_i);
+    if (ld_sign <= 0.0) {
+      Rcpp::stop(
+        "get_gee_criteria_sc_cw_or: working covariance V_i is not positive "
+        "definite for cluster at index %d -- check odds-ratio parameters "
+        "and model specification.",
+        static_cast<int>(cl.start)
+      );
+    }
     sum_log_det += ld;
   }
   return Rcpp::List::create(

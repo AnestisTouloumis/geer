@@ -56,7 +56,8 @@ arma::mat correlation_ar1(const arma::vec& alpha_vector,
                           const arma::uword dimension);
 arma::mat correlation_mdependent(const arma::vec& alpha_vector,
                                  const arma::uword dimension);
-arma::mat correlation_toeplitz(const arma::vec& alpha_vector);
+arma::mat correlation_toeplitz(const arma::vec& alpha_vector,
+                               const arma::uword dimension);
 arma::mat correlation_unstructured(const arma::vec& alpha_vector,
                                    const arma::uword dimension);
 arma::mat get_correlation_matrix(const char* correlation_structure,

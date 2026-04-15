@@ -17,6 +17,9 @@ enum class LinkCode {
 };
 
 inline LinkCode parse_link(const char* link) {
+  if (link == nullptr) {
+    Rcpp::stop("Link must not be NULL.");
+  }
   const std::string_view lk(link);
   if (lk == "logit")    return LinkCode::logit;
   if (lk == "probit")   return LinkCode::probit;
