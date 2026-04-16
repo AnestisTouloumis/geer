@@ -34,14 +34,14 @@ check_nested_models <- function(object0, object1) {
   }
   if (length(coef_names0) < length(coef_names1)) {
     smaller_model <- object0
-    larger_model  <- object1
+    larger_model <- object1
     nms_small <- coef_names0
-    nms_big   <- coef_names1
+    nms_big <- coef_names1
   } else {
     smaller_model <- object1
-    larger_model  <- object0
+    larger_model <- object0
     nms_small <- coef_names1
-    nms_big   <- coef_names0
+    nms_big <- coef_names0
   }
   if (length(setdiff(nms_small, nms_big)) != 0L) {
     stop("models must be nested", call. = FALSE)

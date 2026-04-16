@@ -50,12 +50,30 @@ extract_geer_response_weights <- function(model_frame, family) {
   is_binomial <- identical(family$family, "binomial")
   y <- model.response(model_frame, "any")
   if (is.null(y)) stop("response variable not found", call. = FALSE)
+  y_raw <- y
   if (is_binomial) {
     if (is.factor(y)) {
-      y <- as.numeric(y != levels(y)[1L])
+      if (nlevels(y) != 2L) {
+        stop(
+          "for binomial models, a factor response must have exactly two levels",
+          call. = FALSE
+        )
+      }
+      y <- as.numeric(y == levels(y)[2L])
     } else if (is.character(y)) {
       yfac <- factor(y)
-      y <- as.numeric(yfac != levels(yfac)[1L])
+      if (nlevels(yfac) != 2L) {
+        stop(
+          "for binomial models, a character response must have exactly two distinct values",
+          call. = FALSE
+        )
+      }
+      y <- as.numeric(yfac == levels(yfac)[2L])
+    } else if (is.matrix(y) && ncol(y) != 2L) {
+      stop(
+        "for binomial models, a matrix response must have exactly two columns",
+        call. = FALSE
+      )
     }
   }
   weights <- as.vector(model.weights(model_frame))
@@ -76,17 +94,30 @@ extract_geer_response_weights <- function(model_frame, family) {
     }
   }
   weights <- as.numeric(weights)
+
   if (is_binomial && is.matrix(y) && ncol(y) == 2L) {
     trials <- rowSums(y)
-    if (any(trials <= 0)) {
-      stop("for binomial matrix responses, row sums (trials) must be positive",
-           call. = FALSE)
+    if (any(!is.finite(trials)) || any(trials <= 0)) {
+      stop(
+        "for binomial matrix responses, row sums (trials) must be positive and finite",
+        call. = FALSE
+      )
     }
     weights <- weights * trials
     y <- y[, 1L] / trials
   }
   y <- as.numeric(y)
-  if (any(!is.finite(y))) stop("response variable contains non-finite values", call. = FALSE)
+  if (any(!is.finite(y))) {
+    stop("response variable contains non-finite values", call. = FALSE)
+  }
+  if (is_binomial && !is.matrix(y_raw)) {
+    if (any(y < 0 | y > 1)) {
+      stop(
+        "for binomial models, the response must be coded as 0/1, proportions in [0, 1], or a two-column matrix",
+        call. = FALSE
+      )
+    }
+  }
   list(y = y, weights = weights)
 }
 

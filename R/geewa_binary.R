@@ -331,5 +331,6 @@ geewa_binary <- function(formula,
     warning("geewa_binary: fitted probabilities numerically 0 or 1 occurred", call. = FALSE)
   }
   fit <- new_geer(fit)
+  fit <- validate_geer(fit)
   fit
 }

@@ -469,5 +469,6 @@ geewa <- function(formula,
     }
   }
   fit <- new_geer(fit)
+  fit <- validate_geer(fit)
   fit
 }

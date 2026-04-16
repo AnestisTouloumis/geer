@@ -89,17 +89,17 @@ test_that("check_nested_models validates class and nesting requirements", {
   fit_bad_obs$obs_no <- fit_bad_obs$obs_no + 1L
   expect_error(
     check_nested_models(fit_bin_trt, fit_bad_obs),
-    "same observations"
+    "models were not fit on the same number of observations"
   )
 
   expect_error(
     check_nested_models(fit_bin_trt, fit_bin_trt),
-    "different numbers of coefficients"
+    "models must be nested and have different numbers of coefficients"
   )
 
   expect_error(
     check_nested_models(fit_bin_trt, fit_bin_period),
-    "nested"
+    "models must be nested and have different numbers of coefficients"
   )
 })
 

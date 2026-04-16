@@ -1,9 +1,11 @@
 build_geer_model_frame <- function(model_call, env = parent.frame()) {
   model_call$drop.unused.levels <- TRUE
-  keep <- c("formula", "data", "id", "repeated", "weights", "offset")
+  keep <- c(
+    "formula", "data", "subset", "na.action",
+    "id", "repeated", "weights", "offset"
+  )
   model_call <- model_call[c(1L, match(keep, names(model_call), 0L))]
   model_call[[1L]] <- quote(model.frame)
-
   enclos <- env
   if (!is.null(model_call$formula)) {
     formula_obj <- tryCatch(eval(model_call$formula, envir = env), error = function(e) NULL)
@@ -11,7 +13,6 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
       enclos <- environment(formula_obj)
     }
   }
-
   eval(model_call, envir = env, enclos = enclos)
 }
 
@@ -29,6 +30,9 @@ extract_geer_offset <- function(model_frame, y_length) {
     }
     if (length(offset) != y_length) {
       stop("response variable and 'offset' are not of same length", call. = FALSE)
+    }
+    if (anyNA(offset) || any(!is.finite(offset))) {
+      stop("'offset' must be finite", call. = FALSE)
     }
     offset <- as.double(offset)
   }
