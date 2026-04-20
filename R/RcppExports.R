@@ -17,8 +17,8 @@ fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, we
     .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
 }
 
-get_naive_matrix_inverse_independence <- function(y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector) {
-    .Call(`_geer_get_naive_matrix_inverse_independence`, y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector)
+get_naive_matrix_inverse_independence <- function(model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector) {
+    .Call(`_geer_get_naive_matrix_inverse_independence`, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector)
 }
 
 get_gee_criteria_sc_cw <- function(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector) {

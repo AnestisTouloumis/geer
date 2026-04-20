@@ -4,7 +4,6 @@ local_data <- function() {
   data("respiratory", package = "geer", envir = environment())
   data("leprosy", package = "geer", envir = environment())
   data("rinse", package = "geer", envir = environment())
-
   list(
     epilepsy = epilepsy,
     cerebrovascular = cerebrovascular,
@@ -14,5 +13,4 @@ local_data <- function() {
     rinse = rinse
   )
 }
-
 test_data <- local_data()

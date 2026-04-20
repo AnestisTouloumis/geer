@@ -1,7 +1,52 @@
+evaluate_prediction_offset <- function(object, newdata, n_obs) {
+  offset_formula <- rep.int(0, n_obs)
+  pred_terms <- delete.response(object$terms)
+  mf <- model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = na.pass)
+  offset_from_formula <- model.offset(mf)
+  if (!is.null(offset_from_formula)) {
+    if (length(offset_from_formula) == 1L) {
+      offset_from_formula <- rep.int(as.numeric(offset_from_formula), n_obs)
+    }
+    if (!is.numeric(offset_from_formula) || length(offset_from_formula) != n_obs ||
+        anyNA(offset_from_formula) || any(!is.finite(offset_from_formula))) {
+      stop("formula-based prediction offset must be a finite numeric vector of the correct length",
+           call. = FALSE)
+    }
+    offset_formula <- as.numeric(offset_from_formula)
+  }
+  offset_argument <- rep.int(0, n_obs)
+  call_offset <- object$call$offset
+  if (!is.null(call_offset)) {
+    offset_env <- environment(formula(object))
+    offset_from_argument <- tryCatch(
+      eval(call_offset, envir = newdata, enclos = offset_env),
+      error = function(e) {
+        stop(
+          "could not evaluate the offset supplied via the 'offset' argument in 'newdata'",
+          call. = FALSE
+        )
+      }
+    )
+    if (length(offset_from_argument) == 1L) {
+      offset_from_argument <- rep.int(as.numeric(offset_from_argument), n_obs)
+    }
+    if (!is.numeric(offset_from_argument) || length(offset_from_argument) != n_obs ||
+        anyNA(offset_from_argument) || any(!is.finite(offset_from_argument))) {
+      stop(
+        "prediction offset supplied via the 'offset' argument must be a finite numeric vector of the correct length",
+        call. = FALSE
+      )
+    }
+    offset_argument <- as.numeric(offset_from_argument)
+  }
+  offset_formula + offset_argument
+}
+
+
 #' @title
 #' Extract Model Fitted Values from a geer Object
 #'
-#' @rdname fitted
+#' @rdname fitted.geer
 #' @aliases fitted fitted.values
 #' @method fitted geer
 #'
@@ -162,10 +207,12 @@ predict.geer <- function(object,
   }
   design_matrix <- design_matrix[, coef_names, drop = FALSE]
   eta_vector <- drop(design_matrix %*% object$coefficients)
-  offset_vector <- model.offset(mf)
-  if (!is.null(offset_vector)) {
-    eta_vector <- eta_vector + drop(offset_vector)
-  }
+  offset_vector <- evaluate_prediction_offset(
+    object = object,
+    newdata = newdata,
+    n_obs = nrow(design_matrix)
+  )
+  eta_vector <- eta_vector + offset_vector
   if (!se.fit) {
     return(if (type == "link") eta_vector else object$family$linkinv(eta_vector))
   }
@@ -249,3 +296,5 @@ residuals.geer <- function(object,
   )
   ans
 }
+
+

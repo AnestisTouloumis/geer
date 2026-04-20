@@ -75,7 +75,7 @@ seiz.l$t <- ifelse(seiz.l$time == 0, 8, 2)
 seiz.l$x <- ifelse(seiz.l$time == 0, 0, 1)
 #mod2 <- y ~ offset(log(t)) + x * trt
 # offset term does not work possible bug!? in BCgee
-#mod2 <- y ~  x + trt + x:trt
+mod2 <- y ~  x + trt + x:trt
 ref2_gee <- gee(mod2,
                 id = id,
                 data = seiz.l,

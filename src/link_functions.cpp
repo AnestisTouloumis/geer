@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <cmath>
 
+
 namespace {
 inline bool all_finite(const Rcpp::NumericVector& x) {
   return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x)));
@@ -19,22 +20,12 @@ inline bool all_finite(const Rcpp::NumericVector& x) {
   inline bool all_open_unit_interval(const Rcpp::NumericVector& x) {
     return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x > 0.0) & (x < 1.0)));
   }
-  inline Rcpp::NumericVector clamp_probabilities(const Rcpp::NumericVector& x) {
-    return Rcpp::pmax(Rcpp::pmin(x, 1.0 - DBL_EPSILON), DBL_EPSILON);
-  }
-  inline Rcpp::NumericVector logistic_mu(const Rcpp::NumericVector& eta_vector) {
-    const Rcpp::NumericVector eta_clipped =
-      Rcpp::pmin(Rcpp::pmax(eta_vector, -30.0), 30.0);
-    const Rcpp::NumericVector ans = 1.0 / (1.0 + exp(-eta_clipped));
-    return clamp_probabilities(ans);
-  }
   inline arma::vec arma_logistic_mu(const arma::vec& eta) {
     const arma::vec eta_clipped = arma::clamp(eta, -30.0, 30.0);
     const arma::vec p = 1.0 / (1.0 + arma::exp(-eta_clipped));
     return arma::clamp(p, DBL_EPSILON, 1.0 - DBL_EPSILON);
   }
 }
-
 
 
 //============================ link inverse - arma (char*) ====================
@@ -129,7 +120,7 @@ arma::vec mueta(LinkCode lc, const arma::vec& eta) {
     return arma::clamp(arma::exp(arma::clamp(eta, -arma::datum::inf, 700.0)),
                        DBL_EPSILON, arma::datum::inf);
   case LinkCode::sqrt:
-    return 2.0 * eta;
+    return arma::clamp(2.0 * eta, DBL_EPSILON, arma::datum::inf);
   case LinkCode::inverse_mu_squared:
     return -0.5 / arma::pow(eta, 1.5);
   case LinkCode::inverse:

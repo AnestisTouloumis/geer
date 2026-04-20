@@ -101,6 +101,8 @@ An object of class \code{"geer"}, a list with components:
 \item{df.residual}{the residual degrees of freedom.}
 \item{y}{the response vector.}
 \item{x}{the model matrix.}
+\item{qr}{the QR decomposition of the model matrix, used for estimability
+      checking.}
 \item{id}{the recoded cluster identifier vector.}
 \item{repeated}{the recoded within-cluster ordering vector.}
 \item{converged}{logical indicating whether the algorithm converged.}
@@ -176,8 +178,9 @@ and \code{repeated}.
 A term of the form \code{offset(expression)} is allowed in the right-hand
 side of \code{formula}.
 
-The length of \code{id} and of \code{repeated} or \code{weights} (when
-provided) must equal the number of observations.
+The length of \code{id} must equal the number of observations. When
+provided, \code{repeated} and \code{weights} must also have the same
+length.
 }
 \section{Note on returned components}{
 
@@ -190,7 +193,8 @@ component stores the value of \code{orstr}. Under
 For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
 \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
-returned object.
+returned object, because these methods produce their estimate via a single
+correction step applied to an already-converged fit.
 }
 
 \examples{

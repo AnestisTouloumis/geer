@@ -66,10 +66,12 @@ normalize_geer_control <- function(control) {
   if (is.null(control)) {
     return(geer_control())
   }
-  if (is.list(control) &&
-      !is.null(control$maxiter) &&
-      !is.null(control$tolerance)) {
-    return(control)
+  if (!is.list(control)) {
+    stop(
+      "'control' must be NULL or a list, typically created by geer_control()",
+      call. = FALSE
+    )
   }
-  do.call("geer_control", control)
+  control <- utils::modifyList(geer_control(), control)
+  do.call(geer_control, control)
 }

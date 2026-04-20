@@ -58,7 +58,6 @@ check_nested_models <- function(object0, object1) {
 }
 
 
-## shared test helpers
 check_test_index <- function(index, context) {
   test_df <- length(index)
   if (test_df < 1L) {
@@ -140,7 +139,6 @@ get_or_alpha <- function(object) {
 }
 
 
-## chi-square mixture approximations
 compute_chisq_mixture <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) {
   pmethod <- match.arg(pmethod)
   x <- Re(x)
@@ -164,12 +162,10 @@ compute_chisq_mixture <- function(x, test_stat, pmethod = c("rao-scott", "satter
     test_stat <- test_stat / ((1 + satt_cv2) * x_bar)
     test_p <- 1 - pchisq(test_stat, df = test_df)
   }
-
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
-## score components
 compute_score_components <- function(object0, object1, test_coefficients) {
   if (is_geewa_fit(object1)) {
     score_vector <- estimating_equations_gee_cc(
@@ -178,7 +174,6 @@ compute_score_components <- function(object0, object1, test_coefficients) {
       object0$fitted.values, object0$linear.predictors,
       object1$association_structure, object1$alpha, object1$phi
     )
-
     covariance <- get_covariance_matrices_cc(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
       object1$family$link, object1$family$family,
@@ -187,7 +182,6 @@ compute_score_components <- function(object0, object1, test_coefficients) {
     )
   } else {
     association_alpha <- get_or_alpha(object1)
-
     score_vector <- estimating_equations_gee_or(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
       object1$family$link,
@@ -210,7 +204,6 @@ compute_score_components <- function(object0, object1, test_coefficients) {
 }
 
 
-## Wald test
 wald_test <- function(object0, object1,
                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
@@ -233,7 +226,6 @@ wald_test <- function(object0, object1,
 }
 
 
-## working Wald test
 working_wald_test <- function(object0, object1,
                               cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
                               pmethod = c("rao-scott", "satterthwaite")) {
@@ -267,7 +259,6 @@ working_wald_test <- function(object0, object1,
 }
 
 
-## working likelihood ratio test
 working_lrt_test <- function(object0, object1,
                              cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
                              pmethod = c("rao-scott", "satterthwaite")) {
@@ -279,7 +270,6 @@ working_lrt_test <- function(object0, object1,
   index <- nested_models$index
   check_test_index(index, "Working LR test")
   if (obj1$family$family %in% c("poisson", "binomial")) {
-    ## phi is fixed at 1 for these families; use a practical tolerance
     phi_tol <- 1e-6
     if (abs(obj0$phi - 1) > phi_tol || abs(obj1$phi - 1) > phi_tol) {
       stop(
@@ -305,7 +295,6 @@ working_lrt_test <- function(object0, object1,
 }
 
 
-## score test
 score_test <- function(object0, object1,
                        cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
@@ -347,7 +336,6 @@ score_test <- function(object0, object1,
 }
 
 
-## working score test
 working_score_test <- function(object0, object1,
                                cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
                                pmethod = c("rao-scott", "satterthwaite")) {
@@ -399,7 +387,6 @@ working_score_test <- function(object0, object1,
 }
 
 
-## anova for a list of geer fits
 compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   response_vector <- vapply(
     object,

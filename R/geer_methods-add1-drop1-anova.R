@@ -110,8 +110,12 @@ add1.geer <-
     ans[1L, 2L] <- compute_gee_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
-      add1_model <- update(object, formula = as.formula(paste(". ~ . +", tt)),
-                           data = object$data)
+      add1_model <- update(
+        object,
+        formula = as.formula(paste(". ~ . +", tt)),
+        data = object$data
+      )
+      add1_model <- restore_original_data_call(add1_model, object)
       value <- switch(
         test,
         wald = wald_test(object, add1_model, cov_type),
@@ -120,7 +124,6 @@ add1.geer <-
         `working-score` = working_score_test(object, add1_model, cov_type, pmethod),
         `working-lrt`   = working_lrt_test(object, add1_model, cov_type, pmethod)
       )
-
       ans[i + 1L, ] <- c(value$test_df,
                          compute_gee_cic(add1_model, cov_type),
                          value$test_stat,
@@ -194,8 +197,12 @@ drop1.geer <- function(object,
   ans[1L, 2L] <- compute_gee_cic(object, cov_type)
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
-    drop1_model <- update(object, formula = as.formula(paste(". ~ . -", tt)),
-                          data = object$data)
+    drop1_model <- update(
+      object,
+      formula = as.formula(paste(". ~ . -", tt)),
+      data = object$data
+    )
+    drop1_model <- restore_original_data_call(drop1_model, object)
     value <- switch(
       test,
       wald = wald_test(drop1_model, object, cov_type),
@@ -352,18 +359,29 @@ anova.geer <-
     object_list <- list()
     if (intercept == 1) {
       object_list[[1]] <- update(object, formula = . ~ 1, data = object$data)
+      object_list[[1]] <- restore_original_data_call(object_list[[1]], object)
       for (i in seq_len(nvars)) {
-        object_list[[i + 1]] <- update(object_list[[i]],
-                                       formula = paste(". ~ . + ", terms[i]),
-                                       data = object$data)
+        object_list[[i + 1]] <- update(
+          object_list[[i]],
+          formula = paste(". ~ . + ", terms[i]),
+          data = object$data
+        )
+        object_list[[i + 1]] <- restore_original_data_call(object_list[[i + 1]], object)
       }
     } else {
-      object_list[[1]] <- update(object, formula = paste(". ~ -1 + ", terms[1]),
-                                 data = object$data)
+      object_list[[1]] <- update(
+        object,
+        formula = paste(". ~ -1 + ", terms[1]),
+        data = object$data
+      )
+      object_list[[1]] <- restore_original_data_call(object_list[[1]], object)
       for (i in seq_len(nvars - 1)) {
-        object_list[[i + 1]] <- update(object_list[[i]],
-                                       formula = paste(". ~ . + ", terms[i + 1]),
-                                       data = object$data)
+        object_list[[i + 1]] <- update(
+          object_list[[i]],
+          formula = paste(". ~ . + ", terms[i + 1]),
+          data = object$data
+        )
+        object_list[[i + 1]] <- restore_original_data_call(object_list[[i + 1]], object)
       }
     }
     resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))

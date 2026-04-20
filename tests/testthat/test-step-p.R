@@ -4,24 +4,6 @@ data("respiratory", package = "geer")
 respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 cerebrovascular <- test_data$cerebrovascular
 
-
-
-expect_step_p_result <- function(object) {
-  testthat::expect_s3_class(object, "geer")
-  testthat::expect_true(!is.null(object$anova))
-  testthat::expect_s3_class(object$anova, "anova")
-  testthat::expect_true(is.data.frame(object$anova))
-  testthat::expect_true(all(c("Step", "Df", "Chi", "Pr(>Chi)", "CIC") %in% names(object$anova)))
-}
-
-
-expect_no_step_taken <- function(object) {
-  expect_step_p_result(object)
-  testthat::expect_equal(nrow(object$anova), 1L)
-  testthat::expect_identical(object$anova$Step[[1L]], "")
-}
-
-
 fit_resp_full_indep <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
   id = id,
@@ -31,7 +13,6 @@ fit_resp_full_indep <- geewa_binary(
   orstr = "independence",
   method = "pgee-jeffreys"
 )
-
 
 fit_resp_full_exch <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
@@ -303,4 +284,50 @@ test_that("step_p stores a readable anova heading on the returned fit", {
   expect_true(length(heading) >= 4L)
   expect_true(any(grepl("Initial Model:", heading, fixed = TRUE)))
   expect_true(any(grepl("Final Model:", heading, fixed = TRUE)))
+})
+
+
+test_that("step_p stores numbered steps and descriptive row names", {
+  out <- step_p(
+    fit_resp_full_indep,
+    direction = "backward",
+    test = "wald",
+    cov_type = "robust",
+    p_remove = 0.20,
+    steps = 3
+  )
+  expect_s3_class(out$anova, "anova")
+  expect_identical(rownames(out$anova)[1L], "Initial model")
+  expect_identical(out$anova$Step[1L], "")
+
+  if (nrow(out$anova) > 1L) {
+    expect_identical(
+      out$anova$Step[-1L],
+      as.character(seq_len(nrow(out$anova) - 1L))
+    )
+    expect_true(all(grepl("^Step [0-9]+: [+-] ", rownames(out$anova)[-1L])))
+  }
+})
+
+
+test_that("step_p preserves the original data call for downstream update", {
+  fitted_model <- geewa_binary(
+    formula = status ~ (I(treatment == "active") + gender + visit + age + baseline)^2,
+    id = id,
+    repeated = visit,
+    data = respiratory2,
+    link = "probit",
+    orstr = "independence",
+    method = "pgee-jeffreys"
+  )
+  out <- step_p(
+    fitted_model,
+    scope = list(lower = status ~ 1, upper = status ~ .^2),
+    test = "wald",
+    cov_type = "bias-corrected",
+    p_remove = 0.1,
+    direction = "backward"
+  )
+  expect_s3_class(out, "geer")
+  expect_no_error(update(out, orstr = "exchangeable"))
 })

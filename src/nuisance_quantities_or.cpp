@@ -145,8 +145,8 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
         ans(i, j) =
           get_bivariate_distribution(mu_vector[i],
                                      mu_vector[j],
-                                              odds_ratios_vector[k]) -
-                                                mu_vector[i] * mu_vector[j];
+                                     odds_ratios_vector[k]) -
+          mu_vector[i] * mu_vector[j];
         ++k;
       }
     }
@@ -158,20 +158,6 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
 }
 //==============================================================================
 
-
-//============================ inverse weight matrix ===========================
-arma::mat get_v_matrix_inverse_or(const arma::vec& mu_vector,
-                                  const arma::vec& odds_ratios_vector,
-                                  const arma::vec& weights_vector) {
-  const arma::mat v_matrix =
-    get_v_matrix_or(mu_vector, odds_ratios_vector, weights_vector);
-
-  const arma::mat ans =
-    solve_chol_or_lu_mat(v_matrix,
-                         arma::eye(v_matrix.n_rows, v_matrix.n_cols));
-  return ans;
-}
-//==============================================================================
 
 
 //============================ first derivative wrt row probability ============
@@ -242,37 +228,6 @@ arma::mat get_g_matrix(const arma::vec& mu_vector,
           get_bivariate_distribution_murow(mu_vector[j],
                                            mu_vector[i],
                                                     odds_ratios_vector[k]);
-      }
-    }
-  }
-  return ans;
-}
-//==============================================================================
-
-
-//============================ joint probability distribution derivative =======
-arma::mat get_bivariate_distribution_mu(const arma::vec& mu_vector,
-                                        const arma::vec& odds_ratios_vector) {
-  const arma::uword cluster_size = mu_vector.n_elem;
-  arma::mat ans(cluster_size * cluster_size, cluster_size, arma::fill::zeros);
-  if (cluster_size > 1) {
-    for (arma::uword r = 0; r < cluster_size; ++r) {
-      for (arma::uword i = 0; i < cluster_size; ++i) {
-        if (i != r) {
-          const arma::uword a = std::min(i, r);
-          const arma::uword b = std::max(i, r);
-          const arma::uword k =
-            upper_triangular_pair_index(a, b, cluster_size);
-          ans(r * cluster_size + i, i) =
-            get_bivariate_distribution_murow(mu_vector[i],
-                                             mu_vector[r],
-                                                      odds_ratios_vector[k]);
-
-          ans(r * cluster_size + i, r) +=
-            get_bivariate_distribution_murow(mu_vector[r],
-                                             mu_vector[i],
-                                                      odds_ratios_vector[k]);
-        }
       }
     }
   }

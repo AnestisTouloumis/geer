@@ -1,5 +1,6 @@
 testthat::local_edition(3)
 
+
 test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
   expect_error(
     geewa_binary(
@@ -10,7 +11,6 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
     ),
     "'log-log' link not recognised"
   )
-
   expect_error(
     geewa_binary(
       ecg ~ treatment,
@@ -23,6 +23,7 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
   )
 })
 
+
 test_that("geewa_binary validates weights", {
   expect_error(
     geewa_binary(
@@ -34,10 +35,8 @@ test_that("geewa_binary validates weights", {
     ),
     "weights"
   )
-
   bad_weights <- rep.int(1, nrow(test_data$cerebrovascular))
   bad_weights[1] <- 0
-
   expect_error(
     geewa_binary(
       ecg ~ treatment + factor(period),
@@ -50,6 +49,7 @@ test_that("geewa_binary validates weights", {
     ignore.case = TRUE
   )
 })
+
 
 test_that("geewa_binary rejects duplicated repeated values within cluster", {
   cerebrovascular_bad <- test_data$cerebrovascular
@@ -72,6 +72,7 @@ test_that("geewa_binary rejects duplicated repeated values within cluster", {
   )
 })
 
+
 test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
   expect_error(
     geewa_binary(
@@ -84,5 +85,24 @@ test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
     ),
     "alpha_vector",
     ignore.case = TRUE
+  )
+})
+
+
+test_that("geewa rejects unsupported quasi variance functions early", {
+  dat <- data.frame(
+    y = c(1, 2, 3, 4),
+    x = c(0, 1, 0, 1),
+    id = 1:4
+  )
+  expect_error(
+    geewa(
+      y ~ x,
+      data = dat,
+      id = id,
+      family = quasi(link = "identity", variance = "mu^4"),
+      corstr = "independence"
+    ),
+    "'variance'"
   )
 })

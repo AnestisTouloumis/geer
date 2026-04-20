@@ -66,8 +66,9 @@
 #' A term of the form \code{offset(expression)} is allowed in the right-hand
 #' side of \code{formula}.
 #'
-#' The length of \code{id} and of \code{repeated} or \code{weights} (when
-#' provided) must equal the number of observations.
+#' The length of \code{id} must equal the number of observations. When
+#' provided, \code{repeated} and \code{weights} must also have the same
+#' length.
 #'
 #' @inherit geewa return
 #'
@@ -81,7 +82,8 @@
 #' For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 #' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
 #' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
-#' returned object.
+#' returned object, because these methods produce their estimate via a single
+#' correction step applied to an already-converged fit.
 #'
 #' @author Anestis Touloumis
 #'
@@ -315,9 +317,7 @@ geewa_binary <- function(formula,
   if (method %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical", "opgee-jeffreys", "hpgee-jeffreys")) {
     fit$converged <- TRUE
   }
-
   fit$alpha <- if (identical(orstr, "independence")) 1 else as.numeric(geesolver_fit$alpha)
-
   if (orstr %in% c("unstructured", "fixed")) {
     pairs_matrix <- combn(max(repeated), 2)
     alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])

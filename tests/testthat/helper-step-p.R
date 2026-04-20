@@ -2,6 +2,7 @@ term_labels <- function(object) {
   attr(stats::terms(stats::formula(object)), "term.labels")
 }
 
+
 expect_step_p_result <- function(object) {
   testthat::expect_s3_class(object, "geer")
   testthat::expect_true(!is.null(object$anova))

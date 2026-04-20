@@ -11,7 +11,6 @@ compute_n_association_parameters <- function(object) {
 
 compute_independence_naive_inverse <- function(object) {
   get_naive_matrix_inverse_independence(
-    object$y,
     object$x,
     object$id,
     object$family$link,
@@ -56,7 +55,6 @@ compute_quasi_loglikelihood <- function(object) {
 }
 
 
-## compute all criteria
 compute_gee_criteria <- function(object, cov_type, digits = NULL) {
   quasi_loglikelihood <- compute_quasi_loglikelihood(object)
   sc_wc_stats <- if (is_geewa_fit(object)) {
@@ -123,7 +121,6 @@ compute_gee_criteria <- function(object, cov_type, digits = NULL) {
 }
 
 
-## extract only CIC criterion
 compute_gee_cic <- function(object, cov_type) {
   independence_inverse <- compute_independence_naive_inverse(object)
   beta_covariance <- vcov(object, cov_type = cov_type)

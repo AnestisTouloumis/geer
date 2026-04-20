@@ -60,10 +60,11 @@
 #' A fitted model object of class \code{"geer"} corresponding to the final
 #' selected model. The returned object also includes an \code{anova}
 #' component of class \code{c("anova", "data.frame")} summarizing the
-#' stepwise sequence. This table has one row per step with columns
-#' \code{Step} (the term added or removed), \code{Df} (degrees of freedom
-#' of the test), \code{Chi} (test statistic), \code{Pr(>Chi)} (p-value),
-#' and \code{CIC} (Correlation Information Criterion).
+#' stepwise sequence, accessible as \code{result$anova}. This table has one
+#' row per step with columns \code{Step} (the term added or removed),
+#' \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
+#' \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
+#' Criterion).
 #'
 #' @inherit add1.geer references
 #'

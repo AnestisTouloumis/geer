@@ -1,4 +1,10 @@
-## scope helpers
+.step_p_change_label <- function(term, action = c("add", "drop")) {
+  action <- match.arg(action)
+  prefix <- if (identical(action, "add")) "+ " else "- "
+  paste0(prefix, term)
+}
+
+
 .step_p_validate_scope <- function(scope) {
   if (is.null(scope) || inherits(scope, "formula") || is.character(scope)) {
     return(scope)
@@ -58,12 +64,12 @@
 }
 
 
-## Step-path helpers
 .step_p_init_models <- function(object, cov_type, steps) {
   steps <- as.integer(steps)
   models <- vector("list", steps + 1L)
   models[[1L]] <- list(
-    Step = "",
+    Step = 0L,
+    Change = NA_character_,
     Df = NA_real_,
     Chi = NA_real_,
     `Pr(>Chi)` = NA_real_,
@@ -78,11 +84,12 @@
 
 
 .step_p_update_fit <- function(fitted_model, change, obs_no) {
-  updated_model <- stats::update(
+  updated_model <- update(
     fitted_model,
     formula = paste(". ~ .", change),
     data = fitted_model$data
   )
+  updated_model <- restore_original_data_call(updated_model, fitted_model)
   obs_no_new <- updated_model$obs_no
   if (all(is.finite(c(obs_no, obs_no_new))) && obs_no_new != obs_no) {
     stop("number of rows in use has changed: remove missing values?", call. = FALSE)
@@ -91,10 +98,11 @@
 }
 
 
-.step_p_append_model <- function(models, models_no, step, df, chi, pval, cic) {
+.step_p_append_model <- function(models, models_no, change, df, chi, pval, cic) {
   models_no <- models_no + 1L
   models[[models_no]] <- list(
-    Step = step,
+    Step = models_no - 1L,
+    Change = change,
     Df = df,
     Chi = chi,
     `Pr(>Chi)` = pval,
@@ -107,16 +115,27 @@
 }
 
 
-## print results
 .step_p_results <- function(models, fit, object) {
+  step_no <- vapply(models, `[[`, integer(1), "Step")
+  change <- vapply(models, function(x) {
+    out <- x[["Change"]]
+    if (is.null(out) || is.na(out)) "" else out
+  }, character(1))
+  row_labels <- ifelse(
+    step_no == 0L,
+    "Initial model",
+    paste0("Step ", step_no, ": ", change)
+  )
   aod <- data.frame(
-    Step = vapply(models, `[[`, "", "Step"),
+    Step = ifelse(step_no == 0L, "", as.character(step_no)),
     Df = vapply(models, `[[`, NA_real_, "Df"),
     Chi = vapply(models, `[[`, NA_real_, "Chi"),
     `Pr(>Chi)` = vapply(models, `[[`, NA_real_, "Pr(>Chi)"),
     CIC = vapply(models, `[[`, NA_real_, "CIC"),
-    check.names = FALSE
+    check.names = FALSE,
+    stringsAsFactors = FALSE
   )
+  row.names(aod) <- row_labels
   heading <- c(
     "Stepwise Model Path \nAnalysis of Deviance Table",
     "\nInitial Model:", paste(deparse(stats::formula(object)), collapse = " "),
@@ -128,7 +147,7 @@
   fit
 }
 
-## candidate selection helpers
+
 .step_p_selected_row_backward <- function(aod) {
   aod2 <- aod[-1L, , drop = FALSE]
   if (!nrow(aod2)) {
@@ -186,14 +205,6 @@
 }
 
 
-.step_p_selected_step_label <- function(aod, row) {
-  if (is.na(row) || row < 1L || row > nrow(aod)) {
-    return(NA_character_)
-  }
-  row.names(aod)[row]
-}
-
-
 .step_p_selected_term <- function(step_label) {
   if (is.na(step_label) || !nzchar(step_label)) {
     return(NA_character_)
@@ -229,17 +240,17 @@
     cov_type = cov_type,
     pmethod = pmethod
   )
-  rn <- row.names(aod)
-  row.names(aod) <- c(rn[1L], paste("-", rn[-1L]))
   attr(aod, "heading") <- NULL
+
   pick_row <- .step_p_selected_row_backward(aod)
   if (.step_p_backward_should_stop(aod, pick_row, pvalue)) {
     return(NULL)
   }
+  selected_term <- fscope$drop[[pick_row - 1L]]
   list(
     aod = aod,
     row = pick_row,
-    change = .step_p_selected_step_label(aod, pick_row)
+    change = .step_p_change_label(selected_term, action = "drop")
   )
 }
 
@@ -260,23 +271,20 @@
     cov_type = cov_type,
     pmethod = pmethod
   )
-  rn <- row.names(aod)
-  row.names(aod) <- c(rn[1L], paste("+", rn[-1L]))
   attr(aod, "heading") <- NULL
-
   pick_row <- .step_p_selected_row_forward(aod)
   if (.step_p_forward_should_stop(aod, pick_row, pvalue)) {
     return(NULL)
   }
+  selected_term <- fscope$add[[pick_row - 1L]]
   list(
     aod = aod,
     row = pick_row,
-    change = .step_p_selected_step_label(aod, pick_row)
+    change = .step_p_change_label(selected_term, action = "add")
   )
 }
 
 
-## backward elimination
 .step_p_run_backward <- function(object,
                                  scope,
                                  test,
@@ -314,7 +322,7 @@
     out <- .step_p_append_model(
       models = models,
       models_no = models_no,
-      step = candidate$change,
+      change = candidate$change,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
@@ -327,7 +335,6 @@
 }
 
 
-## forward selection
 .step_p_run_forward <- function(object,
                                 scope,
                                 test,
@@ -365,7 +372,7 @@
     out <- .step_p_append_model(
       models = models,
       models_no = models_no,
-      step = candidate$change,
+      change = candidate$change,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
@@ -378,7 +385,6 @@
 }
 
 
-## both
 .step_p_run_both <- function(object,
                              scope,
                              test,
@@ -388,7 +394,6 @@
                              p_remove,
                              steps) {
   model_terms <- stats::terms(object)
-
   scope_factors <- .step_p_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
   factors_add <- scope_factors$add
@@ -432,7 +437,7 @@
     out <- .step_p_append_model(
       models = models,
       models_no = models_no,
-      step = candidate$change,
+      change = candidate$change,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],

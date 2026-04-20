@@ -35,6 +35,9 @@ Main functions:
   \code{\link{glance.geer}} for model summaries.
   \item \code{\link{anova.geer}}, \code{\link{add1.geer}},
   \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
+  \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+  \code{\link{predict.geer}}, \code{\link{fitted.geer}}, and
+  \code{\link{residuals.geer}} for inference and model diagnostics.
 }
 }
 \author{

@@ -24,11 +24,13 @@ inline bool is_contiguous_1based(const arma::vec& r) {
     const double lower_bound = 10.0 * DBL_EPSILON - 1.0;
     for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
       if (alpha_vector[i] >= 1.0 || alpha_vector[i] <= -1.0) {
-        Rcpp::stop(
+        Rcpp::warning(
           "estimated correlation parameter is outside (-1, 1) "
-          "(alpha[%d] = %.6g); check model specification or data.",
+          "(alpha[%d] = %.6g); clamping to boundary and continuing.",
           static_cast<int>(i + 1), alpha_vector[i]
         );
+        alpha_vector[i] = (alpha_vector[i] >= 1.0) ? upper_bound : lower_bound;
+        continue;
       }
       if (alpha_vector[i] >= upper_bound) {
         alpha_vector[i] = upper_bound;
@@ -396,6 +398,9 @@ arma::mat correlation_mdependent(const arma::vec& alpha_vector,
 //============================ toeplitz ========================================
 arma::mat correlation_toeplitz(const arma::vec& alpha_vector,
                                const arma::uword dimension) {
+  if (!alpha_vector.is_empty() && alpha_vector.n_elem >= dimension) {
+    Rcpp::stop("correlation_toeplitz: alpha_vector is too long.");
+  }
   arma::vec toeplitz_vector(dimension, arma::fill::zeros);
   toeplitz_vector[0] = 1.0;
   if (!alpha_vector.is_empty()) {

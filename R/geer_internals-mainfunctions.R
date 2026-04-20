@@ -5,7 +5,7 @@ valid_methods <- c(
   "pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys"
 )
 valid_corstrs <- c(
-  "independence", "exchangeable", "ar1",
+  "independence", "exchangeable", "ar1", "toeplitz",
   "m-dependent", "unstructured", "fixed"
 )
 valid_orstrs <- c(
@@ -46,16 +46,22 @@ normalize_family <- function(family) {
   family
 }
 
+
 extract_geer_response_weights <- function(model_frame, family) {
-  is_binomial <- identical(family$family, "binomial")
+  is_binomial_like <-
+    identical(family$family, "binomial") ||
+    identical(family$family, "quasibinomial") ||
+    (identical(family$family, "quasi") &&
+       !is.null(family$varfun) &&
+       identical(family$varfun, "mu(1-mu)"))
   y <- model.response(model_frame, "any")
   if (is.null(y)) stop("response variable not found", call. = FALSE)
   y_raw <- y
-  if (is_binomial) {
+  if (is_binomial_like) {
     if (is.factor(y)) {
       if (nlevels(y) != 2L) {
         stop(
-          "for binomial models, a factor response must have exactly two levels",
+          "for binomial-type models, a factor response must have exactly two levels",
           call. = FALSE
         )
       }
@@ -64,21 +70,22 @@ extract_geer_response_weights <- function(model_frame, family) {
       yfac <- factor(y)
       if (nlevels(yfac) != 2L) {
         stop(
-          "for binomial models, a character response must have exactly two distinct values",
+          "for binomial-type models, a character response must have exactly two distinct values",
           call. = FALSE
         )
       }
       y <- as.numeric(yfac == levels(yfac)[2L])
     } else if (is.matrix(y) && ncol(y) != 2L) {
       stop(
-        "for binomial models, a matrix response must have exactly two columns",
+        "for binomial-type models, a matrix response must have exactly two columns",
         call. = FALSE
       )
     }
   }
+  n_obs <- if (is.matrix(y)) nrow(y) else length(y)
   weights <- as.vector(model.weights(model_frame))
   if (is.null(weights)) {
-    weights <- rep.int(1, length(y))
+    weights <- rep.int(1, n_obs)
   } else {
     if (!is.numeric(weights)) {
       stop("'weights' must be a numeric vector", call. = FALSE)
@@ -89,17 +96,28 @@ extract_geer_response_weights <- function(model_frame, family) {
     if (any(weights <= 0)) {
       stop("'weights' must be strictly positive", call. = FALSE)
     }
-    if (length(weights) != length(y)) {
+    if (length(weights) != n_obs) {
       stop("'weights' and the response must have the same length", call. = FALSE)
     }
   }
   weights <- as.numeric(weights)
-
-  if (is_binomial && is.matrix(y) && ncol(y) == 2L) {
-    trials <- rowSums(y)
-    if (any(!is.finite(trials)) || any(trials <= 0)) {
+  if (is_binomial_like && is.matrix(y) && ncol(y) == 2L) {
+    if (anyNA(y) || any(!is.finite(y))) {
       stop(
-        "for binomial matrix responses, row sums (trials) must be positive and finite",
+        "for binomial matrix responses, all entries must be finite",
+        call. = FALSE
+      )
+    }
+    if (any(y < 0)) {
+      stop(
+        "for binomial matrix responses, all counts must be nonnegative",
+        call. = FALSE
+      )
+    }
+    trials <- rowSums(y)
+    if (any(trials <= 0)) {
+      stop(
+        "for binomial matrix responses, row sums (trials) must be positive",
         call. = FALSE
       )
     }
@@ -110,10 +128,10 @@ extract_geer_response_weights <- function(model_frame, family) {
   if (any(!is.finite(y))) {
     stop("response variable contains non-finite values", call. = FALSE)
   }
-  if (is_binomial && !is.matrix(y_raw)) {
+  if (is_binomial_like) {
     if (any(y < 0 | y > 1)) {
       stop(
-        "for binomial models, the response must be coded as 0/1, proportions in [0, 1], or a two-column matrix",
+        "for binomial-type models, the response must be coded as 0/1, proportions in [0, 1], or a two-column matrix",
         call. = FALSE
       )
     }
@@ -147,7 +165,6 @@ extract_geer_id_repeated <- function(model_frame, y_length) {
 }
 
 
-
 normalize_phi <- function(phi_fixed, phi_value) {
   if (!is.logical(phi_fixed) || length(phi_fixed) != 1L || is.na(phi_fixed)) {
     stop("'phi_fixed' must be a single non-missing logical value", call. = FALSE)
@@ -163,9 +180,9 @@ normalize_phi <- function(phi_fixed, phi_value) {
   } else {
     phi_value <- 1
   }
-
   list(phi_fixed = phi_fixed, phi_value = phi_value)
 }
+
 
 normalize_use_p <- function(use_p) {
   if (!is.logical(use_p) || length(use_p) != 1L || is.na(use_p)) {

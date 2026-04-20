@@ -21,6 +21,8 @@ You can install the development version of `geer` from GitHub:
 devtools::install_github("AnestisTouloumis/geer")
 ```
 
+A CRAN submission is planned.
+
 ## Usage
 
 Load the package:
@@ -29,12 +31,49 @@ Load the package:
 library("geer")
 ```
 
+### Quick example
+
+Fit a bias-reducing GEE with an exchangeable working correlation to the
+epilepsy seizure count data:
+
+``` r
+data("epilepsy", package = "geer")
+
+fit <- geewa(
+  formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
+  data = epilepsy,
+  id = id,
+  corstr = "exchangeable",
+  method = "brgee-robust"
+)
+summary(fit, cov_type = "bias-corrected")
+```
+
+For binary responses, use `geewa_binary()` with an odds-ratio
+parameterization:
+
+``` r
+data("cerebrovascular", package = "geer")
+
+fit_bin <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  data = cerebrovascular,
+  id = id,
+  orstr = "exchangeable",
+  method = "brgee-robust"
+)
+summary(fit_bin, cov_type = "bias-corrected")
+```
+
 ### Fitting models
 
 There are two core fitting functions:
 
 - `geewa()` for continuous and count responses (Gaussian, Poisson,
-  binomial, Gamma, inverse Gaussian, and quasi families).
+  binomial, Gamma, inverse Gaussian, quasi, quasibinomial, and
+  quasipoisson families).
 - `geewa_binary()` for binary responses via a marginalized odds-ratio
   parameterization.
 
@@ -44,16 +83,16 @@ Both functions support the following estimation methods via the
 | Method | Description |
 |---|---|
 | `"gee"` | Traditional GEE |
-| `"brgee-naive"`, `"brgee-robust"`, `"brgee-empirical"` | Bias-reducing GEE |
-| `"bcgee-naive"`, `"bcgee-robust"`, `"bcgee-empirical"` | Bias-corrected GEE |
+| `"brgee-naive"`, `"brgee-robust"`, `"brgee-empirical"` | Bias-reducing GEE (differing in the bias adjustment used: model-based, sandwich-based, or empirical) |
+| `"bcgee-naive"`, `"bcgee-robust"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
 | `"pgee-jeffreys"` | Fully iterated Jeffreys-prior penalized GEE |
 | `"opgee-jeffreys"` | One-step penalized GEE |
 | `"hpgee-jeffreys"` | Hybrid one-step GEE |
 
-Working correlation structures for `geewa()` are controlled by
+The working correlation structure for `geewa()` is controlled by
 `corstr`: `"independence"`, `"exchangeable"`, `"ar1"`,
-`"m-dependent"`, `"unstructured"`, and `"fixed"`. Working odds-ratio
-structures for `geewa_binary()` are controlled by `orstr`:
+`"m-dependent"`, `"unstructured"`, `"toeplitz"`, and `"fixed"`. The working
+odds-ratio structure for `geewa_binary()` is controlled by `orstr`:
 `"independence"`, `"exchangeable"`, `"unstructured"`, and `"fixed"`.
 
 Convergence and fitting options are set via `geer_control()`.

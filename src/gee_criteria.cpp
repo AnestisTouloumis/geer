@@ -9,8 +9,7 @@
 
 //============================ naive matrix inverse - independence =============
 // [[Rcpp::export]]
-arma::mat get_naive_matrix_inverse_independence(const arma::vec& y_vector,
-                                                const arma::mat& model_matrix,
+arma::mat get_naive_matrix_inverse_independence(const arma::mat& model_matrix,
                                                 const arma::vec& id_vector,
                                                 const char* link,
                                                 const char* family,

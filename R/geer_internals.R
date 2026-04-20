@@ -93,3 +93,10 @@ format_test_label <- function(test) {
   }
   out
 }
+
+
+restore_original_data_call <- function(updated_model, source_model) {
+  updated_model$call$data <- source_model$call$data
+  updated_model$formula <- updated_model$call$formula
+  updated_model
+}

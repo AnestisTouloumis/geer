@@ -32,6 +32,9 @@
 #'   \code{\link{glance.geer}} for model summaries.
 #'   \item \code{\link{anova.geer}}, \code{\link{add1.geer}},
 #'   \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
+#'   \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+#'   \code{\link{predict.geer}}, \code{\link{fitted.geer}}, and
+#'   \code{\link{residuals.geer}} for inference and model diagnostics.
 #' }
 #'
 #' @name geer-package
@@ -40,7 +43,7 @@
 #' @import Rcpp
 #' @importFrom brglm2 brglmFit brglm_control
 #' @importFrom stats ave .getXlevels add.scope add1 as.formula binomial coef
-#' @importFrom stats coefficients dbinom delete.response dnorm dpois drop.scope
+#' @importFrom stats coefficients delete.response drop.scope
 #' @importFrom stats drop1 factor.scope family formula gaussian glm glm.fit
 #' @importFrom stats model.extract model.frame model.matrix model.offset
 #' @importFrom stats model.response model.weights pchisq pnorm printCoefmat

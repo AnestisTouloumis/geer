@@ -61,13 +61,12 @@ compute_geer_start_values <- function(model_matrix,
       silent = TRUE
     )
   }
-
   if (!inherits(glmfit, "try-error") && all(is.finite(glmfit$coefficients))) {
     return(glmfit$coefficients)
   }
-
   stop("cannot compute starting values; please supply 'beta_start'", call. = FALSE)
 }
+
 
 compute_geer_binary_start_values <- function(model_matrix,
                                              y,

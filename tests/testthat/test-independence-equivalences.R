@@ -29,6 +29,7 @@ fit_independence_pair <- function(method, link = "probit", control = NULL) {
   )
 }
 
+
 test_that("geewa_binary and geewa agree under independence for representative methods", {
   methods <- c(
     "gee",
@@ -40,10 +41,8 @@ test_that("geewa_binary and geewa agree under independence for representative me
     "bcgee-empirical",
     "pgee-jeffreys"
   )
-
   for (method in methods) {
     pair <- fit_independence_pair(method = method, link = "probit")
-
     expect_s3_class(pair$or, "geer")
     expect_s3_class(pair$cor, "geer")
     expect_equal(
@@ -55,9 +54,9 @@ test_that("geewa_binary and geewa agree under independence for representative me
   }
 })
 
+
 test_that("geewa_binary and geewa agree on naive covariance under independence for gee", {
   pair <- fit_independence_pair(method = "gee", link = "probit")
-
   expect_equal(
     vcov(pair$or, cov_type = "naive"),
     vcov(pair$cor, cov_type = "naive"),
@@ -65,12 +64,12 @@ test_that("geewa_binary and geewa agree on naive covariance under independence f
   )
 })
 
+
 test_that("geewa_binary and geewa pgee-jeffreys agree under independence for logit", {
   pair <- fit_independence_pair(
     method = "pgee-jeffreys",
     link = "logit",
     control = list(jeffreys_power = 0.5, tolerance = 1e-12)
   )
-
   expect_equal(coef(pair$or), coef(pair$cor), tolerance = 1e-5)
 })

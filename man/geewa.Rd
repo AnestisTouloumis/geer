@@ -51,11 +51,13 @@ Jeffreys-prior power. Defaults to \code{geer_control()}.}
 
 \item{corstr}{character specifying the working correlation structure. Options
 include \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
-\code{"m-dependent"}, \code{"unstructured"} and \code{"fixed"}.
-By default, \code{corstr = "independence"}.}
+\code{"m-dependent"}, \code{"unstructured"}, \code{"toeplitz"} and
+\code{"fixed"}. By default, \code{corstr = "independence"}.}
 
-\item{Mv}{positive integer which must be specified whenever
-\code{corstr = "m-dependent"}. By default, \code{Mv = 1}.}
+\item{Mv}{positive integer giving the number of lags for the m-dependent
+working correlation structure. Defaults to \code{1} (lag-1
+dependence). Must be set explicitly when lags other than 1 are
+intended. Ignored when \code{corstr != "m-dependent"}.}
 
 \item{method}{character specifying the estimation method. Options are:
 the traditional GEE (\code{"gee"}); bias-reducing methods
@@ -119,6 +121,8 @@ An object of class \code{"geer"}, a list with components:
 \item{df.residual}{the residual degrees of freedom.}
 \item{y}{the response vector.}
 \item{x}{the model matrix.}
+\item{qr}{the QR decomposition of the model matrix, used for estimability
+      checking.}
 \item{id}{the recoded cluster identifier vector.}
 \item{repeated}{the recoded within-cluster ordering vector.}
 \item{converged}{logical indicating whether the algorithm converged.}
@@ -172,10 +176,12 @@ The \code{data} must be in long format (one row per observation). See
 \code{\link{reshape}} for details on reshaping between long and wide formats.
 
 The \code{quasi}, \code{quasibinomial} and \code{quasipoisson} families are
-internally remapped to their canonical counterparts (\code{gaussian},
-\code{binomial} and \code{poisson}, respectively) before fitting. The scale
-parameter \code{phi} is then estimated freely from the data unless
-\code{phi_fixed = TRUE}.
+internally remapped to their standard parametric equivalents before fitting:
+\code{quasibinomial} to \code{binomial}, \code{quasipoisson} to
+\code{poisson}, and \code{quasi} to the family matching its variance
+function (\code{gaussian}, \code{binomial}, \code{poisson}, \code{Gamma},
+or \code{inverse.gaussian}). The scale parameter \code{phi} is then
+estimated freely from the data unless \code{phi_fixed = TRUE}.
 
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 \eqn{N} is the number of clusters. Otherwise, the function recodes the given

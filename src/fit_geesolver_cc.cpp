@@ -816,7 +816,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
   const LinkCode lc = parse_link(link);
   const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
-  use_params *= static_cast<int>(params_no);
+  use_params = (use_params != 0) ? static_cast<int>(params_no) : 0;
   arma::vec beta_vector_new = beta_vector;
   arma::mat beta_hat_matrix(params_no, static_cast<arma::uword>(maxiter) + 1,
                             arma::fill::zeros);

@@ -36,7 +36,7 @@
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     Std.Errors are taken from the robust covariance matrix. 
     
-    Dispersion Parameter: 102.5824 
+    Dispersion Parameter: 97.2764 
     
     Association Structure: independence 
     Association Parameter: 0 
@@ -67,9 +67,9 @@
     Model:
     seizures ~ treatment
                Df     CIC    Chi  Pr(>Chi)    
-    <none>         6.4700                     
-    lnbaseline  1 17.0765 11.515 0.0006902 ***
-    lnage       1  9.0164  0.245 0.6205917    
+    <none>         6.5258                     
+    lnbaseline  1 17.5279 11.515 0.0006902 ***
+    lnage       1  9.2547  0.245 0.6205917    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -80,10 +80,10 @@
     Model:
     seizures ~ treatment + lnbaseline + lnage
                Df     CIC     Chi  Pr(>Chi)    
-    <none>        17.9762                      
-    treatment   1 16.3055  0.4443 0.5050445    
-    lnbaseline  1  9.0164 12.5073 0.0004054 ***
-    lnage       1 17.0765  0.6994 0.4029695    
+    <none>        18.9567                      
+    treatment   1 16.7365  0.4443 0.5050445    
+    lnbaseline  1  9.2547 12.5073 0.0004054 ***
+    lnage       1 17.5279  0.6994 0.4029695    
     ---
     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 

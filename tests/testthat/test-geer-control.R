@@ -1,5 +1,31 @@
 testthat::local_edition(3)
 
+test_that("normalize_geer_control fills defaults for partial control lists", {
+  ctrl <- normalize_geer_control(list(maxiter = 25L, tolerance = 1e-5))
+  expect_type(ctrl, "list")
+  expect_named(
+    ctrl,
+    c(
+      "tolerance", "maxiter", "or_adding",
+      "step_maxiter", "step_multiplier", "jeffreys_power"
+    )
+  )
+  expect_equal(ctrl$tolerance, 1e-5)
+  expect_equal(ctrl$maxiter, 25L)
+  expect_equal(ctrl$or_adding, 0.5)
+  expect_equal(ctrl$step_maxiter, 10L)
+  expect_equal(ctrl$step_multiplier, 1L)
+  expect_equal(ctrl$jeffreys_power, 0.5)
+})
+
+
+test_that("normalize_geer_control validates malformed partial control lists", {
+  expect_error(
+    normalize_geer_control(list(maxiter = "bad", tolerance = -1)),
+    "positive"
+  )
+})
+
 
 test_that("geer_control returns the expected defaults", {
   ctrl <- geer_control()
@@ -58,6 +84,7 @@ test_that("geer_control validates positive numeric controls", {
     "'jeffreys_power' must be a positive number"
   )
 })
+
 
 test_that("geer_control validates positive integer controls", {
   expect_error(

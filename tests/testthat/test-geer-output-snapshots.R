@@ -24,6 +24,7 @@ test_that("core printed outputs remain stable", {
   )
 })
 
+
 test_that("stepwise printed outputs remain stable", {
   expect_snapshot_output(
     print(add1(
@@ -33,7 +34,6 @@ test_that("stepwise printed outputs remain stable", {
       cov_type = "robust"
     ))
   )
-
   expect_snapshot_output(
     print(drop1(fit_full, test = "wald", cov_type = "robust"))
   )

@@ -124,7 +124,6 @@ recover_data.geer <- function(object,
                               data = NULL,
                               ...) {
   object <- check_geer_object(object)
-
   recovered_data <- if (is.null(data) && is.data.frame(object$data)) {
     object$data
   } else {
@@ -153,7 +152,6 @@ emm_basis.geer <- function(object,
                            misc = NULL,
                            ...) {
   object <- check_geer_object(object)
-
   if (!is.null(cov_type)) {
     vcov.method <- cov_type
   }

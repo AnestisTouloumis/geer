@@ -124,17 +124,10 @@ check_working_lrt_allowed <- function(object,
 }
 
 
-check_test_cov_type_compatibility <- function(test, cov_type) {
-  test <- match_test_type(test)
-  cov_type <- match_cov_type(cov_type)
-  invisible(list(test = test, cov_type = cov_type))
-}
-
-
 normalize_geer_test_options <- function(test,
-                                   cov_type,
-                                   pmethod = NULL,
-                                   object = NULL) {
+                                        cov_type,
+                                        pmethod = NULL,
+                                        object = NULL) {
   test <- match_test_type(test)
   cov_type <- match_cov_type(cov_type)
   if (is_working_test(test)) {
@@ -142,7 +135,6 @@ normalize_geer_test_options <- function(test,
   } else {
     pmethod <- NULL
   }
-  check_test_cov_type_compatibility(test, cov_type)
   if (identical(test, "working-lrt") && !is.null(object)) {
     check_working_lrt_allowed(object, test = test)
   }

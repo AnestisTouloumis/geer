@@ -29,7 +29,8 @@ estimate working odds ratios in \code{\link{geewa_binary}}. Defaults to
 step-halving attempts allowed within an iteration. Defaults to \code{10}.}
 
 \item{step_multiplier}{positive integer used to scale the proposed step
-before step-halving. Defaults to \code{1}.}
+before step-halving begins. A value greater than \code{1} enlarges the
+initial step; the default of \code{1} leaves the scoring step unscaled.}
 
 \item{jeffreys_power}{strictly positive constant giving the power of the
 Jeffreys-prior penalty. Defaults to \code{0.5}, which corresponds to the

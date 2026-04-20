@@ -110,12 +110,11 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_naive_matrix_inverse_independence
-arma::mat get_naive_matrix_inverse_independence(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const char* link, const char* family, const arma::vec& mu_vector, const arma::vec& eta_vector, const double& phi, const arma::vec& weights_vector);
-RcppExport SEXP _geer_get_naive_matrix_inverse_independence(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
+arma::mat get_naive_matrix_inverse_independence(const arma::mat& model_matrix, const arma::vec& id_vector, const char* link, const char* family, const arma::vec& mu_vector, const arma::vec& eta_vector, const double& phi, const arma::vec& weights_vector);
+RcppExport SEXP _geer_get_naive_matrix_inverse_independence(SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP phiSEXP, SEXP weights_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y_vector(y_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type id_vector(id_vectorSEXP);
     Rcpp::traits::input_parameter< const char* >::type link(linkSEXP);
@@ -124,7 +123,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     Rcpp::traits::input_parameter< const double& >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_naive_matrix_inverse_independence(y_vector, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector));
+    rcpp_result_gen = Rcpp::wrap(get_naive_matrix_inverse_independence(model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -253,7 +252,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_covariance_matrices_or", (DL_FUNC) &_geer_get_covariance_matrices_or, 9},
     {"_geer_fit_geesolver_cc", (DL_FUNC) &_geer_fit_geesolver_cc, 22},
     {"_geer_fit_bingee_or", (DL_FUNC) &_geer_fit_bingee_or, 15},
-    {"_geer_get_naive_matrix_inverse_independence", (DL_FUNC) &_geer_get_naive_matrix_inverse_independence, 9},
+    {"_geer_get_naive_matrix_inverse_independence", (DL_FUNC) &_geer_get_naive_matrix_inverse_independence, 8},
     {"_geer_get_gee_criteria_sc_cw", (DL_FUNC) &_geer_get_gee_criteria_sc_cw, 9},
     {"_geer_get_gee_criteria_sc_cw_or", (DL_FUNC) &_geer_get_gee_criteria_sc_cw_or, 6},
     {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 4},

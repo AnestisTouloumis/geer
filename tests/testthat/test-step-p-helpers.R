@@ -77,7 +77,7 @@ test_that("step-path initialiser stores the initial model state", {
   expect_identical(out$steps, 3L)
   expect_length(out$models, 4L)
   expect_identical(out$models_no, 1L)
-  expect_identical(out$models[[1L]]$Step, "")
+  expect_identical(out$models[[1L]]$Step, as.integer(0))
   expect_true(is.na(out$models[[1L]]$Df))
   expect_true(is.finite(out$models[[1L]]$CIC))
 })
@@ -88,14 +88,14 @@ test_that("append-model helper increments the path correctly", {
   out <- .step_p_append_model(
     models = init$models,
     models_no = init$models_no,
-    step = "- gender",
+    change = "- gender",
     df = 1,
     chi = 3.5,
     pval = 0.06,
     cic = 12.3
   )
   expect_identical(out$models_no, 2L)
-  expect_identical(out$models[[2L]]$Step, "- gender")
+  expect_identical(out$models[[2L]]$Step, as.integer(1))
   expect_equal(out$models[[2L]]$Df, 1)
   expect_equal(out$models[[2L]]$Chi, 3.5)
   expect_equal(out$models[[2L]]$`Pr(>Chi)`, 0.06)
@@ -108,7 +108,7 @@ test_that("result helper stores an anova table on the fitted model", {
   out_models <- .step_p_append_model(
     models = init$models,
     models_no = init$models_no,
-    step = "- gender",
+    change = "- gender",
     df = 1,
     chi = 3.5,
     pval = 0.06,
@@ -131,7 +131,7 @@ test_that("result helper stores an anova table on the fitted model", {
 })
 
 
-test_that("update-fit helper applies the requested model change", {
+test_that("update-fit helper applies the requested model change for binary and count models", {
   fit_resp_full_indep <- geewa_binary(
     formula = status ~ baseline + treatment + gender + visit + age,
     id = id,
@@ -145,22 +145,17 @@ test_that("update-fit helper applies the requested model change", {
   expect_s3_class(out, "geer")
   expect_false("gender" %in% attr(stats::terms(out), "term.labels"))
   expect_identical(out$obs_no, fit_resp_full_indep$obs_no)
-})
-
-test_that("update-fit helper applies the requested model change", {
-  fitted_model <- fit_geewa_pois_exch
 
   updated <- .step_p_update_fit(
-    fitted_model = fitted_model,
+    fitted_model = fit_geewa_pois_exch,
     change = "- lnage",
-    obs_no = fitted_model$obs_no
+    obs_no = fit_geewa_pois_exch$obs_no
   )
-
   expect_s3_class(updated, "geer")
   expect_false("lnage" %in% attr(stats::terms(updated), "term.labels"))
   expect_true(all(c("treatment", "lnbaseline") %in%
                     attr(stats::terms(updated), "term.labels")))
-  expect_identical(updated$obs_no, fitted_model$obs_no)
+  expect_identical(updated$obs_no, fit_geewa_pois_exch$obs_no)
 })
 
 
@@ -252,10 +247,7 @@ test_that("forward stop helper stops only when the selected p-value is above thr
 })
 
 
-test_that("step label and term helpers return the expected values", {
-  aod <- data.frame(Df = 1, row.names = "+ x1")
-  expect_identical(.step_p_selected_step_label(aod, 1L), "+ x1")
-  expect_identical(.step_p_selected_step_label(aod, 2L), NA_character_)
+test_that("term helper returns the expected values", {
   expect_identical(.step_p_selected_term("+ x1"), "x1")
   expect_identical(.step_p_selected_term("- x2"), "x2")
   expect_identical(.step_p_selected_term(NA_character_), NA_character_)

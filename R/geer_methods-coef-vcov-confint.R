@@ -54,7 +54,7 @@
 #' @examples
 #' data("cerebrovascular", package = "geer")
 #' fit <- geewa_binary(
-#'   formula = ecg ~ period + treatment,
+#'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
