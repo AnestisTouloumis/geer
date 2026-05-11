@@ -1,11 +1,11 @@
 #' Generalized Estimating Equations in R
 #'
 #' @description
-#' Fits marginal models for independent, repeated, or clustered responses using
+#' Fits marginal models for repeated or clustered responses using
 #' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
-#' Jeffreys-prior penalized GEE. Continuous and count responses are handled by
-#' \code{\link{geewa}}, while binary responses are handled by
+#' the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
+#' Jeffreys-prior penalized GEE. Continuous, binary and count responses are handled by
+#' \code{\link{geewa}}, while binary responses can also be handled by
 #' \code{\link{geewa_binary}} through an odds-ratio parameterization.
 #'
 #' @author Anestis Touloumis \email{A.Touloumis@@brighton.ac.uk}
@@ -23,9 +23,9 @@
 #' @seealso
 #' Main functions:
 #' \itemize{
-#'   \item \code{\link{geewa}} for continuous and count responses.
+#'   \item \code{\link{geewa}} for continuous, binary and count responses.
 #'   \item \code{\link{geewa_binary}} for binary responses via an odds-ratio
-#'   parameterization.
+#'   parameterization (preferred).
 #'   \item \code{\link{geer_control}} for convergence and fitting options.
 #'   \item \code{\link{geecriteria}} for model selection criteria.
 #'   \item \code{\link{summary.geer}}, \code{\link{tidy.geer}}, and
@@ -33,8 +33,9 @@
 #'   \item \code{\link{anova.geer}}, \code{\link{add1.geer}},
 #'   \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
 #'   \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
-#'   \code{\link{predict.geer}}, \code{\link{fitted.geer}}, and
-#'   \code{\link{residuals.geer}} for inference and model diagnostics.
+#'   \code{\link{predict.geer}}, \code{\link{fitted.geer}},
+#'   \code{\link{residuals.geer}}, and \code{\link{frechet_bounds_cor}} for
+#'   inference and model diagnostics.
 #' }
 #'
 #' @name geer-package

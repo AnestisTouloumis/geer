@@ -50,9 +50,9 @@ print.geer <- function(x, ...) {
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance estimator used to
-#'   compute standard errors, z-statistics, and p-values. Options are
-#'   \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-#'   \code{"naive"}. Defaults to \code{"robust"}.
+#'   compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
+#'   \code{"robust"}, \code{"df-adjusted"}, and
+#'   \code{"naive"}. Defaults to \code{"bias-corrected"}.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
@@ -99,7 +99,7 @@ print.geer <- function(x, ...) {
 #'
 #' @export
 summary.geer <- function(object,
-                         cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                         cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                          ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
@@ -176,7 +176,7 @@ print.summary.geer <- function(x, ...) {
   cat("Link Function:", x$family$link, "\n")
   cat("\nCoefficients:\n")
   printCoefmat(x$coefficients)
-  cat("Std.Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
+  cat("Std. Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
   cat("\nDispersion Parameter:", round(x$phi, digits = 4), "\n")
   cat("\nAssociation Structure:", x$association_structure, "\n")
   if (length(x$alpha) == 1) {

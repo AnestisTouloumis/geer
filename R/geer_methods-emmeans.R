@@ -11,10 +11,9 @@
 #' applied to fitted \code{geer} objects.
 #'
 #' By default, \pkg{emmeans} calculations for \code{geer} objects use the
-#' robust covariance matrix. Alternative covariance estimators may be
+#' bias-corrected covariance matrix. Alternative covariance estimators may be
 #' requested via \code{vcov.method}, with supported character values
-#' \code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-#' \code{"naive"}. The alias \code{"model"} is also accepted for
+#' \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"}, and
 #' \code{"naive"}.
 #'
 #' In line with the large-sample inference used elsewhere in \pkg{geer},
@@ -29,11 +28,10 @@
 #' @param grid the reference grid supplied by \pkg{emmeans}.
 #' @param vcov.method covariance specification to use for \pkg{emmeans}
 #'        calculations. This may be a character string specifying one of the
-#'        supported covariance estimators (\code{"robust"},
-#'        \code{"bias-corrected"}, \code{"df-adjusted"}, \code{"naive"}, or
-#'        the alias \code{"model"} for \code{"naive"}), or a covariance matrix
+#'        supported covariance estimators (\code{"bias-corrected"}, \code{"robust"},
+#'        \code{"df-adjusted"}, \code{"naive"}, or a covariance matrix
 #'        or function accepted by \pkg{emmeans} through its \code{vcov.}
-#'        mechanism. Defaults to \code{"robust"}.
+#'        mechanism. Defaults to \code{"bias-corrected"}.
 #' @param cov_type optional alias for \code{vcov.method}.
 #' @param vcov. optional covariance matrix or function supplied through the
 #'        standard \pkg{emmeans} \code{vcov.} argument. When provided, it
@@ -71,7 +69,7 @@ NULL
 
 normalize_emmeans_vcov_method <- function(vcov.method) {
   if (is.null(vcov.method)) {
-    return("robust")
+    return("bias-corrected")
   }
   if (!is.character(vcov.method) || length(vcov.method) != 1L || is.na(vcov.method)) {
     stop(
@@ -81,24 +79,21 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
   }
   key <- tolower(vcov.method)
   key <- gsub("[._]", "-", key)
-  choices <- c("robust", "bias-corrected", "df-adjusted", "naive", "model")
+  choices <- c("bias-corrected", "robust", "df-adjusted", "naive")
   idx <- pmatch(key, choices)
   if (is.na(idx)) {
     stop(
-      "'vcov.method' must identify one of: robust, bias-corrected, df-adjusted, naive, model",
+      "'vcov.method' must identify one of: bias-corrected, robust, df-adjusted, naive",
       call. = FALSE
     )
   }
   choice <- choices[[idx]]
-  if (identical(choice, "model")) {
-    choice <- "naive"
-  }
   choice
 }
 
 
 resolve_emmeans_vcov <- function(object,
-                                 vcov.method = "robust",
+                                 vcov.method = "bias-corrected",
                                  vcov. = NULL,
                                  ...) {
   if (!is.null(vcov.)) {
@@ -146,7 +141,7 @@ emm_basis.geer <- function(object,
                            trms,
                            xlev,
                            grid,
-                           vcov.method = "robust",
+                           vcov.method = "bias-corrected",
                            cov_type = NULL,
                            vcov. = NULL,
                            misc = NULL,

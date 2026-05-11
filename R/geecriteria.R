@@ -10,9 +10,11 @@
 #' @param ... additional fitted model objects of class \code{"geer"} to be
 #'   included in the comparison.
 #' @param cov_type character string specifying the covariance estimator used in
-#'   the covariance-based criteria. Options are \code{"robust"},
-#'   \code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
-#'   Defaults to \code{"robust"}.
+#'   the covariance-based criteria. Options are the bias-corrected estimator
+#'   (\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}),
+#'   the degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+#'   model-based or naive estimator (\code{"naive"}). Defaults to
+#'   \code{"bias-corrected"}.
 #' @param digits non-negative integer giving the number of decimal places used
 #'   to round the reported criteria. Defaults to \code{2}.
 #'
@@ -93,7 +95,7 @@
 #' ## Compare estimation methods
 #' data("cerebrovascular", package = "geer")
 #' fitted_gee <- geewa_binary(
-#'   formula = ecg ~ period * treatment,
+#'   formula = ecg ~ factor(period) * treatment,
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
@@ -106,7 +108,7 @@
 #' @export
 geecriteria <- function(object,
                         ...,
-                        cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                        cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                         digits = 2) {
   cov_type <- match.arg(cov_type)
   digits <- check_nonnegative_integerish(digits, "digits")

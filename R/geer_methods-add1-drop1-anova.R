@@ -80,7 +80,7 @@ add1.geer <-
   function(object,
            scope,
            test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+           cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
            pmethod = c("rao-scott", "satterthwaite"),
            ...) {
     object <- check_geer_object(object)
@@ -163,7 +163,7 @@ add1.geer <-
 drop1.geer <- function(object,
                        scope,
                        test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                       cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                        pmethod = c("rao-scott", "satterthwaite"),
                        ...) {
   object <- check_geer_object(object)
@@ -235,7 +235,7 @@ drop1.geer <- function(object,
 #'
 #' @description
 #' Computes hypothesis test tables for one or more fitted \code{geer} objects,
-#' analogous to analysis-of-variance (ANOVA) tables for GEE models.
+#' analogous to analysis-of-variance (ANOVA) tables for GLM models.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param ... additional fitted model objects of class \code{"geer"}, used for
@@ -247,11 +247,11 @@ drop1.geer <- function(object,
 #'   working likelihood ratio test (\code{"working-lrt"}). Defaults to
 #'   \code{"wald"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for inference on the regression parameters. Options are the sandwich
-#'   or robust estimator (\code{"robust"}), the bias-corrected estimator
-#'   (\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+#'   used for inference on the regression parameters. Options are the bias-corrected
+#'   estimator (\code{"bias-corrected"}), the sandwich or robust estimator
+#'   (\code{"robust"}), the degrees-of-freedom adjusted estimator
 #'   (\code{"df-adjusted"}), and the model-based or naive estimator
-#'   (\code{"naive"}). Defaults to \code{"robust"}.
+#'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param pmethod character string specifying the approximation used to compute
 #'   the p-value for the modified working tests. Options are the Rao--Scott
 #'   approximation (\code{"rao-scott"}) and the Satterthwaite approximation
@@ -320,7 +320,7 @@ anova.geer <-
   function(object,
            ...,
            test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+           cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
            pmethod = c("rao-scott", "satterthwaite")) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(

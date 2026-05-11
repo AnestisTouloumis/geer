@@ -7,7 +7,7 @@
 geecriteria(
   object,
   ...,
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   digits = 2
 )
 }
@@ -18,9 +18,11 @@ geecriteria(
 included in the comparison.}
 
 \item{cov_type}{character string specifying the covariance estimator used in
-the covariance-based criteria. Options are \code{"robust"},
-\code{"bias-corrected"}, \code{"df-adjusted"}, and \code{"naive"}.
-Defaults to \code{"robust"}.}
+the covariance-based criteria. Options are the bias-corrected estimator
+(\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}),
+the degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+model-based or naive estimator (\code{"naive"}). Defaults to
+\code{"bias-corrected"}.}
 
 \item{digits}{non-negative integer giving the number of decimal places used
 to round the reported criteria. Defaults to \code{2}.}
@@ -84,7 +86,7 @@ geecriteria(fit_ind, fit, fit_ar1)
 ## Compare estimation methods
 data("cerebrovascular", package = "geer")
 fitted_gee <- geewa_binary(
-  formula = ecg ~ period * treatment,
+  formula = ecg ~ factor(period) * treatment,
   link = "logit",
   data = cerebrovascular,
   id = id,

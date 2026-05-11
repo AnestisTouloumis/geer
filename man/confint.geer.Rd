@@ -9,7 +9,7 @@
   object,
   parm,
   level = 0.95,
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   ...
 )
 }
@@ -23,11 +23,10 @@
 \item{level}{the confidence level required.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the sandwich
-or robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+used for inference on the regression parameters. Options are the bias-corrected estimator
+(\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"robust"}.}
+(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }

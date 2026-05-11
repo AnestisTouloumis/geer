@@ -1,6 +1,5 @@
 library("BCgee")
 library("gee")
-library("geepack")
 library("testthat")
 devtools::load_all()
 
@@ -17,7 +16,7 @@ check_bcgee_example <- function(label, ref_bc, est_bc) {
                    tolerance = tol)
     })
     it("robust vcov agrees", {
-      expect_equal(strip(ref_bc$robust.variance), strip(vcov(est_bc, type = "robust")),
+      expect_equal(strip(ref_bc$robust.variance), strip(vcov(est_bc, cov_type = "robust")),
                    tolerance = tol)
     })
     it("naive vcov agrees", {

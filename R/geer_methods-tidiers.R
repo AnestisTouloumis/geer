@@ -25,9 +25,8 @@ generics::glance
 #'   z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.
 #' @param cov_type character string specifying the covariance estimator used to
 #'   compute standard errors and Wald z-statistics. Options are
-#'   \code{"robust"} (sandwich, default), \code{"bias-corrected"},
-#'   \code{"df-adjusted"}, and \code{"naive"} (model-based). See
-#'   \code{\link{vcov.geer}} for details.
+#'   \code{"bias-corrected"} (default), \code{"robust"}, \code{"df-adjusted"},
+#'   and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
@@ -55,7 +54,7 @@ generics::glance
 #' @return
 #' A data frame with one row per regression coefficient and columns as
 #' described in the Details section. When \pkg{tibble} is available, the result
-#' has class \code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
+#' has class \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
 #' \code{data.frame} is returned.
 #'
 #' @references
@@ -81,7 +80,7 @@ generics::glance
 #' tidy(fitmodel)
 #' tidy(fitmodel, conf.int = TRUE)
 #' tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
-#' tidy(fitmodel, cov_type = "bias-corrected")
+#' tidy(fitmodel, cov_type = "robust")
 #'
 #' data("cerebrovascular", package = "geer")
 #' fitbin <- geewa_binary(
@@ -98,7 +97,7 @@ tidy.geer <- function(x,
                       conf.int = FALSE,
                       conf.level = 0.95,
                       exponentiate = FALSE,
-                      cov_type = c("robust", "bias-corrected",
+                      cov_type = c("bias-corrected", "robust",
                                    "df-adjusted", "naive"),
                       ...) {
   object <- check_geer_object(x)
@@ -209,7 +208,7 @@ tidy.geer <- function(x,
 #' @return
 #' A one-row data frame with columns as described in the Details section.
 #' When \pkg{tibble} is available, the result has class
-#' \code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
+#' \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
 #' \code{data.frame} is returned.
 #'
 #' @references
@@ -250,7 +249,7 @@ tidy.geer <- function(x,
 #' )
 #' glance(fitbin)
 #'
-#' \dontrun{
+#' \donttest{
 #' fitind  <- update(fitmodel, corstr = "independence")
 #' fitar1  <- update(fitmodel, corstr = "ar1")
 #' fitunst <- update(fitmodel, corstr = "unstructured")

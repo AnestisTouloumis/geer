@@ -2,7 +2,7 @@ Package: geer
 Type: Package
 Title: Generalized Estimating Equations in R
 Version: 0.0.0.9999
-Authors@R:
+Authors@R: 
     person(given = "Anestis",
            family = "Touloumis",
            role = c("aut", "cre"),
@@ -10,22 +10,19 @@ Authors@R:
            comment = c(ORCID = "0000-0002-5965-1639"))
 Description: Generalized Estimating Equations (GEE) solver for estimating the regression coefficients of a marginal model with repeated or clustered responses. Bias-reducing and penalized GEE approaches are also implemented.
 License: GPL-2 | GPL-3
-Imports:
-    brglm2,
-    generics,
-    Rcpp (>= 1.0.9)
+Imports: 
+   brglm2, 
+   generics, 
+   Rcpp (>= 1.0.9)
 LinkingTo: 
-    Rcpp,
-    RcppArmadillo
+   Rcpp, 
+   RcppArmadillo
 Encoding: UTF-8
-RoxygenNote: 7.3.3
-Depends: 
-    R (>= 3.5)
+Depends: R (>= 4.0)
 LazyData: true
-Suggests: 
-    covr,
-    emmeans (>= 2.0.0), 
-    estimability,
-    testthat (>= 3.0.0),
-    tibble
+Suggests: covr, emmeans (>= 2.0.0), estimability, testthat (>= 3.0.0),
+        tibble
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
+URL: https://github.com/AnestisTouloumis/geer
+BugReports: https://github.com/AnestisTouloumis/geer/issues

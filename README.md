@@ -1,4 +1,4 @@
-<!-- badges: start -->
+a<!-- badges: start -->
 [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
 <!-- badges: end -->
@@ -8,9 +8,10 @@
 `geer` fits marginal models for independent, repeated, or clustered
 responses using Generalized Estimating Equations (GEE). Supported
 estimation methods include the traditional GEE, bias-reducing GEE,
-bias-corrected GEE, and Jeffreys-prior penalized GEE. Continuous and
-count responses are handled by `geewa`, while binary responses are
-handled by `geewa_binary` through an odds-ratio parameterization.
+bias-corrected GEE, and Jeffreys-prior penalized GEE. Continuous,
+binary, and count responses are handled by `geewa`, while binary
+responses can also be handled by `geewa_binary` through an odds-ratio
+parameterization.
 
 ## Installation
 
@@ -71,7 +72,7 @@ summary(fit_bin, cov_type = "bias-corrected")
 
 There are two core fitting functions:
 
-- `geewa()` for continuous and count responses (Gaussian, Poisson,
+- `geewa()` for continuous, binary, and count responses (Gaussian, Poisson,
   binomial, Gamma, inverse Gaussian, quasi, quasibinomial, and
   quasipoisson families).
 - `geewa_binary()` for binary responses via a marginalized odds-ratio

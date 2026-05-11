@@ -63,8 +63,8 @@ geer_control(tolerance = 1e-8, maxiter = 200)
 ## Custom continuity correction for odds-ratio estimation
 geer_control(or_adding = 1)
 
-## Stronger Jeffreys-prior penalty for Jeffreys-type fits
-geer_control(jeffreys_power = 1)
+## Weaker Jeffreys-prior penalty for Jeffreys-type fits
+geer_control(jeffreys_power = 0.1)
 
 }
 \references{

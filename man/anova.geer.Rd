@@ -9,7 +9,7 @@
   object,
   ...,
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   pmethod = c("rao-scott", "satterthwaite")
 )
 }
@@ -27,11 +27,11 @@ working likelihood ratio test (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the sandwich
-or robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+used for inference on the regression parameters. Options are the bias-corrected
+estimator (\code{"bias-corrected"}), the sandwich or robust estimator
+(\code{"robust"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"robust"}.}
+(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation used to compute
 the p-value for the modified working tests. Options are the Rao--Scott
@@ -51,7 +51,7 @@ selection.
 }
 \description{
 Computes hypothesis test tables for one or more fitted \code{geer} objects,
-analogous to analysis-of-variance (ANOVA) tables for GEE models.
+analogous to analysis-of-variance (ANOVA) tables for GLM models.
 }
 \details{
 Details of the hypothesis tests controlled by \code{test} are given in

@@ -11,7 +11,7 @@ step_p(
   p_enter = 0.15,
   p_remove = 0.15,
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   pmethod = c("rao-scott", "satterthwaite"),
   steps = 1000
 )
@@ -28,13 +28,13 @@ step_p(
 
 \item{direction}{character string specifying the direction of the stepwise
 search: backward elimination (\code{"backward"}), forward selection
-(\code{"forward"}), or bidirectional (\code{"both"}). Defaults to
+(\code{"forward"}) or bidirectional (\code{"both"}). Defaults to
 \code{"backward"}.}
 
-\item{p_enter}{numeric value in \code{(0, 1)} giving the p-value threshold
+\item{p_enter}{numeric value specifying the p-value threshold
 for adding a term during forward steps. Defaults to \code{0.15}.}
 
-\item{p_remove}{numeric value in \code{(0, 1)} giving the p-value threshold
+\item{p_remove}{numeric value specifying the p-value threshold
 for removing a term during backward steps. Defaults to \code{0.15}.}
 
 \item{test}{character string specifying the hypothesis testing procedure.
@@ -45,11 +45,11 @@ working likelihood ratio test (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the sandwich
-or robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+used for inference on the regression parameters. Options are the bias-corrected
+estimator (\code{"bias-corrected"}), the sandwich or robust estimator
+(\code{"robust"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"robust"}.}
+(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation used to compute
 the p-value for the modified working tests. Options are the Rao--Scott
@@ -64,7 +64,7 @@ The algorithm stops earlier if no eligible move is found. Defaults to
 A fitted model object of class \code{"geer"} corresponding to the final
 selected model. The returned object also includes an \code{anova}
 component of class \code{c("anova", "data.frame")} summarizing the
-stepwise sequence, accessible as \code{result$anova}. This table has one
+stepwise sequence. This table has one
 row per step with columns \code{Step} (the term added or removed),
 \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
 \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
@@ -102,7 +102,7 @@ when an immediate add-remove cycle involving the same term would occur.
 Details of the hypothesis tests controlled by \code{test} are given in
 Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
 valid only when the model is fitted with an independence working association
-structure; otherwise an error is returned.
+structure. Otherwise, an error is returned.
 
 When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
 ignored and \code{cov_type} specifies the covariance estimator used to
@@ -112,6 +112,7 @@ independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to compute the p-value.
 }
 \examples{
+\donttest{
 data("respiratory", package = "geer")
 respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 
@@ -148,6 +149,7 @@ step_p(
   p_remove = 0.15,
   steps = 50
 )
+}
 
 }
 \references{

@@ -1,0 +1,38 @@
+bibentry(
+  bibtype  = "Manual",
+  title    = "{geer}: Generalized Estimating Equations in R",
+  author   = person(
+    given   = "Anestis",
+    family  = "Touloumis",
+    role    = c("aut", "cre"),
+    email   = "A.Touloumis@brighton.ac.uk",
+    comment = c(ORCID = "0000-0002-5965-1639")
+  ),
+  year     = "2026",
+  note     = paste0("R package version ",
+                    meta$Version,
+                    ". https://github.com/AnestisTouloumis/geer"),
+  url      = "https://github.com/AnestisTouloumis/geer"
+)
+
+bibentry(
+  bibtype  = "Unpublished",
+  title    = "Bias reduction in generalized estimating equations",
+  author   = person(
+    given  = "Anestis",
+    family = "Touloumis"
+  ),
+  year     = "2026",
+  note     = "Preprint"
+)
+
+bibentry(
+  bibtype  = "Unpublished",
+  title    = "Jeffreys-prior penalized {GEE} for correlated binary data with an odds-ratio parameterization",
+  author   = person(
+    given  = "Anestis",
+    family = "Touloumis"
+  ),
+  year     = "2026",
+  note     = "Preprint"
+)

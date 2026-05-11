@@ -6,7 +6,7 @@
 \usage{
 \method{summary}{geer}(
   object,
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   ...
 )
 }
@@ -14,9 +14,9 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance estimator used to
-compute standard errors, z-statistics, and p-values. Options are
-\code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-\code{"naive"}. Defaults to \code{"robust"}.}
+compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
+\code{"robust"}, \code{"df-adjusted"}, and
+\code{"naive"}. Defaults to \code{"bias-corrected"}.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
 unused.}

@@ -50,22 +50,21 @@ within-cluster association. Options are
 \code{"unstructured"} and \code{"fixed"}. Defaults to
 \code{"independence"}.}
 
-\item{method}{character specifying the estimation method. Options are:
-the traditional GEE (\code{"gee"}); bias-reducing methods
-(\code{"brgee-naive"}, \code{"brgee-robust"}, \code{"brgee-empirical"});
-bias-corrected methods (\code{"bcgee-naive"}, \code{"bcgee-robust"},
-\code{"bcgee-empirical"}); the fully iterated Jeffreys-prior penalized GEE
-(\code{"pgee-jeffreys"}); the one-step penalized GEE
-(\code{"opgee-jeffreys"}); and the hybrid one-step GEE
-(\code{"hpgee-jeffreys"}). By default, \code{method = "gee"}.}
+\item{method}{character string specifying the estimation method. Options are
+the traditional GEE (\code{"gee"}), bias-reducing methods
+(\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
+bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
+\code{"bcgee-naive"}), the fully iterated Jeffreys-prior penalized GEE
+(\code{"pgee-jeffreys"}), the one-step penalized GEE
+(\code{"opgee-jeffreys"}), and the hybrid one-step GEE
+(\code{"hpgee-jeffreys"}). Defaults to \code{"gee"}.}
 
 \item{weights}{optional numeric vector of observation weights. Must be finite
 and strictly positive. If not supplied, all weights are 1.}
 
 \item{beta_start}{optional numeric vector of starting values for the
-regression parameters. If \code{NULL} (the default), starting values
-are computed by fitting the corresponding GLM via
-\code{\link[stats]{glm}}.}
+regression parameters. If \code{NULL} (default), starting values
+are computed by fitting a \code{\link[stats]{glm}} model.}
 
 \item{offset}{this can be used to specify an a priori known component to be
 included in the linear predictor during fitting. This should be
@@ -115,6 +114,9 @@ An object of class \code{"geer"}, a list with components:
 \item{method}{character string identifying the estimation method used.}
 \item{contrasts}{the contrasts used.}
 \item{xlevels}{a record of the levels of the factors used in fitting.}
+\item{na.action}{information on how missing values were handled, as returned
+      by the \code{na.action} attribute of the model frame. \code{NULL} if
+      no observations were removed.}
 \item{naive_covariance}{the model-based (naive) covariance matrix.}
 \item{robust_covariance}{the sandwich (robust) covariance matrix.}
 \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
@@ -127,9 +129,9 @@ An object of class \code{"geer"}, a list with components:
 \item{max_cluster_size}{the maximum cluster size.}
 }
 \description{
-Fits a marginal model for independent, repeated, or clustered responses using
+Fits a marginal model for repeated or clustered binary responses using
 Generalized Estimating Equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
 Jeffreys-prior penalized GEE.
 }
 \details{
@@ -198,6 +200,7 @@ correction step applied to an already-converged fit.
 }
 
 \examples{
+\donttest{
 data("respiratory", package = "geer")
 respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 fitted_model <- geewa_binary(
@@ -210,6 +213,7 @@ fitted_model <- geewa_binary(
   method = "pgee-jeffreys"
 )
 summary(fitted_model, cov_type = "bias-corrected")
+}
 
 data("cholecystectomy", package = "geer")
 fitted_model_gee <- geewa_binary(
@@ -234,6 +238,7 @@ summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
 fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
 summary(fitted_model_bcgee_robust, cov_type = "robust")
 
+\donttest{
 ## Penalized GEE with exchangeable odds-ratio structure
 fitted_model_pgee <- geewa_binary(
   formula = pain ~ treatment + gender + age,
@@ -245,6 +250,7 @@ fitted_model_pgee <- geewa_binary(
   control = geer_control(jeffreys_power = 1)
 )
 summary(fitted_model_pgee, cov_type = "robust")
+}
 
 }
 \seealso{

@@ -19,26 +19,6 @@ inline bool is_contiguous_1based(const arma::vec& r) {
   }
   return true;
 }
-  inline void clamp_alpha_vector(arma::vec& alpha_vector) {
-    const double upper_bound = 1.0 - 10.0 * DBL_EPSILON;
-    const double lower_bound = 10.0 * DBL_EPSILON - 1.0;
-    for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
-      if (alpha_vector[i] >= 1.0 || alpha_vector[i] <= -1.0) {
-        Rcpp::warning(
-          "estimated correlation parameter is outside (-1, 1) "
-          "(alpha[%d] = %.6g); clamping to boundary and continuing.",
-          static_cast<int>(i + 1), alpha_vector[i]
-        );
-        alpha_vector[i] = (alpha_vector[i] >= 1.0) ? upper_bound : lower_bound;
-        continue;
-      }
-      if (alpha_vector[i] >= upper_bound) {
-        alpha_vector[i] = upper_bound;
-      } else if (alpha_vector[i] <= lower_bound) {
-        alpha_vector[i] = lower_bound;
-      }
-    }
-  }
 }
 
 
@@ -338,7 +318,6 @@ arma::vec get_alpha_hat(const char* correlation_structure,
     Rcpp::stop("get_alpha_hat: unsupported correlation structure \"%s\".",
                correlation_structure);
   }
-  clamp_alpha_vector(ans);
   return ans;
 }
 //==============================================================================
@@ -431,26 +410,63 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
   if (std::strcmp(correlation_structure, "independence") == 0) {
     return correlation_independence(dimension);
   }
-  if (std::strcmp(correlation_structure, "exchangeable") == 0) {
-    return correlation_exchangeable(alpha_vector, dimension);
-  }
   if (std::strcmp(correlation_structure, "ar1") == 0) {
+    if (alpha_vector[0] <= -1.0 || alpha_vector[0] >= 1.0) {
+      Rcpp::stop(
+        "ar1 correlation parameter must be in (-1, 1): "
+        "alpha = %.6g is outside the admissible range.",
+        alpha_vector[0]
+      );
+    }
     return correlation_ar1(alpha_vector, dimension);
   }
+  if (std::strcmp(correlation_structure, "exchangeable") == 0) {
+    const double lower = -1.0 / static_cast<double>(dimension - 1);
+    if (alpha_vector[0] <= lower || alpha_vector[0] >= 1.0) {
+      Rcpp::stop(
+        "exchangeable correlation parameter must be in (-1/(n-1), 1) = "
+        "(%.6g, 1) for the largest cluster size of %d: "
+        "alpha = %.6g is outside the admissible range.",
+        lower,
+        static_cast<int>(dimension),
+        alpha_vector[0]
+      );
+    }
+    return correlation_exchangeable(alpha_vector, dimension);
+  }
+  for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
+    if (alpha_vector[i] <= -1.0 || alpha_vector[i] >= 1.0) {
+      Rcpp::stop(
+        "%s correlation parameter must be in (-1, 1): "
+        "alpha[%d] = %.6g is outside the admissible range.",
+        correlation_structure,
+        static_cast<int>(i + 1),
+        alpha_vector[i]
+      );
+    }
+  }
+  arma::mat cor_mat;
   if (std::strcmp(correlation_structure, "m-dependent") == 0) {
-    return correlation_mdependent(alpha_vector, dimension);
+    cor_mat = correlation_mdependent(alpha_vector, dimension);
+  } else if (std::strcmp(correlation_structure, "toeplitz") == 0) {
+    cor_mat = correlation_toeplitz(alpha_vector, dimension);
+  } else if (std::strcmp(correlation_structure, "unstructured") == 0) {
+    cor_mat = correlation_unstructured(alpha_vector, dimension);
+  } else if (std::strcmp(correlation_structure, "fixed") == 0) {
+    cor_mat = correlation_unstructured(alpha_vector, dimension);
+  } else {
+    Rcpp::stop("get_correlation_matrix: unsupported correlation structure \"%s\".",
+               correlation_structure);
   }
-  if (std::strcmp(correlation_structure, "unstructured") == 0) {
-    return correlation_unstructured(alpha_vector, dimension);
+  arma::mat chol_result;
+  if (!arma::chol(chol_result, cor_mat)) {
+    Rcpp::stop(
+      "%s working correlation matrix is not positive definite; "
+      "consider a simpler correlation structure or fixing alpha.",
+      correlation_structure
+    );
   }
-  if (std::strcmp(correlation_structure, "toeplitz") == 0) {
-    return correlation_toeplitz(alpha_vector, dimension);
-  }
-  if (std::strcmp(correlation_structure, "fixed") == 0) {
-    return correlation_unstructured(alpha_vector, dimension);
-  }
-
-  Rcpp::stop("Unsupported correlation structure.");
+  return cor_mat;
 }
 //==============================================================================
 

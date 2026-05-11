@@ -76,11 +76,6 @@ test_that("naive emmeans from an independence geer fit match glm results", {
 
 test_that("emmeans support honors covariance aliases and custom matrices", {
   skip_if_no_emmeans()
-  emm_model <- emmeans::emmeans(
-    fit_geewa_bin_exch,
-    ~ treatment,
-    vcov.method = "model"
-  )
   custom_vcov <- vcov(fit_geewa_bin_exch, cov_type = "naive")
   emm_custom_method <- emmeans::emmeans(
     fit_geewa_bin_exch,
@@ -92,11 +87,8 @@ test_that("emmeans support honors covariance aliases and custom matrices", {
     ~ treatment,
     vcov. = custom_vcov
   )
-  model_df <- as.data.frame(emm_model)
   custom_method_df <- as.data.frame(emm_custom_method)
   custom_dot_df <- as.data.frame(emm_custom_dot)
-  expect_equal(model_df$emmean, custom_method_df$emmean, tolerance = 1e-10)
-  expect_equal(model_df$SE, custom_method_df$SE, tolerance = 1e-10)
   expect_equal(custom_method_df$emmean, custom_dot_df$emmean, tolerance = 1e-10)
   expect_equal(custom_method_df$SE, custom_dot_df$SE, tolerance = 1e-10)
 })

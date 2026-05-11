@@ -7,7 +7,7 @@
 \usage{
 \method{vcov}{geer}(
   object,
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   ...
 )
 }
@@ -15,11 +15,10 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the sandwich
-or robust estimator (\code{"robust"}), the bias-corrected estimator
-(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+used for inference on the regression parameters. Options are the bias-corrected estimator
+(\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
 (\code{"df-adjusted"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"robust"}.}
+(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
@@ -30,20 +29,19 @@ returned by \code{\link{coef.geer}}.
 }
 \description{
 Extracts the variance-covariance matrix of the estimated regression
-parameters from a fitted \code{geer} object. The parameters correspond to
-those returned by \code{\link{coef.geer}}.
+parameters from a fitted \code{geer} object.
 }
 \details{
 The form of the covariance estimator is controlled by \code{cov_type}:
 \describe{
+  \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
+  (Morel et al., 2003).}
   \item{\code{"robust"}}{the sandwich (robust) covariance estimator
-  (Liang and Zeger, 1986).}
-  \item{\code{"naive"}}{the model-based covariance estimator
   (Liang and Zeger, 1986).}
   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
   estimator (MacKinnon, 1985).}
-  \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
-  (Morel et al., 2003).}
+  \item{\code{"naive"}}{the model-based covariance estimator
+  (Liang and Zeger, 1986).}
 }
 }
 \examples{
@@ -56,7 +54,7 @@ fit <- geewa_binary(
   orstr = "exchangeable"
 )
 vcov(fit)
-vcov(fit, cov_type = "bias-corrected")
+vcov(fit, cov_type = "robust")
 
 }
 \references{

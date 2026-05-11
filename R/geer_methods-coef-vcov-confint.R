@@ -6,29 +6,27 @@
 #'
 #' @description
 #' Extracts the variance-covariance matrix of the estimated regression
-#' parameters from a fitted \code{geer} object. The parameters correspond to
-#' those returned by \code{\link{coef.geer}}.
+#' parameters from a fitted \code{geer} object.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for inference on the regression parameters. Options are the sandwich
-#'   or robust estimator (\code{"robust"}), the bias-corrected estimator
-#'   (\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+#'   used for inference on the regression parameters. Options are the bias-corrected estimator
+#'   (\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
 #'   (\code{"df-adjusted"}), and the model-based or naive estimator
-#'   (\code{"naive"}). Defaults to \code{"robust"}.
+#'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param ... additional arguments passed to or from other methods.
 #'
 #' @details
 #' The form of the covariance estimator is controlled by \code{cov_type}:
 #' \describe{
+#'   \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
+#'   (Morel et al., 2003).}
 #'   \item{\code{"robust"}}{the sandwich (robust) covariance estimator
-#'   (Liang and Zeger, 1986).}
-#'   \item{\code{"naive"}}{the model-based covariance estimator
 #'   (Liang and Zeger, 1986).}
 #'   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
 #'   estimator (MacKinnon, 1985).}
-#'   \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
-#'   (Morel et al., 2003).}
+#'   \item{\code{"naive"}}{the model-based covariance estimator
+#'   (Liang and Zeger, 1986).}
 #' }
 #'
 #' @return
@@ -61,11 +59,11 @@
 #'   orstr = "exchangeable"
 #' )
 #' vcov(fit)
-#' vcov(fit, cov_type = "bias-corrected")
+#' vcov(fit, cov_type = "robust")
 #'
 #' @export
 vcov.geer <- function(object,
-                      cov_type = c("robust", "bias-corrected",
+                      cov_type = c("bias-corrected", "robust",
                                    "df-adjusted", "naive"),
                       ...) {
   object <- check_geer_object(object)
@@ -114,7 +112,6 @@ vcov.geer <- function(object,
 #'   id = id
 #' )
 #' coef(fit)
-#' names(coef(fit))
 #'
 #' data("cerebrovascular", package = "geer")
 #' fit_bin <- geewa_binary(
@@ -179,7 +176,7 @@ coef.geer <- function(object, ...) {
 confint.geer <- function(object,
                          parm,
                          level = 0.95,
-                         cov_type = c("robust", "bias-corrected",
+                         cov_type = c("bias-corrected", "robust",
                                       "df-adjusted", "naive"),
                          ...) {
   if (!is.numeric(level) || length(level) != 1L ||

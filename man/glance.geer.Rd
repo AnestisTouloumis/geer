@@ -15,7 +15,7 @@ unused.}
 \value{
 A one-row data frame with columns as described in the Details section.
 When \pkg{tibble} is available, the result has class
-\code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
+\code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
 \code{data.frame} is returned.
 }
 \description{
@@ -83,7 +83,7 @@ fitbin <- geewa_binary(
 )
 glance(fitbin)
 
-\dontrun{
+\donttest{
 fitind  <- update(fitmodel, corstr = "independence")
 fitar1  <- update(fitmodel, corstr = "ar1")
 fitunst <- update(fitmodel, corstr = "unstructured")

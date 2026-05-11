@@ -8,7 +8,7 @@
 #' \describe{
 #'   \item{id}{integer subject identifier.}
 #'   \item{period}{integer period identifier.}
-#'   \item{ecg}{integer indicator of ECG status, 0 = abnormal and 1 = normal.}
+#'   \item{ecg}{binary indicator of ECG status, 0 = abnormal and 1 = normal.}
 #'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
 #' }
 #'
@@ -39,7 +39,7 @@
 #' \describe{
 #'   \item{id}{integer subject identifier.}
 #'   \item{time}{integer time identifier.}
-#'   \item{pain}{integer indicator of shoulder pain status, 0 = high pain and
+#'   \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
 #'     1 = low pain.}
 #'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
 #'   \item{gender}{factor with levels \code{female} and \code{male}.}
@@ -189,10 +189,10 @@
 #' \describe{
 #'   \item{id}{integer subject identifier.}
 #'   \item{visit}{integer follow-up visit identifier.}
-#'   \item{status}{integer indicator of respiratory status, 0 = poor and
+#'   \item{status}{binary indicator of respiratory status, 0 = poor and
 #'     1 = good.}
 #'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
-#'   \item{baseline}{integer indicator of baseline respiratory status,
+#'   \item{baseline}{binary indicator of baseline respiratory status,
 #'     0 = poor and 1 = good.}
 #'   \item{age}{numeric age in years recorded at baseline.}
 #'   \item{gender}{factor with levels \code{female} and \code{male}.}

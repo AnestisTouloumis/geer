@@ -2,9 +2,9 @@
 #' Fitting (Adjusted) Generalized Estimating Equations
 #'
 #' @description
-#' Fits a marginal model for independent, repeated, or clustered responses using
+#' Fits a marginal model for repeated or clustered responses using
 #' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
 #' Jeffreys-prior penalized GEE.
 #'
 #' @param formula \code{formula} expression of the form
@@ -24,28 +24,27 @@
 #' @param control a \code{\link{geer_control}} list specifying convergence
 #'        tolerance, maximum iterations, step-halving parameters, and the
 #'        Jeffreys-prior power. Defaults to \code{geer_control()}.
-#' @param corstr character specifying the working correlation structure. Options
-#'        include \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
+#' @param corstr character string specifying the working correlation structure. Options
+#'        are \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
 #'        \code{"m-dependent"}, \code{"unstructured"}, \code{"toeplitz"} and
-#'        \code{"fixed"}. By default, \code{corstr = "independence"}.
+#'        \code{"fixed"}. Defaults to \code{"independence"}.
 #' @param Mv positive integer giving the number of lags for the m-dependent
 #'        working correlation structure. Defaults to \code{1} (lag-1
 #'        dependence). Must be set explicitly when lags other than 1 are
 #'        intended. Ignored when \code{corstr != "m-dependent"}.
-#' @param method character specifying the estimation method. Options are:
-#'        the traditional GEE (\code{"gee"}); bias-reducing methods
-#'        (\code{"brgee-naive"}, \code{"brgee-robust"}, \code{"brgee-empirical"});
-#'        bias-corrected methods (\code{"bcgee-naive"}, \code{"bcgee-robust"},
-#'        \code{"bcgee-empirical"}); the fully iterated Jeffreys-prior penalized GEE
-#'        (\code{"pgee-jeffreys"}); the one-step penalized GEE
-#'        (\code{"opgee-jeffreys"}); and the hybrid one-step GEE
-#'        (\code{"hpgee-jeffreys"}). By default, \code{method = "gee"}.
+#' @param method character string specifying the estimation method. Options are
+#'        the traditional GEE (\code{"gee"}), bias-reducing methods
+#'        (\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
+#'        bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
+#'        \code{"bcgee-naive"}), the fully iterated Jeffreys-prior penalized GEE
+#'        (\code{"pgee-jeffreys"}), the one-step penalized GEE
+#'        (\code{"opgee-jeffreys"}), and the hybrid one-step GEE
+#'        (\code{"hpgee-jeffreys"}). Defaults to \code{"gee"}.
 #' @param weights optional numeric vector of observation weights. Must be finite
 #'        and strictly positive. If not supplied, all weights are 1.
 #' @param beta_start optional numeric vector of starting values for the
-#'        regression parameters. If \code{NULL} (the default), starting values
-#'        are computed by fitting the corresponding GLM via
-#'        \code{\link[stats]{glm}}.
+#'        regression parameters. If \code{NULL} (default), starting values
+#'        are computed by fitting a \code{\link[stats]{glm}} model.
 #' @param offset this can be used to specify an a priori known component to be
 #'        included in the linear predictor during fitting. This should be
 #'        \code{NULL} or a numeric vector of length equal to the number of
@@ -57,14 +56,13 @@
 #'        values. Ignored when \code{beta_start} is supplied.
 #' @param use_p logical indicating whether to apply the \code{N - p}
 #'        degrees-of-freedom correction when estimating the scale and working
-#'        correlation parameters, where \code{N} is the number of clusters and
-#'        \code{p} is the number of regression parameters. By default,
-#'        \code{use_p = TRUE}.
+#'        correlation parameters, \code{p} is the number of regression parameters.
+#'        Defaults to \code{TRUE}.
 #' @param alpha_vector numeric vector of fixed association parameters used only
 #'        when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)}
 #'        where \code{T = max(repeated)} after recoding. Ignored otherwise.
 #' @param phi_fixed logical indicating whether the scale parameter is fixed at
-#'        the value of \code{phi_value}. By default, \code{phi_fixed = FALSE}.
+#'        the value of \code{phi_value}. Defaults to \code{phi_fixed = FALSE}.
 #' @param phi_value positive number giving the fixed value of the scale
 #'        parameter. Used only when \code{phi_fixed = TRUE}. Defaults to
 #'        \code{1}.
@@ -75,7 +73,7 @@
 #' the standard GEE are solved with no adjustment. If \code{method} is one of
 #' \code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
 #' an adjustment vector is added to produce naive, robust or empirical
-#' bias-reducing estimators, respectively. If \code{method} is one of
+#' bias-reduced estimators, respectively. If \code{method} is one of
 #' \code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
 #' the corresponding bias-corrected estimators are produced via a one-step
 #' correction applied to the converged GEE solution. If
@@ -151,6 +149,9 @@
 #' \item{method}{character string identifying the estimation method used.}
 #' \item{contrasts}{the contrasts used.}
 #' \item{xlevels}{a record of the levels of the factors used in fitting.}
+#' \item{na.action}{information on how missing values were handled, as returned
+#'       by the \code{na.action} attribute of the model frame. \code{NULL} if
+#'       no observations were removed.}
 #' \item{naive_covariance}{the model-based (naive) covariance matrix.}
 #' \item{robust_covariance}{the sandwich (robust) covariance matrix.}
 #' \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
@@ -202,6 +203,7 @@
 #' fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
 #' summary(fitted_model_bcgee_robust, cov_type = "robust")
 #'
+#' \donttest{
 #' ## Penalized GEE with custom control
 #' fitted_model_pgee <- geewa(
 #'   formula = seizures ~ treatment + lnbaseline + lnage,
@@ -210,9 +212,10 @@
 #'   id = id,
 #'   corstr = "exchangeable",
 #'   method = "pgee-jeffreys",
-#'   control = geer_control(jeffreys_power = 1)
+#'   control = geer_control(jeffreys_power = 0.1)
 #' )
 #' summary(fitted_model_pgee, cov_type = "robust")
+#' }
 #'
 #' @export
 geewa <- function(formula,

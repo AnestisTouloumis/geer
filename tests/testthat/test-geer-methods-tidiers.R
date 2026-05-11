@@ -39,7 +39,7 @@ test_that("tidy.geer standard errors use the requested covariance type", {
 
 
 test_that("tidy.geer adds confidence intervals when requested", {
-  out <- tidy(count_fit, conf.int = TRUE, conf.level = 0.95)
+  out <- tidy(count_fit, conf.int = TRUE, conf.level = 0.95, cov_type = "robust")
   ci <- confint(count_fit, level = 0.95, cov_type = "robust")
   expect_true(all(c("conf.low", "conf.high") %in% names(out)))
   expect_equal(out$conf.low, unname(ci[, 1L]), tolerance = 1e-6)

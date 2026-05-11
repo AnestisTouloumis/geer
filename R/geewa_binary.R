@@ -1,7 +1,11 @@
 #' @title
 #' Fitting (Adjusted) Generalized Estimating Equations for Binary Responses
 #'
-#' @inherit geewa description
+#' @description
+#' Fits a marginal model for repeated or clustered binary responses using
+#' Generalized Estimating Equations (GEE). Supported estimation methods include
+#' the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
+#' Jeffreys-prior penalized GEE.
 #'
 #' @inheritParams geewa
 #' @param link character string specifying the link function for the marginal mean
@@ -91,6 +95,7 @@
 #'   \code{\link{summary.geer}}, \code{\link{geecriteria}}.
 #'
 #' @examples
+#' \donttest{
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #' fitted_model <- geewa_binary(
@@ -103,6 +108,7 @@
 #'   method = "pgee-jeffreys"
 #' )
 #' summary(fitted_model, cov_type = "bias-corrected")
+#' }
 #'
 #' data("cholecystectomy", package = "geer")
 #' fitted_model_gee <- geewa_binary(
@@ -127,6 +133,7 @@
 #' fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
 #' summary(fitted_model_bcgee_robust, cov_type = "robust")
 #'
+#' \donttest{
 #' ## Penalized GEE with exchangeable odds-ratio structure
 #' fitted_model_pgee <- geewa_binary(
 #'   formula = pain ~ treatment + gender + age,
@@ -138,6 +145,7 @@
 #'   control = geer_control(jeffreys_power = 1)
 #' )
 #' summary(fitted_model_pgee, cov_type = "robust")
+#' }
 #'
 #' @export
 geewa_binary <- function(formula,

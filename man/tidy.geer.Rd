@@ -9,7 +9,7 @@
   conf.int = FALSE,
   conf.level = 0.95,
   exponentiate = FALSE,
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   ...
 )
 }
@@ -30,9 +30,8 @@ z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.}
 
 \item{cov_type}{character string specifying the covariance estimator used to
 compute standard errors and Wald z-statistics. Options are
-\code{"robust"} (sandwich, default), \code{"bias-corrected"},
-\code{"df-adjusted"}, and \code{"naive"} (model-based). See
-\code{\link{vcov.geer}} for details.}
+\code{"bias-corrected"} (default), \code{"robust"}, \code{"df-adjusted"},
+and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
 unused.}
@@ -40,7 +39,7 @@ unused.}
 \value{
 A data frame with one row per regression coefficient and columns as
 described in the Details section. When \pkg{tibble} is available, the result
-has class \code{c("tbl_df", "tbl", "data.frame")}; otherwise a plain
+has class \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
 \code{data.frame} is returned.
 }
 \description{
@@ -81,7 +80,7 @@ fitmodel <- geewa(
 tidy(fitmodel)
 tidy(fitmodel, conf.int = TRUE)
 tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
-tidy(fitmodel, cov_type = "bias-corrected")
+tidy(fitmodel, cov_type = "robust")
 
 data("cerebrovascular", package = "geer")
 fitbin <- geewa_binary(

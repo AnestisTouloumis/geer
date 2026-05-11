@@ -9,7 +9,7 @@
   object,
   newdata = NULL,
   type = c("link", "response"),
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
   se.fit = FALSE,
   ...
 )
@@ -26,11 +26,11 @@ Options are \code{"link"} for the linear predictor scale and
 
 \item{cov_type}{character string specifying the covariance matrix estimator
 used to compute approximate standard errors when \code{se.fit = TRUE}.
-Options are the sandwich or robust estimator (\code{"robust"}), the
-bias-corrected estimator (\code{"bias-corrected"}), the
+Options are the bias-corrected estimator (\code{"bias-corrected"}),
+the sandwich or robust estimator (\code{"robust"}), the
 degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
 model-based or naive estimator (\code{"naive"}). Defaults to
-\code{"robust"}.}
+\code{"bias-corrected"}.}
 
 \item{se.fit}{logical indicating whether approximate standard errors are to
 be returned. Defaults to \code{FALSE}.}

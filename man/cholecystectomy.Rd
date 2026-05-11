@@ -9,7 +9,7 @@ A data frame with 246 rows and 6 columns:
 \describe{
   \item{id}{integer subject identifier.}
   \item{time}{integer time identifier.}
-  \item{pain}{integer indicator of shoulder pain status, 0 = high pain and
+  \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
     1 = low pain.}
   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
   \item{gender}{factor with levels \code{female} and \code{male}.}

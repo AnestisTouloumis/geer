@@ -13,7 +13,7 @@ emm_basis.geer(
   trms,
   xlev,
   grid,
-  vcov.method = "robust",
+  vcov.method = "bias-corrected",
   cov_type = NULL,
   vcov. = NULL,
   misc = NULL,
@@ -36,11 +36,10 @@ model predictors.}
 
 \item{vcov.method}{covariance specification to use for \pkg{emmeans}
 calculations. This may be a character string specifying one of the
-supported covariance estimators (\code{"robust"},
-\code{"bias-corrected"}, \code{"df-adjusted"}, \code{"naive"}, or
-the alias \code{"model"} for \code{"naive"}), or a covariance matrix
+supported covariance estimators (\code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"naive"}, or a covariance matrix
 or function accepted by \pkg{emmeans} through its \code{vcov.}
-mechanism. Defaults to \code{"robust"}.}
+mechanism. Defaults to \code{"bias-corrected"}.}
 
 \item{cov_type}{optional alias for \code{vcov.method}.}
 
@@ -65,10 +64,9 @@ such as \code{emmeans::emmeans()} and \code{emmeans::ref_grid()} can be
 applied to fitted \code{geer} objects.
 
 By default, \pkg{emmeans} calculations for \code{geer} objects use the
-robust covariance matrix. Alternative covariance estimators may be
+bias-corrected covariance matrix. Alternative covariance estimators may be
 requested via \code{vcov.method}, with supported character values
-\code{"robust"}, \code{"bias-corrected"}, \code{"df-adjusted"}, and
-\code{"naive"}. The alias \code{"model"} is also accepted for
+\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"}, and
 \code{"naive"}.
 
 In line with the large-sample inference used elsewhere in \pkg{geer},

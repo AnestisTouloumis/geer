@@ -205,7 +205,7 @@ compute_score_components <- function(object0, object1, test_coefficients) {
 
 
 wald_test <- function(object0, object1,
-                      cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
+                      cov_type = c("bias-corrected", "robust", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$object1
@@ -227,7 +227,7 @@ wald_test <- function(object0, object1,
 
 
 working_wald_test <- function(object0, object1,
-                              cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                              cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                               pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
@@ -260,7 +260,7 @@ working_wald_test <- function(object0, object1,
 
 
 working_lrt_test <- function(object0, object1,
-                             cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                             cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                              pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
@@ -296,7 +296,7 @@ working_lrt_test <- function(object0, object1,
 
 
 score_test <- function(object0, object1,
-                       cov_type = c("robust", "bias-corrected", "df-adjusted", "naive")) {
+                       cov_type = c("bias-corrected", "robust", "df-adjusted", "naive")) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$object0
@@ -337,7 +337,7 @@ score_test <- function(object0, object1,
 
 
 working_score_test <- function(object0, object1,
-                               cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                               cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
                                pmethod = c("rao-scott", "satterthwaite")) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)

@@ -30,7 +30,6 @@ fit <- geewa(
   id = id
 )
 coef(fit)
-names(coef(fit))
 
 data("cerebrovascular", package = "geer")
 fit_bin <- geewa_binary(

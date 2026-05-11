@@ -36,21 +36,21 @@ check_glmtoolbox_criteria <- function(label, ref, fixed, tol = 1e-5) {
     it("QIC agrees", {
       expect_equal(
         unname(glmtoolbox::QIC(ref)),
-        round(unname(geecriteria(fixed, digits = 3)[1, "QIC"]), 3),
+        round(unname(geecriteria(fixed, cov_type = "robust", digits = 3)[1, "QIC"]), 3),
         tolerance = tol
       )
     })
     it("CIC agrees", {
       expect_equal(
         unname(glmtoolbox::CIC(ref, digits = 3)),
-        round(unname(geecriteria(fixed, digits = 3)[1, "CIC"]), 3),
+        round(unname(geecriteria(fixed, cov_type = "robust", digits = 3)[1, "CIC"]), 3),
         tolerance = tol
       )
     })
     it("RJC agrees", {
       expect_equal(
         unname(glmtoolbox::RJC(ref, digits = 3)),
-        round(unname(geecriteria(fixed, digits = 3)[1, "RJC"]), 3),
+        round(unname(geecriteria(fixed, cov_type = "robust", digits = 3)[1, "RJC"]), 3),
         tolerance = tol
       )
     })
