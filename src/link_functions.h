@@ -12,14 +12,8 @@ arma::vec mueta2(LinkCode lc,
                  const arma::vec& eta_vector);
 arma::vec mueta3(LinkCode lc,
                  const arma::vec& eta_vector);
-arma::vec linkinv(const char* link,
-                  const arma::vec& eta_vector);
 arma::vec mueta(const char* link,
                 const arma::vec& eta_vector);
-arma::vec mueta2(const char* link,
-                 const arma::vec& eta_vector);
-arma::vec mueta3(const char* link,
-                 const arma::vec& eta_vector);
 bool valideta(const char* link,
               const Rcpp::NumericVector& eta_vector);
 bool validmu(const char* family,

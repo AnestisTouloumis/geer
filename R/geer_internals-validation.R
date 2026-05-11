@@ -48,12 +48,6 @@ check_nonnegative_integerish <- function(x, name) {
 }
 
 
-check_probability_open <- function(x, name) {
-  check_probability(x, name, open = TRUE)
-  invisible(x)
-}
-
-
 match_choice_with_default <- function(x,
                                       choices,
                                       name,
@@ -61,7 +55,6 @@ match_choice_with_default <- function(x,
   if (missing(x) || is.null(x)) {
     return(default)
   }
-
   check_choice(x, choices, name)
   x
 }

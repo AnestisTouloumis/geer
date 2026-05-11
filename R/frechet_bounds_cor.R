@@ -116,24 +116,19 @@ frechet_bounds_cor <- function(object) {
   n_pairs <- length(keys)
   time_j     <- integer(n_pairs)
   time_k     <- integer(n_pairs)
-  lower_min  <- numeric(n_pairs)
   lower_max  <- numeric(n_pairs)
   upper_min  <- numeric(n_pairs)
-  upper_max  <- numeric(n_pairs)
   cor_vec    <- numeric(n_pairs)
   n_violated <- integer(n_pairs)
   for (s in seq_len(n_pairs)) {
     parts      <- as.integer(strsplit(keys[s], ":", fixed = TRUE)[[1L]])
     time_j[s]     <- parts[1L]
     time_k[s]     <- parts[2L]
-    lower_min[s]  <- min(pair_lower[[keys[s]]])
     lower_max[s]  <- max(pair_lower[[keys[s]]])
     upper_min[s]  <- min(pair_upper[[keys[s]]])
-    upper_max[s]  <- max(pair_upper[[keys[s]]])
     cor_vec[s]    <- cor_mat[parts[1L], parts[2L]]
     n_violated[s] <- sum(pair_violated[[keys[s]]])
   }
-  corstr <- object$association_structure
   alpha_name <- paste0("alpha_", time_j, ".", time_k)
   ord <- order(time_j, time_k)
   data.frame(

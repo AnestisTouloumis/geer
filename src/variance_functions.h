@@ -9,7 +9,4 @@ arma::vec variancemu(FamilyCode fc,  const arma::vec& mu_vector);
 arma::vec variancemu2(FamilyCode fc, const arma::vec& mu_vector);
 
 arma::vec variance(const char* family,    const arma::vec& mu_vector);
-arma::vec variancemu(const char* family,  const arma::vec& mu_vector);
-arma::vec variancemu2(const char* family, const arma::vec& mu_vector);
-
 #endif

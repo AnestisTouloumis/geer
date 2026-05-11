@@ -47,19 +47,10 @@ check_single_numeric <- function(x, name) {
 }
 
 
-check_probability <- function(x, name, open = TRUE) {
-  if (!is.logical(open) || length(open) != 1L || is.na(open)) {
-    stop("'open' must be a single logical value", call. = FALSE)
-  }
+check_probability_open <- function(x, name) {
   check_single_numeric(x, name)
-  if (open) {
-    if (x <= 0 || x >= 1) {
-      stop(sprintf("'%s' must be strictly between 0 and 1", name), call. = FALSE)
-    }
-  } else {
-    if (x < 0 || x > 1) {
-      stop(sprintf("'%s' must be between 0 and 1", name), call. = FALSE)
-    }
+  if (x <= 0 || x >= 1) {
+    stop(sprintf("'%s' must be strictly between 0 and 1", name), call. = FALSE)
   }
   invisible(x)
 }

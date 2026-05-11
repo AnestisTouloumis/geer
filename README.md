@@ -1,4 +1,4 @@
-a<!-- badges: start -->
+<!-- badges: start -->
 [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
 <!-- badges: end -->
@@ -112,7 +112,7 @@ Standard S3 methods are available for fitted `geer` objects:
   [broom](https://broom.tidymodels.org/) conventions.
 
 The `cov_type` argument controls the covariance estimator used for
-inference: `"robust"` (sandwich, default), `"bias-corrected"`,
+inference: `"bias-corrected"` (default), `"robust"` (sandwich),
 `"df-adjusted"`, or `"naive"` (model-based).
 
 ### Model building and selection

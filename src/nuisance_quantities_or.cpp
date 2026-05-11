@@ -113,21 +113,17 @@ double get_bivariate_distribution(const double& row_prob,
                                   const double& odds_ratio) {
   const double ans_independence = row_prob * col_prob;
   const double tol = 1e-8;
-  if (row_prob > 1.0 - tol ||
-      col_prob > 1.0 - tol ||
-      row_prob < tol ||
-      col_prob < tol ||
-      std::abs(odds_ratio - 1.0) < tol
-      ) {
+  if (std::abs(odds_ratio - 1.0) < tol)
     return ans_independence;
-  }
   const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double root_value = std::max(
-    0.0,
-    std::pow(f_value, 2.0) -
-      4.0 * odds_ratio * (odds_ratio - 1.0) * ans_independence
-  );
-  return (f_value - std::sqrt(root_value)) / (2.0 * (odds_ratio - 1.0));
+  const double discriminant = f_value * f_value -
+    4.0 * odds_ratio * (odds_ratio - 1.0) * ans_independence;
+  if (discriminant < 0.0)
+    return ans_independence;
+  const double root_value = std::sqrt(discriminant);
+  if (root_value < tol * std::abs(f_value))
+    return ans_independence;
+  return (f_value - root_value) / (2.0 * (odds_ratio - 1.0));
 }
 //==============================================================================
 
@@ -164,13 +160,19 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
 double get_bivariate_distribution_murow(const double& row_prob,
                                         const double& col_prob,
                                         const double& odds_ratio) {
+  const double tol = 1e-8;
+  if (std::abs(odds_ratio - 1.0) < tol)
+    return col_prob;
   const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
+  const double discriminant = f_value * f_value -
+    4.0 * odds_ratio * (odds_ratio - 1.0) * row_prob * col_prob;
+  if (discriminant < 0.0)
+    return col_prob;
+  const double den = std::sqrt(discriminant);
+  if (den < tol * std::abs(f_value))
+    return col_prob;
   const double num =
     row_prob + col_prob - odds_ratio * (row_prob - col_prob) - 1.0;
-  const double den =
-    f_value - 2.0 * (odds_ratio - 1.0) * biv_dis;
   return 0.5 * (1.0 + num / den);
 }
 //==============================================================================
@@ -180,13 +182,20 @@ double get_bivariate_distribution_murow(const double& row_prob,
 double get_bivariate_distribution_murow2(const double& row_prob,
                                          const double& col_prob,
                                          const double& odds_ratio) {
+  const double tol = 1e-8;
+  if (std::abs(odds_ratio - 1.0) < tol)
+    return 0.0;
   const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
+  const double discriminant = f_value * f_value -
+    4.0 * odds_ratio * (odds_ratio - 1.0) * row_prob * col_prob;
+  if (discriminant < 0.0)
+    return 0.0;
+  const double sqR = std::sqrt(discriminant);
+  if (sqR < tol * std::abs(f_value))
+    return 0.0;
   const double num =
     2.0 * odds_ratio * (odds_ratio - 1.0) * col_prob * (col_prob - 1.0);
-  const double den =
-    std::pow(f_value - 2.0 * (odds_ratio - 1.0) * biv_dis, 3.0);
+  const double den = sqR * sqR * sqR;
   return num / den;
 }
 //==============================================================================
@@ -196,13 +205,20 @@ double get_bivariate_distribution_murow2(const double& row_prob,
 double get_bivariate_distribution_murowcol(const double& row_prob,
                                            const double& col_prob,
                                            const double& odds_ratio) {
+  const double tol = 1e-8;
+  if (std::abs(odds_ratio - 1.0) < tol)
+    return 1.0;
   const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
+  const double discriminant = f_value * f_value -
+    4.0 * odds_ratio * (odds_ratio - 1.0) * row_prob * col_prob;
+  if (discriminant < 0.0)
+    return 1.0;
+  const double sqR = std::sqrt(discriminant);
+  if (sqR < tol * std::abs(f_value))
+    return 1.0;
   const double num =
     (f_value - 2.0 * (odds_ratio - 1.0) * row_prob * col_prob) * odds_ratio;
-  const double den =
-    std::pow(f_value - 2.0 * (odds_ratio - 1.0) * biv_dis, 3.0);
+  const double den = sqR * sqR * sqR;
   return num / den;
 }
 //==============================================================================

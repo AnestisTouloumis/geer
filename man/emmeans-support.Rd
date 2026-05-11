@@ -36,7 +36,7 @@ model predictors.}
 
 \item{vcov.method}{covariance specification to use for \pkg{emmeans}
 calculations. This may be a character string specifying one of the
-supported covariance estimators (\code{"bias-corrected"}, \code{"robust"},
+supported covariance estimators \code{"bias-corrected"}, \code{"robust"},
 \code{"df-adjusted"}, \code{"naive"}, or a covariance matrix
 or function accepted by \pkg{emmeans} through its \code{vcov.}
 mechanism. Defaults to \code{"bias-corrected"}.}

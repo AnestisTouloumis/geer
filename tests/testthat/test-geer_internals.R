@@ -53,10 +53,9 @@ test_that("scalar check helpers accept valid inputs and reject invalid ones", {
   expect_error(check_single_numeric(c(1, 2), "x"), "'x' must be a single finite numeric value")
   expect_error(check_single_numeric(NA_real_, "x"), "'x' must be a single finite numeric value")
   expect_error(check_single_numeric(Inf, "x"), "'x' must be a single finite numeric value")
-  expect_no_error(check_probability(0.5, "p"))
-  expect_no_error(check_probability(0, "p", open = FALSE))
-  expect_error(check_probability(0, "p"), "'p' must be strictly between 0 and 1")
-  expect_error(check_probability(1.1, "p", open = FALSE), "'p' must be between 0 and 1")
+  expect_no_error(check_probability_open(0.5, "p"))
+  expect_error(check_probability_open(0, "p"), "'p' must be strictly between 0 and 1")
+  expect_error(check_probability_open(1.1, "p"), "'p' must be strictly between 0 and 1")
   expect_no_error(check_choice("robust", c("robust", "naive"), "cov_type"))
   expect_error(
     check_choice("bad", c("robust", "naive"), "cov_type"),

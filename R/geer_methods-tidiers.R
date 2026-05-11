@@ -199,9 +199,10 @@ tidy.geer <- function(x,
 #'   \item{\code{niter}}{number of iterations used.}
 #' }
 #'
-#' QIC, QICu, and CIC are computed using the robust sandwich covariance
-#' matrix, consistent with \code{\link{geecriteria}}. If computation fails, the
-#' corresponding values are returned as \code{NA_real_}. For the full set of
+#' QIC and CIC are computed using the same formulas as
+#' \code{geecriteria(object, cov_type = "robust")}. QICu does not depend on
+#' the covariance estimator. If computation fails, the corresponding values
+#' are returned as \code{NA_real_}. For the full set of
 #' model selection criteria, including RJC, GESSC, and GPC, see
 #' \code{\link{geecriteria}}.
 #'

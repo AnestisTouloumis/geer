@@ -17,8 +17,9 @@
 #'   for adding a term during forward steps. Defaults to \code{0.15}.
 #' @param p_remove numeric value specifying the p-value threshold
 #'   for removing a term during backward steps. Defaults to \code{0.15}.
-#' @param steps positive integer giving the maximum number of steps to perform.
-#'   The algorithm stops earlier if no eligible move is found. Defaults to
+#' @param steps non-negative integer giving the maximum number of accepted
+#'   steps to perform. If \code{steps = 0}, the initial model is returned with
+#'   an initial-model row in its \code{anova} component. Defaults to
 #'   \code{1000}.
 #'
 #' @details
@@ -60,8 +61,8 @@
 #' A fitted model object of class \code{"geer"} corresponding to the final
 #' selected model. The returned object also includes an \code{anova}
 #' component of class \code{c("anova", "data.frame")} summarizing the
-#' stepwise sequence. This table has one
-#' row per step with columns \code{Step} (the term added or removed),
+#' stepwise sequence. This table has one row for the initial model and one row
+#' for each accepted step, with columns \code{Step} (the term added or removed),
 #' \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
 #' \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
 #' Criterion).

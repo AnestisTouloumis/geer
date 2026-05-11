@@ -28,14 +28,6 @@ inline bool all_finite(const Rcpp::NumericVector& x) {
 }
 
 
-//============================ link inverse - arma (char*) ====================
-arma::vec linkinv(const char* link,
-                  const arma::vec& eta_vector) {
-  return linkinv(parse_link(link), eta_vector);
-}
-//==============================================================================
-
-
 //============================ link inverse - arma (enum) =====================
 arma::vec linkinv(LinkCode lc, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
@@ -131,15 +123,6 @@ arma::vec mueta(LinkCode lc, const arma::vec& eta) {
 //==============================================================================
 
 
-
-//============================ mu eta - second derivative - arma (char*) =======
-arma::vec mueta2(const char* link,
-                 const arma::vec& eta_vector) {
-  return mueta2(parse_link(link), eta_vector);
-}
-//==============================================================================
-
-
 //============================ mu eta - second derivative - arma (enum) ========
 arma::vec mueta2(LinkCode lc, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
@@ -175,15 +158,6 @@ arma::vec mueta2(LinkCode lc, const arma::vec& eta) {
     return 2.0 / arma::pow(eta, 3.0);
   }
   Rcpp::stop("Unsupported link.");
-}
-//==============================================================================
-
-
-
-//============================ mu eta - third derivative - arma (char*) ========
-arma::vec mueta3(const char* link,
-                 const arma::vec& eta_vector) {
-  return mueta3(parse_link(link), eta_vector);
 }
 //==============================================================================
 

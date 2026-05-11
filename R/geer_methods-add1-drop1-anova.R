@@ -177,8 +177,9 @@ drop1.geer <- function(object,
   cov_type <- opts$cov_type
   pmethod <- opts$pmethod
   model_terms <- attr(terms(object), "term.labels")
+  admissible_scope <- drop.scope(object)
   if (missing(scope) || is.null(scope)) {
-    scope <- drop.scope(object)
+    scope <- admissible_scope
   } else {
     if (!is.character(scope)) {
       scope <- attr(terms(update.formula(object, scope)), "term.labels")
@@ -186,17 +187,25 @@ drop1.geer <- function(object,
     if (!all(match(scope, model_terms, 0L) > 0L)) {
       stop("scope is not a subset of term labels", call. = FALSE)
     }
+    scope <- intersect(scope, admissible_scope)
   }
   ns <- length(scope)
   if (ns == 0L) {
-    stop("no terms in scope for dropping from object", call. = FALSE)
+    stop("no admissible terms in scope for dropping from object", call. = FALSE)
   }
-  ans <- matrix(NA_real_, nrow = ns + 1L, ncol = 4L,
-                dimnames = list(c("<none>", scope),
-                                c("Df", "CIC", "Chi", "Pr(>Chi)")))
+  ans <- matrix(
+    NA_real_,
+    nrow = ns + 1L,
+    ncol = 4L,
+    dimnames = list(
+      c("<none>", scope),
+      c("Df", "CIC", "Chi", "Pr(>Chi)")
+    )
+  )
   ans[1L, 2L] <- compute_gee_cic(object, cov_type)
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
+
     drop1_model <- update(
       object,
       formula = as.formula(paste(". ~ . -", tt)),
@@ -207,14 +216,22 @@ drop1.geer <- function(object,
       test,
       wald = wald_test(drop1_model, object, cov_type),
       score = score_test(drop1_model, object, cov_type),
-      `working-wald` = working_wald_test(drop1_model, object, cov_type, pmethod),
-      `working-score` = working_score_test(drop1_model, object, cov_type, pmethod),
-      `working-lrt` = working_lrt_test(drop1_model, object, cov_type, pmethod)
+      `working-wald` = working_wald_test(
+        drop1_model, object, cov_type, pmethod
+      ),
+      `working-score` = working_score_test(
+        drop1_model, object, cov_type, pmethod
+      ),
+      `working-lrt` = working_lrt_test(
+        drop1_model, object, cov_type, pmethod
+      )
     )
-    ans[i + 1L, ] <- c(value$test_df,
-                       compute_gee_cic(drop1_model, cov_type),
-                       value$test_stat,
-                       value$test_p)
+    ans[i + 1L, ] <- c(
+      value$test_df,
+      compute_gee_cic(drop1_model, cov_type),
+      value$test_stat,
+      value$test_p
+    )
   }
   aod <- as.data.frame(ans)
   test_type <- format_test_label(test)

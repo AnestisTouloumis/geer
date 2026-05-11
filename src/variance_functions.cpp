@@ -60,13 +60,6 @@ arma::vec variancemu(FamilyCode fc, const arma::vec& mu_vector) {
 //==============================================================================
 
 
-//============================ derivative variance wrt mean (char*) ============
-arma::vec variancemu(const char* family, const arma::vec& mu_vector) {
-  return variancemu(parse_family(family), mu_vector);
-}
-//==============================================================================
-
-
 //============================ second derivative variance wrt mean (enum) ======
 arma::vec variancemu2(FamilyCode fc, const arma::vec& mu_vector) {
   arma::vec ans(mu_vector.n_elem);
@@ -86,12 +79,5 @@ arma::vec variancemu2(FamilyCode fc, const arma::vec& mu_vector) {
     break;
   }
   return ans;
-}
-//==============================================================================
-
-
-//============================ second derivative variance wrt mean (char*) =====
-arma::vec variancemu2(const char* family, const arma::vec& mu_vector) {
-  return variancemu2(parse_family(family), mu_vector);
 }
 //==============================================================================
