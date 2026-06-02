@@ -89,6 +89,11 @@
 #' returned object, because these methods produce their estimate via a single
 #' correction step applied to an already-converged fit.
 #'
+#' @references
+#' Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
+#' Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
+#'
+#'
 #' @author Anestis Touloumis
 #'
 #' @seealso \code{\link{geewa}}, \code{\link{geer_control}},

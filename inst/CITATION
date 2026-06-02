@@ -17,7 +17,7 @@ bibentry(
 
 bibentry(
   bibtype  = "Unpublished",
-  title    = "Bias reduction in generalized estimating equations",
+  title    = "Jeffreys-Type Penalized GEE for Correlated Binary Data with an Odds-Ratio Parameterization.",
   author   = person(
     given  = "Anestis",
     family = "Touloumis"
