@@ -22,8 +22,6 @@ You can install the development version of `geer` from GitHub:
 devtools::install_github("AnestisTouloumis/geer")
 ```
 
-A CRAN submission is planned.
-
 ## Usage
 
 Load the package:
@@ -84,8 +82,8 @@ Both functions support the following estimation methods via the
 | Method | Description |
 |---|---|
 | `"gee"` | Traditional GEE |
-| `"brgee-naive"`, `"brgee-robust"`, `"brgee-empirical"` | Bias-reducing GEE (differing in the bias adjustment used: model-based, sandwich-based, or empirical) |
-| `"bcgee-naive"`, `"bcgee-robust"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
+| `"brgee-robust"`, `"brgee-naive"`, `"brgee-empirical"` | Bias-reducing GEE (differing in the bias adjustment used: robust, model-based, or empirical) |
+| `"bcgee-robust"`, `"bcgee-naive"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
 | `"pgee-jeffreys"` | Fully iterated Jeffreys-prior penalized GEE |
 | `"opgee-jeffreys"` | One-step penalized GEE |
 | `"hpgee-jeffreys"` | Hybrid one-step GEE |
@@ -141,6 +139,6 @@ and `rinse`.
 Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 generalized linear models. *Biometrika*, **73**, 13--22.
 
-Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
-Binary Data with an Odds-Ratio Parameterization. *Preprint*.
+Touloumis, A. (2026) [Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
 
+Touloumis, A. (2026) [Jeffreys-Type Penalized GEE for Correlated Binary Data with an Odds-Ratio Parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.

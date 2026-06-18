@@ -1,4 +1,5 @@
 testthat::local_edition(3)
+testthat::skip_on_cran()
 
 data(epilepsy, package = "geer")
 

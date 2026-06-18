@@ -73,7 +73,7 @@ test_that("pearson residuals match the Poisson reference formula", {
   y <- count_fit$y
   mu <- fitted(count_fit)
   wt <- count_fit$prior.weights
-  expected <- (y - mu) / sqrt(mu) * sqrt(wt)
+  expected <- ((y - mu) / sqrt(mu) * sqrt(wt))/sqrt(count_fit$phi)
   observed <- residuals(count_fit, type = "pearson")
   expect_equal(observed, expected, tolerance = 1e-6)
 })

@@ -253,10 +253,15 @@ summary(fitted_model_pgee, cov_type = "robust")
 }
 
 }
-\seealso{
-\code{\link{geewa}}, \code{\link{geer_control}},
-  \code{\link{summary.geer}}, \code{\link{geecriteria}}.
+\references{
+Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
+Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
+\url{https://arxiv.org/abs/2606.16058}
+
+Touloumis, A. (2026) Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.
+\emph{Preprint}. \url{https://arxiv.org/abs/2606.16043}
 }
-\author{
-Anestis Touloumis
+\seealso{
+\code{\link{geewa}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
+\code{\link{geecriteria}}.
 }

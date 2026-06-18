@@ -283,7 +283,8 @@ residuals.geer <- function(object,
   ans <- switch(
     type,
     working = object$residuals,
-    pearson = as.numeric(get_pearson_residuals(object$family$family, y, mu, weights)),
+    pearson =
+      as.numeric(get_pearson_residuals(object$family$family, y, mu, weights))/sqrt(object$phi),
     deviance = {
       if (object$df.residual > 0) {
         dr <- sqrt(pmax(object$family$dev.resids(y, mu, weights), 0))

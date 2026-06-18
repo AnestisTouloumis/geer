@@ -2,7 +2,7 @@
 % Please edit documentation in R/frechet_bounds_cor.R
 \name{frechet_bounds_cor}
 \alias{frechet_bounds_cor}
-\title{Fréchet Bounds for a Working Correlation Matrix}
+\title{Frechet Bounds for a Working Correlation Matrix}
 \usage{
 frechet_bounds_cor(object)
 }
@@ -18,25 +18,25 @@ a data frame with one row per unique time pair \eqn{(j, k)} and
   \item{\code{alpha_name}}{label of the form \code{alpha_j.k} identifying the
     working correlation entry for this time pair.}
   \item{\code{alpha_value}}{working correlation value for the time pair.}
-  \item{\code{lower_max}}{maximum Fréchet lower bound across clusters,
+  \item{\code{lower_max}}{maximum Frechet lower bound across clusters,
     giving the tightest lower admissibility constraint.}
-  \item{\code{upper_min}}{minimum Fréchet upper bound across clusters,
+  \item{\code{upper_min}}{minimum Frechet upper bound across clusters,
     giving the tightest upper admissibility constraint.}
   \item{\code{n_violated}}{number of clusters for which \code{alpha_value}
-    falls outside the cluster-specific Fréchet bounds.}
+    falls outside the cluster-specific Frechet bounds.}
 }
 }
 \description{
 For a fitted \code{geer} model from \code{\link{geewa}} with a
 \code{binomial} family and a non-independence association structure,
 checks whether each off-diagonal entry of the working correlation matrix
-lies within the Fréchet bounds implied by the fitted marginal probabilities.
-Results are summarised at the time-pair level.
+lies within the Frechet bounds implied by the fitted marginal probabilities.
+Results are summarized at the time-pair level.
 }
 \details{
 For a pair of observations at times \eqn{j} and \eqn{k} within cluster
 \eqn{i}, with fitted marginal probabilities \eqn{\pi_{ij}} and
-\eqn{\pi_{ik}}, the Fréchet bounds on their correlation are
+\eqn{\pi_{ik}}, the Frechet bounds on their correlation are
 \deqn{
   \ell_{ijk} = \max\!\left(
     -\sqrt{\frac{\pi_{ij}\pi_{ik}}{(1-\pi_{ij})(1-\pi_{ik})}},\;
@@ -57,6 +57,21 @@ bounds across clusters, lower_max (maximum lower bound) and upper_min
 (minimum upper bound), are reported in the returned data frame. The column
 \code{n_violated} counts the number of clusters for which \code{cor} falls outside
 \eqn{(\ell_{ijk},\, u_{ijk})}.
+}
+\examples{
+data("cholecystectomy", package = "geer")
+
+fit <- geewa(
+  formula = pain ~ treatment + gender + age + I(time >4),
+  family = binomial(link = "logit"),
+  data = cholecystectomy,
+  id = id,
+  repeated = time,
+  corstr = "unstructured",
+  method = "gee"
+)
+frechet_bounds_cor(fit)
+
 }
 \seealso{
 \code{\link{geewa}}.

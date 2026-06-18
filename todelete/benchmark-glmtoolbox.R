@@ -74,7 +74,7 @@ check_confint_example <- function(label, ref, fixed, level = 0.95, tol = 1e-5, .
 
 check_glmtoolbox_residuals <- function(label, ref, fixed, tol = 1e-5, ...) {
   res_ref <- residuals(ref, type = "pearson", ...)
-  res_fixed <- residuals.geer(fixed, type = "pearson", ...)/sqrt(ref$phi)
+  res_fixed <- residuals.geer(fixed, type = "pearson", ...)
 
   describe(paste(label, "pearson residuals"), {
     it("residuals agree", {

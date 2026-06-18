@@ -874,14 +874,15 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                      phi,
                      jeffreys_power,
                      method) - beta_vector;
-    // Step-length control: monotone step-size rule (Ortega & Rheinboldt).
-    // Accept the halved step if the resulting Newton step norm is strictly
-    // smaller than the norm at the original iterate.  GEE has no log-
-    // likelihood, so a merit-function (Armijo) line search is not available;
-    // this norm-reduction criterion is the standard substitute used in geepack
-    // and glmtoolbox.  criterion_inner is intentionally held fixed at the
-    // original step norm throughout the inner loop — every candidate is
-    // compared against that baseline, not against the previous candidate.
+    // Damped Newton continuation: if the full-step candidate does not improve
+    // the convergence criterion relative to the fixed baseline established at
+    // the start of this outer iteration, the step multiplier is halved and a
+    // new Newton direction is computed at the (failed) candidate point itself —
+    // i.e., each retry re-linearizes at the most recent trial point rather than
+    // retrying a smaller multiple of the original direction. The multiplier
+    // shrinks geometrically across retries, and the criterion is always
+    // compared against the same fixed baseline, not against the previous
+    // candidate's criterion value.
     double criterion_inner = arma::norm(stepsize_vector, "inf");
     beta_vector_inner = beta_vector;
     beta_vector_new = beta_vector;

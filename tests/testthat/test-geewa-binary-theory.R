@@ -1,4 +1,5 @@
 testthat::local_edition(3)
+testthat::skip_on_cran()
 
 fit_gee_probit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),

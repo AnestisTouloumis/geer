@@ -92,12 +92,15 @@
 #' @references
 #' Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
 #' Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16058}
+#'
+#' Touloumis, A. (2026) Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.
+#' \emph{Preprint}. \url{https://arxiv.org/abs/2606.16043}
 #'
 #'
-#' @author Anestis Touloumis
-#'
-#' @seealso \code{\link{geewa}}, \code{\link{geer_control}},
-#'   \code{\link{summary.geer}}, \code{\link{geecriteria}}.
+#' @seealso
+#' \code{\link{geewa}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
+#' \code{\link{geecriteria}}.
 #'
 #' @examples
 #' \donttest{
@@ -272,7 +275,7 @@ geewa_binary <- function(formula,
     if (last_criterion > tolerance) {
       stop("hpgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
     }
-    ## pass 2: one step GEE from penalised solution
+    ## pass 2: one step GEE from penalized solution
     geesolver_fit <- fit_bingee_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(geesolver_fit$beta_hat), offset,
@@ -291,7 +294,7 @@ geewa_binary <- function(formula,
     if (last_criterion > tolerance) {
       stop("opgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
     }
-    ## pass 2: one step PGEE from penalised solution
+    ## pass 2: one step PGEE from penalized solution
     geesolver_fit <- fit_bingee_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(geesolver_fit$beta_hat), offset,

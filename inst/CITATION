@@ -1,6 +1,6 @@
 bibentry(
   bibtype  = "Manual",
-  title    = "{geer}: Generalized Estimating Equations in R",
+  title    = "{geer}: Bias-Reduced and Penalized Generalized Estimating Equations",
   author   = person(
     given   = "Anestis",
     family  = "Touloumis",
@@ -17,22 +17,24 @@ bibentry(
 
 bibentry(
   bibtype  = "Unpublished",
-  title    = "Jeffreys-Type Penalized GEE for Correlated Binary Data with an Odds-Ratio Parameterization.",
+  title    = "Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions",
   author   = person(
     given  = "Anestis",
     family = "Touloumis"
   ),
   year     = "2026",
-  note     = "Preprint"
+  note     = "Preprint",
+  url      = "https://arxiv.org/abs/2606.16043"
 )
 
 bibentry(
   bibtype  = "Unpublished",
-  title    = "Jeffreys-prior penalized {GEE} for correlated binary data with an odds-ratio parameterization",
+  title    = "Jeffreys-Type Penalized GEE for Correlated Binary Data with an Odds-Ratio Parameterization",
   author   = person(
     given  = "Anestis",
     family = "Touloumis"
   ),
   year     = "2026",
-  note     = "Preprint"
+  note     = "Preprint",
+  url      = "https://arxiv.org/abs/2606.16058"
 )

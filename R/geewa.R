@@ -174,10 +174,17 @@
 #' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
 #' returned object.
 #'
-#' @author Anestis Touloumis
+#' @references
+#' Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
+#' Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16058}
 #'
-#' @seealso \code{\link{geewa_binary}}, \code{\link{geer_control}},
-#'   \code{\link{summary.geer}}, \code{\link{geecriteria}}.
+#' Touloumis, A. (2026) Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.
+#' \emph{Preprint}. \url{https://arxiv.org/abs/2606.16043}
+#'
+#' @seealso
+#' \code{\link{geewa_binary}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
+#' \code{\link{geecriteria}}.
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
@@ -384,7 +391,7 @@ geewa <- function(formula,
     if (last_criterion > tolerance) {
       stop("hpgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
     }
-    ## pass 2: one GEE step warm-started from penalised solution
+    ## pass 2: one GEE step warm-started from penalized solution
     geesolver_fit <- fit_geesolver_cc(
       y, model_matrix, id, repeated, weights,
       link, family$family, as.numeric(geesolver_fit$beta_hat),
@@ -463,7 +470,7 @@ geewa <- function(formula,
     names(fit$alpha) <- paste0("alpha_lag", seq_along(fit$alpha))
   }
   if (!fit$converged) warning("geewa: algorithm did not converge", call. = FALSE)
-  eps <- 10 * .Machine$double.eps
+  eps <- sqrt(.Machine$double.eps)
   if (identical(family$family, "binomial")) {
     if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps)) {
       warning("geewa: fitted probabilities numerically 0 or 1 occurred", call. = FALSE)
