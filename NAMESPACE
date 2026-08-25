@@ -26,46 +26,52 @@ export(recover_data.geer)
 export(step_p)
 export(tidy)
 import(Rcpp)
-importFrom(brglm2,brglmFit)
-importFrom(brglm2,brglm_control)
-importFrom(generics,glance)
-importFrom(generics,tidy)
-importFrom(stats,.getXlevels)
-importFrom(stats,Gamma)
-importFrom(stats,add.scope)
-importFrom(stats,add1)
-importFrom(stats,as.formula)
-importFrom(stats,ave)
-importFrom(stats,binomial)
-importFrom(stats,coef)
-importFrom(stats,coefficients)
-importFrom(stats,confint)
-importFrom(stats,delete.response)
-importFrom(stats,drop.scope)
-importFrom(stats,drop1)
-importFrom(stats,factor.scope)
-importFrom(stats,family)
-importFrom(stats,formula)
-importFrom(stats,gaussian)
-importFrom(stats,glm)
-importFrom(stats,glm.fit)
-importFrom(stats,inverse.gaussian)
-importFrom(stats,model.extract)
-importFrom(stats,model.frame)
-importFrom(stats,model.matrix)
-importFrom(stats,model.offset)
-importFrom(stats,model.response)
-importFrom(stats,model.weights)
-importFrom(stats,na.pass)
-importFrom(stats,pchisq)
-importFrom(stats,pnorm)
-importFrom(stats,poisson)
-importFrom(stats,printCoefmat)
-importFrom(stats,qlogis)
-importFrom(stats,qnorm)
-importFrom(stats,terms)
-importFrom(stats,update)
-importFrom(stats,update.formula)
-importFrom(stats,vcov)
+importFrom(brglm2,
+  brglmFit,
+  brglm_control
+)
+importFrom(generics,
+  glance,
+  tidy
+)
+importFrom(stats,
+  .getXlevels,
+  Gamma,
+  add.scope,
+  add1,
+  as.formula,
+  ave,
+  binomial,
+  coef,
+  coefficients,
+  confint,
+  delete.response,
+  drop.scope,
+  drop1,
+  factor.scope,
+  family,
+  formula,
+  gaussian,
+  glm,
+  glm.fit,
+  inverse.gaussian,
+  model.extract,
+  model.frame,
+  model.matrix,
+  model.offset,
+  model.response,
+  model.weights,
+  na.pass,
+  pchisq,
+  pnorm,
+  poisson,
+  printCoefmat,
+  qlogis,
+  qnorm,
+  terms,
+  update,
+  update.formula,
+  vcov
+)
 importFrom(utils,combn)
 useDynLib(geer, .registration = TRUE)
