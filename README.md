@@ -1,5 +1,6 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
+[![R release](https://img.shields.io/badge/R%20release-4.6.1-276DC3?logo=R&logoColor=white)](https://www.r-project.org/)
 [![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
 <!-- badges: end -->
 
@@ -119,8 +120,11 @@ inference: `"bias-corrected"` (default), `"robust"` (sandwich),
 - `add1()`, `drop1()` — single-term additions and deletions with
   hypothesis tests and CIC.
 - `step_p()` — stepwise model selection by hypothesis testing.
-- `geecriteria()` — QIC, CIC, RJC, QICu, GESSC, and GPC model
-  selection criteria.
+- `geecriteria()` — QIC, QICHH, QICC, CIC, RJC, QICu, EQIC, GESSC, GPC,
+  AGPC, SGPC, GHYC, and PAC model selection criteria.
+  For `geecriteria()`, `cov_type = "robust"` is the default so the classical
+  covariance-based definitions are returned unless another covariance estimator
+  is requested explicitly.
 
 ### Post-estimation support
 

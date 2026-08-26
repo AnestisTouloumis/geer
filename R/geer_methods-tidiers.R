@@ -203,7 +203,8 @@ tidy.geer <- function(x,
 #' \code{geecriteria(object, cov_type = "robust")}. QICu does not depend on
 #' the covariance estimator. If computation fails, the corresponding values
 #' are returned as \code{NA_real_}. For the full set of
-#' model selection criteria, including RJC, GESSC, and GPC, see
+#' model selection criteria, including QICHH, QICC, EQIC, RJC, GESSC, GPC,
+#' AGPC, SGPC, GHYC, and PAC, see
 #' \code{\link{geecriteria}}.
 #'
 #' @return
@@ -265,7 +266,7 @@ tidy.geer <- function(x,
 glance.geer <- function(x, ...) {
   object <- check_geer_object(x)
   crit <- tryCatch(
-    compute_gee_criteria(object, cov_type = "robust", digits = 15L),
+    compute_gee_criteria(object, cov_type = "robust", digits = 15L, include_extended = FALSE),
     error = function(e) NULL
   )
   qic <- if (is.null(crit)) NA_real_ else crit$QIC

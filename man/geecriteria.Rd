@@ -7,7 +7,7 @@
 geecriteria(
   object,
   ...,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
+  cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
   digits = 2
 )
 }
@@ -18,19 +18,22 @@ geecriteria(
 included in the comparison.}
 
 \item{cov_type}{character string specifying the covariance estimator used in
-the covariance-based criteria. Options are the bias-corrected estimator
-(\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}),
-the degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
-model-based or naive estimator (\code{"naive"}). Defaults to
-\code{"bias-corrected"}.}
+the covariance-based penalty terms. Options are the sandwich or robust
+estimator (\code{"robust"}), the bias-corrected estimator
+(\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
+(\code{"df-adjusted"}), and the model-based or naive estimator
+(\code{"naive"}). Defaults to \code{"robust"}, which reproduces the
+classical covariance-based definitions of QIC, QICHH, QICC, CIC, RJC, and EQIC.}
 
 \item{digits}{non-negative integer giving the number of decimal places used
 to round the reported criteria. Defaults to \code{2}.}
 }
 \value{
 A data frame with one row per fitted model and columns \code{QIC},
-\code{CIC}, \code{RJC}, \code{QICu}, \code{GESSC}, \code{GPC}, and
-\code{Parameters}, as described in the Details section. When more than one
+\code{QICHH}, \code{QICC}, \code{CIC}, \code{RJC}, \code{QICu},
+\code{EQIC}, \code{GESSC}, \code{GPC}, \code{AGPC}, \code{SGPC},
+\code{GHYC}, \code{PAC}, and \code{Parameters}, as described in the
+Details section. When more than one
 model is supplied, row names are set to the deparsed model expressions.
 }
 \description{
@@ -43,6 +46,14 @@ The reported criteria are:
 \describe{
   \item{\code{QIC}}{Quasi Information Criterion for comparing marginal mean
   models. Smaller values are preferred.}
+  \item{\code{QICHH}}{Hardin-Hilbe modification of QIC. The independence
+  quasi-likelihood and independence model-based information matrix are
+  evaluated using the regression and scale estimates under working
+  independence. Smaller values are preferred.}
+  \item{\code{QICC}}{Corrected QIC of Hardin and Hilbe (2013), using
+  QIC as the base criterion and a finite-cluster correction that also
+  accounts for the number of working-association parameters. Smaller
+  values are preferred.}
   \item{\code{CIC}}{Correlation Information Criterion, used here for
   selecting the working association structure. Smaller values are preferred.}
   \item{\code{RJC}}{Rotnitzky and Jewell Criterion. Smaller values are
@@ -50,18 +61,93 @@ The reported criteria are:
   \item{\code{QICu}}{A variant of QIC primarily intended for comparing
   marginal mean models with different covariate sets. Smaller values are
   preferred.}
+  \item{\code{EQIC}}{Extended Quasi-likelihood Information Criterion of
+  Wang and Hin (2010). It uses the extended quasi-likelihood with the
+  Nelder-Pregibon adjustment \eqn{k = 1/6}. When the dispersion is not
+  fixed, EQIC uses the deviance-based dispersion estimate. Smaller values
+  are preferred.}
   \item{\code{GESSC}}{Generalized Error Sum of Squares Criterion. Smaller
   values are preferred.}
   \item{\code{GPC}}{Gaussian Pseudolikelihood Criterion. Unlike the other
   criteria, larger values are preferred, because GPC is a pseudolikelihood
   measure rather than an information criterion.}
+  \item{\code{AGPC}}{Akaike-type penalized Gaussian Pseudolikelihood
+  Criterion. Smaller values are preferred.}
+  \item{\code{SGPC}}{Schwarz-type penalized Gaussian Pseudolikelihood
+  Criterion. Smaller values are preferred.}
+  \item{\code{GHYC}}{Gosho-Hamada-Yoshimura Criterion for selecting the
+  working association structure. Smaller values are preferred.}
+  \item{\code{PAC}}{Pardo-Alonso Criterion for selecting the working
+  association structure. Smaller values are preferred.}
   \item{\code{Parameters}}{Number of regression parameters in the marginal
   mean model.}
 }
 
-The \code{cov_type} argument affects only the covariance-based criteria
-\code{QIC}, \code{CIC}, and \code{RJC}; the remaining criteria are
-unaffected.
+The \code{cov_type} argument affects the covariance penalty in
+\code{QIC}, \code{QICHH}, \code{QICC}, \code{CIC}, \code{RJC}, and
+\code{EQIC}.
+The classical definitions use the robust sandwich covariance, so
+\code{cov_type = "robust"} is the default. \code{QICu}, \code{GESSC},
+\code{GPC}, \code{AGPC}, \code{SGPC}, \code{GHYC}, and \code{PAC}
+are unaffected by \code{cov_type}.
+
+QICHH is based on the conventional, unadjusted working-independence GEE
+regression estimate and has the form
+\deqn{\mathrm{QIC}_{HH} = -2\Psi(\hat\beta_I; I) +
+2\mathrm{tr}(\hat\Omega_I\hat V).}
+The independence fit is obtained from the stored response, design matrix,
+weights, offset, and family, so the original data object does not need to be
+re-evaluated.
+
+QICC applies the finite-cluster correction of Hardin and Hilbe (2013) to
+QIC:
+\deqn{\mathrm{QICC} = \mathrm{QIC} -
+\frac{2(p + m)(p + m + 1)}{N - p - m - 1},}
+where \eqn{p} is the number of regression parameters, \eqn{m} is the
+number of estimated working-association parameters, and \eqn{N} is the
+number of independent clusters. Thus, \code{corstr = "fixed"} or
+\code{orstr = "fixed"} contributes \eqn{m = 0}. Hardin and Hilbe note
+that the same correction may
+alternatively be applied to QICHH. In \code{geer}, the reported
+\code{QICC} uses QIC as the base criterion. QICC is returned as
+\code{NA} when \eqn{N - p - m - 1 <= 0}.
+
+The Gaussian pseudolikelihood-based criteria use the same fitted working
+covariance matrices as \code{GPC}. If \eqn{n^{\star}} is the number of
+observations, \eqn{p} the number of regression parameters, \eqn{m} the
+number of estimated working-association parameters, and \eqn{N} the number
+of independent clusters, define
+\deqn{D_G = n^{\star}\log(2\pi) - 2\,\mathrm{GPC}.}
+Then
+\deqn{\mathrm{AGPC} = D_G + 2(p+m)}
+and
+\deqn{\mathrm{SGPC} = D_G + \log(N)(p+m).}
+Fixed working correlation or odds-ratio structures contribute \eqn{m=0}.
+The additive normalizing constant in \eqn{D_G} is included so AGPC and SGPC
+are on the conventional scale used in the literature and in
+\pkg{glmtoolbox}.
+
+GHYC and PAC compare the empirical residual covariance with the fitted
+working covariance. For incomplete repeated-measure patterns, each matrix
+entry is averaged over the clusters in which both corresponding repeated
+positions are observed, matching the pairwise-available construction used
+by \pkg{glmtoolbox}. Writing these matrices as \eqn{\bar S} and
+\eqn{\bar V}, respectively,
+\deqn{\mathrm{GHYC} = \mathrm{tr}[(\bar S\bar V^{-1}-I)^2]}
+and
+\deqn{\mathrm{PAC} = |\det(\bar S)/\det(\bar V)-1|.}
+GHYC or PAC is returned as \code{NA} when the required pairwise covariance
+matrix cannot be formed or the relevant working covariance matrix is
+singular.
+
+For EQIC, the variance and deviance contributions use the adjustment
+\eqn{k = 1/6} recommended by Nelder and Pregibon and used by Wang and Hin.
+For binomial models the dispersion is fixed at 1. For other families, if
+\code{phi_fixed = TRUE} was used in \code{geewa()}, the fitted fixed
+dispersion is retained. Otherwise, the EQIC dispersion is estimated as the
+adjusted deviance divided by the number of observations. This same EQIC
+dispersion is used in the independence information matrix entering its
+covariance penalty.
 
 If the supplied models do not all have the same number of observations, a
 warning is issued.
@@ -102,6 +188,18 @@ Carey, V.J. and Wang, Y.G. (2011) Working covariance model selection for
 generalized estimating equations. \emph{Statistics in Medicine}, \bold{30},
 3117--3124.
 
+Fu, L., Hao, Y. and Wang, Y.G. (2018) Working correlation structure
+selection in generalized estimating equations. \emph{Computational
+Statistics}, \bold{33}, 983--996.
+
+Gosho, M., Hamada, C. and Yoshimura, I. (2011) Criterion for the selection
+of a working correlation structure in the generalized estimating equation
+approach for longitudinal balanced data. \emph{Communications in Statistics
+- Theory and Methods}, \bold{40}, 3839--3856.
+
+Gosho, M. (2014) Criteria to select a working correlation structure in SAS.
+\emph{Journal of Statistical Software, Code Snippets}, \bold{57}, 1--10.
+
 Chaganty, N.R. and Shults, J. (1999) On eliminating the asymptotic bias in
 the quasi-least squares estimate of the correlation parameter.
 \emph{Journal of Statistical Planning and Inference}, \bold{76}, 145--161.
@@ -110,12 +208,37 @@ Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure
 identification in generalized estimating equations. \emph{Statistics in
 Medicine}, \bold{28}, 642--658.
 
+Hardin, J.W. and Hilbe, J.M. (2003) \emph{Generalized Estimating Equations}.
+Chapman and Hall/CRC, Boca Raton.
+
+Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
+Equations}, Second Edition. Chapman and Hall/CRC, Boca Raton.
+
 Pan, W. (2001) Akaike's information criterion in generalized estimating
 equations. \emph{Biometrics}, \bold{57}, 120--125.
+
+Pardo, M.C. and Alonso, R. (2019) Working correlation structure selection
+in GEE analysis. \emph{Statistical Papers}, \bold{60}, 1447--1467.
 
 Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
 parameters in semiparametric generalized linear models for cluster correlated
 data. \emph{Biometrika}, \bold{77}, 485--497.
+
+Wang, Y.G. and Hin, L.Y. (2010) Modeling strategies in longitudinal data
+analysis: covariate, variance function and correlation structure selection.
+\emph{Computational Statistics & Data Analysis}, \bold{54}, 3359--3370.
+
+Wang, M. (2014) Generalized estimating equations in longitudinal data
+analysis: a review and recent developments. \emph{Advances in Statistics},
+\bold{2014}, Article ID 303728.
+
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+equations using the new R package glmtoolbox. \emph{The R Journal},
+\bold{15}, 105--133.
+
+Zhu, X. and Zhu, Z. (2013) Comparison of criteria to select working
+correlation matrix in generalized estimating equations. \emph{Chinese
+Journal of Applied Probability and Statistics}, \bold{29}, 515--530.
 }
 \seealso{
 \code{\link{glance.geer}}, \code{\link{anova.geer}},

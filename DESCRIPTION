@@ -1,8 +1,8 @@
 Package: geer
 Type: Package
 Title: Bias-Reduced and Penalized Generalized Estimating Equations
-Version: 0.1.0
-Authors@R: 
+Version: 0.1.1
+Authors@R:
     person(given = "Anestis",
            family = "Touloumis",
            role = c("aut", "cre"),
@@ -28,7 +28,7 @@ LazyData: true
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
 NeedsCompilation: yes
-Packaged: 2026-08-25 17:20:44 UTC; Anestis
+Packaged: 2026-08-26 12:30:07 UTC; Anestis
 Author: Anestis Touloumis [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-5965-1639>)
 Maintainer: Anestis Touloumis <A.Touloumis@brighton.ac.uk>
