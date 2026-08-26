@@ -63,9 +63,16 @@ test_that("residuals return finite vectors for supported types", {
     expect_length(r, count_fit$obs_no)
     expect_true(all(is.finite(r)))
   }
-  r_bin <- residuals(binary_fit, type = "working")
-  expect_length(r_bin, binary_fit$obs_no)
+  r_mahalanobis <- residuals(count_fit, type = "mahalanobis")
+  expect_length(r_mahalanobis, count_fit$clusters_no)
+  expect_true(all(is.finite(r_mahalanobis)))
+  expect_true(all(r_mahalanobis >= 0))
+  expect_identical(names(r_mahalanobis), as.character(unique(count_fit$id)))
+
+  r_bin <- residuals(binary_fit, type = "mahalanobis")
+  expect_length(r_bin, binary_fit$clusters_no)
   expect_true(all(is.finite(r_bin)))
+  expect_true(all(r_bin >= 0))
 })
 
 
@@ -76,6 +83,47 @@ test_that("pearson residuals match the Poisson reference formula", {
   expected <- ((y - mu) / sqrt(mu) * sqrt(wt))/sqrt(count_fit$phi)
   observed <- residuals(count_fit, type = "pearson")
   expect_equal(observed, expected, tolerance = 1e-6)
+})
+
+
+test_that("deviance residuals are scaled by the fitted dispersion", {
+  y <- count_fit$y
+  mu <- fitted(count_fit)
+  wt <- count_fit$prior.weights
+  sign_term <- ifelse(y > mu, 1, ifelse(y < mu, -1, 0))
+  expected <- sign_term * sqrt(
+    pmax(count_fit$family$dev.resids(y, mu, wt), 0) / count_fit$phi
+  )
+  observed <- residuals(count_fit, type = "deviance")
+  expect_equal(observed, expected, tolerance = 1e-10)
+})
+
+
+test_that("Mahalanobis residuals match their cluster-level definition", {
+  id_labels <- as.character(count_fit$id)
+  cluster_ids <- unique(id_labels)
+  alpha <- as.numeric(count_fit$alpha[[1L]])
+  expected <- vapply(
+    cluster_ids,
+    FUN.VALUE = numeric(1),
+    FUN = function(cluster_id) {
+      indices <- which(id_labels == cluster_id)
+      mu <- count_fit$fitted.values[indices]
+      weights <- count_fit$prior.weights[indices]
+      n_i <- length(indices)
+      correlation <- matrix(alpha, n_i, n_i)
+      diag(correlation) <- 1
+      marginal_sd <- sqrt(count_fit$phi * mu / weights)
+      working_covariance <- correlation * tcrossprod(marginal_sd)
+      raw_residual <- count_fit$y[indices] - mu
+      as.numeric(
+        crossprod(raw_residual, solve(working_covariance, raw_residual)) / n_i
+      )
+    }
+  )
+  names(expected) <- cluster_ids
+  observed <- residuals(count_fit, type = "mahalanobis")
+  expect_equal(observed, expected, tolerance = 1e-10)
 })
 
 

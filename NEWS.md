@@ -19,6 +19,11 @@
   natural cluster/repeated order, fitted-value order, or covariate-based
   orderings.
 
+* Added cluster-level Mahalanobis residuals through
+  `residuals(..., type = "mahalanobis")`, using the fitted working covariance
+  matrix. Deviance residuals are now scaled by the fitted dispersion parameter,
+  consistent with the GEE residual definition used by `glmtoolbox`.
+
 * Changed the default covariance estimator in `geecriteria()` to `"robust"` so
   the classical forms of covariance-based GEE criteria are returned by default.
   Other covariance estimators remain available through `cov_type`.

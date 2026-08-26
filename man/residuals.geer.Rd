@@ -6,29 +6,49 @@
 \alias{residuals}
 \title{Residuals from a geer Object}
 \usage{
-\method{residuals}{geer}(object, type = c("working", "pearson", "deviance"), ...)
+\method{residuals}{geer}(
+  object,
+  type = c("working", "pearson", "deviance", "mahalanobis"),
+  ...
+)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{type}{character string specifying the type of residuals to return.
 Options are \code{"working"} for raw residuals, \code{"pearson"} for
-residuals standardized by the variance function, and \code{"deviance"}
-for signed square roots of the deviance contributions. Defaults to
-\code{"working"}.}
+residuals standardized by the marginal variance, \code{"deviance"}
+for dispersion-scaled signed square roots of the deviance contributions,
+and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
+Defaults to \code{"working"}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
 \value{
-A numeric vector of residuals of the requested \code{type}, of the same
-length as the number of observations used in fitting.
+A numeric vector. For \code{type = "working"}, \code{"pearson"}, or
+\code{"deviance"}, the vector has one value per fitted observation. For
+\code{type = "mahalanobis"}, it has one value per cluster and is named by
+the cluster identifier.
 }
 \description{
 Extracts residuals of different types from a fitted \code{geer} object.
 }
 \details{
-Residuals are computed using the marginal variance and deviance functions
-of the family specified in the fitted model.
+Pearson residuals are computed as
+\deqn{r^P_{ij} = \frac{y_{ij} - \hat\mu_{ij}}{\sqrt{\hat\phi
+V(\hat\mu_{ij}) / w_{ij}}}.}
+Deviance residuals are computed as
+\deqn{r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
+\sqrt{d_{ij} / \hat\phi},}
+where \eqn{d_{ij}} is the non-scaled deviance contribution returned by
+the fitted family.
+
+Mahalanobis residuals are computed once per cluster as
+\deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^T
+\widehat{\operatorname{Var}}(Y_i)^{-1}(y_i - \hat\mu_i),}
+using the fitted working covariance matrix for that cluster. They are
+therefore nonnegative cluster-level diagnostics, rather than
+observation-level signed residuals.
 }
 \examples{
 data("cerebrovascular", package = "geer")
@@ -42,7 +62,13 @@ fit <- geewa_binary(
 head(residuals(fit, type = "working"))
 head(residuals(fit, type = "pearson"))
 head(residuals(fit, type = "deviance"))
+head(residuals(fit, type = "mahalanobis"))
 
+}
+\references{
+Vanegas, L. H., Rondon, L. M., and Paula, G. A. (2023). Generalized
+Estimating Equations using the new R package glmtoolbox. \emph{The R
+Journal}, 15(2), 105--133.
 }
 \seealso{
 \code{\link{fitted.geer}}, \code{\link{predict.geer}},

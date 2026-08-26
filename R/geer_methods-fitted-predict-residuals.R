@@ -230,6 +230,55 @@ predict.geer <- function(object,
 }
 
 
+compute_mahalanobis_residuals <- function(object) {
+  id_labels <- as.character(object$id)
+  cluster_ids <- unique(id_labels)
+  ans <- vapply(
+    cluster_ids,
+    FUN.VALUE = numeric(1),
+    FUN = function(cluster_id) {
+      indices <- which(id_labels == cluster_id)
+      residual_vector <- object$y[indices] - object$fitted.values[indices]
+      working_covariance <- compute_working_covariance_for_criteria(
+        object,
+        indices
+      )
+      solved <- tryCatch(
+        solve(working_covariance, residual_vector),
+        error = function(e) {
+          stop(
+            sprintf(
+              paste0(
+                "Mahalanobis residual could not be computed for cluster '%s' ",
+                "because its working covariance matrix is singular"
+              ),
+              as.character(cluster_id)
+            ),
+            call. = FALSE
+          )
+        }
+      )
+      value <- as.numeric(crossprod(residual_vector, solved)) / length(indices)
+      if (!is.finite(value)) {
+        stop(
+          sprintf(
+            paste0(
+              "Mahalanobis residual could not be computed for cluster '%s' ",
+              "because the result is non-finite"
+            ),
+            as.character(cluster_id)
+          ),
+          call. = FALSE
+        )
+      }
+      max(value, 0)
+    }
+  )
+  names(ans) <- cluster_ids
+  ans
+}
+
+
 #' @title
 #' Residuals from a geer Object
 #'
@@ -242,17 +291,38 @@ predict.geer <- function(object,
 #' @inheritParams coef.geer
 #' @param type character string specifying the type of residuals to return.
 #'   Options are \code{"working"} for raw residuals, \code{"pearson"} for
-#'   residuals standardized by the variance function, and \code{"deviance"}
-#'   for signed square roots of the deviance contributions. Defaults to
-#'   \code{"working"}.
+#'   residuals standardized by the marginal variance, \code{"deviance"}
+#'   for dispersion-scaled signed square roots of the deviance contributions,
+#'   and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
+#'   Defaults to \code{"working"}.
 #'
 #' @details
-#' Residuals are computed using the marginal variance and deviance functions
-#' of the family specified in the fitted model.
+#' Pearson residuals are computed as
+#' \deqn{r^P_{ij} = \frac{y_{ij} - \hat\mu_{ij}}{\sqrt{\hat\phi
+#' V(\hat\mu_{ij}) / w_{ij}}}.}
+#' Deviance residuals are computed as
+#' \deqn{r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
+#' \sqrt{d_{ij} / \hat\phi},}
+#' where \eqn{d_{ij}} is the non-scaled deviance contribution returned by
+#' the fitted family.
+#'
+#' Mahalanobis residuals are computed once per cluster as
+#' \deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^T
+#' \widehat{\operatorname{Var}}(Y_i)^{-1}(y_i - \hat\mu_i),}
+#' using the fitted working covariance matrix for that cluster. They are
+#' therefore nonnegative cluster-level diagnostics, rather than
+#' observation-level signed residuals.
 #'
 #' @return
-#' A numeric vector of residuals of the requested \code{type}, of the same
-#' length as the number of observations used in fitting.
+#' A numeric vector. For \code{type = "working"}, \code{"pearson"}, or
+#' \code{"deviance"}, the vector has one value per fitted observation. For
+#' \code{type = "mahalanobis"}, it has one value per cluster and is named by
+#' the cluster identifier.
+#'
+#' @references
+#' Vanegas, L. H., Rondon, L. M., and Paula, G. A. (2023). Generalized
+#' Estimating Equations using the new R package glmtoolbox. \emph{The R
+#' Journal}, 15(2), 105--133.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},
 #'   \code{\link{runs_test}}, \code{\link{geewa}},
@@ -270,10 +340,11 @@ predict.geer <- function(object,
 #' head(residuals(fit, type = "working"))
 #' head(residuals(fit, type = "pearson"))
 #' head(residuals(fit, type = "deviance"))
+#' head(residuals(fit, type = "mahalanobis"))
 #'
 #' @export
 residuals.geer <- function(object,
-                           type = c("working", "pearson", "deviance"),
+                           type = c("working", "pearson", "deviance", "mahalanobis"),
                            ...) {
   object <- check_geer_object(object)
   type <- match.arg(type)
@@ -287,13 +358,14 @@ residuals.geer <- function(object,
       as.numeric(get_pearson_residuals(object$family$family, y, mu, weights))/sqrt(object$phi),
     deviance = {
       if (object$df.residual > 0) {
-        dr <- sqrt(pmax(object$family$dev.resids(y, mu, weights), 0))
+        dr <- sqrt(pmax(object$family$dev.resids(y, mu, weights), 0) / object$phi)
         sign_term <- ifelse(y > mu, 1, ifelse(y < mu, -1, 0))
         dr * sign_term
       } else {
         rep.int(0, length(mu))
       }
-    }
+    },
+    mahalanobis = compute_mahalanobis_residuals(object)
   )
   ans
 }

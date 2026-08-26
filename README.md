@@ -104,8 +104,8 @@ Standard S3 methods are available for fitted `geer` objects:
 - `summary()`, `print()` — coefficient table and model summary.
 - `coef()`, `vcov()`, `confint()` — estimates, covariance matrices,
   and confidence intervals.
-- `fitted()`, `residuals()`, `predict()` — fitted values and
-  predictions.
+- `fitted()`, `residuals()`, `predict()` — fitted values, observation-level
+  residuals, cluster-level Mahalanobis residuals, and predictions.
 - `runs_test()` — Wald-Wolfowitz test for non-random residual sign
   sequences, with natural, fitted-value, and covariate-based ordering.
 - `model.matrix()` — design matrix.
@@ -122,6 +122,13 @@ check for non-random residual sign patterns:
 ``` r
 runs_test(fit)
 runs_test(fit, type = "deviance", order_by = "fitted")
+```
+
+Cluster-level Mahalanobis residuals can be used to identify clusters whose
+response profiles fit the working mean/covariance model poorly:
+
+``` r
+residuals(fit, type = "mahalanobis")
 ```
 
 ### Model building and selection
