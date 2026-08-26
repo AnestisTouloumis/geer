@@ -46,6 +46,6 @@ head(residuals(fit, type = "deviance"))
 }
 \seealso{
 \code{\link{fitted.geer}}, \code{\link{predict.geer}},
-  \code{\link{geewa}}, \code{\link{geewa_binary}},
-  \code{\link[stats]{residuals}}.
+  \code{\link{runs_test}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}, \code{\link[stats]{residuals}}.
 }

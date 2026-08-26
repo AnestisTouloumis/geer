@@ -255,8 +255,8 @@ predict.geer <- function(object,
 #' length as the number of observations used in fitting.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},
-#'   \code{\link{geewa}}, \code{\link{geewa_binary}},
-#'   \code{\link[stats]{residuals}}.
+#'   \code{\link{runs_test}}, \code{\link{geewa}},
+#'   \code{\link{geewa_binary}}, \code{\link[stats]{residuals}}.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")

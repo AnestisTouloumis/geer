@@ -106,6 +106,8 @@ Standard S3 methods are available for fitted `geer` objects:
   and confidence intervals.
 - `fitted()`, `residuals()`, `predict()` — fitted values and
   predictions.
+- `runs_test()` — Wald-Wolfowitz test for non-random residual sign
+  sequences, with natural, fitted-value, and covariate-based ordering.
 - `model.matrix()` — design matrix.
 - `tidy()`, `glance()` — tidy summaries following
   [broom](https://broom.tidymodels.org/) conventions.
@@ -113,6 +115,14 @@ Standard S3 methods are available for fitted `geer` objects:
 The `cov_type` argument controls the covariance estimator used for
 inference: `"bias-corrected"` (default), `"robust"` (sandwich),
 `"df-adjusted"`, or `"naive"` (model-based).
+
+The Wald-Wolfowitz residual runs test can be used as a quantitative
+check for non-random residual sign patterns:
+
+``` r
+runs_test(fit)
+runs_test(fit, type = "deviance", order_by = "fitted")
+```
 
 ### Model building and selection
 
@@ -158,6 +168,12 @@ and `rinse`.
 
 Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 generalized linear models. *Biometrika*, **73**, 13--22.
+
+Chang, Y.-C. (2000) Residuals analysis of the generalized linear models
+for longitudinal data. *Statistics in Medicine*, **19**, 1277--1293.
+
+Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
+2nd ed. Chapman and Hall/CRC.
 
 Touloumis, A. (2026) [Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
 

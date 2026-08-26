@@ -13,6 +13,7 @@ test_that("package exports the core public API", {
     "geewa",
     "geewa_binary",
     "glance",
+    "runs_test",
     "step_p",
     "tidy"
   ) %in% exported))

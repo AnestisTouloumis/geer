@@ -13,6 +13,12 @@
   `AGPC`, and `SGPC`. These complement the existing `QIC`, `CIC`, `RJC`,
   `QICu`, `GESSC`, and `GPC` criteria.
 
+* Added `runs_test()` for the Wald-Wolfowitz nonparametric runs test of GEE
+  residual signs described by Chang (2000) and Hardin and Hilbe (2013). The
+  test supports Pearson, deviance, and working residuals and can assess the
+  natural cluster/repeated order, fitted-value order, or covariate-based
+  orderings.
+
 * Changed the default covariance estimator in `geecriteria()` to `"robust"` so
   the classical forms of covariance-based GEE criteria are returned by default.
   Other covariance estimators remain available through `cov_type`.
