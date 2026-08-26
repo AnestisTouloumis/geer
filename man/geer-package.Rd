@@ -40,6 +40,8 @@ Main functions:
   \code{\link{predict.geer}}, \code{\link{fitted.geer}},
   \code{\link{residuals.geer}}, and \code{\link{frechet_bounds_cor}} for
   inference and model diagnostics.
+  \item \code{\link{marginaleffects-support}} for post-estimation support
+  through the \pkg{marginaleffects} package.
 }
 }
 \author{

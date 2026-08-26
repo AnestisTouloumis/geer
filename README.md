@@ -122,11 +122,27 @@ inference: `"bias-corrected"` (default), `"robust"` (sandwich),
 - `geecriteria()` — QIC, CIC, RJC, QICu, GESSC, and GPC model
   selection criteria.
 
-### emmeans support
+### Post-estimation support
 
 Fitted `geer` objects are compatible with the
 [emmeans](https://cran.r-project.org/package=emmeans) package for
 estimated marginal means.
+
+They are also compatible with the
+[marginaleffects](https://marginaleffects.com/) package for predictions,
+average predictions, comparisons, and slopes (marginal effects):
+
+``` r
+# install.packages("marginaleffects")
+marginaleffects::avg_predictions(fit_bin)
+marginaleffects::avg_comparisons(fit_bin, variables = "treatment")
+marginaleffects::avg_slopes(fit, variables = "lnage")
+```
+
+By default, `marginaleffects` uses the bias-corrected covariance matrix
+for `geer` models. Use `vcov = "robust"` for the sandwich covariance
+matrix. Other `geer` covariance estimators can be supplied as a function,
+for example `vcov = function(x) vcov(x, cov_type = "naive")`.
 
 ## Datasets
 
