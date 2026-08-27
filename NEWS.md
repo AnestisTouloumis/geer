@@ -19,6 +19,50 @@
   natural cluster/repeated order, fitted-value order, or covariate-based
   orderings.
 
+* Added `little_mcar_test()` implementing Little's (1988) test for assessing
+  whether repeated-response missingness is compatible with MCAR. The function
+  works directly with fitted `geer` objects or numeric wide-format data,
+  estimates the common multivariate-normal mean and covariance by an internal
+  EM algorithm, and applies Little's `n / (n - 1)` covariance correction in the
+  test statistic. The exact normal-theory F reference is used automatically for
+  the bivariate monotone case; otherwise the large-sample chi-squared reference
+  is used. A warning is issued when binary variables are detected because
+  Little recommends the procedure primarily for quantitative variables.
+
+* Added `mcar_homoscedasticity_test()` implementing the Jamshidian-Jalal
+  (2010) MCAR screening framework. Cases are grouped by their original
+  missingness pattern, completed with either distribution-free residual
+  resampling or conditional normal imputation, and assessed using the modified
+  Hawkins normality/homoscedasticity test and/or the nonparametric k-sample
+  Anderson-Darling test. The default `method = "auto"` follows the published
+  diagnostic logic, while small pattern groups are omitted using the same
+  seven-case default threshold as the associated `MissMech` implementation.
+  The function works with fitted `geer` objects or numeric wide-format data and
+  is documented as a screening diagnostic that does not condition on the
+  fitted GEE regression structure. Documentation also notes the common-population
+  assumption and that the reported result is based on a single imputation;
+  multiple imputation is treated as a sensitivity diagnostic in the original
+  framework.
+
+* Revised `mcar_logistic_test()` to use a Ridout-style longitudinal risk-set
+  formulation. At occasion `t`, the missingness indicator is modeled only when
+  the response at `t - 1` is observed; the immediately previous response is
+  included automatically and occasion effects are nuisance parameters. The
+  binary model is now fitted with `geewa_binary()` using a logit link and a
+  working odds-ratio structure. The primary test assesses dependence on the
+  previous response, with additional tests for observed-covariate effects and
+  the joint effect of covariates and response history. All five hypothesis-test
+  procedures implemented for `geer` models are available: Wald, generalized
+  score, modified working Wald, modified working score, and modified working
+  LRT. The Rao-Scott and Satterthwaite approximations are available for the
+  modified working tests. The default covariance estimator for this diagnostic
+  is now the bias-corrected covariance matrix, consistent with the package's
+  default inferential emphasis. This distinguishes evidence against
+  covariate-dependent MCAR from covariate-only departures from strict MCAR. Intermittent missingness is supported as a local
+  transition diagnostic with a warning that the interpretation is no longer a
+  pure dropout test. References now include Ridout (1991) and Fitzmaurice,
+  Heath and Clifford (1996).
+
 * Added cluster-level Mahalanobis residuals through
   `residuals(..., type = "mahalanobis")`, using the fitted working covariance
   matrix. Deviance residuals are now scaled by the fitted dispersion parameter,

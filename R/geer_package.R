@@ -35,8 +35,11 @@
 #'   \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
 #'   \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
 #'   \code{\link{predict.geer}}, \code{\link{fitted.geer}},
-#'   \code{\link{residuals.geer}}, \code{\link{runs_test}}, and
-#'   \code{\link{frechet_bounds_cor}} for inference and model diagnostics.
+#'   \code{\link{residuals.geer}}, \code{\link{runs_test}},
+#'   \code{\link{little_mcar_test}}, \code{\link{mcar_homoscedasticity_test}},
+#'   \code{\link{mcar_logistic_test}}, and
+#'   \code{\link{frechet_bounds_cor}}
+#'   for inference and model diagnostics.
 #'   \item \code{\link{marginaleffects-support}} for post-estimation support
 #'   through the \pkg{marginaleffects} package.
 #' }
