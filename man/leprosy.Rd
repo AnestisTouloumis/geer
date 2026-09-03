@@ -15,6 +15,10 @@ A data frame with 60 rows and 4 columns:
     where \code{C} denotes placebo.}
 }
 }
+\source{
+Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Ames,
+Iowa: Iowa State University Press.
+}
 \usage{
 leprosy
 }
@@ -33,9 +37,5 @@ treatments A and B reduced bacilli abundance compared with placebo.
 \examples{
 data("leprosy", package = "geer")
 str(leprosy)
-}
-\references{
-Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Ames,
-Iowa: Iowa State University Press.
 }
 \keyword{datasets}

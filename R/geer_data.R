@@ -1,5 +1,7 @@
+#' @title
 #' Cerebrovascular Deficiency Trial
 #'
+#' @description
 #' Data from a randomized two-period crossover trial on cerebrovascular
 #' deficiency.
 #'
@@ -19,7 +21,7 @@
 #' followed by placebo. ECG status was classified as normal or abnormal at each
 #' period.
 #'
-#' @references
+#' @source
 #' Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
 #' Trials}. London: Chapman and Hall/CRC Press.
 #'
@@ -29,8 +31,10 @@
 "cerebrovascular"
 
 
+#' @title
 #' Shoulder Pain After Laparoscopic Cholecystectomy Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on shoulder pain after laparoscopic
 #' cholecystectomy.
 #'
@@ -70,8 +74,10 @@
 "cholecystectomy"
 
 
+#' @title
 #' Postnatal Depression Oestrogen Patch Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on the efficacy of oestrogen patches
 #' in treating postnatal depression.
 #'
@@ -107,8 +113,10 @@
 "depression"
 
 
+#' @title
 #' Progabide Epilepsy Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on the efficacy of progabide in
 #' treating partial seizures.
 #'
@@ -146,8 +154,10 @@
 "epilepsy"
 
 
+#' @title
 #' Antibiotic Treatment for Leprosy Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on the efficacy of antibiotic
 #' treatments for leprosy in the Philippines.
 #'
@@ -170,7 +180,7 @@
 #' bacilli counts were recorded again. The trial aimed to assess whether
 #' treatments A and B reduced bacilli abundance compared with placebo.
 #'
-#' @references
+#' @source
 #' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Ames,
 #' Iowa: Iowa State University Press.
 #'
@@ -180,8 +190,10 @@
 "leprosy"
 
 
+#' @title
 #' Respiratory Illness Clinical Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on respiratory illness.
 #'
 #' @docType data
@@ -206,7 +218,7 @@
 #' Baseline examinations were conducted before treatment began. After
 #' treatment, subjects were examined at four scheduled follow-up visits.
 #'
-#' @references
+#' @source
 #' Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
 #' Analysis using the SAS System}. Cary, NC: SAS Institute, Inc.
 #'
@@ -216,8 +228,10 @@
 "respiratory"
 
 
+#' @title
 #' Dental Plaque Mouth Rinse Trial
 #'
+#' @description
 #' Data from a randomized clinical trial on the efficacy of mouth rinses in
 #' reducing dental plaque.
 #'
@@ -238,8 +252,8 @@
 #' @details
 #' One hundred nine adults aged 18--55 with pre-existing dental plaque but
 #' without advanced periodontal disease were enrolled in a randomized,
-#' double-blind clinical trial, yielding 218 observations (baseline plus
-#' up to two follow-up assessments per subject). Subjects were assigned to one
+#' double-blind clinical trial, yielding 218 follow-up observations (up to two
+#' follow-up assessments per subject). Subjects were assigned to one
 #' of two novel mouth rinses (A or B) or to a control mouth rinse. Eligibility
 #' required at least 20 sound natural teeth and a mean plaque index of 2.0 or
 #' greater. Plaque was assessed at baseline, 3 months, and 6 months using the
@@ -247,7 +261,7 @@
 #' plaque scores. The trial aimed to evaluate the effectiveness of the three
 #' rinses in inhibiting dental plaque.
 #'
-#' @references
+#' @source
 #' Hadgu, A. and Koch, G. (1999) Application of generalized estimating
 #' equations to a dental randomized clinical trial. \emph{Journal of
 #' Biopharmaceutical Statistics}, \bold{9}, 161--178.

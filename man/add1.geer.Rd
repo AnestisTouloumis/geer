@@ -2,26 +2,24 @@
 % Please edit documentation in R/geer_methods-add1-drop1-anova.R
 \name{add1.geer}
 \alias{add1.geer}
-\alias{add1}
 \alias{drop1.geer}
-\alias{drop1}
 \title{Add or Drop Single Terms to or from a geer Model}
 \usage{
 \method{add1}{geer}(
   object,
   scope,
-  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  pmethod = c("rao-scott", "satterthwaite"),
+  test = geer_test_choices,
+  cov_type = geer_cov_type_choices,
+  pmethod = geer_pmethod_choices,
   ...
 )
 
 \method{drop1}{geer}(
   object,
   scope,
-  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  pmethod = c("rao-scott", "satterthwaite"),
+  test = geer_test_choices,
+  cov_type = geer_cov_type_choices,
+  pmethod = geer_pmethod_choices,
   ...
 )
 }
@@ -42,7 +40,8 @@ working likelihood ratio test (\code{"working-lrt"}). Defaults to
 used for inference on the regression parameters. Options are the bias-corrected
 estimator (\code{"bias-corrected"}), the sandwich or robust estimator
 (\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), and the model-based or naive estimator
+(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+(\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation used to compute
@@ -85,10 +84,17 @@ compute the test statistic. For modified working tests, \code{cov_type}
 determines the covariance matrix used to form the coefficients of the sum of
 independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to compute the p-value.
+When \code{cov_type = "jackknife"} is used with a score or modified working
+score test, the score and model-based information remain evaluated under the
+null model, while the covariance component is the full leave-one-cluster
+jackknife covariance from the larger fitted model.
 
 The output table also includes the Correlation Information Criterion (CIC)
-for each candidate model, which can be used to guide selection of the
-working association structure.
+for each candidate model as supplementary model information. The CIC is
+computed from \code{vcov(model, cov_type = cov_type)}, so with
+\code{cov_type = "jackknife"} a full set of leave-one-cluster refits is
+performed for the current model and for every candidate model; see
+\code{\link{vcov.geer}}.
 }
 \examples{
 data("respiratory", package = "geer")

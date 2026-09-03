@@ -18,6 +18,11 @@ A data frame with 218 rows and 8 columns:
   \item{smoke}{factor with levels \code{yes} and \code{no}.}
 }
 }
+\source{
+Hadgu, A. and Koch, G. (1999) Application of generalized estimating
+equations to a dental randomized clinical trial. \emph{Journal of
+Biopharmaceutical Statistics}, \bold{9}, 161--178.
+}
 \usage{
 rinse
 }
@@ -28,8 +33,8 @@ reducing dental plaque.
 \details{
 One hundred nine adults aged 18--55 with pre-existing dental plaque but
 without advanced periodontal disease were enrolled in a randomized,
-double-blind clinical trial, yielding 218 observations (baseline plus
-up to two follow-up assessments per subject). Subjects were assigned to one
+double-blind clinical trial, yielding 218 follow-up observations (up to two
+follow-up assessments per subject). Subjects were assigned to one
 of two novel mouth rinses (A or B) or to a control mouth rinse. Eligibility
 required at least 20 sound natural teeth and a mean plaque index of 2.0 or
 greater. Plaque was assessed at baseline, 3 months, and 6 months using the
@@ -40,10 +45,5 @@ rinses in inhibiting dental plaque.
 \examples{
 data("rinse", package = "geer")
 str(rinse)
-}
-\references{
-Hadgu, A. and Koch, G. (1999) Application of generalized estimating
-equations to a dental randomized clinical trial. \emph{Journal of
-Biopharmaceutical Statistics}, \bold{9}, 161--178.
 }
 \keyword{datasets}

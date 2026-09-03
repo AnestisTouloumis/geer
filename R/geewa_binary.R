@@ -4,8 +4,8 @@
 #' @description
 #' Fits a marginal model for repeated or clustered binary responses using
 #' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
-#' Jeffreys-prior penalized GEE.
+#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' Jeffreys-type penalized GEE.
 #'
 #' @inheritParams geewa
 #' @param link character string specifying the link function for the marginal mean
@@ -34,7 +34,7 @@
 #' the corresponding bias-corrected estimators are produced via a one-step
 #' correction applied to the converged GEE solution. If
 #' \code{method = "pgee-jeffreys"}, the GEE are penalized using a
-#' Jeffreys-prior penalty run to full convergence. If
+#' Jeffreys-type penalty run to full convergence. If
 #' \code{method = "opgee-jeffreys"}, a single penalized scoring step is
 #' performed from the converged independence penalized solution (one-step
 #' approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
@@ -47,10 +47,10 @@
 #' scale parameter is fixed at \code{phi = 1}.
 #'
 #' For the construction of the \code{formula} argument, see the documentation
-#' of \code{\link{glm}} and \code{\link{formula}}.
+#' of \code{\link[stats]{glm}} and \code{\link[stats]{formula}}.
 #'
 #' The \code{data} must be in long format (one row per observation). See
-#' \code{\link{reshape}} for details on reshaping between long and wide formats.
+#' \code{\link[stats]{reshape}} for details on reshaping between long and wide formats.
 #'
 #' The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 #' \eqn{N} is the number of clusters. Otherwise, the function recodes the
@@ -175,7 +175,7 @@ geewa_binary <- function(formula,
   mcall <- match.call(expand.dots = FALSE)
   model_frame <- build_geer_model_frame(mcall, env = parent.frame())
   ## link function
-  family <- binomial(link = link)
+  family <- stats::binomial(link = link)
   family <- normalize_family(family)
   link <- family$link
   ## response
@@ -212,7 +212,7 @@ geewa_binary <- function(formula,
   tolerance <- control$tolerance
   ## method
   method <- as.character(method)
-  check_choice(method, valid_methods, "method")
+  check_choice(method, geer_method_choices, "method")
   ## initial beta
   beta_zero <- compute_geer_binary_start_values(
     model_matrix = model_matrix,
@@ -227,7 +227,7 @@ geewa_binary <- function(formula,
     jeffreys_power = control$jeffreys_power
   )
   ## odds ratios structure
-  check_choice(orstr, valid_orstrs, "orstr")
+  check_choice(orstr, geer_orstr_choices, "orstr")
   if (identical(orstr, "independence")) {
     alpha_vector <- rep.int(1, choose(max(repeated), 2))
   } else if (identical(orstr, "fixed")) {
@@ -244,7 +244,7 @@ geewa_binary <- function(formula,
   }
   ## fit
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
-  if (method %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method %in% geer_bcgee_methods) {
     ## pass 1: plain GEE to convergence
     geesolver_fit <- fit_bingee_or(
       y, model_matrix, id, repeated, weights, link,
@@ -323,29 +323,23 @@ geewa_binary <- function(formula,
     id = id,
     repeated = repeated,
     call = call,
+    formula = formula,
     data = data,
     model_terms = model_terms,
     control = control,
     method = method,
     association_structure = orstr
   )
-  fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
-  if (method %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical", "opgee-jeffreys", "hpgee-jeffreys")) {
-    fit$converged <- TRUE
-  }
-  fit$alpha <- if (identical(orstr, "independence")) 1 else as.numeric(geesolver_fit$alpha)
-  if (orstr %in% c("unstructured", "fixed")) {
-    pairs_matrix <- combn(max(repeated), 2)
-    alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
-    names(fit$alpha) <- alpha_names
-  }
-  if (!fit$converged) {
-    warning("geewa_binary: algorithm did not converge", call. = FALSE)
-  }
-  eps <- 10 * .Machine$double.eps
-  if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps)) {
-    warning("geewa_binary: fitted probabilities numerically 0 or 1 occurred", call. = FALSE)
-  }
+  fit <- finalize_geer_fit(
+    fit = fit,
+    geesolver_fit = geesolver_fit,
+    tolerance = tolerance,
+    method = method,
+    family = family,
+    association_structure = orstr,
+    repeated = repeated,
+    fit_function = "geewa_binary"
+  )
   fit <- new_geer(fit)
   fit <- validate_geer(fit)
   fit

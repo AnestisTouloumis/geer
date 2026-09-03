@@ -4,18 +4,14 @@
 \alias{summary.geer}
 \title{Summarize a geer Object}
 \usage{
-\method{summary}{geer}(
-  object,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  ...
-)
+\method{summary}{geer}(object, cov_type = geer_cov_type_choices, ...)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance estimator used to
 compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
-\code{"robust"}, \code{"df-adjusted"}, and
+\code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, and
 \code{"naive"}. Defaults to \code{"bias-corrected"}.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
@@ -30,9 +26,14 @@ An object of class \code{"summary.geer"}, a list with components:
 \item{alpha}{the estimated or fixed association parameters.}
 \item{call}{the matched call.}
 \item{residuals}{the working residuals.}
+\item{obs_no}{the number of observations used in the fit.}
+\item{clusters_no}{the number of clusters used in the fit.}
+\item{min_cluster_size}{the smallest observed cluster size.}
+\item{max_cluster_size}{the largest observed cluster size.}
 \item{iter}{the number of iterations used.}
 \item{converged}{logical indicating whether the algorithm converged.}
-\item{phi}{the estimated or fixed scale parameter.}
+\item{phi}{the estimated or fixed scale parameter. For models fitted by
+  \code{geewa_binary()}, this is always \code{1}.}
 \item{association_structure}{the name of the working association structure.}
 \item{method}{character string identifying the estimation method used.}
 \item{cov_type}{the covariance estimator used for standard errors.}

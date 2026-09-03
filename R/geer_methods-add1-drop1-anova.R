@@ -2,7 +2,6 @@
 #' Add or Drop Single Terms to or from a geer Model
 #'
 #' @rdname add1.geer
-#' @aliases add1 add1.geer
 #' @method add1 geer
 #'
 #' @description
@@ -34,10 +33,17 @@
 #' determines the covariance matrix used to form the coefficients of the sum of
 #' independent chi-squared random variables, and \code{pmethod} specifies the
 #' approximation used to compute the p-value.
+#' When \code{cov_type = "jackknife"} is used with a score or modified working
+#' score test, the score and model-based information remain evaluated under the
+#' null model, while the covariance component is the full leave-one-cluster
+#' jackknife covariance from the larger fitted model.
 #'
 #' The output table also includes the Correlation Information Criterion (CIC)
-#' for each candidate model, which can be used to guide selection of the
-#' working association structure.
+#' for each candidate model as supplementary model information. The CIC is
+#' computed from \code{vcov(model, cov_type = cov_type)}, so with
+#' \code{cov_type = "jackknife"} a full set of leave-one-cluster refits is
+#' performed for the current model and for every candidate model; see
+#' \code{\link{vcov.geer}}.
 #'
 #' @return
 #' An object of class \code{"anova"} summarizing the differences in fit
@@ -79,9 +85,9 @@
 add1.geer <-
   function(object,
            scope,
-           test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-           pmethod = c("rao-scott", "satterthwaite"),
+           test = geer_test_choices,
+           cov_type = geer_cov_type_choices,
+           pmethod = geer_pmethod_choices,
            ...) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
@@ -97,7 +103,7 @@ add1.geer <-
       stop("no terms in scope for adding to object", call. = FALSE)
     }
     if (!is.character(scope)) {
-      scope <- add.scope(object, update.formula(object, scope))
+      scope <- stats::add.scope(object, stats::update.formula(object, scope))
     }
     if (!length(scope)) {
       stop("no terms in scope for adding to object", call. = FALSE)
@@ -110,12 +116,7 @@ add1.geer <-
     ans[1L, 2L] <- compute_gee_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
-      add1_model <- update(
-        object,
-        formula = as.formula(paste(". ~ . +", tt)),
-        data = object$data
-      )
-      add1_model <- restore_original_data_call(add1_model, object)
+      add1_model <- refit_geer(object, stats::as.formula(paste(". ~ . +", tt)))
       value <- switch(
         test,
         wald = wald_test(object, add1_model, cov_type),
@@ -131,7 +132,7 @@ add1.geer <-
     }
     aod <- as.data.frame(ans)
     test_type <- format_test_label(test)
-    formula_txt <- paste(deparse(object$call$formula), collapse = " ")
+    formula_txt <- paste(deparse(object$formula), collapse = " ")
     head <- c(
       paste("Single term additions using", test_type, "test:"),
       "\nModel:", formula_txt
@@ -141,7 +142,6 @@ add1.geer <-
 
 
 #' @rdname add1.geer
-#' @aliases drop1 drop1.geer
 #' @method drop1 geer
 #'
 #' @examples
@@ -162,9 +162,9 @@ add1.geer <-
 #' @export
 drop1.geer <- function(object,
                        scope,
-                       test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-                       cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-                       pmethod = c("rao-scott", "satterthwaite"),
+                       test = geer_test_choices,
+                       cov_type = geer_cov_type_choices,
+                       pmethod = geer_pmethod_choices,
                        ...) {
   object <- check_geer_object(object)
   opts <- normalize_geer_test_options(
@@ -176,13 +176,13 @@ drop1.geer <- function(object,
   test <- opts$test
   cov_type <- opts$cov_type
   pmethod <- opts$pmethod
-  model_terms <- attr(terms(object), "term.labels")
-  admissible_scope <- drop.scope(object)
+  model_terms <- attr(stats::terms(object), "term.labels")
+  admissible_scope <- stats::drop.scope(object)
   if (missing(scope) || is.null(scope)) {
     scope <- admissible_scope
   } else {
     if (!is.character(scope)) {
-      scope <- attr(terms(update.formula(object, scope)), "term.labels")
+      scope <- attr(stats::terms(stats::update.formula(object, scope)), "term.labels")
     }
     if (!all(match(scope, model_terms, 0L) > 0L)) {
       stop("scope is not a subset of term labels", call. = FALSE)
@@ -206,12 +206,7 @@ drop1.geer <- function(object,
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
 
-    drop1_model <- update(
-      object,
-      formula = as.formula(paste(". ~ . -", tt)),
-      data = object$data
-    )
-    drop1_model <- restore_original_data_call(drop1_model, object)
+    drop1_model <- refit_geer(object, stats::as.formula(paste(". ~ . -", tt)))
     value <- switch(
       test,
       wald = wald_test(drop1_model, object, cov_type),
@@ -235,7 +230,7 @@ drop1.geer <- function(object,
   }
   aod <- as.data.frame(ans)
   test_type <- format_test_label(test)
-  formula_txt <- paste(deparse(object$call$formula), collapse = " ")
+  formula_txt <- paste(deparse(object$formula), collapse = " ")
   head <- c(
     paste("Single term deletions using", test_type, "test:"),
     "\nModel:", formula_txt
@@ -247,7 +242,6 @@ drop1.geer <- function(object,
 #' @title
 #' ANOVA Tables for geer Objects
 #'
-#' @aliases anova anova.geer
 #' @method anova geer
 #'
 #' @description
@@ -267,7 +261,8 @@ drop1.geer <- function(object,
 #'   used for inference on the regression parameters. Options are the bias-corrected
 #'   estimator (\code{"bias-corrected"}), the sandwich or robust estimator
 #'   (\code{"robust"}), the degrees-of-freedom adjusted estimator
-#'   (\code{"df-adjusted"}), and the model-based or naive estimator
+#'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+#'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param pmethod character string specifying the approximation used to compute
 #'   the p-value for the modified working tests. Options are the Rao--Scott
@@ -286,10 +281,15 @@ drop1.geer <- function(object,
 #' determines the covariance matrix used to form the coefficients of the sum of
 #' independent chi-squared random variables, and \code{pmethod} specifies the
 #' approximation used to compute the p-value.
+#' When \code{cov_type = "jackknife"} is used with a score or modified working
+#' score test, the score and model-based information remain evaluated under the
+#' null model, while the covariance component is the full leave-one-cluster
+#' jackknife covariance from the larger fitted model.
 #'
 #' When comparing two or more models, the data must be identical across all
-#' fits, and the models must be nested in the order supplied. In particular,
-#' each consecutive pair of models must be nested.
+#' fits and each consecutive pair of models must be nested. Models with a
+#' working association structure different from Model 1 are omitted with a
+#' warning.
 #'
 #' @return
 #' An object of class \code{c("anova", "data.frame")}. With a single model,
@@ -304,9 +304,9 @@ drop1.geer <- function(object,
 #'
 #' @inherit add1.geer references
 #'
-#' @seealso \code{\link{add1.geer}}, \code{\link{drop1.geer}} for type II
-#'   tests where each term is dropped one at a time while respecting model
-#'   hierarchy; \code{\link{step_p}} for stepwise model selection;
+#' @seealso \code{\link{add1.geer}} and \code{\link{drop1.geer}} for
+#'   single-term additions and deletions while respecting model hierarchy;
+#'   \code{\link{step_p}} for stepwise model selection;
 #'   \code{\link{geecriteria}} for model comparison criteria.
 #'
 #' @examples
@@ -336,9 +336,9 @@ drop1.geer <- function(object,
 anova.geer <-
   function(object,
            ...,
-           test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-           cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-           pmethod = c("rao-scott", "satterthwaite")) {
+           test = geer_test_choices,
+           cov_type = geer_cov_type_choices,
+           pmethod = geer_pmethod_choices) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
       test = test[1L],
@@ -375,30 +375,23 @@ anova.geer <-
     nvars <- max(c(0, varseq))
     object_list <- list()
     if (intercept == 1) {
-      object_list[[1]] <- update(object, formula = . ~ 1, data = object$data)
-      object_list[[1]] <- restore_original_data_call(object_list[[1]], object)
+      object_list[[1]] <- refit_geer(object, . ~ 1)
       for (i in seq_len(nvars)) {
-        object_list[[i + 1]] <- update(
+        object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
-          formula = paste(". ~ . + ", terms[i]),
-          data = object$data
+          stats::as.formula(paste(". ~ . + ", terms[i]))
         )
-        object_list[[i + 1]] <- restore_original_data_call(object_list[[i + 1]], object)
       }
     } else {
-      object_list[[1]] <- update(
+      object_list[[1]] <- refit_geer(
         object,
-        formula = paste(". ~ -1 + ", terms[1]),
-        data = object$data
+        stats::as.formula(paste(". ~ -1 + ", terms[1]))
       )
-      object_list[[1]] <- restore_original_data_call(object_list[[1]], object)
       for (i in seq_len(nvars - 1)) {
-        object_list[[i + 1]] <- update(
+        object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
-          formula = paste(". ~ . + ", terms[i + 1]),
-          data = object$data
+          stats::as.formula(paste(". ~ . + ", terms[i + 1]))
         )
-        object_list[[i + 1]] <- restore_original_data_call(object_list[[i + 1]], object)
       }
     }
     resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))

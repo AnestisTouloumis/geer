@@ -84,12 +84,7 @@
 
 
 .step_p_update_fit <- function(fitted_model, change, obs_no) {
-  updated_model <- update(
-    fitted_model,
-    formula = paste(". ~ .", change),
-    data = fitted_model$data
-  )
-  updated_model <- restore_original_data_call(updated_model, fitted_model)
+  updated_model <- refit_geer(fitted_model, stats::as.formula(paste(". ~ .", change)))
   obs_no_new <- updated_model$obs_no
   if (all(is.finite(c(obs_no, obs_no_new))) && obs_no_new != obs_no) {
     stop("number of rows in use has changed: remove missing values?", call. = FALSE)
@@ -137,7 +132,7 @@
   )
   row.names(aod) <- row_labels
   heading <- c(
-    "Stepwise Model Path \nAnalysis of Deviance Table",
+    "Stepwise Model Selection Table",
     "\nInitial Model:", paste(deparse(stats::formula(object)), collapse = " "),
     "\nFinal Model:", paste(deparse(stats::formula(fit)), collapse = " "), "\n"
   )
@@ -233,7 +228,7 @@
   if (!length(fscope$drop)) {
     return(NULL)
   }
-  aod <- drop1(
+  aod <- stats::drop1(
     object = fitted_model,
     scope = fscope$drop,
     test = test,
@@ -264,7 +259,7 @@
   if (!length(fscope$add)) {
     return(NULL)
   }
-  aod <- add1(
+  aod <- stats::add1(
     object = fitted_model,
     scope = fscope$add,
     test = test,

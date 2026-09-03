@@ -4,26 +4,28 @@
 #' @description
 #' Fits a marginal model for repeated or clustered responses using
 #' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
-#' Jeffreys-prior penalized GEE.
+#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' Jeffreys-type penalized GEE.
 #'
 #' @param formula \code{formula} expression of the form
 #'        \code{response ~ predictors}: a symbolic description of the marginal
 #'        model to be fitted.
-#' @param family a \code{\link[stats]{family}} object specifying the marginal
+#' @param family a \code{\link[stats]{family}} object, family function, or
+#'        character string naming a family function, specifying the marginal
 #'        variance and link functions. Supported families are \code{gaussian},
 #'        \code{binomial}, \code{poisson}, \code{Gamma},
 #'        \code{inverse.gaussian}, \code{quasi}, \code{quasibinomial} and
 #'        \code{quasipoisson}. Defaults to
 #'        \code{gaussian(link = "identity")}.
 #' @param data optional data frame containing variables referenced in
-#'        \code{formula}, \code{id} and \code{repeated}.
+#'        \code{formula}, \code{id}, \code{repeated}, \code{weights}, and
+#'        \code{offset}.
 #' @param id variable identifying the clusters.
 #' @param repeated optional variable identifying the order of observations
 #'        within each cluster.
 #' @param control a \code{\link{geer_control}} list specifying convergence
 #'        tolerance, maximum iterations, step-halving parameters, and the
-#'        Jeffreys-prior power. Defaults to \code{geer_control()}.
+#'        power of the Jeffreys-type penalty. Defaults to \code{geer_control()}.
 #' @param corstr character string specifying the working correlation structure. Options
 #'        are \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
 #'        \code{"m-dependent"}, \code{"unstructured"}, \code{"toeplitz"} and
@@ -36,7 +38,7 @@
 #'        the traditional GEE (\code{"gee"}), bias-reducing methods
 #'        (\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
 #'        bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
-#'        \code{"bcgee-naive"}), the fully iterated Jeffreys-prior penalized GEE
+#'        \code{"bcgee-naive"}), the fully iterated Jeffreys-type penalized GEE
 #'        (\code{"pgee-jeffreys"}), the one-step penalized GEE
 #'        (\code{"opgee-jeffreys"}), and the hybrid one-step GEE
 #'        (\code{"hpgee-jeffreys"}). Defaults to \code{"gee"}.
@@ -44,23 +46,26 @@
 #'        and strictly positive. If not supplied, all weights are 1.
 #' @param beta_start optional numeric vector of starting values for the
 #'        regression parameters. If \code{NULL} (default), starting values
-#'        are computed by fitting a \code{\link[stats]{glm}} model.
+#'        are obtained from an auxiliary generalized linear model fit, using
+#'        \code{\link[brglm2]{brglmFit}} where appropriate.
 #' @param offset this can be used to specify an a priori known component to be
 #'        included in the linear predictor during fitting. This should be
-#'        \code{NULL} or a numeric vector of length equal to the number of
-#'        observations. One or more offset terms can be included in the formula
-#'        instead or as well, and if more than one is specified their sum is
-#'        used.
-#' @param control_glm optional list of control parameters passed to
-#'        \code{\link[stats]{glm.control}} when computing GLM-based starting
-#'        values. Ignored when \code{beta_start} is supplied.
-#' @param use_p logical indicating whether to apply the \code{N - p}
-#'        degrees-of-freedom correction when estimating the scale and working
-#'        correlation parameters, \code{p} is the number of regression parameters.
-#'        Defaults to \code{TRUE}.
+#'        \code{NULL}, a single numeric value, or a numeric vector of length
+#'        equal to the number of observations. One or more offset terms can be
+#'        included in the formula instead or as well, and if more than one is
+#'        specified their sum is used.
+#' @param control_glm optional list of control parameters interpreted by
+#'        \code{\link[brglm2]{brglm_control}} when computing GLM-based
+#'        starting values. Ignored when \code{beta_start} is supplied.
+#' @param use_p logical indicating whether to apply a degrees-of-freedom
+#'        correction by subtracting the number of regression parameters from
+#'        the relevant denominator when estimating the scale and working
+#'        correlation parameters. Defaults to \code{TRUE}.
 #' @param alpha_vector numeric vector of fixed association parameters used only
 #'        when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)}
-#'        where \code{T = max(repeated)} after recoding. Ignored otherwise.
+#'        where \code{T = max(repeated)} after recoding, and the resulting
+#'        working correlation matrix must be positive definite. Ignored
+#'        otherwise.
 #' @param phi_fixed logical indicating whether the scale parameter is fixed at
 #'        the value of \code{phi_value}. Defaults to \code{phi_fixed = FALSE}.
 #' @param phi_value positive number giving the fixed value of the scale
@@ -78,7 +83,7 @@
 #' the corresponding bias-corrected estimators are produced via a one-step
 #' correction applied to the converged GEE solution. If
 #' \code{method = "pgee-jeffreys"}, the GEE are penalized using a
-#' Jeffreys-prior penalty run to full convergence. If
+#' Jeffreys-type penalty run to full convergence. If
 #' \code{method = "opgee-jeffreys"}, a single penalized scoring step is
 #' performed from the converged independence penalized solution (one-step
 #' approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
@@ -86,18 +91,20 @@
 #' (hybrid one-step approximation).
 #'
 #' For the construction of the \code{formula} argument, see the documentation
-#' of \code{\link{glm}} and \code{\link{formula}}.
+#' of \code{\link[stats]{glm}} and \code{\link[stats]{formula}}.
 #'
 #' The \code{data} must be in long format (one row per observation). See
-#' \code{\link{reshape}} for details on reshaping between long and wide formats.
+#' \code{\link[stats]{reshape}} for details on reshaping between long and wide formats.
 #'
 #' The \code{quasi}, \code{quasibinomial} and \code{quasipoisson} families are
-#' internally remapped to their standard parametric equivalents before fitting:
-#' \code{quasibinomial} to \code{binomial}, \code{quasipoisson} to
-#' \code{poisson}, and \code{quasi} to the family matching its variance
-#' function (\code{gaussian}, \code{binomial}, \code{poisson}, \code{Gamma},
-#' or \code{inverse.gaussian}). The scale parameter \code{phi} is then
-#' estimated freely from the data unless \code{phi_fixed = TRUE}.
+#' internally remapped to their standard parametric equivalents before fitting.
+#' The \code{quasibinomial} and \code{quasipoisson} families are mapped to
+#' \code{binomial} and \code{poisson}, respectively. A \code{quasi} family is
+#' supported when its variance function is \code{constant}, \code{mu(1-mu)},
+#' \code{mu}, \code{mu^2}, or \code{mu^3}; these are mapped to
+#' \code{gaussian}, \code{binomial}, \code{poisson}, \code{Gamma}, and
+#' \code{inverse.gaussian}, respectively. The scale parameter \code{phi} is
+#' then estimated freely from the data unless \code{phi_fixed = TRUE}.
 #'
 #' The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 #' \eqn{N} is the number of clusters. Otherwise, the function recodes the given
@@ -127,7 +134,7 @@
 #' \item{fitted.values}{the fitted mean values, obtained by transforming the
 #'       linear predictors by the inverse of the link function.}
 #' \item{rank}{the numeric rank of the fitted model.}
-#' \item{family}{the \code{\link{family}} object used.}
+#' \item{family}{the \code{\link[stats]{family}} object used.}
 #' \item{linear.predictors}{the linear fit on the link scale.}
 #' \item{iter}{the number of iterations used.}
 #' \item{prior.weights}{the weights initially supplied, a vector of 1s if none
@@ -142,11 +149,19 @@
 #' \item{converged}{logical indicating whether the algorithm converged.}
 #' \item{call}{the matched call.}
 #' \item{formula}{the formula supplied.}
-#' \item{terms}{the \code{\link{terms}} object used.}
+#' \item{terms}{the \code{\link[stats]{terms}} object used.}
 #' \item{data}{the data argument.}
 #' \item{offset}{the offset vector used.}
 #' \item{control}{the \code{\link{geer_control}} list used.}
 #' \item{method}{character string identifying the estimation method used.}
+#' \item{fit_function}{character string identifying the fitting function used,
+#'       either \code{"geewa"} or \code{"geewa_binary"}.}
+#' \item{use_p}{for \code{geewa()} fits, logical indicating whether the
+#'       degrees-of-freedom correction was used. This component is not stored
+#'       for \code{geewa_binary()} fits.}
+#' \item{phi_fixed}{for \code{geewa()} fits, logical indicating whether the
+#'       scale parameter was fixed. This component is not stored for
+#'       \code{geewa_binary()} fits.}
 #' \item{contrasts}{the contrasts used.}
 #' \item{xlevels}{a record of the levels of the factors used in fitting.}
 #' \item{na.action}{information on how missing values were handled, as returned
@@ -157,8 +172,10 @@
 #' \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
 #' \item{association_structure}{the name of the working association structure.}
 #' \item{alpha}{a vector of the estimated working association parameters.}
-#' \item{phi}{the estimated or fixed scale parameter.}
-#' \item{obs_no}{the total number of observations.}
+#' \item{phi}{the scale parameter. For \code{geewa()} fits, this is
+#'       estimated or fixed according to the fitting options; for
+#'       \code{geewa_binary()} fits, it is always \code{1}.}
+#' \item{obs_no}{the number of observations used in fitting.}
 #' \item{clusters_no}{the number of clusters.}
 #' \item{min_cluster_size}{the minimum cluster size.}
 #' \item{max_cluster_size}{the maximum cluster size.}
@@ -226,7 +243,7 @@
 #'
 #' @export
 geewa <- function(formula,
-                  family = gaussian(link = "identity"),
+                  family = stats::gaussian(link = "identity"),
                   data = parent.frame(),
                   id,
                   repeated,
@@ -284,9 +301,9 @@ geewa <- function(formula,
   tolerance <- control$tolerance
   ## method
   method <- as.character(method)
-  check_choice(method, valid_methods, "method")
+  check_choice(method, geer_method_choices, "method")
   ## correlation structure
-  check_choice(corstr, valid_corstrs, "corstr")
+  check_choice(corstr, geer_corstr_choices, "corstr")
   if (!identical(corstr, "m-dependent")) {
     Mv <- 1L
   } else {
@@ -354,7 +371,7 @@ geewa <- function(formula,
     link <- family$link
   }
   ## fit
-  if (method %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method %in% geer_bcgee_methods) {
     ## pass 1: plain GEE to convergence
     geesolver_fit <- fit_geesolver_cc(
       y, model_matrix, id, repeated, weights,
@@ -447,40 +464,25 @@ geewa <- function(formula,
     id = id,
     repeated = repeated,
     call = call,
+    formula = formula,
     data = data,
     model_terms = model_terms,
     control = control,
     method = method,
     association_structure = corstr
   )
-  fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
-  if (method %in% c("bcgee-naive", "bcgee-robust", "bcgee-empirical", "opgee-jeffreys", "hpgee-jeffreys")) {
-    fit$converged <- TRUE
-  }
-  fit$alpha <- if (identical(corstr, "independence")) 0 else as.numeric(geesolver_fit$alpha)
-  if (corstr %in% c("unstructured", "fixed")) {
-    pairs_matrix <- combn(max(repeated), 2)
-    alpha_names <- paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
-    names(fit$alpha) <- alpha_names
-  }
-  if (corstr == "toeplitz") {
-    names(fit$alpha) <- paste0("alpha_lag", seq_along(fit$alpha))
-  }
-  if (corstr == "m-dependent") {
-    names(fit$alpha) <- paste0("alpha_lag", seq_along(fit$alpha))
-  }
-  if (!fit$converged) warning("geewa: algorithm did not converge", call. = FALSE)
-  eps <- sqrt(.Machine$double.eps)
-  if (identical(family$family, "binomial")) {
-    if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps)) {
-      warning("geewa: fitted probabilities numerically 0 or 1 occurred", call. = FALSE)
-    }
-  }
-  if (identical(family$family, "poisson")) {
-    if (any(fit$fitted.values < eps)) {
-      warning("geewa: fitted rates numerically 0 occurred", call. = FALSE)
-    }
-  }
+  fit <- finalize_geer_fit(
+    fit = fit,
+    geesolver_fit = geesolver_fit,
+    tolerance = tolerance,
+    method = method,
+    family = family,
+    association_structure = corstr,
+    repeated = repeated,
+    fit_function = "geewa"
+  )
+  fit$use_p <- use_p
+  fit$phi_fixed <- isTRUE(phi_fixed)
   if (!identical(corstr, "independence")) {
     corr <- get_correlation_matrix(corstr, fit$alpha, max(repeated))
     eigenvalues <- eigen(corr, symmetric = TRUE, only.values = TRUE)$values

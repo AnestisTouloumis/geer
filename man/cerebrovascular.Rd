@@ -13,6 +13,10 @@ A data frame with 134 rows and 4 columns:
   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
 }
 }
+\source{
+Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
+Trials}. London: Chapman and Hall/CRC Press.
+}
 \usage{
 cerebrovascular
 }
@@ -30,9 +34,5 @@ period.
 \examples{
 data("cerebrovascular", package = "geer")
 str(cerebrovascular)
-}
-\references{
-Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
-Trials}. London: Chapman and Hall/CRC Press.
 }
 \keyword{datasets}

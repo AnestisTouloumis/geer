@@ -1,7 +1,6 @@
 #' @title
 #' Construct Design Matrices from a geer Object
 #'
-#' @aliases model.matrix model.matrix.geer
 #' @method model.matrix geer
 #'
 #' @description
@@ -11,9 +10,12 @@
 #' @inheritParams coef.geer
 #'
 #' @details
-#' The design matrix is reconstructed from \code{object$terms} and
-#' \code{object$data}, with factor variables and interactions expanded using
-#' the contrasts recorded at fitting time.
+#' The design matrix returned is the one constructed when the model was
+#' fitted and stored in the fitted object, following the convention of
+#' \code{\link[stats]{model.matrix}} methods for \code{lm} objects. It is
+#' therefore guaranteed to agree with the fitted coefficients, with the
+#' contrasts and factor levels recorded at fitting time, and with the rows
+#' actually used in the fit after any missing values were removed.
 #'
 #' By convention, if the response variable also appears on the right-hand side
 #' of the formula, it is dropped, although interactions involving that term are
@@ -57,9 +59,5 @@
 #' @export
 model.matrix.geer <- function(object, ...) {
   object <- check_geer_object(object)
-  model.matrix(
-    object = object$terms,
-    data = object$data,
-    contrasts.arg = object$contrasts
-  )
+  object$x
 }

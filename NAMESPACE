@@ -27,8 +27,8 @@ export(geer_control)
 export(geewa)
 export(geewa_binary)
 export(glance)
-export(little_mcar_test)
 export(mcar_homoscedasticity_test)
+export(mcar_little_test)
 export(mcar_logistic_test)
 export(recover_data.geer)
 export(runs_test)
@@ -44,43 +44,23 @@ importFrom(generics,
   tidy
 )
 importFrom(stats,
-  .getXlevels,
   Gamma,
-  add.scope,
   add1,
-  as.formula,
-  ave,
+  anova,
   binomial,
   coef,
-  coefficients,
   confint,
-  delete.response,
-  drop.scope,
   drop1,
-  factor.scope,
-  family,
-  formula,
+  fitted,
   gaussian,
-  glm,
-  glm.fit,
   inverse.gaussian,
-  model.extract,
-  model.frame,
   model.matrix,
-  model.offset,
-  model.response,
-  model.weights,
-  na.pass,
-  pchisq,
-  pnorm,
   poisson,
-  printCoefmat,
-  qlogis,
-  qnorm,
-  terms,
-  update,
-  update.formula,
+  predict,
+  quasi,
+  quasibinomial,
+  quasipoisson,
+  residuals,
   vcov
 )
-importFrom(utils,combn)
 useDynLib(geer, .registration = TRUE)

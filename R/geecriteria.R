@@ -13,9 +13,12 @@
 #'   the covariance-based penalty terms. Options are the sandwich or robust
 #'   estimator (\code{"robust"}), the bias-corrected estimator
 #'   (\code{"bias-corrected"}), the degrees-of-freedom adjusted estimator
-#'   (\code{"df-adjusted"}), and the model-based or naive estimator
+#'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+#'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"robust"}, which reproduces the
 #'   classical covariance-based definitions of QIC, QICHH, QICC, CIC, RJC, and EQIC.
+#'   With \code{cov_type = "jackknife"} a full set of leave-one-cluster refits
+#'   is performed for each model supplied; see \code{\link{vcov.geer}}.
 #' @param digits non-negative integer giving the number of decimal places used
 #'   to round the reported criteria. Defaults to \code{2}.
 #'
@@ -167,7 +170,7 @@
 #' Chapman and Hall/CRC, Boca Raton.
 #'
 #' Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
-#' Equations}, Second Edition. Chapman and Hall/CRC, Boca Raton.
+#' Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 #'
 #' Pan, W. (2001) Akaike's information criterion in generalized estimating
 #' equations. \emph{Biometrics}, \bold{57}, 120--125.
@@ -187,8 +190,8 @@
 #' analysis: a review and recent developments. \emph{Advances in Statistics},
 #' \bold{2014}, Article ID 303728.
 #'
-#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
-#' equations using the new R package glmtoolbox. \emph{The R Journal},
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
+#' Equations using the new R package glmtoolbox. \emph{The R Journal},
 #' \bold{15}, 105--133.
 #'
 #' Zhu, X. and Zhu, Z. (2013) Comparison of criteria to select working
@@ -231,7 +234,7 @@
 #' @export
 geecriteria <- function(object,
                         ...,
-                        cov_type = c("robust", "bias-corrected", "df-adjusted", "naive"),
+                        cov_type = geer_criteria_cov_type_choices,
                         digits = 2) {
   cov_type <- match.arg(cov_type)
   digits <- check_nonnegative_integerish(digits, "digits")

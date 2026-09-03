@@ -13,8 +13,8 @@
 #' By default, \pkg{emmeans} calculations for \code{geer} objects use the
 #' bias-corrected covariance matrix. Alternative covariance estimators may be
 #' requested via \code{vcov.method}, with supported character values
-#' \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"}, and
-#' \code{"naive"}.
+#' \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+#' \code{"jackknife"}, and \code{"naive"}.
 #'
 #' In line with the large-sample inference used elsewhere in \pkg{geer},
 #' these methods use asymptotic inference with degrees of freedom equal to
@@ -29,13 +29,15 @@
 #' @param vcov.method covariance specification to use for \pkg{emmeans}
 #'        calculations. This may be a character string specifying one of the
 #'        supported covariance estimators \code{"bias-corrected"}, \code{"robust"},
-#'        \code{"df-adjusted"}, \code{"naive"}, or a covariance matrix
+#'        \code{"df-adjusted"}, \code{"jackknife"}, \code{"naive"}, or a covariance matrix
 #'        or function accepted by \pkg{emmeans} through its \code{vcov.}
 #'        mechanism. Defaults to \code{"bias-corrected"}.
-#' @param cov_type optional alias for \code{vcov.method}.
+#' @param cov_type optional alias for \code{vcov.method}. When supplied, it
+#'        takes precedence over \code{vcov.method}.
 #' @param vcov. optional covariance matrix or function supplied through the
 #'        standard \pkg{emmeans} \code{vcov.} argument. When provided, it
-#'        takes precedence over \code{vcov.method}.
+#'        takes precedence over both \code{cov_type} and
+#'        \code{vcov.method}.
 #' @param misc optional list passed through by \pkg{emmeans}.
 #' @param ... additional arguments passed through from \pkg{emmeans}.
 #'
@@ -79,11 +81,11 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
   }
   key <- tolower(vcov.method)
   key <- gsub("[._]", "-", key)
-  choices <- c("bias-corrected", "robust", "df-adjusted", "naive")
+  choices <- geer_cov_type_choices
   idx <- pmatch(key, choices)
   if (is.na(idx)) {
     stop(
-      "'vcov.method' must identify one of: bias-corrected, robust, df-adjusted, naive",
+      "'vcov.method' must identify one of: bias-corrected, robust, df-adjusted, jackknife, naive",
       call. = FALSE
     )
   }
@@ -101,7 +103,7 @@ resolve_emmeans_vcov <- function(object,
   }
   if (is.character(vcov.method) || is.null(vcov.method)) {
     cov_type <- normalize_emmeans_vcov_method(vcov.method)
-    return(vcov(object, cov_type = cov_type))
+    return(stats::vcov(object, cov_type = cov_type))
   }
   if (is.matrix(vcov.method) || is.function(vcov.method)) {
     return(emmeans::.my.vcov(object, vcov. = vcov.method, ...))
@@ -126,7 +128,7 @@ recover_data.geer <- function(object,
   }
   emmeans::recover_data(
     object$call,
-    trms = delete.response(object$terms),
+    trms = stats::delete.response(object$terms),
     na.action = object$na.action,
     data = recovered_data,
     pwts = object$prior.weights,
@@ -150,9 +152,9 @@ emm_basis.geer <- function(object,
   if (!is.null(cov_type)) {
     vcov.method <- cov_type
   }
-  model_frame <- model.frame(trms, grid, na.action = na.pass, xlev = xlev)
-  design_matrix <- model.matrix(trms, model_frame, contrasts.arg = object$contrasts)
-  coefficient_vector <- coef(object)
+  model_frame <- stats::model.frame(trms, grid, na.action = stats::na.pass, xlev = xlev)
+  design_matrix <- stats::model.matrix(trms, model_frame, contrasts.arg = object$contrasts)
+  coefficient_vector <- stats::coef(object)
   coefficient_names <- names(coefficient_vector)
   if (is.null(coefficient_names) || !length(coefficient_names)) {
     stop("'coefficients' must be a named numeric vector", call. = FALSE)

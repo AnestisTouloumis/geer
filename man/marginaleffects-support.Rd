@@ -30,8 +30,12 @@
 
 \item{vcov}{covariance specification supplied by \pkg{marginaleffects}.
 \code{NULL} or \code{TRUE} uses the bias-corrected covariance matrix,
-\code{"robust"} uses the sandwich covariance matrix, and a square
-covariance matrix is returned unchanged after validation.}
+while \code{FALSE} returns \code{NULL}. Character values may be
+\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+\code{"jackknife"}, or \code{"naive"}. A covariance-producing
+function may also be supplied. A square covariance matrix may be supplied;
+after validation, its rows and columns are aligned with the model
+coefficient names.}
 
 \item{newdata}{a data frame containing predictor values at which to compute
 predictions.}
@@ -42,8 +46,9 @@ predictions.}
 \value{
 These methods return objects in the formats required internally by
 \pkg{marginaleffects}: a named coefficient vector, a modified \code{geer}
-object, a named covariance matrix, a model data frame, or a data frame
-with columns \code{rowid} and \code{estimate}.
+object, a named covariance matrix (or \code{NULL} when
+\code{vcov = FALSE}), a model data frame, or a data frame with columns
+\code{rowid} and \code{estimate}.
 }
 \description{
 Methods that allow fitted \code{geer} objects to work with the
@@ -58,10 +63,10 @@ objects.
 
 By default, \pkg{marginaleffects} inference for \code{geer} objects uses
 the bias-corrected covariance matrix, matching the default inference in
-\pkg{geer}. Supplying \code{vcov = "robust"} to a \pkg{marginaleffects}
-function uses the sandwich covariance matrix. Other covariance estimators
-can be supplied through a function, for example
-\code{vcov = function(x) vcov(x, cov_type = "naive")}.
+\pkg{geer}. A character value may select any covariance estimator
+supported by \code{vcov.geer()}, including \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, and \code{"naive"}. A
+covariance matrix or function can also be supplied.
 }
 \examples{
 if (requireNamespace("marginaleffects", quietly = TRUE)) {

@@ -1,5 +1,7 @@
 # geer 0.1.1
 
+- Added `cov_type = "jackknife"` throughout the package wherever `cov_type` is accepted, including `vcov()`, summaries, confidence intervals, prediction, tidiers, `geecriteria()`, `add1()`, `drop1()`, `anova()`, `step_p()`, and `mcar_logistic_test()`. The estimator refits the regression parameters after deleting each cluster in turn while holding the working association structure and association-parameter vector fixed at their full-data values; it uses the centered Quenouille-Tukey jackknife covariance, including the `(K - 1) / K` finite-sample factor, where `K` is the number of clusters, and each leave-one-cluster estimate is obtained by a full refit rather than by a one-step approximation. It is available for all estimation methods. Score-based procedures retain their null-model score/information calculation and use the larger model's full-refit jackknife covariance as the covariance component.
+
 ## New features
 
 * Added optional integration with the `marginaleffects` package. `geer` model
@@ -19,7 +21,7 @@
   natural cluster/repeated order, fitted-value order, or covariate-based
   orderings.
 
-* Added `little_mcar_test()` implementing Little's (1988) test for assessing
+* Added `mcar_little_test()` implementing Little's (1988) test for assessing
   whether repeated-response missingness is compatible with MCAR. The function
   works directly with fitted `geer` objects or numeric wide-format data,
   estimates the common multivariate-normal mean and covariance by an internal

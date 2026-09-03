@@ -17,8 +17,8 @@ generics::glance
 #' @param conf.int logical indicating whether to append confidence interval
 #'   columns \code{conf.low} and \code{conf.high}. Defaults to
 #'   \code{FALSE}.
-#' @param conf.level numeric coverage probability for the confidence interval
-#'   when \code{conf.int = TRUE}. Defaults to \code{0.95}.
+#' @param conf.level a single number strictly between 0 and 1 specifying the
+#'   confidence level when \code{conf.int = TRUE}. Defaults to \code{0.95}.
 #' @param exponentiate logical indicating whether to exponentiate coefficient
 #'   estimates and confidence limits. This is often useful for models with a
 #'   log, logit, or complementary log-log link. Standard errors and Wald
@@ -26,7 +26,7 @@ generics::glance
 #' @param cov_type character string specifying the covariance estimator used to
 #'   compute standard errors and Wald z-statistics. Options are
 #'   \code{"bias-corrected"} (default), \code{"robust"}, \code{"df-adjusted"},
-#'   and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.
+#'   \code{"jackknife"}, and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
@@ -58,7 +58,7 @@ generics::glance
 #' \code{data.frame} is returned.
 #'
 #' @references
-#' Robinson D., Hayes A. and Couch S. (2024)
+#' Robinson, D., Hayes, A. and Couch, S. (2024)
 #' \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 #' \url{https://broom.tidymodels.org/}.
 #'
@@ -97,8 +97,7 @@ tidy.geer <- function(x,
                       conf.int = FALSE,
                       conf.level = 0.95,
                       exponentiate = FALSE,
-                      cov_type = c("bias-corrected", "robust",
-                                   "df-adjusted", "naive"),
+                      cov_type = geer_cov_type_choices,
                       ...) {
   object <- check_geer_object(x)
   cov_type <- match.arg(cov_type)
@@ -119,14 +118,14 @@ tidy.geer <- function(x,
       call. = FALSE
     )
   }
-  beta <- coef(object)
-  vcov_matrix <- vcov(object, cov_type = cov_type)
+  beta <- stats::coef(object)
+  vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   se <- sqrt(pmax(0, diag(vcov_matrix)))
   z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]
   pval <- rep(NA_real_, length(beta))
-  pval[ok] <- 2 * pnorm(abs(z_stat[ok]), lower.tail = FALSE)
+  pval[ok] <- 2 * stats::pnorm(abs(z_stat[ok]), lower.tail = FALSE)
   ans <- data.frame(
     term = names(beta),
     estimate = unname(beta),
@@ -136,9 +135,15 @@ tidy.geer <- function(x,
     stringsAsFactors = FALSE
   )
   if (conf.int) {
-    ci <- confint(object, level = conf.level, cov_type = cov_type)
-    ans$conf.low <- unname(ci[, 1L])
-    ans$conf.high <- unname(ci[, 2L])
+    ## The limits are built from the standard errors already computed above
+    ## rather than by calling confint(), which would recompute the covariance
+    ## matrix. The result is identical, but it avoids a second full set of
+    ## leave-one-cluster refits when cov_type = "jackknife".
+    conf_probs <- (1 - conf.level) / 2
+    conf_probs <- c(conf_probs, 1 - conf_probs)
+    limits <- beta + se %o% stats::qnorm(conf_probs)
+    ans$conf.low <- unname(limits[, 1L])
+    ans$conf.high <- unname(limits[, 2L])
   }
   if (exponentiate) {
     ans$estimate <- exp(ans$estimate)
@@ -177,7 +182,7 @@ tidy.geer <- function(x,
 #'   \item{\code{wastr}}{stored working association structure. For
 #'   \code{geewa()} fits this corresponds to \code{corstr}; for
 #'   \code{geewa_binary()} fits it corresponds to \code{orstr}.}
-#'   \item{\code{nobs}}{total number of observations \eqn{n^{\star}}.}
+#'   \item{\code{nobs}}{number of observations used in fitting.}
 #'   \item{\code{nclusters}}{number of independent clusters \eqn{N}.}
 #'   \item{\code{min.cluster.size}}{minimum cluster size.}
 #'   \item{\code{max.cluster.size}}{maximum cluster size.}
@@ -214,14 +219,14 @@ tidy.geer <- function(x,
 #' \code{data.frame} is returned.
 #'
 #' @references
-#' Pan W. (2001) Akaike's information criterion in generalized estimating
+#' Pan, W. (2001) Akaike's information criterion in generalized estimating
 #' equations. \emph{Biometrics}, \bold{57}, 120--125.
 #'
-#' Hin L.Y. and Wang Y.G. (2009) Working-correlation-structure identification
+#' Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure identification
 #' in generalized estimating equations. \emph{Statistics in Medicine},
 #' \bold{28}, 642--658.
 #'
-#' Robinson D., Hayes A. and Couch S. (2024)
+#' Robinson, D., Hayes, A. and Couch, S. (2024)
 #' \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 #' \url{https://broom.tidymodels.org/}.
 #'

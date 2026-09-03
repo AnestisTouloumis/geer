@@ -19,6 +19,10 @@ A data frame with 444 rows and 8 columns:
   \item{center}{factor with levels \code{C1} and \code{C2}.}
 }
 }
+\source{
+Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
+Analysis using the SAS System}. Cary, NC: SAS Institute, Inc.
+}
 \usage{
 respiratory
 }
@@ -35,9 +39,5 @@ treatment, subjects were examined at four scheduled follow-up visits.
 \examples{
 data("respiratory", package = "geer")
 str(respiratory)
-}
-\references{
-Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
-Analysis using the SAS System}. Cary, NC: SAS Institute, Inc.
 }
 \keyword{datasets}

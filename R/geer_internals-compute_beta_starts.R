@@ -18,7 +18,7 @@ compute_geer_start_values <- function(model_matrix,
   }
   control_glm <- do.call("brglm_control", control_glm)
   if (link != "identity" && !(family$family %in% c("quasi", "quasibinomial", "quasipoisson"))) {
-    if (method %in% c("gee", "bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+    if (method %in% c("gee", geer_bcgee_methods)) {
       type <- "ML"
     } else if (identical(method, "brgee-naive")) {
       type <- "AS_mean"
@@ -46,7 +46,7 @@ compute_geer_start_values <- function(model_matrix,
     )
   } else {
     glmfit <- try(
-      glm.fit(
+      stats::glm.fit(
         x = model_matrix,
         y = y,
         weights = weights,
@@ -86,7 +86,7 @@ compute_geer_binary_start_values <- function(model_matrix,
     }
     return(beta_start)
   }
-  if (method %in% c("gee", "bcgee-naive", "bcgee-robust", "bcgee-empirical")) {
+  if (method %in% c("gee", geer_bcgee_methods)) {
     type <- "ML"
   } else if (identical(method, "brgee-naive")) {
     type <- "AS_mean"

@@ -887,22 +887,28 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
     beta_vector_inner = beta_vector;
     beta_vector_new = beta_vector;
     stepsize_vector_inner = stepsize_vector;
+    // Damping may need several attempts before a candidate lands inside the
+    // valid region, so an invalid trial point shrinks the multiplier and
+    // retries rather than aborting. `last_failure` records why the most recent
+    // trial was rejected, so that an exhausted inner loop that never produced
+    // a valid candidate can still report the original diagnostic.
+    bool valid_candidate_found = false;
+    int last_failure = 0;
     for (int j = 1; j < step_maxiter + 1; ++j) {
       beta_vector_new_inner =
         beta_vector_inner +
         step_multiplier * std::pow(0.5, j - 1) * stepsize_vector_inner;
       eta_vector = model_matrix * beta_vector_new_inner + offset;
       if (!valideta(link, arma2vec(eta_vector))) {
-        Rcpp::stop(
-          "invalid linear predictor: please try different starting values for beta."
-        );
+        last_failure = 1;
+        continue;
       }
       mu_vector = linkinv(lc, eta_vector);
       if (!validmu(family, arma2vec(mu_vector))) {
-        Rcpp::stop(
-          "invalid fitted values: please try different starting values for beta."
-        );
+        last_failure = 2;
+        continue;
       }
+      valid_candidate_found = true;
       pearson_residuals_vector =
         get_pearson_residuals(fc,
                               y_vector,
@@ -944,6 +950,16 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
       if (criterion_inner > criterion_candidate) {
         break;
       }
+    }
+    if (!valid_candidate_found) {
+      if (last_failure == 2) {
+        Rcpp::stop(
+          "invalid fitted values: please try different starting values for beta."
+        );
+      }
+      Rcpp::stop(
+        "invalid linear predictor: please try different starting values for beta."
+      );
     }
     criterion_vector(i - 1) = arma::norm(stepsize_vector_inner, "inf");
     beta_vector = beta_vector_new;

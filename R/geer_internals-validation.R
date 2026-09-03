@@ -1,9 +1,52 @@
+geer_method_choices <- c(
+  "gee",
+  "brgee-naive", "brgee-robust", "brgee-empirical",
+  "bcgee-naive", "bcgee-robust", "bcgee-empirical",
+  "pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys"
+)
+
+geer_corstr_choices <- c(
+  "independence", "exchangeable", "ar1", "toeplitz",
+  "m-dependent", "unstructured", "fixed"
+)
+
+geer_orstr_choices <- c(
+  "independence", "exchangeable", "unstructured", "fixed"
+)
+
+geer_family_choices <- c(
+  "gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian",
+  "quasi", "quasibinomial", "quasipoisson"
+)
+
+geer_link_choices <- c(
+  "logit", "probit", "cauchit", "cloglog", "identity", "log",
+  "sqrt", "1/mu^2", "inverse"
+)
+
+## One-step estimators: fitted by a single update from a starting fit rather
+## than by iterating to convergence.
+geer_bcgee_methods <- c(
+  "bcgee-naive", "bcgee-robust", "bcgee-empirical"
+)
+
+geer_onestep_methods <- c(
+  geer_bcgee_methods, "opgee-jeffreys", "hpgee-jeffreys"
+)
+
 geer_test_choices <- c(
   "wald", "score", "working-wald", "working-score", "working-lrt"
 )
 
 geer_cov_type_choices <- c(
-  "robust", "bias-corrected", "df-adjusted", "naive"
+  "bias-corrected", "robust", "df-adjusted", "jackknife", "naive"
+)
+
+## geecriteria() reports criteria based on the robust covariance by
+## default, unlike the rest of the package, because the CIC and related
+## criteria are classically defined that way. Same set, robust first.
+geer_criteria_cov_type_choices <- c(
+  "robust", setdiff(geer_cov_type_choices, "robust")
 )
 
 geer_pmethod_choices <- c(

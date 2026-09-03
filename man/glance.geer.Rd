@@ -33,7 +33,7 @@ The returned one-row data frame contains the following columns:
   \item{\code{wastr}}{stored working association structure. For
   \code{geewa()} fits this corresponds to \code{corstr}; for
   \code{geewa_binary()} fits it corresponds to \code{orstr}.}
-  \item{\code{nobs}}{total number of observations \eqn{n^{\star}}.}
+  \item{\code{nobs}}{number of observations used in fitting.}
   \item{\code{nclusters}}{number of independent clusters \eqn{N}.}
   \item{\code{min.cluster.size}}{minimum cluster size.}
   \item{\code{max.cluster.size}}{maximum cluster size.}
@@ -98,14 +98,14 @@ do.call(rbind, lapply(
 
 }
 \references{
-Pan W. (2001) Akaike's information criterion in generalized estimating
+Pan, W. (2001) Akaike's information criterion in generalized estimating
 equations. \emph{Biometrics}, \bold{57}, 120--125.
 
-Hin L.Y. and Wang Y.G. (2009) Working-correlation-structure identification
+Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure identification
 in generalized estimating equations. \emph{Statistics in Medicine},
 \bold{28}, 642--658.
 
-Robinson D., Hayes A. and Couch S. (2024)
+Robinson, D., Hayes, A. and Couch, S. (2024)
 \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 \url{https://broom.tidymodels.org/}.
 }

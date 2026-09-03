@@ -13,7 +13,7 @@ test_that("package exports the core public API", {
     "geewa",
     "geewa_binary",
     "glance",
-    "little_mcar_test",
+    "mcar_little_test",
     "mcar_homoscedasticity_test",
     "mcar_logistic_test",
     "runs_test",

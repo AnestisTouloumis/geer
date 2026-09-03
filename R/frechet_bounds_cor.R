@@ -1,5 +1,7 @@
+#' @title
 #' Frechet Bounds for a Working Correlation Matrix
 #'
+#' @description
 #' For a fitted \code{geer} model from \code{\link{geewa}} with a
 #' \code{binomial} family and a non-independence association structure,
 #' checks whether each off-diagonal entry of the working correlation matrix
@@ -26,14 +28,15 @@
 #'     \sqrt{\frac{\pi_{ik}(1-\pi_{ij})}{\pi_{ij}(1-\pi_{ik})}}
 #'   \right)
 #' }
-#' The working correlation value \code{cor} for a time pair \eqn{(j, k)} is
-#' the same for all clusters and is read from the fitted working correlation
-#' matrix. The bounds \eqn{\ell_{ijk}} and \eqn{u_{ijk}} vary across clusters
-#' because they depend on the cluster-specific fitted probabilities. The tightest
-#' bounds across clusters, lower_max (maximum lower bound) and upper_min
-#' (minimum upper bound), are reported in the returned data frame. The column
-#' \code{n_violated} counts the number of clusters for which \code{cor} falls outside
-#' \eqn{(\ell_{ijk},\, u_{ijk})}.
+#' The working correlation value \code{alpha_value} for a time pair
+#' \eqn{(j, k)} is the same for all clusters and is read from the fitted
+#' working correlation matrix. The bounds \eqn{\ell_{ijk}} and \eqn{u_{ijk}}
+#' vary across clusters because they depend on the cluster-specific fitted
+#' probabilities. The tightest bounds across clusters, \code{lower_max}
+#' (maximum lower bound) and \code{upper_min} (minimum upper bound), are
+#' reported in the returned data frame. The column \code{n_violated} counts
+#' the number of clusters for which \code{alpha_value} falls outside
+#' \eqn{[\ell_{ijk},\, u_{ijk}]}.
 #'
 #'
 #' @return
@@ -58,7 +61,7 @@
 #' data("cholecystectomy", package = "geer")
 #'
 #' fit <- geewa(
-#'   formula = pain ~ treatment + gender + age + I(time >4),
+#'   formula = pain ~ treatment + gender + age + I(time > 4),
 #'   family = binomial(link = "logit"),
 #'   data = cholecystectomy,
 #'   id = id,
@@ -70,19 +73,25 @@
 #'
 #' @export
 frechet_bounds_cor <- function(object) {
-  if (!inherits(object, "geer")) {
-    stop("'object' must be of class \"geer\"", call. = FALSE)
-  }
-  if (!grepl("binomial", object$family$family, ignore.case = TRUE)) {
+  object <- check_geer_object(object)
+  if (!identical(object$fit_function, "geewa")) {
     stop(
-      "frechet_bounds_cor: family must be \"binomial\"; ",
-      "got \"", object$family$family, "\"",
+      "'object' must be fitted by 'geewa': 'geewa_binary' parameterizes the ",
+      "within-cluster association through marginalized odds ratios rather than ",
+      "correlations, so the Frechet bounds on a working correlation matrix do ",
+      "not apply",
       call. = FALSE
     )
   }
-  if (object$association_structure == "independence") {
+  if (!grepl("binomial", object$family$family, ignore.case = TRUE)) {
     stop(
-      "frechet_bounds_cor: association structure must not be \"independence\"",
+      "'object' must be a binomial fit: got '", object$family$family, "'",
+      call. = FALSE
+    )
+  }
+  if (identical(object$association_structure, "independence")) {
+    stop(
+      "'object' must not have an 'independence' association structure",
       call. = FALSE
     )
   }
@@ -95,13 +104,12 @@ frechet_bounds_cor <- function(object) {
     object$alpha,
     time_max
   )
-  uid  <- unique(id)
-  n_cl <- length(uid)
-  pair_lower <- list()
-  pair_upper <- list()
-  pair_violated <- list()
-  for (i in seq_len(n_cl)) {
-    idx <- which(id == uid[i])
+  cluster_index <- split(seq_along(id), id)
+  lower_acc <- matrix(-Inf, nrow = time_max, ncol = time_max)
+  upper_acc <- matrix(Inf, nrow = time_max, ncol = time_max)
+  violated_acc <- matrix(0L, nrow = time_max, ncol = time_max)
+  observed <- matrix(FALSE, nrow = time_max, ncol = time_max)
+  for (idx in cluster_index) {
     mu_i <- mu[idx]
     re_i <- repeated[idx]
     n_i <- length(idx)
@@ -112,7 +120,6 @@ frechet_bounds_cor <- function(object) {
         q <- mu_i[j2]
         tj <- re_i[j1]
         tk <- re_i[j2]
-        key <- paste0(tj, ":", tk)
         lo <- max(
           -sqrt(p * q / ((1 - p) * (1 - q))),
           -sqrt((1 - p) * (1 - q) / (p * q))
@@ -122,37 +129,24 @@ frechet_bounds_cor <- function(object) {
           sqrt(q * (1 - p) / (p * (1 - q)))
         )
         cv <- cor_mat[tj, tk]
-        pair_lower[[key]] <- c(pair_lower[[key]],    lo)
-        pair_upper[[key]] <- c(pair_upper[[key]],    up)
-        pair_violated[[key]] <- c(pair_violated[[key]], cv < lo || cv > up)
+        observed[tj, tk] <- TRUE
+        lower_acc[tj, tk] <- max(lower_acc[tj, tk], lo)
+        upper_acc[tj, tk] <- min(upper_acc[tj, tk], up)
+        violated_acc[tj, tk] <- violated_acc[tj, tk] + (cv < lo || cv > up)
       }
     }
   }
-  keys <- names(pair_lower)
-  n_pairs <- length(keys)
-  time_j <- integer(n_pairs)
-  time_k <- integer(n_pairs)
-  lower_max <- numeric(n_pairs)
-  upper_min <- numeric(n_pairs)
-  cor_vec <- numeric(n_pairs)
-  n_violated <- integer(n_pairs)
-  for (s in seq_len(n_pairs)) {
-    parts <- as.integer(strsplit(keys[s], ":", fixed = TRUE)[[1L]])
-    time_j[s] <- parts[1L]
-    time_k[s] <- parts[2L]
-    lower_max[s] <- max(pair_lower[[keys[s]]])
-    upper_min[s] <- min(pair_upper[[keys[s]]])
-    cor_vec[s] <- cor_mat[parts[1L], parts[2L]]
-    n_violated[s] <- sum(pair_violated[[keys[s]]])
-  }
-  alpha_name <- paste0("alpha_", time_j, ".", time_k)
-  ord <- order(time_j, time_k)
+  time_pairs <- which(observed, arr.ind = TRUE)
+  ord <- order(time_pairs[, 1L], time_pairs[, 2L])
+  time_j <- time_pairs[ord, 1L]
+  time_k <- time_pairs[ord, 2L]
+  cell <- cbind(time_j, time_k)
   data.frame(
-    alpha_name = alpha_name[ord],
-    alpha_value = cor_vec[ord],
-    lower_max = lower_max[ord],
-    upper_min = upper_min[ord],
-    n_violated = n_violated[ord],
+    alpha_name = paste0("alpha_", time_j, ".", time_k),
+    alpha_value = cor_mat[cell],
+    lower_max = lower_acc[cell],
+    upper_min = upper_acc[cell],
+    n_violated = violated_acc[cell],
     row.names = NULL
   )
 }

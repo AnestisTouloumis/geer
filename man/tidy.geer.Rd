@@ -9,7 +9,7 @@
   conf.int = FALSE,
   conf.level = 0.95,
   exponentiate = FALSE,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
+  cov_type = geer_cov_type_choices,
   ...
 )
 }
@@ -20,8 +20,8 @@
 columns \code{conf.low} and \code{conf.high}. Defaults to
 \code{FALSE}.}
 
-\item{conf.level}{numeric coverage probability for the confidence interval
-when \code{conf.int = TRUE}. Defaults to \code{0.95}.}
+\item{conf.level}{a single number strictly between 0 and 1 specifying the
+confidence level when \code{conf.int = TRUE}. Defaults to \code{0.95}.}
 
 \item{exponentiate}{logical indicating whether to exponentiate coefficient
 estimates and confidence limits. This is often useful for models with a
@@ -31,7 +31,7 @@ z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.}
 \item{cov_type}{character string specifying the covariance estimator used to
 compute standard errors and Wald z-statistics. Options are
 \code{"bias-corrected"} (default), \code{"robust"}, \code{"df-adjusted"},
-and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.}
+\code{"jackknife"}, and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
 unused.}
@@ -94,7 +94,7 @@ tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 
 }
 \references{
-Robinson D., Hayes A. and Couch S. (2024)
+Robinson, D., Hayes, A. and Couch, S. (2024)
 \emph{broom: Convert Statistical Objects into Tidy Tibbles}.
 \url{https://broom.tidymodels.org/}.
 }

@@ -2,8 +2,6 @@
 % Please edit documentation in R/geer_methods-fitted-predict-residuals.R
 \name{fitted.geer}
 \alias{fitted.geer}
-\alias{fitted}
-\alias{fitted.values}
 \title{Extract Model Fitted Values from a geer Object}
 \usage{
 \method{fitted}{geer}(object, ...)

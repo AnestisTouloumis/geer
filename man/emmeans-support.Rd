@@ -37,15 +37,17 @@ model predictors.}
 \item{vcov.method}{covariance specification to use for \pkg{emmeans}
 calculations. This may be a character string specifying one of the
 supported covariance estimators \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"naive"}, or a covariance matrix
+\code{"df-adjusted"}, \code{"jackknife"}, \code{"naive"}, or a covariance matrix
 or function accepted by \pkg{emmeans} through its \code{vcov.}
 mechanism. Defaults to \code{"bias-corrected"}.}
 
-\item{cov_type}{optional alias for \code{vcov.method}.}
+\item{cov_type}{optional alias for \code{vcov.method}. When supplied, it
+takes precedence over \code{vcov.method}.}
 
 \item{vcov.}{optional covariance matrix or function supplied through the
 standard \pkg{emmeans} \code{vcov.} argument. When provided, it
-takes precedence over \code{vcov.method}.}
+takes precedence over both \code{cov_type} and
+\code{vcov.method}.}
 
 \item{misc}{optional list passed through by \pkg{emmeans}.}
 }
@@ -66,8 +68,8 @@ applied to fitted \code{geer} objects.
 By default, \pkg{emmeans} calculations for \code{geer} objects use the
 bias-corrected covariance matrix. Alternative covariance estimators may be
 requested via \code{vcov.method}, with supported character values
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"}, and
-\code{"naive"}.
+\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+\code{"jackknife"}, and \code{"naive"}.
 
 In line with the large-sample inference used elsewhere in \pkg{geer},
 these methods use asymptotic inference with degrees of freedom equal to

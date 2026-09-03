@@ -1,26 +1,3 @@
-valid_methods <- c(
-  "gee",
-  "brgee-naive", "brgee-robust", "brgee-empirical",
-  "bcgee-naive", "bcgee-robust", "bcgee-empirical",
-  "pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys"
-)
-valid_corstrs <- c(
-  "independence", "exchangeable", "ar1", "toeplitz",
-  "m-dependent", "unstructured", "fixed"
-)
-valid_orstrs <- c(
-  "independence", "exchangeable", "unstructured", "fixed"
-)
-valid_families <- c(
-  "gaussian", "poisson", "binomial", "Gamma", "inverse.gaussian",
-  "quasi", "quasibinomial", "quasipoisson"
-)
-valid_links <- c(
-  "logit", "probit", "cauchit", "cloglog", "identity", "log",
-  "sqrt", "1/mu^2", "inverse"
-)
-
-
 normalize_family <- function(family) {
   if (is.character(family)) {
     family_fun <- tryCatch(
@@ -35,14 +12,14 @@ normalize_family <- function(family) {
     }
     family <- family_fun()
   } else if (is.function(family)) {
-    family <- family()
+    family <- stats::family()
   }
   if (!is.list(family) || is.null(family$family) || is.null(family$link)) {
     stop("'family' must be a valid family object", call. = FALSE)
   }
-  check_choice(family$family, valid_families, "family")
+  check_choice(family$family, geer_family_choices, "family")
   link <- as.character(family$link)
-  check_choice(link, valid_links, "link")
+  check_choice(link, geer_link_choices, "link")
   family
 }
 
@@ -54,7 +31,7 @@ extract_geer_response_weights <- function(model_frame, family) {
     (identical(family$family, "quasi") &&
        !is.null(family$varfun) &&
        identical(family$varfun, "mu(1-mu)"))
-  y <- model.response(model_frame, "any")
+  y <- stats::model.response(model_frame, "any")
   if (is.null(y)) stop("response variable not found", call. = FALSE)
   y_raw <- y
   if (is_binomial_like) {
@@ -83,7 +60,7 @@ extract_geer_response_weights <- function(model_frame, family) {
     }
   }
   n_obs <- if (is.matrix(y)) nrow(y) else length(y)
-  weights <- as.vector(model.weights(model_frame))
+  weights <- as.vector(stats::model.weights(model_frame))
   if (is.null(weights)) {
     weights <- rep.int(1, n_obs)
   } else {
@@ -141,16 +118,16 @@ extract_geer_response_weights <- function(model_frame, family) {
 
 
 extract_geer_id_repeated <- function(model_frame, y_length) {
-  id_raw <- model.extract(model_frame, "id")
+  id_raw <- stats::model.extract(model_frame, "id")
   if (is.null(id_raw)) stop("'id' not found", call. = FALSE)
   if (anyNA(id_raw)) stop("'id' cannot contain missing values", call. = FALSE)
   id <- as.numeric(factor(id_raw))
   if (length(id) != y_length) {
     stop("response variable and 'id' are not of same length", call. = FALSE)
   }
-  repeated <- model.extract(model_frame, "repeated")
+  repeated <- stats::model.extract(model_frame, "repeated")
   if (is.null(repeated)) {
-    repeated <- ave(id, id, FUN = seq_along)
+    repeated <- stats::ave(id, id, FUN = seq_along)
   } else {
     if (anyNA(repeated)) stop("'repeated' cannot contain missing values", call. = FALSE)
     repeated <- as.numeric(factor(repeated))

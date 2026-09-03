@@ -1,17 +1,19 @@
+geer_required_components <- c(
+  "coefficients", "residuals", "fitted.values", "qr", "rank", "family",
+  "linear.predictors", "iter", "prior.weights", "df.residual", "y", "x",
+  "id", "repeated", "converged", "call", "formula", "terms",
+  "data", "offset", "control", "method",
+  "naive_covariance", "robust_covariance", "bias_corrected_covariance",
+  "association_structure", "alpha", "phi", "obs_no", "clusters_no",
+  "min_cluster_size", "max_cluster_size"
+)
+
+
 new_geer <- function(x) {
   if (!is.list(x)) {
     stop("'x' must be a list", call. = FALSE)
   }
-  required <- c(
-    "coefficients", "residuals", "fitted.values", "qr", "rank", "family",
-    "linear.predictors", "iter", "prior.weights", "df.residual", "y", "x",
-    "id", "repeated", "converged", "call", "formula", "terms",
-    "data", "offset", "control", "method",
-    "naive_covariance", "robust_covariance", "bias_corrected_covariance",
-    "association_structure", "alpha", "phi", "obs_no", "clusters_no",
-    "min_cluster_size", "max_cluster_size"
-  )
-  missing_components <- setdiff(required, names(x))
+  missing_components <- setdiff(geer_required_components, names(x))
   if (length(missing_components) > 0L) {
     stop(
       "Input is missing required components: ",
@@ -40,23 +42,7 @@ validate_geer <- function(x) {
   if (!inherits(x, "geer")) {
     stop("object must inherit from class 'geer'", call. = FALSE)
   }
-  required <- c(
-    "coefficients",
-    "fitted.values",
-    "residuals",
-    "family",
-    "formula",
-    "terms",
-    "call",
-    "x",
-    "y",
-    "id",
-    "alpha",
-    "association_structure",
-    "method",
-    "df.residual"
-  )
-  missing_components <- setdiff(required, names(x))
+  missing_components <- setdiff(geer_required_components, names(x))
   if (length(missing_components) > 0L) {
     stop(
       sprintf(
@@ -118,11 +104,8 @@ validate_geer <- function(x) {
   if (!("formula" %in% names(x$call))) {
     stop("'call' must contain a formula component", call. = FALSE)
   }
-  if (!identical(
-    paste(deparse(x$formula), collapse = ""),
-    paste(deparse(x$call$formula), collapse = "")
-  )) {
-    stop("'formula' and 'call$formula' must be identical", call. = FALSE)
+  if (!inherits(x$formula, "formula")) {
+    stop("'formula' must be a formula object", call. = FALSE)
   }
   if (!is.list(x$family)) {
     stop("'family' must be a family object", call. = FALSE)

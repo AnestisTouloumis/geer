@@ -2,8 +2,6 @@
 % Please edit documentation in R/geer_methods-fitted-predict-residuals.R
 \name{residuals.geer}
 \alias{residuals.geer}
-\alias{resid}
-\alias{residuals}
 \title{Residuals from a geer Object}
 \usage{
 \method{residuals}{geer}(
@@ -66,9 +64,9 @@ head(residuals(fit, type = "mahalanobis"))
 
 }
 \references{
-Vanegas, L. H., Rondon, L. M., and Paula, G. A. (2023). Generalized
-Estimating Equations using the new R package glmtoolbox. \emph{The R
-Journal}, 15(2), 105--133.
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
+Equations using the new R package glmtoolbox. \emph{The R Journal},
+\bold{15}, 105--133.
 }
 \seealso{
 \code{\link{fitted.geer}}, \code{\link{predict.geer}},

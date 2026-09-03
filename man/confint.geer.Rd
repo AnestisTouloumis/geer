@@ -2,16 +2,9 @@
 % Please edit documentation in R/geer_methods-coef-vcov-confint.R
 \name{confint.geer}
 \alias{confint.geer}
-\alias{confint}
 \title{Confidence Intervals for Model Parameters from a geer Object}
 \usage{
-\method{confint}{geer}(
-  object,
-  parm,
-  level = 0.95,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  ...
-)
+\method{confint}{geer}(object, parm, level = 0.95, cov_type = geer_cov_type_choices, ...)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
@@ -20,12 +13,14 @@
     confidence intervals, either a vector of numbers or a vector of
     names.  If missing, all parameters are considered.}
 
-\item{level}{the confidence level required.}
+\item{level}{a single number strictly between 0 and 1 specifying the
+confidence level. Defaults to \code{0.95}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
 used for inference on the regression parameters. Options are the bias-corrected estimator
 (\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), and the model-based or naive estimator
+(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+(\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{...}{additional arguments passed to or from other methods.}

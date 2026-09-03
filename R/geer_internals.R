@@ -86,8 +86,11 @@ format_test_label <- function(test) {
 }
 
 
-restore_original_data_call <- function(updated_model, source_model) {
-  updated_model$call$data <- source_model$call$data
-  updated_model$formula <- updated_model$call$formula
-  updated_model
+refit_geer <- function(object, formula) {
+  refit_call <- stats::update(object, formula = formula, evaluate = FALSE)
+  env <- environment(object$formula)
+  if (is.null(env)) {
+    env <- parent.frame()
+  }
+  eval(refit_call, envir = env)
 }

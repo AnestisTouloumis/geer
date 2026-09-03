@@ -49,20 +49,21 @@ For a pair of observations at times \eqn{j} and \eqn{k} within cluster
     \sqrt{\frac{\pi_{ik}(1-\pi_{ij})}{\pi_{ij}(1-\pi_{ik})}}
   \right)
 }
-The working correlation value \code{cor} for a time pair \eqn{(j, k)} is
-the same for all clusters and is read from the fitted working correlation
-matrix. The bounds \eqn{\ell_{ijk}} and \eqn{u_{ijk}} vary across clusters
-because they depend on the cluster-specific fitted probabilities. The tightest
-bounds across clusters, lower_max (maximum lower bound) and upper_min
-(minimum upper bound), are reported in the returned data frame. The column
-\code{n_violated} counts the number of clusters for which \code{cor} falls outside
-\eqn{(\ell_{ijk},\, u_{ijk})}.
+The working correlation value \code{alpha_value} for a time pair
+\eqn{(j, k)} is the same for all clusters and is read from the fitted
+working correlation matrix. The bounds \eqn{\ell_{ijk}} and \eqn{u_{ijk}}
+vary across clusters because they depend on the cluster-specific fitted
+probabilities. The tightest bounds across clusters, \code{lower_max}
+(maximum lower bound) and \code{upper_min} (minimum upper bound), are
+reported in the returned data frame. The column \code{n_violated} counts
+the number of clusters for which \code{alpha_value} falls outside
+\eqn{[\ell_{ijk},\, u_{ijk}]}.
 }
 \examples{
 data("cholecystectomy", package = "geer")
 
 fit <- geewa(
-  formula = pain ~ treatment + gender + age + I(time >4),
+  formula = pain ~ treatment + gender + age + I(time > 4),
   family = binomial(link = "logit"),
   data = cholecystectomy,
   id = id,

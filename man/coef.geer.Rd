@@ -2,8 +2,6 @@
 % Please edit documentation in R/geer_methods-coef-vcov-confint.R
 \name{coef.geer}
 \alias{coef.geer}
-\alias{coef}
-\alias{coefficients}
 \title{Extract Model Coefficients from a geer Object}
 \usage{
 \method{coef}{geer}(object, ...)

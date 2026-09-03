@@ -2,14 +2,13 @@
 % Please edit documentation in R/geer_methods-fitted-predict-residuals.R
 \name{predict.geer}
 \alias{predict.geer}
-\alias{predict}
 \title{Predictions from a geer Object}
 \usage{
 \method{predict}{geer}(
   object,
   newdata = NULL,
   type = c("link", "response"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
+  cov_type = geer_cov_type_choices,
   se.fit = FALSE,
   ...
 )
@@ -28,7 +27,8 @@ Options are \code{"link"} for the linear predictor scale and
 used to compute approximate standard errors when \code{se.fit = TRUE}.
 Options are the bias-corrected estimator (\code{"bias-corrected"}),
 the sandwich or robust estimator (\code{"robust"}), the
-degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), the
+leave-one-cluster jackknife estimator (\code{"jackknife"}), and the
 model-based or naive estimator (\code{"naive"}). Defaults to
 \code{"bias-corrected"}.}
 
@@ -50,9 +50,10 @@ approximate standard errors.
 }
 \details{
 Predictions are obtained by computing the model matrix for \code{newdata}
-(or using the original fit when \code{newdata} is omitted) and multiplying
-by the estimated coefficients. If \code{type = "response"}, the linear
-predictor is transformed via the inverse link function.
+(or using the original fit when \code{newdata} is omitted), multiplying by
+the estimated coefficients, and adding any offset. If
+\code{type = "response"}, the linear predictor is transformed via the
+inverse link function.
 
 When \code{se.fit = TRUE}, approximate standard errors are computed by the
 delta method using the covariance matrix specified by \code{cov_type}. On

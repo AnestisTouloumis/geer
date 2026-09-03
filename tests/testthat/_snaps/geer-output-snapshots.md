@@ -8,8 +8,8 @@
            (Intercept) treatmentprogabide         lnbaseline              lnage 
             -18.809872          -1.285207          10.205033           2.923632 
     
-    Number of iterations : 1 
-    Algorithm converged  : TRUE 
+    Number of iterations: 1 
+    Algorithm converged : TRUE 
 
 ---
 
@@ -21,6 +21,10 @@
     Estimating Method   : gee 
     Number of iterations: 1 
     Algorithm converged : TRUE 
+    
+    Number of observations: 236 
+    Number of clusters    : 59 
+    Cluster sizes         : 4 to 4 
     
     Marginal Model
     Family       : gaussian 

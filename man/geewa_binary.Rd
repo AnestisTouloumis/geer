@@ -33,7 +33,8 @@ model. Options are \code{"logit"}, \code{"probit"},
 \code{"inverse"}. Defaults to \code{"logit"}.}
 
 \item{data}{optional data frame containing variables referenced in
-\code{formula}, \code{id} and \code{repeated}.}
+\code{formula}, \code{id}, \code{repeated}, \code{weights}, and
+\code{offset}.}
 
 \item{id}{variable identifying the clusters.}
 
@@ -42,7 +43,7 @@ within each cluster.}
 
 \item{control}{a \code{\link{geer_control}} list specifying convergence
 tolerance, maximum iterations, step-halving parameters, and the
-Jeffreys-prior power. Defaults to \code{geer_control()}.}
+power of the Jeffreys-type penalty. Defaults to \code{geer_control()}.}
 
 \item{orstr}{character string specifying the working odds-ratio structure for the
 within-cluster association. Options are
@@ -54,7 +55,7 @@ within-cluster association. Options are
 the traditional GEE (\code{"gee"}), bias-reducing methods
 (\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
 bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
-\code{"bcgee-naive"}), the fully iterated Jeffreys-prior penalized GEE
+\code{"bcgee-naive"}), the fully iterated Jeffreys-type penalized GEE
 (\code{"pgee-jeffreys"}), the one-step penalized GEE
 (\code{"opgee-jeffreys"}), and the hybrid one-step GEE
 (\code{"hpgee-jeffreys"}). Defaults to \code{"gee"}.}
@@ -64,18 +65,19 @@ and strictly positive. If not supplied, all weights are 1.}
 
 \item{beta_start}{optional numeric vector of starting values for the
 regression parameters. If \code{NULL} (default), starting values
-are computed by fitting a \code{\link[stats]{glm}} model.}
+are obtained from an auxiliary generalized linear model fit, using
+\code{\link[brglm2]{brglmFit}} where appropriate.}
 
 \item{offset}{this can be used to specify an a priori known component to be
 included in the linear predictor during fitting. This should be
-\code{NULL} or a numeric vector of length equal to the number of
-observations. One or more offset terms can be included in the formula
-instead or as well, and if more than one is specified their sum is
-used.}
+\code{NULL}, a single numeric value, or a numeric vector of length
+equal to the number of observations. One or more offset terms can be
+included in the formula instead or as well, and if more than one is
+specified their sum is used.}
 
-\item{control_glm}{optional list of control parameters passed to
-\code{\link[stats]{glm.control}} when computing GLM-based starting
-values. Ignored when \code{beta_start} is supplied.}
+\item{control_glm}{optional list of control parameters interpreted by
+\code{\link[brglm2]{brglm_control}} when computing GLM-based
+starting values. Ignored when \code{beta_start} is supplied.}
 
 \item{alpha_vector}{numeric vector of fixed odds-ratio parameters used only
 when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
@@ -92,7 +94,7 @@ An object of class \code{"geer"}, a list with components:
 \item{fitted.values}{the fitted mean values, obtained by transforming the
       linear predictors by the inverse of the link function.}
 \item{rank}{the numeric rank of the fitted model.}
-\item{family}{the \code{\link{family}} object used.}
+\item{family}{the \code{\link[stats]{family}} object used.}
 \item{linear.predictors}{the linear fit on the link scale.}
 \item{iter}{the number of iterations used.}
 \item{prior.weights}{the weights initially supplied, a vector of 1s if none
@@ -107,11 +109,19 @@ An object of class \code{"geer"}, a list with components:
 \item{converged}{logical indicating whether the algorithm converged.}
 \item{call}{the matched call.}
 \item{formula}{the formula supplied.}
-\item{terms}{the \code{\link{terms}} object used.}
+\item{terms}{the \code{\link[stats]{terms}} object used.}
 \item{data}{the data argument.}
 \item{offset}{the offset vector used.}
 \item{control}{the \code{\link{geer_control}} list used.}
 \item{method}{character string identifying the estimation method used.}
+\item{fit_function}{character string identifying the fitting function used,
+      either \code{"geewa"} or \code{"geewa_binary"}.}
+\item{use_p}{for \code{geewa()} fits, logical indicating whether the
+      degrees-of-freedom correction was used. This component is not stored
+      for \code{geewa_binary()} fits.}
+\item{phi_fixed}{for \code{geewa()} fits, logical indicating whether the
+      scale parameter was fixed. This component is not stored for
+      \code{geewa_binary()} fits.}
 \item{contrasts}{the contrasts used.}
 \item{xlevels}{a record of the levels of the factors used in fitting.}
 \item{na.action}{information on how missing values were handled, as returned
@@ -122,8 +132,10 @@ An object of class \code{"geer"}, a list with components:
 \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
 \item{association_structure}{the name of the working association structure.}
 \item{alpha}{a vector of the estimated working association parameters.}
-\item{phi}{the estimated or fixed scale parameter.}
-\item{obs_no}{the total number of observations.}
+\item{phi}{the scale parameter. For \code{geewa()} fits, this is
+      estimated or fixed according to the fitting options; for
+      \code{geewa_binary()} fits, it is always \code{1}.}
+\item{obs_no}{the number of observations used in fitting.}
 \item{clusters_no}{the number of clusters.}
 \item{min_cluster_size}{the minimum cluster size.}
 \item{max_cluster_size}{the maximum cluster size.}
@@ -131,8 +143,8 @@ An object of class \code{"geer"}, a list with components:
 \description{
 Fits a marginal model for repeated or clustered binary responses using
 Generalized Estimating Equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
-Jeffreys-prior penalized GEE.
+the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+Jeffreys-type penalized GEE.
 }
 \details{
 \code{method} specifies the estimation approach. If \code{method = "gee"},
@@ -144,7 +156,7 @@ bias-reducing estimators, respectively. If \code{method} is one of
 the corresponding bias-corrected estimators are produced via a one-step
 correction applied to the converged GEE solution. If
 \code{method = "pgee-jeffreys"}, the GEE are penalized using a
-Jeffreys-prior penalty run to full convergence. If
+Jeffreys-type penalty run to full convergence. If
 \code{method = "opgee-jeffreys"}, a single penalized scoring step is
 performed from the converged independence penalized solution (one-step
 approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
@@ -157,10 +169,10 @@ marginalized pairwise odds ratios rather than a correlation structure. The
 scale parameter is fixed at \code{phi = 1}.
 
 For the construction of the \code{formula} argument, see the documentation
-of \code{\link{glm}} and \code{\link{formula}}.
+of \code{\link[stats]{glm}} and \code{\link[stats]{formula}}.
 
 The \code{data} must be in long format (one row per observation). See
-\code{\link{reshape}} for details on reshaping between long and wide formats.
+\code{\link[stats]{reshape}} for details on reshaping between long and wide formats.
 
 The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
 \eqn{N} is the number of clusters. Otherwise, the function recodes the

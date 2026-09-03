@@ -23,8 +23,9 @@ the within-cluster \code{repeated} index. \code{"fitted"} orders by fitted
 values. A single model-matrix column name can be supplied to order by that
 covariate, or a numeric vector with one value per fitted observation can
 be supplied directly. Numeric vectors must already be aligned with the
-observation order stored in \code{object}. Ties are resolved using the
-natural cluster/repeated order.}
+observation order stored in \code{object}. Ordering values must be finite
+and non-missing. Ties are resolved using the natural cluster/repeated
+order.}
 }
 \value{
 An object of class \code{"htest"}. In addition to the standard
@@ -94,8 +95,8 @@ Chang, Y.-C. (2000) Residuals analysis of the generalized linear models for
 longitudinal data. \emph{Statistics in Medicine}, \bold{19}, 1277--1293.
 \doi{10.1002/(SICI)1097-0258(20000530)19:10<1277::AID-SIM494>3.0.CO;2-S}
 
-Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating Equations},
-2nd ed. Chapman and Hall/CRC.
+Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
+Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 }
 \seealso{
 \code{\link{residuals.geer}}, \code{\link{fitted.geer}},

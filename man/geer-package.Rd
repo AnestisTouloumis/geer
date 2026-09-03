@@ -8,8 +8,8 @@
 \description{
 Fits marginal models for repeated or clustered responses using
 Generalized Estimating Equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reducing GEE, bias-correcting GEE, and
-Jeffreys-prior penalized GEE. Continuous, binary and count responses are handled by
+the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+Jeffreys-type penalized GEE. Continuous, binary and count responses are handled by
 \code{\link{geewa}}, while binary responses can also be handled by
 \code{\link{geewa_binary}} through an odds-ratio parameterization.
 }
@@ -39,7 +39,7 @@ Main functions:
   \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
   \code{\link{predict.geer}}, \code{\link{fitted.geer}},
   \code{\link{residuals.geer}}, \code{\link{runs_test}},
-  \code{\link{little_mcar_test}}, \code{\link{mcar_homoscedasticity_test}},
+  \code{\link{mcar_little_test}}, \code{\link{mcar_homoscedasticity_test}},
   \code{\link{mcar_logistic_test}}, and
   \code{\link{frechet_bounds_cor}}
   for inference and model diagnostics.

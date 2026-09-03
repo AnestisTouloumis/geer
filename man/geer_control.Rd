@@ -33,8 +33,8 @@ before step-halving begins. A value greater than \code{1} enlarges the
 initial step; the default of \code{1} leaves the scoring step unscaled.}
 
 \item{jeffreys_power}{strictly positive constant giving the power of the
-Jeffreys-prior penalty. Defaults to \code{0.5}, which corresponds to the
-GEE analogue of the standard Jeffreys prior.}
+Jeffreys-type penalty. Defaults to \code{0.5}, which corresponds to the
+standard Jeffreys-type penalty.}
 }
 \value{
 A named list with elements \code{tolerance}, \code{maxiter},
@@ -63,13 +63,13 @@ geer_control(tolerance = 1e-8, maxiter = 200)
 ## Custom continuity correction for odds-ratio estimation
 geer_control(or_adding = 1)
 
-## Weaker Jeffreys-prior penalty for Jeffreys-type fits
+## Weaker Jeffreys-type penalty
 geer_control(jeffreys_power = 0.1)
 
 }
 \references{
-Touloumis, A. (2026) Jeffreys-prior penalized GEE for correlated binary
-data with an odds-ratio parameterization. Preprint.
+Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated Binary
+Data with an Odds-Ratio Parameterization. Preprint.
 }
 \seealso{
 \code{\link{geewa}}, \code{\link{geewa_binary}}.

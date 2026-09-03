@@ -2,15 +2,14 @@
 % Please edit documentation in R/geer_methods-add1-drop1-anova.R
 \name{anova.geer}
 \alias{anova.geer}
-\alias{anova}
 \title{ANOVA Tables for geer Objects}
 \usage{
 \method{anova}{geer}(
   object,
   ...,
-  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  pmethod = c("rao-scott", "satterthwaite")
+  test = geer_test_choices,
+  cov_type = geer_cov_type_choices,
+  pmethod = geer_pmethod_choices
 )
 }
 \arguments{
@@ -30,7 +29,8 @@ working likelihood ratio test (\code{"working-lrt"}). Defaults to
 used for inference on the regression parameters. Options are the bias-corrected
 estimator (\code{"bias-corrected"}), the sandwich or robust estimator
 (\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), and the model-based or naive estimator
+(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+(\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation used to compute
@@ -65,10 +65,15 @@ compute the test statistic. For modified working tests, \code{cov_type}
 determines the covariance matrix used to form the coefficients of the sum of
 independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to compute the p-value.
+When \code{cov_type = "jackknife"} is used with a score or modified working
+score test, the score and model-based information remain evaluated under the
+null model, while the covariance component is the full leave-one-cluster
+jackknife covariance from the larger fitted model.
 
 When comparing two or more models, the data must be identical across all
-fits, and the models must be nested in the order supplied. In particular,
-each consecutive pair of models must be nested.
+fits and each consecutive pair of models must be nested. Models with a
+working association structure different from Model 1 are omitted with a
+warning.
 }
 \examples{
 data("cerebrovascular", package = "geer")
@@ -100,8 +105,8 @@ parameters in semiparametric generalized linear models for cluster
 correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{add1.geer}}, \code{\link{drop1.geer}} for type II
-  tests where each term is dropped one at a time while respecting model
-  hierarchy; \code{\link{step_p}} for stepwise model selection;
+\code{\link{add1.geer}} and \code{\link{drop1.geer}} for
+  single-term additions and deletions while respecting model hierarchy;
+  \code{\link{step_p}} for stepwise model selection;
   \code{\link{geecriteria}} for model comparison criteria.
 }

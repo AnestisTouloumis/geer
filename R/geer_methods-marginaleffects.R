@@ -13,18 +13,22 @@
 #'
 #' By default, \pkg{marginaleffects} inference for \code{geer} objects uses
 #' the bias-corrected covariance matrix, matching the default inference in
-#' \pkg{geer}. Supplying \code{vcov = "robust"} to a \pkg{marginaleffects}
-#' function uses the sandwich covariance matrix. Other covariance estimators
-#' can be supplied through a function, for example
-#' \code{vcov = function(x) vcov(x, cov_type = "naive")}.
+#' \pkg{geer}. A character value may select any covariance estimator
+#' supported by \code{vcov.geer()}, including \code{"robust"},
+#' \code{"df-adjusted"}, \code{"jackknife"}, and \code{"naive"}. A
+#' covariance matrix or function can also be supplied.
 #'
 #' @param model a fitted model object of class \code{"geer"}.
 #' @param x a fitted model object of class \code{"geer"}.
 #' @param coefs a named numeric vector of regression coefficients.
 #' @param vcov covariance specification supplied by \pkg{marginaleffects}.
 #'   \code{NULL} or \code{TRUE} uses the bias-corrected covariance matrix,
-#'   \code{"robust"} uses the sandwich covariance matrix, and a square
-#'   covariance matrix is returned unchanged after validation.
+#'   while \code{FALSE} returns \code{NULL}. Character values may be
+#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+#'   \code{"jackknife"}, or \code{"naive"}. A covariance-producing
+#'   function may also be supplied. A square covariance matrix may be supplied;
+#'   after validation, its rows and columns are aligned with the model
+#'   coefficient names.
 #' @param newdata a data frame containing predictor values at which to compute
 #'   predictions.
 #' @param type prediction scale. Supported values are \code{"response"} and
@@ -34,8 +38,9 @@
 #' @return
 #' These methods return objects in the formats required internally by
 #' \pkg{marginaleffects}: a named coefficient vector, a modified \code{geer}
-#' object, a named covariance matrix, a model data frame, or a data frame
-#' with columns \code{rowid} and \code{estimate}.
+#' object, a named covariance matrix (or \code{NULL} when
+#' \code{vcov = FALSE}), a model data frame, or a data frame with columns
+#' \code{rowid} and \code{estimate}.
 #'
 #' @seealso \code{\link{predict.geer}}, \code{\link{vcov.geer}},
 #'   \code{\link{coef.geer}}.
@@ -104,7 +109,7 @@ get_data.geer <- function(x, ...) {
 #' @exportS3Method marginaleffects::get_coef
 get_coef.geer <- function(model, ...) {
   model <- check_geer_object(model)
-  coef(model)
+  stats::coef(model)
 }
 
 
@@ -137,19 +142,21 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
   } else if (isFALSE(vcov)) {
     return(NULL)
   } else if (is.character(vcov) && length(vcov) == 1L && !is.na(vcov)) {
-    if (!identical(tolower(vcov), "robust")) {
+    vcov_type <- tolower(vcov)
+    choices <- geer_cov_type_choices
+    if (!(vcov_type %in% choices)) {
       stop(
         paste0(
-          "unsupported 'vcov' specification for a 'geer' model; use TRUE ",
-          "for the bias-corrected covariance, 'robust' for the sandwich ",
-          "covariance, or supply a covariance matrix/function"
+          "unsupported 'vcov' specification for a 'geer' model; use one of ",
+          "'bias-corrected', 'robust', 'df-adjusted', 'jackknife', or 'naive', ",
+          "or supply a covariance matrix/function"
         ),
         call. = FALSE
       )
     }
-    out <- stats::vcov(model, cov_type = "robust")
+    out <- stats::vcov(model, cov_type = vcov_type)
   } else if (is.function(vcov)) {
-    out <- vcov(model)
+    out <- stats::vcov(model)
   } else {
     out <- vcov
   }

@@ -156,7 +156,7 @@ test_that("validate_geer checks fitted values, residuals, id, y, and repeated al
 })
 
 
-test_that("validate_geer checks terms, call, and formula consistency", {
+test_that("validate_geer checks terms, call, and formula components", {
   obj <- make_valid_geer_object()
   obj$terms <- list()
   expect_error(validate_geer(obj), "'terms' must be a terms object")
@@ -167,8 +167,11 @@ test_that("validate_geer checks terms, call, and formula consistency", {
   obj$call <- quote(geewa(data = data.frame()))
   expect_error(validate_geer(obj), "'call' must contain a formula component")
   obj <- make_valid_geer_object()
-  obj$call <- quote(geewa(formula = y ~ x1))
-  expect_error(validate_geer(obj), "'formula' and")
+  obj$formula <- "y ~ x1 + x2"
+  expect_error(validate_geer(obj), "'formula' must be a formula object")
+  obj <- make_valid_geer_object()
+  obj$formula <- quote(user_formula)
+  expect_error(validate_geer(obj), "'formula' must be a formula object")
 })
 
 

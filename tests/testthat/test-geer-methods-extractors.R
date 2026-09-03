@@ -155,6 +155,18 @@ test_that("model.matrix returns the stored design matrix", {
 })
 
 
+test_that("model.matrix does not depend on the stored data component", {
+  # model.matrix.geer returns the design matrix built at fitting time, so it
+  # must not consult object$data, which is an environment whenever the fit was
+  # made without an explicit data argument.
+  fit <- count_fit
+  fit$data <- NULL
+  expect_equal(model.matrix(fit), count_fit$x)
+  fit$data <- new.env()
+  expect_equal(model.matrix(fit), count_fit$x)
+})
+
+
 test_that("model.matrix.geer rejects non-geer objects", {
   expect_error(
     model.matrix.geer(list(terms = terms(~ 1), data = data.frame(x = 1))),

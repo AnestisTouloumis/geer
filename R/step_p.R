@@ -13,10 +13,11 @@
 #'   search: backward elimination (\code{"backward"}), forward selection
 #'   (\code{"forward"}) or bidirectional (\code{"both"}). Defaults to
 #'   \code{"backward"}.
-#' @param p_enter numeric value specifying the p-value threshold
-#'   for adding a term during forward steps. Defaults to \code{0.15}.
-#' @param p_remove numeric value specifying the p-value threshold
-#'   for removing a term during backward steps. Defaults to \code{0.15}.
+#' @param p_enter numeric value strictly between 0 and 1 specifying the p-value
+#'   threshold for adding a term during forward steps. Defaults to \code{0.15}.
+#' @param p_remove numeric value strictly between 0 and 1 specifying the p-value
+#'   threshold for removing a term during backward steps. Defaults to
+#'   \code{0.15}.
 #' @param steps non-negative integer giving the maximum number of accepted
 #'   steps to perform. If \code{steps = 0}, the initial model is returned with
 #'   an initial-model row in its \code{anova} component. Defaults to
@@ -56,16 +57,24 @@
 #' determines the covariance matrix used to form the coefficients of the sum of
 #' independent chi-squared random variables, and \code{pmethod} specifies the
 #' approximation used to compute the p-value.
+#' For score-based procedures with \code{cov_type = "jackknife"}, the
+#' covariance component is the full leave-one-cluster jackknife covariance from
+#' the larger fitted candidate model. The \code{CIC} column is also computed
+#' from \code{vcov(model, cov_type = cov_type)}, so
+#' \code{cov_type = "jackknife"} performs a full set of leave-one-cluster
+#' refits for every candidate model considered at every step and can be very
+#' slow; see \code{\link{vcov.geer}}.
 #'
 #' @return
 #' A fitted model object of class \code{"geer"} corresponding to the final
 #' selected model. The returned object also includes an \code{anova}
 #' component of class \code{c("anova", "data.frame")} summarizing the
 #' stepwise sequence. This table has one row for the initial model and one row
-#' for each accepted step, with columns \code{Step} (the term added or removed),
+#' for each accepted step, with columns \code{Step} (the step number),
 #' \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
 #' \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
-#' Criterion).
+#' Criterion). The term added or removed at each accepted step is indicated in
+#' the row names.
 #'
 #' @inherit add1.geer references
 #'
@@ -116,12 +125,12 @@
 #' @export
 step_p <- function(object,
                    scope,
-                   direction = c("backward", "forward", "both"),
+                   direction = geer_direction_choices,
                    p_enter = 0.15,
                    p_remove = 0.15,
-                   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-                   cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-                   pmethod = c("rao-scott", "satterthwaite"),
+                   test = geer_test_choices,
+                   cov_type = geer_cov_type_choices,
+                   pmethod = geer_pmethod_choices,
                    steps = 1000) {
   object <- check_geer_object(object)
   direction <- match_direction_type(direction[1L])

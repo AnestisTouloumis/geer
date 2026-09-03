@@ -7,12 +7,12 @@
 step_p(
   object,
   scope,
-  direction = c("backward", "forward", "both"),
+  direction = geer_direction_choices,
   p_enter = 0.15,
   p_remove = 0.15,
-  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-  pmethod = c("rao-scott", "satterthwaite"),
+  test = geer_test_choices,
+  cov_type = geer_cov_type_choices,
+  pmethod = geer_pmethod_choices,
   steps = 1000
 )
 }
@@ -31,11 +31,12 @@ search: backward elimination (\code{"backward"}), forward selection
 (\code{"forward"}) or bidirectional (\code{"both"}). Defaults to
 \code{"backward"}.}
 
-\item{p_enter}{numeric value specifying the p-value threshold
-for adding a term during forward steps. Defaults to \code{0.15}.}
+\item{p_enter}{numeric value strictly between 0 and 1 specifying the p-value
+threshold for adding a term during forward steps. Defaults to \code{0.15}.}
 
-\item{p_remove}{numeric value specifying the p-value threshold
-for removing a term during backward steps. Defaults to \code{0.15}.}
+\item{p_remove}{numeric value strictly between 0 and 1 specifying the p-value
+threshold for removing a term during backward steps. Defaults to
+\code{0.15}.}
 
 \item{test}{character string specifying the hypothesis testing procedure.
 Options are the Wald test (\code{"wald"}), the generalized score test
@@ -48,7 +49,8 @@ working likelihood ratio test (\code{"working-lrt"}). Defaults to
 used for inference on the regression parameters. Options are the bias-corrected
 estimator (\code{"bias-corrected"}), the sandwich or robust estimator
 (\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), and the model-based or naive estimator
+(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+(\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation used to compute
@@ -66,10 +68,11 @@ A fitted model object of class \code{"geer"} corresponding to the final
 selected model. The returned object also includes an \code{anova}
 component of class \code{c("anova", "data.frame")} summarizing the
 stepwise sequence. This table has one row for the initial model and one row
-for each accepted step, with columns \code{Step} (the term added or removed),
+for each accepted step, with columns \code{Step} (the step number),
 \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
 \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
-Criterion).
+Criterion). The term added or removed at each accepted step is indicated in
+the row names.
 }
 \description{
 Performs stepwise model selection for a fitted \code{geer} object using
@@ -111,6 +114,13 @@ compute the test statistic. For modified working tests, \code{cov_type}
 determines the covariance matrix used to form the coefficients of the sum of
 independent chi-squared random variables, and \code{pmethod} specifies the
 approximation used to compute the p-value.
+For score-based procedures with \code{cov_type = "jackknife"}, the
+covariance component is the full leave-one-cluster jackknife covariance from
+the larger fitted candidate model. The \code{CIC} column is also computed
+from \code{vcov(model, cov_type = cov_type)}, so
+\code{cov_type = "jackknife"} performs a full set of leave-one-cluster
+refits for every candidate model considered at every step and can be very
+slow; see \code{\link{vcov.geer}}.
 }
 \examples{
 \donttest{

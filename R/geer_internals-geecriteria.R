@@ -467,8 +467,8 @@ compute_gee_criteria <- function(object,
     )
   }
   sc_wc_stats <- unlist(sc_wc_stats, use.names = FALSE)
-  naive_covariance <- vcov(object, cov_type = "naive")
-  beta_covariance <- vcov(object, cov_type = cov_type)
+  naive_covariance <- stats::vcov(object, cov_type = "naive")
+  beta_covariance <- stats::vcov(object, cov_type = cov_type)
   independence_inverse <- compute_independence_naive_inverse(object)
   p <- length(object$coefficients)
   association_params_no <- compute_n_association_parameters(object)
@@ -551,6 +551,6 @@ compute_gee_criteria <- function(object,
 
 compute_gee_cic <- function(object, cov_type) {
   independence_inverse <- compute_independence_naive_inverse(object)
-  beta_covariance <- vcov(object, cov_type = cov_type)
+  beta_covariance <- stats::vcov(object, cov_type = cov_type)
   sum(independence_inverse * beta_covariance)
 }

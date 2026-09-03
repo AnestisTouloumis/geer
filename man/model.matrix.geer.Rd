@@ -2,7 +2,6 @@
 % Please edit documentation in R/geer_methods-modelmatrix.R
 \name{model.matrix.geer}
 \alias{model.matrix.geer}
-\alias{model.matrix}
 \title{Construct Design Matrices from a geer Object}
 \usage{
 \method{model.matrix}{geer}(object, ...)
@@ -30,9 +29,12 @@ Constructs the design matrix for the marginal mean model underlying a fitted
 \code{geer} object.
 }
 \details{
-The design matrix is reconstructed from \code{object$terms} and
-\code{object$data}, with factor variables and interactions expanded using
-the contrasts recorded at fitting time.
+The design matrix returned is the one constructed when the model was
+fitted and stored in the fitted object, following the convention of
+\code{\link[stats]{model.matrix}} methods for \code{lm} objects. It is
+therefore guaranteed to agree with the fitted coefficients, with the
+contrasts and factor levels recorded at fitting time, and with the rows
+actually used in the fit after any missing values were removed.
 
 By convention, if the response variable also appears on the right-hand side
 of the formula, it is dropped, although interactions involving that term are

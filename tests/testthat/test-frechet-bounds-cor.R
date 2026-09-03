@@ -23,6 +23,16 @@ fit_bin_exch_T4 <- geewa(
   method  = "gee"
 )
 
+fit_bin_unstr_T4 <- geewa(
+  formula = status ~ baseline + treatment,
+  family  = binomial(link = "logit"),
+  data    = test_data$respiratory2,
+  id      = id,
+  repeated = visit,
+  corstr  = "unstructured",
+  method  = "gee"
+)
+
 fit_bin_ar1_T4 <- geewa(
   formula = status ~ baseline + treatment,
   family  = binomial(link = "logit"),
@@ -32,9 +42,6 @@ fit_bin_ar1_T4 <- geewa(
   corstr  = "ar1",
   method  = "gee"
 )
-
-# Poisson fit — used to test the non-binomial error path
-fit_pois_exch <- fit_geewa_pois_exch
 
 
 # ── Output structure ──────────────────────────────────────────────────────────
@@ -102,21 +109,75 @@ test_that("frechet_bounds_cor works for ar1 association structure", {
   expect_true(all(is.finite(out$upper_min)))
 })
 
+test_that("frechet_bounds_cor works for unstructured association structure", {
+  out <- frechet_bounds_cor(fit_bin_unstr_T4)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), choose(4L, 2L))
+  expect_true(all(is.finite(out$lower_max)))
+  expect_true(all(is.finite(out$upper_min)))
+  expect_true(all(out$lower_max < out$upper_min))
+})
+
+test_that("under unstructured the labels and values match the fitted alpha", {
+  # alpha_name coincides with names(object$alpha) only for the unstructured and
+  # fixed structures; under exchangeable, ar1, toeplitz and m-dependent the
+  # labels are synthetic and alpha_value is a function of the alpha parameters
+  # rather than one of them.
+  out <- frechet_bounds_cor(fit_bin_unstr_T4)
+  expect_identical(out$alpha_name, names(fit_bin_unstr_T4$alpha))
+  expect_equal(
+    out$alpha_value,
+    unname(fit_bin_unstr_T4$alpha),
+    tolerance = 1e-10
+  )
+})
+
 
 # ── Error paths ───────────────────────────────────────────────────────────────
 
 test_that("frechet_bounds_cor errors on non-geer input", {
   expect_error(
     frechet_bounds_cor(list()),
-    "'object' must be of class \"geer\"",
+    "'object' must be of 'geer' class",
+    fixed = TRUE
+  )
+})
+
+test_that("frechet_bounds_cor errors on a geewa_binary fit", {
+  expect_error(
+    frechet_bounds_cor(fit_geewa_bin_exch),
+    "must be fitted by 'geewa'",
+    fixed = TRUE
+  )
+})
+
+test_that("the geewa_binary guard is not shadowed by the other error paths", {
+  # Regression guard. A geewa_binary() fit satisfies both remaining gates: its
+  # family is always binomial and its association structure can be
+  # non-independence. Without the fit_function check the odds-ratio alpha vector
+  # would be passed to get_correlation_matrix() and silently treated as a
+  # working correlation.
+  expect_identical(fit_geewa_bin_exch$family$family, "binomial")
+  expect_false(
+    identical(fit_geewa_bin_exch$association_structure, "independence")
+  )
+  expect_identical(fit_geewa_bin_exch$fit_function, "geewa_binary")
+})
+
+test_that("frechet_bounds_cor errors when fit_function is absent", {
+  fit_no_tag <- fit_bin_exch_T2
+  fit_no_tag$fit_function <- NULL
+  expect_error(
+    frechet_bounds_cor(fit_no_tag),
+    "must be fitted by 'geewa'",
     fixed = TRUE
   )
 })
 
 test_that("frechet_bounds_cor errors on non-binomial family", {
   expect_error(
-    frechet_bounds_cor(fit_pois_exch),
-    "family must be \"binomial\"",
+    frechet_bounds_cor(fit_geewa_pois_exch),
+    "must be a binomial fit",
     fixed = TRUE
   )
 })
@@ -132,7 +193,7 @@ test_that("frechet_bounds_cor errors on independence association structure", {
   )
   expect_error(
     frechet_bounds_cor(fit_indep),
-    "association structure must not be \"independence\"",
+    "must not have an 'independence' association structure",
     fixed = TRUE
   )
 })

@@ -5,7 +5,7 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
     "id", "repeated", "weights", "offset"
   )
   model_call <- model_call[c(1L, match(keep, names(model_call), 0L))]
-  model_call[[1L]] <- quote(model.frame)
+  model_call[[1L]] <- quote(stats::model.frame)
   enclos <- env
   if (!is.null(model_call$formula)) {
     formula_obj <- tryCatch(eval(model_call$formula, envir = env), error = function(e) NULL)
@@ -18,7 +18,7 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
 
 
 extract_geer_offset <- function(model_frame, y_length) {
-  offset <- model.offset(model_frame)
+  offset <- stats::model.offset(model_frame)
   if (is.null(offset)) {
     offset <- rep.int(0, y_length)
   } else {
@@ -42,7 +42,7 @@ extract_geer_offset <- function(model_frame, y_length) {
 
 build_geer_design_matrix <- function(model_frame) {
   model_terms <- attr(model_frame, "terms")
-  model_matrix <- model.matrix(model_terms, model_frame)
+  model_matrix <- stats::model.matrix(model_terms, model_frame)
   xnames <- colnames(model_matrix)
   if (length(xnames) == 1L) {
     model_matrix <- matrix(model_matrix, ncol = 1L)

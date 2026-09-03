@@ -1,8 +1,8 @@
 evaluate_prediction_offset <- function(object, newdata, n_obs) {
   offset_formula <- rep.int(0, n_obs)
-  pred_terms <- delete.response(object$terms)
-  mf <- model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = na.pass)
-  offset_from_formula <- model.offset(mf)
+  pred_terms <- stats::delete.response(object$terms)
+  mf <- stats::model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = stats::na.pass)
+  offset_from_formula <- stats::model.offset(mf)
   if (!is.null(offset_from_formula)) {
     if (length(offset_from_formula) == 1L) {
       offset_from_formula <- rep.int(as.numeric(offset_from_formula), n_obs)
@@ -17,7 +17,7 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
   offset_argument <- rep.int(0, n_obs)
   call_offset <- object$call$offset
   if (!is.null(call_offset)) {
-    offset_env <- environment(formula(object))
+    offset_env <- environment(stats::formula(object))
     offset_from_argument <- tryCatch(
       eval(call_offset, envir = newdata, enclos = offset_env),
       error = function(e) {
@@ -47,7 +47,6 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
 #' Extract Model Fitted Values from a geer Object
 #'
 #' @rdname fitted.geer
-#' @aliases fitted fitted.values
 #' @method fitted geer
 #'
 #' @description
@@ -82,7 +81,6 @@ fitted.geer <- function(object, ...) {
 #' @title
 #' Predictions from a geer Object
 #'
-#' @aliases predict predict.geer
 #' @method predict geer
 #'
 #' @description
@@ -99,7 +97,8 @@ fitted.geer <- function(object, ...) {
 #'   used to compute approximate standard errors when \code{se.fit = TRUE}.
 #'   Options are the bias-corrected estimator (\code{"bias-corrected"}),
 #'   the sandwich or robust estimator (\code{"robust"}), the
-#'   degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), and the
+#'   degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), the
+#'   leave-one-cluster jackknife estimator (\code{"jackknife"}), and the
 #'   model-based or naive estimator (\code{"naive"}). Defaults to
 #'   \code{"bias-corrected"}.
 #' @param se.fit logical indicating whether approximate standard errors are to
@@ -108,9 +107,10 @@ fitted.geer <- function(object, ...) {
 #'
 #' @details
 #' Predictions are obtained by computing the model matrix for \code{newdata}
-#' (or using the original fit when \code{newdata} is omitted) and multiplying
-#' by the estimated coefficients. If \code{type = "response"}, the linear
-#' predictor is transformed via the inverse link function.
+#' (or using the original fit when \code{newdata} is omitted), multiplying by
+#' the estimated coefficients, and adding any offset. If
+#' \code{type = "response"}, the linear predictor is transformed via the
+#' inverse link function.
 #'
 #' When \code{se.fit = TRUE}, approximate standard errors are computed by the
 #' delta method using the covariance matrix specified by \code{cov_type}. On
@@ -151,7 +151,7 @@ fitted.geer <- function(object, ...) {
 predict.geer <- function(object,
                          newdata = NULL,
                          type = c("link", "response"),
-                         cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
+                         cov_type = geer_cov_type_choices,
                          se.fit = FALSE,
                          ...) {
   object <- check_geer_object(object)
@@ -172,7 +172,7 @@ predict.geer <- function(object,
     if (!se.fit) {
       return(out)
     }
-    vcov_matrix <- vcov(object, cov_type = cov_type)
+    vcov_matrix <- stats::vcov(object, cov_type = cov_type)
     vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
     design_matrix <- object$x
     if (is.null(colnames(design_matrix))) {
@@ -189,9 +189,9 @@ predict.geer <- function(object,
   if (!is.data.frame(newdata)) {
     newdata <- as.data.frame(newdata)
   }
-  pred_terms <- delete.response(object$terms)
-  mf <- model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = na.pass)
-  design_matrix <- model.matrix(pred_terms, mf, contrasts.arg = object$contrasts)
+  pred_terms <- stats::delete.response(object$terms)
+  mf <- stats::model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = stats::na.pass)
+  design_matrix <- stats::model.matrix(pred_terms, mf, contrasts.arg = object$contrasts)
   if (is.null(colnames(design_matrix))) {
     stop("prediction model matrix must have column names", call. = FALSE)
   }
@@ -216,7 +216,7 @@ predict.geer <- function(object,
   if (!se.fit) {
     return(if (type == "link") eta_vector else object$family$linkinv(eta_vector))
   }
-  vcov_matrix <- vcov(object, cov_type = cov_type)
+  vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
   se <- sqrt(rowSums((design_matrix %*% vcov_matrix) * design_matrix))
   if (type == "response") {
@@ -231,13 +231,13 @@ predict.geer <- function(object,
 
 
 compute_mahalanobis_residuals <- function(object) {
-  id_labels <- as.character(object$id)
-  cluster_ids <- unique(id_labels)
+  cluster_index <- split(seq_along(object$id), object$id)
+  cluster_ids <- names(cluster_index)
   ans <- vapply(
     cluster_ids,
     FUN.VALUE = numeric(1),
     FUN = function(cluster_id) {
-      indices <- which(id_labels == cluster_id)
+      indices <- cluster_index[[cluster_id]]
       residual_vector <- object$y[indices] - object$fitted.values[indices]
       working_covariance <- compute_working_covariance_for_criteria(
         object,
@@ -282,7 +282,6 @@ compute_mahalanobis_residuals <- function(object) {
 #' @title
 #' Residuals from a geer Object
 #'
-#' @aliases resid residuals residuals.geer
 #' @method residuals geer
 #'
 #' @description
@@ -320,9 +319,9 @@ compute_mahalanobis_residuals <- function(object) {
 #' the cluster identifier.
 #'
 #' @references
-#' Vanegas, L. H., Rondon, L. M., and Paula, G. A. (2023). Generalized
-#' Estimating Equations using the new R package glmtoolbox. \emph{The R
-#' Journal}, 15(2), 105--133.
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
+#' Equations using the new R package glmtoolbox. \emph{The R Journal},
+#' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},
 #'   \code{\link{runs_test}}, \code{\link{geewa}},

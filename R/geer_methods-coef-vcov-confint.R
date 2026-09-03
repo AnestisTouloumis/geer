@@ -1,7 +1,6 @@
 #' @title
 #' Extract Variance-Covariance Matrix from a geer Object
 #'
-#' @aliases vcov vcov.geer
 #' @method vcov geer
 #'
 #' @description
@@ -12,7 +11,8 @@
 #' @param cov_type character string specifying the covariance matrix estimator
 #'   used for inference on the regression parameters. Options are the bias-corrected estimator
 #'   (\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
-#'   (\code{"df-adjusted"}), and the model-based or naive estimator
+#'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+#'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param ... additional arguments passed to or from other methods.
 #'
@@ -25,9 +25,49 @@
 #'   (Liang and Zeger, 1986).}
 #'   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
 #'   estimator (MacKinnon, 1985).}
+#'   \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife covariance estimator. Each
+#'   cluster is deleted in turn and the regression parameters are refitted
+#'   using the original estimation method while the working association
+#'   parameters are held fixed at their full-data estimates.}
 #'   \item{\code{"naive"}}{the model-based covariance estimator
 #'   (Liang and Zeger, 1986).}
 #' }
+#'
+#' For \code{cov_type = "jackknife"}, let \eqn{K} denote the number of
+#' clusters, let \eqn{\hat\beta_{(i)}} denote the regression-parameter
+#' estimate obtained after deleting cluster \eqn{i}, and let
+#' \eqn{\bar\beta_{(-)} = K^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
+#' \deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{K-1}{K}
+#' \sum_{i=1}^K (\hat\beta_{(i)}-\bar\beta_{(-)})
+#' (\hat\beta_{(i)}-\bar\beta_{(-)})^T,}
+#' where \eqn{(K-1)/K} is the usual finite-sample correction of the
+#' Quenouille-Tukey jackknife.
+#' Each \eqn{\hat\beta_{(i)}} is obtained by refitting the model in full on
+#' the remaining clusters. This is deliberate: no one-step approximation to
+#' the deletion estimates is used, so every \eqn{\hat\beta_{(i)}} solves the
+#' same estimating equations as the full-data fit.
+#'
+#' The estimation method of the original fit is used in every deletion refit,
+#' with nuisance quantities handled as follows. The working association
+#' structure is the one selected for the full-data model, and the applicable
+#' components of its association-parameter vector are held fixed at the
+#' full-data estimates. For \code{"bcgee-naive"}, \code{"bcgee-robust"},
+#' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"} and
+#' \code{"hpgee-jeffreys"}, the full-data fit re-estimates these association
+#' parameters in its second pass, so a deletion refit is not identical to a
+#' complete re-run of the original method on the reduced data. The preliminary
+#' independence pass required by \code{"opgee-jeffreys"} and
+#' \code{"hpgee-jeffreys"} is reproduced in each deletion refit. The
+#' dispersion parameter is re-estimated when it was estimated in the original
+#' model and remains fixed when the original fit used a fixed dispersion; it
+#' is always \code{1} for models fitted by \code{geewa_binary()}.
+#'
+#' Unlike the other covariance estimators, this one can fail rather than
+#' return a matrix. At least two clusters are required, and an error is
+#' signalled if any deletion refit fails to converge or returns a non-finite
+#' estimate. Because a complete model is refitted once for each cluster, this
+#' option can also be substantially more computationally expensive than the
+#' other covariance estimators.
 #'
 #' @return
 #' A square numeric matrix of estimated covariances between regression
@@ -63,8 +103,7 @@
 #'
 #' @export
 vcov.geer <- function(object,
-                      cov_type = c("bias-corrected", "robust",
-                                   "df-adjusted", "naive"),
+                      cov_type = geer_cov_type_choices,
                       ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
@@ -73,6 +112,7 @@ vcov.geer <- function(object,
     robust = object$robust_covariance,
     naive = object$naive_covariance,
     `bias-corrected` = object$bias_corrected_covariance,
+    jackknife = compute_jackknife_covariance(object),
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = object$robust_covariance,
       clusters_no = object$clusters_no,
@@ -86,7 +126,6 @@ vcov.geer <- function(object,
 #' @title
 #' Extract Model Coefficients from a geer Object
 #'
-#' @aliases coef.geer coef coefficients
 #' @method coef geer
 #'
 #' @description
@@ -132,7 +171,6 @@ coef.geer <- function(object, ...) {
 #' @title
 #' Confidence Intervals for Model Parameters from a geer Object
 #'
-#' @aliases confint confint.geer
 #' @method confint geer
 #'
 #' @description
@@ -141,6 +179,8 @@ coef.geer <- function(object, ...) {
 #'
 #' @inheritParams vcov.geer
 #' @inheritParams stats::confint
+#' @param level a single number strictly between 0 and 1 specifying the
+#'   confidence level. Defaults to \code{0.95}.
 #'
 #' @details
 #' Confidence intervals are computed as
@@ -176,8 +216,7 @@ coef.geer <- function(object, ...) {
 confint.geer <- function(object,
                          parm,
                          level = 0.95,
-                         cov_type = c("bias-corrected", "robust",
-                                      "df-adjusted", "naive"),
+                         cov_type = geer_cov_type_choices,
                          ...) {
   if (!is.numeric(level) || length(level) != 1L ||
       !is.finite(level) || level <= 0 || level >= 1) {
@@ -185,7 +224,7 @@ confint.geer <- function(object,
   }
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
-  beta <- coef(object)
+  beta <- stats::coef(object)
   beta_names <- names(beta)
   if (missing(parm)) {
     parm <- beta_names
@@ -200,14 +239,14 @@ confint.geer <- function(object,
   conf_probs <- (1 - level) / 2
   conf_probs <- c(conf_probs, 1 - conf_probs)
   pct <- format_percent(conf_probs, 3)
-  percentiles <- qnorm(conf_probs)
+  percentiles <- stats::qnorm(conf_probs)
   ans <- matrix(
     NA_real_,
     nrow = length(parm),
     ncol = 2L,
     dimnames = list(parm, pct)
   )
-  vcov_matrix <- vcov(object, cov_type = cov_type)
+  vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   standard_errors <- sqrt(pmax(diag(vcov_matrix), 0))[parm]
   ans[] <- beta[parm] + standard_errors %o% percentiles
   ans

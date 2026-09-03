@@ -35,8 +35,8 @@ print.geer <- function(x, ...) {
   } else {
     cat("<none>\n")
   }
-  cat("\nNumber of iterations :", x$iter, "\n")
-  cat("Algorithm converged  :", x$converged, "\n")
+  cat("\nNumber of iterations:", x$iter, "\n")
+  cat("Algorithm converged :", x$converged, "\n")
   invisible(x)
 }
 
@@ -51,7 +51,7 @@ print.geer <- function(x, ...) {
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance estimator used to
 #'   compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
-#'   \code{"robust"}, \code{"df-adjusted"}, and
+#'   \code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, and
 #'   \code{"naive"}. Defaults to \code{"bias-corrected"}.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
@@ -65,9 +65,14 @@ print.geer <- function(x, ...) {
 #' \item{alpha}{the estimated or fixed association parameters.}
 #' \item{call}{the matched call.}
 #' \item{residuals}{the working residuals.}
+#' \item{obs_no}{the number of observations used in the fit.}
+#' \item{clusters_no}{the number of clusters used in the fit.}
+#' \item{min_cluster_size}{the smallest observed cluster size.}
+#' \item{max_cluster_size}{the largest observed cluster size.}
 #' \item{iter}{the number of iterations used.}
 #' \item{converged}{logical indicating whether the algorithm converged.}
-#' \item{phi}{the estimated or fixed scale parameter.}
+#' \item{phi}{the estimated or fixed scale parameter. For models fitted by
+#'   \code{geewa_binary()}, this is always \code{1}.}
 #' \item{association_structure}{the name of the working association structure.}
 #' \item{method}{character string identifying the estimation method used.}
 #' \item{cov_type}{the covariance estimator used for standard errors.}
@@ -99,18 +104,18 @@ print.geer <- function(x, ...) {
 #'
 #' @export
 summary.geer <- function(object,
-                         cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
+                         cov_type = geer_cov_type_choices,
                          ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
-  beta <- coef(object)
-  vcov_matrix <- vcov(object, cov_type = cov_type)
+  beta <- stats::coef(object)
+  vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   se <- sqrt(pmax(0, diag(vcov_matrix)))
   z_stat <- rep.int(NA_real_, length(beta))
   pval <- rep.int(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]
-  pval[ok] <- 2 * pnorm(abs(z_stat[ok]), lower.tail = FALSE)
+  pval[ok] <- 2 * stats::pnorm(abs(z_stat[ok]), lower.tail = FALSE)
   coef_table <- cbind(
     Estimate = beta,
     `Std. Error` = se,
@@ -123,6 +128,10 @@ summary.geer <- function(object,
     alpha = object$alpha,
     call = object$call,
     residuals = object$residuals,
+    obs_no = object$obs_no,
+    clusters_no = object$clusters_no,
+    min_cluster_size = object$min_cluster_size,
+    max_cluster_size = object$max_cluster_size,
     iter = object$iter,
     converged = object$converged,
     phi = object$phi,
@@ -140,8 +149,8 @@ summary.geer <- function(object,
 #'
 #' @description
 #' Prints the contents of a \code{summary.geer} object, including the call,
-#' estimation method, coefficient table, dispersion parameter, and working
-#' association structure.
+#' estimation method, sample size and cluster sizes, coefficient table,
+#' dispersion parameter, and working association structure.
 #'
 #' @param x an object of class \code{"summary.geer"}.
 #' @param ... additional arguments passed to or from other methods. Currently
@@ -171,11 +180,15 @@ print.summary.geer <- function(x, ...) {
   cat("\nEstimating Method   :", x$method, "\n")
   cat("Number of iterations:", x$iter, "\n")
   cat("Algorithm converged :", x$converged, "\n")
+  cat("\nNumber of observations:", x$obs_no, "\n")
+  cat("Number of clusters    :", x$clusters_no, "\n")
+  cat("Cluster sizes         :", x$min_cluster_size, "to",
+      x$max_cluster_size, "\n")
   cat("\nMarginal Model\n")
   cat("Family       :", x$family$family, "\n")
   cat("Link Function:", x$family$link, "\n")
   cat("\nCoefficients:\n")
-  printCoefmat(x$coefficients)
+  stats::printCoefmat(x$coefficients)
   cat("Std. Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
   cat("\nDispersion Parameter:", round(x$phi, digits = 4), "\n")
   cat("\nAssociation Structure:", x$association_structure, "\n")

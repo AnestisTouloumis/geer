@@ -139,7 +139,7 @@ get_or_alpha <- function(object) {
 }
 
 
-compute_chisq_mixture <- function(x, test_stat, pmethod = c("rao-scott", "satterthwaite")) {
+compute_chisq_mixture <- function(x, test_stat, pmethod = geer_pmethod_choices) {
   pmethod <- match.arg(pmethod)
   x <- Re(x)
   if (!is.numeric(test_stat) || length(test_stat) != 1L || !is.finite(test_stat)) {
@@ -155,12 +155,12 @@ compute_chisq_mixture <- function(x, test_stat, pmethod = c("rao-scott", "satter
   }
   if (identical(pmethod, "rao-scott")) {
     test_stat <- test_stat / x_bar
-    test_p <- 1 - pchisq(test_stat, df = test_df)
+    test_p <- 1 - stats::pchisq(test_stat, df = test_df)
   } else {
     satt_cv2 <- sum((x - x_bar)^2) / (test_df * x_bar^2)
     test_df <- test_df / (1 + satt_cv2)
     test_stat <- test_stat / ((1 + satt_cv2) * x_bar)
-    test_p <- 1 - pchisq(test_stat, df = test_df)
+    test_p <- 1 - stats::pchisq(test_stat, df = test_df)
   }
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
@@ -205,14 +205,14 @@ compute_score_components <- function(object0, object1, test_coefficients) {
 
 
 wald_test <- function(object0, object1,
-                      cov_type = c("bias-corrected", "robust", "df-adjusted", "naive")) {
+                      cov_type = geer_cov_type_choices) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$object1
   index <- nested_models$index
   test_df <- check_test_index(index, "Wald test")
   test_coefficients <- as.numeric(obj1$coefficients[index])
-  cov_test <- vcov(obj1, cov_type = cov_type)[index, index, drop = FALSE]
+  cov_test <- stats::vcov(obj1, cov_type = cov_type)[index, index, drop = FALSE]
   test_stat <- tryCatch(
     as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
     error = function(e) {
@@ -221,14 +221,14 @@ wald_test <- function(object0, object1,
     }
   )
   test_stat <- check_test_statistic(test_stat, "Wald test")
-  test_p <- 1 - pchisq(test_stat, df = test_df)
+  test_p <- 1 - stats::pchisq(test_stat, df = test_df)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
 working_wald_test <- function(object0, object1,
-                              cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-                              pmethod = c("rao-scott", "satterthwaite")) {
+                              cov_type = geer_cov_type_choices,
+                              pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
@@ -236,7 +236,7 @@ working_wald_test <- function(object0, object1,
   index <- nested_models$index
   check_test_index(index, "Working Wald test")
   test_coefficients <- as.numeric(obj1$coefficients[index])
-  naive_mat <- vcov(obj1, cov_type = "naive")
+  naive_mat <- stats::vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
   test_stat <- tryCatch(
     as.numeric(crossprod(test_coefficients, solve(cov_test, test_coefficients))),
@@ -248,7 +248,7 @@ working_wald_test <- function(object0, object1,
     }
   )
   test_stat <- check_test_statistic(test_stat, "Working Wald test")
-  robust_mat <- vcov(obj1, cov_type = cov_type)
+  robust_mat <- stats::vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
   eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
@@ -260,8 +260,8 @@ working_wald_test <- function(object0, object1,
 
 
 working_lrt_test <- function(object0, object1,
-                             cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-                             pmethod = c("rao-scott", "satterthwaite")) {
+                             cov_type = geer_cov_type_choices,
+                             pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
@@ -282,9 +282,9 @@ working_lrt_test <- function(object0, object1,
   ll_obj1 <- compute_quasi_loglikelihood(obj1)
   test_stat <- -2 * (ll_obj0 - ll_obj1)
   test_stat <- check_test_statistic(test_stat, "Working LR test")
-  naive_mat <- vcov(obj1, cov_type = "naive")
+  naive_mat <- stats::vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
-  robust_mat <- vcov(obj1, cov_type = cov_type)
+  robust_mat <- stats::vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
   eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
@@ -296,7 +296,7 @@ working_lrt_test <- function(object0, object1,
 
 
 score_test <- function(object0, object1,
-                       cov_type = c("bias-corrected", "robust", "df-adjusted", "naive")) {
+                       cov_type = geer_cov_type_choices) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$object0
@@ -316,9 +316,10 @@ score_test <- function(object0, object1,
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = sc$robust_covariance[index, index, drop = FALSE],
       clusters_no = obj1$clusters_no,
-      coef_no = length(coef(obj1)),
+      coef_no = length(stats::coef(obj1)),
       context = "Score test"
-    )
+    ),
+    jackknife = stats::vcov(obj1, cov_type = "jackknife")[index, index, drop = FALSE]
   )
   naive_mat <- sc$naive_covariance
   mid <- naive_mat[index, , drop = FALSE] %*% score_vector
@@ -331,14 +332,14 @@ score_test <- function(object0, object1,
   )
   test_stat <- as.numeric((t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol)
   test_stat <- check_test_statistic(test_stat, "Score test")
-  test_p <- 1 - pchisq(test_stat, df = test_df)
+  test_p <- 1 - stats::pchisq(test_stat, df = test_df)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
 
 working_score_test <- function(object0, object1,
-                               cov_type = c("bias-corrected", "robust", "df-adjusted", "naive"),
-                               pmethod = c("rao-scott", "satterthwaite")) {
+                               cov_type = geer_cov_type_choices,
+                               pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
   pmethod <- match.arg(pmethod)
   nested_models <- check_nested_models(object0, object1)
@@ -361,9 +362,10 @@ working_score_test <- function(object0, object1,
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = sc$robust_covariance,
       clusters_no = obj1$clusters_no,
-      coef_no = length(coef(obj1)),
+      coef_no = length(stats::coef(obj1)),
       context = "Working score test"
-    )
+    ),
+    jackknife = stats::vcov(obj1, cov_type = "jackknife")
   )
   cov_test <- naive_mat[index, index, drop = FALSE]
   mid <- naive_mat[index, , drop = FALSE] %*% score_vector
@@ -390,7 +392,7 @@ working_score_test <- function(object0, object1,
 compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   response_vector <- vapply(
     object,
-    function(x) paste(deparse(formula(x)[[2L]]), collapse = " "),
+    function(x) paste(deparse(stats::formula(x)[[2L]]), collapse = " "),
     character(1)
   )
   same_response <- response_vector == response_vector[1L]
@@ -472,7 +474,7 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   title <- paste("Analysis of", test_type, "Statistic Table\n")
   variables <- vapply(
     object,
-    function(x) paste(deparse(formula(x)), collapse = "\n"),
+    function(x) paste(deparse(stats::formula(x)), collapse = "\n"),
     character(1)
   )
   topnote <- paste(

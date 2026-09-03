@@ -17,8 +17,8 @@ The input object \code{x} is returned invisibly.
 }
 \description{
 Prints the contents of a \code{summary.geer} object, including the call,
-estimation method, coefficient table, dispersion parameter, and working
-association structure.
+estimation method, sample size and cluster sizes, coefficient table,
+dispersion parameter, and working association structure.
 }
 \examples{
 data("epilepsy", package = "geer")

@@ -1,13 +1,13 @@
 testthat::local_edition(3)
 
 
-test_that("little_mcar_test reproduces Little's bivariate monotone result", {
+test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   x <- cbind(
     y1 = 1:8,
     y2 = c(2.0, 3.2, 4.1, 5.0, NA, NA, NA, NA)
   )
 
-  out <- little_mcar_test(x)
+  out <- mcar_little_test(x)
 
   expect_s3_class(out, "htest")
   expect_equal(unname(out$statistic), 5.333333333333333, tolerance = 1e-6)
@@ -32,13 +32,13 @@ test_that("little_mcar_test reproduces Little's bivariate monotone result", {
 })
 
 
-test_that("little_mcar_test can force the asymptotic reference", {
+test_that("mcar_little_test can force the asymptotic reference", {
   x <- cbind(
     y1 = 1:8,
     y2 = c(2.0, 3.2, 4.1, 5.0, NA, NA, NA, NA)
   )
 
-  out <- little_mcar_test(x, reference = "asymptotic")
+  out <- mcar_little_test(x, reference = "asymptotic")
 
   expect_equal(unname(out$statistic), 5.333333333333333, tolerance = 1e-6)
   expect_identical(unname(out$parameter), 1L)
@@ -52,19 +52,19 @@ test_that("little_mcar_test can force the asymptotic reference", {
 })
 
 
-test_that("little_mcar_test applies Little's covariance correction", {
+test_that("mcar_little_test applies Little's covariance correction", {
   x <- cbind(
     y1 = 1:8,
     y2 = c(2.0, 3.2, 4.1, 5.0, NA, NA, NA, NA)
   )
-  out <- little_mcar_test(x, reference = "asymptotic")
+  out <- mcar_little_test(x, reference = "asymptotic")
 
   expect_equal(out$covariance, nrow(x) / (nrow(x) - 1) * out$ml.covariance, tolerance = 1e-10)
 })
 
 
-test_that("little_mcar_test agrees with the corrected airquality benchmark", {
-  out <- little_mcar_test(datasets::airquality)
+test_that("mcar_little_test agrees with the corrected airquality benchmark", {
+  out <- mcar_little_test(datasets::airquality)
 
   expect_s3_class(out, "htest")
   expect_equal(unname(out$statistic), 34.8954, tolerance = 0.05)
@@ -75,7 +75,7 @@ test_that("little_mcar_test agrees with the corrected airquality benchmark", {
 })
 
 
-test_that("little_mcar_test reconstructs repeated responses from a geer fit", {
+test_that("mcar_little_test reconstructs repeated responses from a geer fit", {
   id <- rep(seq_len(30), each = 3)
   visit <- rep(seq_len(3), times = 30)
   xcov <- rep(c(0, 1), length.out = length(id))
@@ -95,8 +95,8 @@ test_that("little_mcar_test reconstructs repeated responses from a geer fit", {
   wide <- matrix(NA_real_, nrow = 30, ncol = 3)
   wide[cbind(dat$id, dat$visit)] <- dat$y
 
-  from_fit <- little_mcar_test(fit)
-  from_wide <- little_mcar_test(wide)
+  from_fit <- mcar_little_test(fit)
+  from_wide <- mcar_little_test(wide)
 
   expect_equal(from_fit$statistic, from_wide$statistic, tolerance = 1e-8)
   expect_identical(from_fit$parameter, from_wide$parameter)
@@ -107,7 +107,7 @@ test_that("little_mcar_test reconstructs repeated responses from a geer fit", {
 })
 
 
-test_that("little_mcar_test uses within-cluster row order when repeated is omitted", {
+test_that("mcar_little_test uses within-cluster row order when repeated is omitted", {
   id <- rep(seq_len(24), each = 3)
   visit <- rep(seq_len(3), times = 24)
   y <- 1.5 + 0.1 * id + 0.3 * visit + sin(id / 3 + visit)
@@ -126,14 +126,14 @@ test_that("little_mcar_test uses within-cluster row order when repeated is omitt
   wide[cbind(dat$id, dat$visit)] <- dat$y
 
   expect_equal(
-    little_mcar_test(fit)$statistic,
-    little_mcar_test(wide)$statistic,
+    mcar_little_test(fit)$statistic,
+    mcar_little_test(wide)$statistic,
     tolerance = 1e-8
   )
 })
 
 
-test_that("little_mcar_test accepts original data supplied explicitly", {
+test_that("mcar_little_test accepts original data supplied explicitly", {
   id <- rep(seq_len(20), each = 3)
   visit <- rep(seq_len(3), times = 20)
   y <- 1 + 0.2 * id + cos(id + visit)
@@ -151,23 +151,23 @@ test_that("little_mcar_test accepts original data supplied explicitly", {
   fit$data <- NULL
 
   expect_error(
-    little_mcar_test(fit),
+    mcar_little_test(fit),
     "original data are not available"
   )
 
-  out <- little_mcar_test(fit, data = dat)
+  out <- mcar_little_test(fit, data = dat)
   expect_s3_class(out, "htest")
   expect_identical(out$n, 20L)
   expect_identical(out$variables, 3L)
 })
 
 
-test_that("little_mcar_test handles complete data explicitly", {
+test_that("mcar_little_test handles complete data explicitly", {
   x <- cbind(
     a = seq_len(10),
     b = seq_len(10)^2
   )
-  out <- little_mcar_test(x)
+  out <- mcar_little_test(x)
 
   expect_equal(unname(out$statistic), 0)
   expect_identical(unname(out$parameter), 0L)
@@ -180,7 +180,7 @@ test_that("little_mcar_test handles complete data explicitly", {
 })
 
 
-test_that("little_mcar_test warns for binary variables", {
+test_that("mcar_little_test warns for binary variables", {
   x <- cbind(
     binary = rep(c(0, 1), 6),
     y2 = c(1.1, 2.4, 1.8, 3.7, 2.2, NA, 4.6, 3.1, NA, 5.2, 4.1, 6.0),
@@ -188,43 +188,43 @@ test_that("little_mcar_test warns for binary variables", {
   )
 
   expect_warning(
-    little_mcar_test(x),
+    mcar_little_test(x),
     "most appropriate for quantitative variables"
   )
 })
 
 
-test_that("little_mcar_test validates inputs", {
+test_that("mcar_little_test validates inputs", {
   expect_error(
-    little_mcar_test(data.frame(a = c(1, NA, 3), b = letters[1:3])),
+    mcar_little_test(data.frame(a = c(1, NA, 3), b = letters[1:3])),
     "must be numeric"
   )
   expect_error(
-    little_mcar_test(matrix(1:5, ncol = 1)),
+    mcar_little_test(matrix(1:5, ncol = 1)),
     "at least two variables"
   )
   expect_error(
-    little_mcar_test(cbind(a = c(1, 2, 3), b = c(NA, NA, NA))),
+    mcar_little_test(cbind(a = c(1, 2, 3), b = c(NA, NA, NA))),
     "at least two observed values"
   )
   expect_error(
-    little_mcar_test(cbind(a = c(1, 2, NA, NA), b = c(NA, NA, 3, 4))),
+    mcar_little_test(cbind(a = c(1, 2, NA, NA), b = c(NA, NA, 3, 4))),
     "at least one jointly observed value"
   )
   expect_error(
-    little_mcar_test(matrix(1:12, ncol = 2), maxit = 0),
+    mcar_little_test(matrix(1:12, ncol = 2), maxit = 0),
     "positive integer"
   )
   expect_error(
-    little_mcar_test(matrix(1:12, ncol = 2), tol = 0),
+    mcar_little_test(matrix(1:12, ncol = 2), tol = 0),
     "positive finite"
   )
   expect_error(
-    little_mcar_test(matrix(1:12, ncol = 2), data = data.frame()),
+    mcar_little_test(matrix(1:12, ncol = 2), data = data.frame()),
     "only used when 'object'"
   )
   expect_error(
-    little_mcar_test(matrix(1:12, ncol = 2), reference = "invalid"),
+    mcar_little_test(matrix(1:12, ncol = 2), reference = "invalid"),
     "'arg' should be one of"
   )
 })

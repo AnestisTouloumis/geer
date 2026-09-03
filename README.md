@@ -9,7 +9,7 @@
 `geer` fits marginal models for independent, repeated, or clustered
 responses using Generalized Estimating Equations (GEE). Supported
 estimation methods include the traditional GEE, bias-reducing GEE,
-bias-corrected GEE, and Jeffreys-prior penalized GEE. Continuous,
+bias-corrected GEE, and Jeffreys-type penalized GEE. Continuous,
 binary, and count responses are handled by `geewa`, while binary
 responses can also be handled by `geewa_binary` through an odds-ratio
 parameterization.
@@ -85,7 +85,7 @@ Both functions support the following estimation methods via the
 | `"gee"` | Traditional GEE |
 | `"brgee-robust"`, `"brgee-naive"`, `"brgee-empirical"` | Bias-reducing GEE (differing in the bias adjustment used: robust, model-based, or empirical) |
 | `"bcgee-robust"`, `"bcgee-naive"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
-| `"pgee-jeffreys"` | Fully iterated Jeffreys-prior penalized GEE |
+| `"pgee-jeffreys"` | Fully iterated Jeffreys-type penalized GEE |
 | `"opgee-jeffreys"` | One-step penalized GEE |
 | `"hpgee-jeffreys"` | Hybrid one-step GEE |
 
@@ -108,7 +108,7 @@ Standard S3 methods are available for fitted `geer` objects:
   residuals, cluster-level Mahalanobis residuals, and predictions.
 - `runs_test()` — Wald-Wolfowitz test for non-random residual sign
   sequences, with natural, fitted-value, and covariate-based ordering.
-- `little_mcar_test()` — Little's test for assessing whether repeated-response
+- `mcar_little_test()` — Little's test for assessing whether repeated-response
   missingness is compatible with MCAR.
 - `mcar_homoscedasticity_test()` — Jamshidian-Jalal screening diagnostic for
   MCAR based on covariance homogeneity across missingness-pattern groups, with
@@ -116,13 +116,29 @@ Standard S3 methods are available for fitted `geer` objects:
 - `mcar_logistic_test()` — Ridout-style longitudinal MCAR diagnostic that
   models response missingness from the previous observed response and covariates
   using `geewa_binary()`.
+- `frechet_bounds_cor()` — Frechet bounds on the working correlations of a
+  binomial `geewa()` fit, with a count of clusters violating them.
 - `model.matrix()` — design matrix.
 - `tidy()`, `glance()` — tidy summaries following
   [broom](https://broom.tidymodels.org/) conventions.
 
 The `cov_type` argument controls the covariance estimator used for
 inference: `"bias-corrected"` (default), `"robust"` (sandwich),
-`"df-adjusted"`, or `"naive"` (model-based).
+`"df-adjusted"`, `"jackknife"` (full leave-one-cluster jackknife), or
+`"naive"` (model-based). The jackknife option computes each
+leave-one-cluster estimate by refitting the model in full rather than by a
+one-step approximation. The working association structure is unchanged and
+the applicable association parameters are held fixed at their full-data
+estimates in every deletion fit; it requires at least two clusters and
+signals an error if any deletion refit fails to converge. The same
+`"jackknife"` choice is accepted by every public function that exposes
+`cov_type`, including model-comparison, selection-criterion, stepwise-selection,
+and MCAR-regression diagnostics.
+
+``` r
+vcov(fit, cov_type = "jackknife")
+summary(fit, cov_type = "jackknife")
+```
 
 The Wald-Wolfowitz residual runs test can be used as a quantitative
 check for non-random residual sign patterns:
@@ -144,7 +160,7 @@ applied directly to a fitted model. The test reconstructs the wide response
 matrix from the original `id` and `repeated` variables:
 
 ``` r
-little_mcar_test(fit)
+mcar_little_test(fit)
 ```
 
 The same function can also be used with a numeric wide-format matrix or data
@@ -241,9 +257,9 @@ marginaleffects::avg_slopes(fit, variables = "lnage")
 ```
 
 By default, `marginaleffects` uses the bias-corrected covariance matrix
-for `geer` models. Use `vcov = "robust"` for the sandwich covariance
-matrix. Other `geer` covariance estimators can be supplied as a function,
-for example `vcov = function(x) vcov(x, cov_type = "naive")`.
+for `geer` models. Character values such as `vcov = "robust"`,
+`vcov = "df-adjusted"`, `vcov = "jackknife"`, and `vcov = "naive"`
+select the corresponding `geer` covariance estimator.
 
 ## Datasets
 
@@ -256,40 +272,43 @@ and `rinse`.
 Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 generalized linear models. *Biometrika*, **73**, 13--22.
 
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
+Equations using the new R package glmtoolbox. *The R Journal*, **15**, 105--133.
+
 Rubin, D.B. (1976) Inference and missing data. *Biometrika*, **63**,
-581–592.
+581--592.
 
 Little, R.J.A. (1988) A test of missing completely at random for multivariate
 data with missing values. *Journal of the American Statistical Association*,
-**83**, 1198–1202.
+**83**, 1198--1202.
 
 Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity, normality, and
 missing completely at random for incomplete multivariate data. *Psychometrika*,
-**75**, 649–674.
+**75**, 649--674.
 
 Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package for
 testing homoscedasticity, multivariate normality, and missing completely at
-random (MCAR). *Journal of Statistical Software*, **56**(6), 1–31.
+random (MCAR). *Journal of Statistical Software*, **56**, 1--31.
 
 Ridout, M.S. (1991) Testing for random dropouts in repeated measurement data.
-*Biometrics*, **47**, 1617–1619.
+*Biometrics*, **47**, 1617--1619.
 
 Fitzmaurice, G.M., Heath, A.F. and Clifford, P. (1996) Logistic regression
 models for binary panel data with attrition. *Journal of the Royal Statistical
-Society: Series A*, **159**, 249–263.
+Society: Series A*, **159**, 249--263.
 
 Carpenter, J.R. and Smuk, M. (2021) Missing data: A statistical framework for
-practice. *Biometrical Journal*, **63**, 915–947.
+practice. *Biometrical Journal*, **63**, 915--947.
 
 Lu, P. and Shelley, M. (2023) Testing the missingness mechanism in longitudinal
 surveys: a case study using the Health and Retirement Study. *International
-Journal of Social Research Methodology*, **26**, 439–452.
+Journal of Social Research Methodology*, **26**, 439--452.
 
 Chang, Y.-C. (2000) Residuals analysis of the generalized linear models
 for longitudinal data. *Statistics in Medicine*, **19**, 1277--1293.
 
 Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
-2nd ed. Chapman and Hall/CRC.
+2nd Edition. Chapman and Hall/CRC, Boca Raton.
 
 Touloumis, A. (2026) [Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
 

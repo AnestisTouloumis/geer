@@ -38,3 +38,10 @@ test_that("normalize_geer_test_options keeps pmethod for working tests", {
   expect_identical(out$cov_type, "robust")
   expect_identical(out$pmethod, "satterthwaite")
 })
+
+
+test_that("jackknife is a valid package-wide covariance choice", {
+  out <- normalize_geer_test_options("wald", "jackknife", "rao-scott")
+  expect_identical(out$cov_type, "jackknife")
+  expect_true("jackknife" %in% geer_cov_type_choices)
+})
