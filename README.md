@@ -145,7 +145,7 @@ check for non-random residual sign patterns:
 
 ``` r
 runs_test(fit)
-runs_test(fit, type = "deviance", order_by = "fitted")
+runs_test(fit, order_by = "fitted")
 ```
 
 Cluster-level Mahalanobis residuals can be used to identify clusters whose

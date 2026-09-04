@@ -17,9 +17,30 @@
 
 * Added `runs_test()` for the Wald-Wolfowitz nonparametric runs test of GEE
   residual signs described by Chang (2000) and Hardin and Hilbe (2013). The
-  test supports Pearson, deviance, and working residuals and can assess the
-  natural cluster/repeated order, fitted-value order, or covariate-based
-  orderings.
+  test can assess the natural cluster/repeated order, fitted-value order, or
+  covariate-based orderings. It has no residual-type argument, because the
+  working, Pearson, and deviance residuals share a sign sequence and therefore
+  give an identical statistic. The `alternative` argument selects a two-sided
+  test (the default) or a one-sided test against too few or too many runs.
+  Results are returned in the standard `"htest"` slots, so the number of runs,
+  its null expectation, and the two sign counts are all shown by the default
+  print method. The `nperm` argument replaces the normal approximation by a
+  Monte Carlo p-value based on permuting residual signs within clusters, which
+  does not assume that signs are exchangeable across clusters; this extends
+  Chang (2000), who considers only the normal approximation. When the normal
+  approximation is not recommended, that is when either sign count is 15 or
+  fewer, the exact null distribution of the number of runs is used instead of
+  warning; `exact` forces or suppresses this. A character `order_by` naming a
+  variable that is not a model-matrix column is now resolved against the data
+  used to fit the model, so residuals can be ordered on a covariate omitted
+  from the model. The returned object now also inherits from
+  `"geer_runs_test"` and carries the tested sign sequence, so that
+  `plot()` draws the residual runs figure of Hardin and Hilbe (2013,
+  Section 4.2.1), colouring the points by run and, under the natural ordering,
+  marking the cluster boundaries. With `nperm` the reported statistic is
+  standardized by the permutation moments rather than by the exchangeable
+  ones, so that the statistic and the p-value refer to the same reference
+  distribution.
 
 * Added `mcar_little_test()` implementing Little's (1988) test for assessing
   whether repeated-response missingness is compatible with MCAR. The function
