@@ -127,6 +127,64 @@ test_that("Mahalanobis residuals match their cluster-level definition", {
 })
 
 
+test_that("deviance residuals do not depend on the residual degrees of freedom", {
+  ## The deviance contributions are a property of the family, not of N - p, so
+  ## exhausting the degrees of freedom must not silence them.
+  reference <- residuals(count_fit, type = "deviance")
+  fit <- count_fit
+  fit$df.residual <- 0
+  expect_identical(residuals(fit, type = "deviance"), reference)
+  expect_true(any(reference != 0))
+})
+
+
+test_that("deviance residual signs follow the raw residual", {
+  fit <- count_fit
+  dev <- residuals(fit, type = "deviance")
+  raw <- residuals(fit, type = "working")
+  expect_identical(sign(dev), sign(raw))
+  expect_true(any(dev > 0) && any(dev < 0))
+})
+
+
+test_that("scaled residuals require a usable dispersion estimate", {
+  fit <- count_fit
+  fit$phi <- 0
+  for (type in c("pearson", "deviance", "mahalanobis")) {
+    expect_error(
+      residuals(fit, type = type),
+      "finite positive dispersion estimate"
+    )
+  }
+  ## Raw residuals are unscaled and remain available.
+  expect_identical(
+    residuals(fit, type = "working"),
+    residuals(count_fit, type = "working")
+  )
+})
+
+
+test_that("Mahalanobis residuals reject a non-positive-definite covariance", {
+  ## get_correlation_matrix() already rejects inadmissible alpha and checks
+  ## positive-definiteness itself, so the working correlation is always sound.
+  ## The reachable failure is a vanishing marginal variance: a Poisson fitted
+  ## mean of zero gives V(mu) = 0, a zero row and column in the cluster
+  ## covariance, and hence a singular matrix. That previously yielded a
+  ## non-finite or negative quadratic form rather than an error.
+  fit <- count_fit
+  first_cluster <- which(fit$id == fit$id[[1L]])
+  fit$fitted.values[first_cluster[[1L]]] <- 0
+  expect_error(
+    residuals(fit, type = "mahalanobis"),
+    "not positive definite"
+  )
+  expect_error(
+    residuals(fit, type = "mahalanobis"),
+    as.character(fit$id[[1L]])
+  )
+})
+
+
 test_that("residuals validates type", {
   expect_error(
     residuals(count_fit, type = "raw"),

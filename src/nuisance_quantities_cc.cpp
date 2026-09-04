@@ -52,10 +52,18 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
   if (denominator <= 0.0) {
     Rcpp::stop("get_phi_hat: non-positive denominator.");
   }
-  double ans =
+  const double ans =
     arma::accu(arma::square(pearson_residuals_vector)) / denominator;
-  if (ans < DBL_EPSILON) {
-    ans = 10.0 * DBL_EPSILON;
+  // A dispersion estimate that underflows to zero means the fitted means
+  // reproduce the data, so the scaled residuals and the working covariance
+  // matrices are undefined. Reporting it is preferred to flooring the value,
+  // which would silently inflate every scaled quantity that divides by it.
+  if (!std::isfinite(ans) || ans < DBL_EPSILON) {
+    Rcpp::stop(
+      "get_phi_hat: the dispersion estimate is not a usable positive value "
+      "(%.6g); the fitted means may reproduce the data exactly.",
+      ans
+    );
   }
   return ans;
 }

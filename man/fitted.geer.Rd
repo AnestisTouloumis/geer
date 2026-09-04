@@ -13,12 +13,30 @@
 }
 \value{
 A numeric vector of fitted mean values on the response scale, of the same
-length as the number of observations used in fitting.
+length as the number of observations used in fitting, in the internal
+observation order described below rather than in the row order of the
+supplied data.
 }
 \description{
 Extracts the fitted mean values on the response scale from a fitted
 \code{geer} object. \code{fitted.values} is an alias for \code{fitted}.
 }
+\section{Observation order}{
+
+The returned vector follows the internal observation order of the fitted
+model, not the row order of the data supplied to \code{geewa} or
+\code{geewa_binary}. Rows are restricted to the complete cases retained by
+the \code{na.action} in force and are then sorted by cluster identifier
+and, within cluster, by the repeated index. Unless the supplied data were
+already sorted that way and free of missing values, assigning the result
+back with an expression such as \code{data$r <- residuals(fit)} will
+attach values to the wrong rows without any warning, because the lengths
+can still agree. Order the data by cluster and repeated index before
+fitting, or align the result yourself using \code{fit$id} and
+\code{fit$repeated}, which are stored in the same order as the returned
+vector.
+}
+
 \examples{
 data("leprosy", package = "geer")
 fit <- geewa(

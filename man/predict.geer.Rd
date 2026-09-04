@@ -60,6 +60,20 @@ delta method using the covariance matrix specified by \code{cov_type}. On
 the response scale, standard errors are additionally scaled by the absolute
 derivative of the inverse link function.
 }
+\section{Observation order}{
+
+When \code{newdata} is supplied the predictions follow the row order of
+\code{newdata}. When it is omitted they follow the internal observation
+order of the fitted model instead: the complete cases retained by the
+\code{na.action} in force, sorted by cluster identifier and, within
+cluster, by the repeated index. Unless the data supplied to \code{geewa}
+or \code{geewa_binary} were already sorted that way and free of missing
+values, assigning the result back to those data will attach values to the
+wrong rows without any warning, because the lengths can still agree. Pass
+the original data as \code{newdata} to obtain predictions in the row order
+of the data.
+}
+
 \examples{
 data("cerebrovascular", package = "geer")
 fit <- geewa_binary(

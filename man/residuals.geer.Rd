@@ -24,9 +24,10 @@ Defaults to \code{"working"}.}
 }
 \value{
 A numeric vector. For \code{type = "working"}, \code{"pearson"}, or
-\code{"deviance"}, the vector has one value per fitted observation. For
-\code{type = "mahalanobis"}, it has one value per cluster and is named by
-the cluster identifier.
+\code{"deviance"}, the vector has one value per fitted observation, in the
+internal observation order described below rather than in the row order of
+the supplied data. For \code{type = "mahalanobis"}, it has one value per
+cluster and is named by the cluster identifier.
 }
 \description{
 Extracts residuals of different types from a fitted \code{geer} object.
@@ -37,17 +38,39 @@ Pearson residuals are computed as
 V(\hat\mu_{ij}) / w_{ij}}}.}
 Deviance residuals are computed as
 \deqn{r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
-\sqrt{d_{ij} / \hat\phi},}
-where \eqn{d_{ij}} is the non-scaled deviance contribution returned by
-the fitted family.
+\sqrt{d(y_{ij}, \hat\mu_{ij}, w_{ij}) / \hat\phi},}
+where \eqn{d(y_{ij}, \hat\mu_{ij}, w_{ij})} is the non-scaled deviance
+contribution returned by the fitted family. As in
+\code{\link[stats]{glm}}, that contribution already includes the prior
+weight \eqn{w_{ij}}, which is why the weight appears inside \eqn{d} here
+but explicitly in the denominator of the Pearson residual.
 
 Mahalanobis residuals are computed once per cluster as
 \deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^T
 \widehat{\operatorname{Var}}(Y_i)^{-1}(y_i - \hat\mu_i),}
-using the fitted working covariance matrix for that cluster. They are
-therefore nonnegative cluster-level diagnostics, rather than
-observation-level signed residuals.
+using the fitted working covariance matrix for that cluster, which already
+includes the estimated dispersion. They are therefore nonnegative
+cluster-level diagnostics, rather than observation-level signed residuals.
+The quadratic form is evaluated through a Cholesky factorization of the
+working covariance matrix, and an error is signalled for any cluster whose
+working covariance matrix is not positive definite.
 }
+\section{Observation order}{
+
+The returned vector follows the internal observation order of the fitted
+model, not the row order of the data supplied to \code{geewa} or
+\code{geewa_binary}. Rows are restricted to the complete cases retained by
+the \code{na.action} in force and are then sorted by cluster identifier
+and, within cluster, by the repeated index. Unless the supplied data were
+already sorted that way and free of missing values, assigning the result
+back with an expression such as \code{data$r <- residuals(fit)} will
+attach values to the wrong rows without any warning, because the lengths
+can still agree. Order the data by cluster and repeated index before
+fitting, or align the result yourself using \code{fit$id} and
+\code{fit$repeated}, which are stored in the same order as the returned
+vector.
+}
+
 \examples{
 data("cerebrovascular", package = "geer")
 fit <- geewa_binary(
