@@ -10,8 +10,9 @@
   col = NULL,
   run_colors = grDevices::palette.colors(4L, "Okabe-Ito"),
   pch = 1L,
-  cex = 1L,
+  cex = NULL,
   main = NULL,
+  sub = NULL,
   xlab = NULL,
   ylab = NULL,
   ...
@@ -26,23 +27,30 @@ should mark the boundaries between clusters. The default, \code{NULL},
 draws them when the test used the natural cluster/repeated ordering and
 omits them otherwise.}
 
-\item{col}{colour of the plotting symbols. The default, \code{NULL},
-colours the symbols by run using \code{run_colors}. A single colour
-suppresses that and draws every symbol alike.}
+\item{col}{color of the plotting symbols. The default, \code{NULL},
+colors the symbols by run using \code{run_colors}. A single color
+suppresses that and draws every symbol alike; a vector is recycled across
+the tested residuals by \code{\link[graphics]{points}}.}
 
-\item{run_colors}{vector of colours recycled across successive runs when
-\code{col} is \code{NULL}. At least three are needed for adjacent runs
-to be distinguishable, because consecutive runs necessarily differ in
-sign and so are already separated vertically.}
+\item{run_colors}{vector of at least three colors recycled across
+successive runs when \code{col} is \code{NULL}. Fewer than three is an
+error; see Details.}
 
-\item{pch, cex}{plotting symbol and symbol expansion, passed to
-\code{\link[graphics]{points}}.}
+\item{pch}{plotting symbol, passed to \code{\link[graphics]{points}}.}
 
-\item{main, xlab, ylab}{character strings giving the title and the axis
-labels. Defaults are supplied when these are \code{NULL}.}
+\item{cex}{symbol expansion, passed to \code{\link[graphics]{points}}. The
+default, \code{NULL}, shrinks the symbols as the sequence lengthens so
+that long sequences remain readable.}
+
+\item{main, sub, xlab, ylab}{character strings giving the title, subtitle and
+axis labels. Defaults are supplied when these are \code{NULL}; use
+\code{""} to suppress one.}
 
 \item{...}{further graphical parameters passed to
-\code{\link[graphics]{plot.default}}.}
+\code{\link[graphics]{plot.default}}. These take precedence over the
+defaults set here, so \code{ylim} and \code{yaxt} may be overridden;
+\code{type} may not, because the symbols are drawn separately. All must
+be named.}
 }
 \value{
 Invisibly, a data frame with one row per tested residual and columns
@@ -59,23 +67,32 @@ boundaries between clusters.
 Each retained residual contributes one point at \eqn{+1} or \eqn{-1},
 plotted against its position in the sequence that was tested. Residuals
 equal to zero are excluded from that sequence, so positions index the
-tested signs rather than the observations of the fitted model.
+tested signs rather than the observations of the fitted model. The number
+of excluded residuals is reported in the default subtitle when it is not
+zero.
 
-Successive runs are drawn in different colours, recycled from
+The default title records the ordering that was used, because the ordering
+determines which alternative the test has power against, and two sequences
+drawn from the same fit under different orderings are otherwise
+indistinguishable. The default subtitle reports the observed number of
+runs, its null expectation and the p-value, so that the figure can be read
+without the printed test beside it.
+
+Successive runs are drawn in different colors, recycled from
 \code{run_colors}, so that a long run appears as a monochrome block and
-the number of colour changes is the observed number of runs less one.
-Colouring is used in preference to vertical rules at every sign change,
+the number of color changes is the observed number of runs less one.
+Coloring is used in preference to vertical rules at every sign change,
 which saturate the display once the sequence runs to a few hundred
-observations. Note that colouring by run parity alone would carry no
-information, since consecutive runs differ in sign by definition and are
-therefore already separated on the vertical axis; at least three colours
-are required. Dotted grid lines mark the boundaries
-between clusters, which makes it possible to see how many clusters have
-residuals of a common sign; this is the pattern that drives the statistic
-downwards under the natural ordering. Cluster boundaries are only
-interpretable when the sequence is ordered naturally, since any other
-ordering interleaves the clusters, and a warning is issued if they are
-requested for such an ordering.
+observations. At least three colors are required: with two, the color
+alternates exactly with the sign, so it reproduces the vertical axis and
+carries no information of its own.
+
+Dotted grid lines mark the boundaries between clusters, which makes it
+possible to see how many clusters have residuals of a common sign; this is
+the pattern that drives the statistic downwards under the natural ordering.
+Cluster boundaries are only interpretable when the sequence is ordered
+naturally, since any other ordering interleaves the clusters, and a warning
+is issued if they are requested for such an ordering.
 }
 \examples{
 data("epilepsy", package = "geer")
@@ -89,6 +106,7 @@ fit <- geewa(
 )
 
 plot(runs_test(fit))
+plot(runs_test(fit, order_by = "fitted"), ylim = c(-2, 2))
 
 }
 \references{

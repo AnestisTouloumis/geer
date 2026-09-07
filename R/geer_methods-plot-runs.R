@@ -15,41 +15,56 @@
 #'   should mark the boundaries between clusters. The default, \code{NULL},
 #'   draws them when the test used the natural cluster/repeated ordering and
 #'   omits them otherwise.
-#' @param col colour of the plotting symbols. The default, \code{NULL},
-#'   colours the symbols by run using \code{run_colors}. A single colour
-#'   suppresses that and draws every symbol alike.
-#' @param run_colors vector of colours recycled across successive runs when
-#'   \code{col} is \code{NULL}. At least three are needed for adjacent runs
-#'   to be distinguishable, because consecutive runs necessarily differ in
-#'   sign and so are already separated vertically.
-#' @param pch,cex plotting symbol and symbol expansion, passed to
-#'   \code{\link[graphics]{points}}.
-#' @param main,xlab,ylab character strings giving the title and the axis
-#'   labels. Defaults are supplied when these are \code{NULL}.
+#' @param col color of the plotting symbols. The default, \code{NULL},
+#'   colors the symbols by run using \code{run_colors}. A single color
+#'   suppresses that and draws every symbol alike; a vector is recycled across
+#'   the tested residuals by \code{\link[graphics]{points}}.
+#' @param run_colors vector of at least three colors recycled across
+#'   successive runs when \code{col} is \code{NULL}. Fewer than three is an
+#'   error; see Details.
+#' @param pch plotting symbol, passed to \code{\link[graphics]{points}}.
+#' @param cex symbol expansion, passed to \code{\link[graphics]{points}}. The
+#'   default, \code{NULL}, shrinks the symbols as the sequence lengthens so
+#'   that long sequences remain readable.
+#' @param main,sub,xlab,ylab character strings giving the title, subtitle and
+#'   axis labels. Defaults are supplied when these are \code{NULL}; use
+#'   \code{""} to suppress one.
 #' @param ... further graphical parameters passed to
-#'   \code{\link[graphics]{plot.default}}.
+#'   \code{\link[graphics]{plot.default}}. These take precedence over the
+#'   defaults set here, so \code{ylim} and \code{yaxt} may be overridden;
+#'   \code{type} may not, because the symbols are drawn separately. All must
+#'   be named.
 #'
 #' @details
 #' Each retained residual contributes one point at \eqn{+1} or \eqn{-1},
 #' plotted against its position in the sequence that was tested. Residuals
 #' equal to zero are excluded from that sequence, so positions index the
-#' tested signs rather than the observations of the fitted model.
+#' tested signs rather than the observations of the fitted model. The number
+#' of excluded residuals is reported in the default subtitle when it is not
+#' zero.
 #'
-#' Successive runs are drawn in different colours, recycled from
+#' The default title records the ordering that was used, because the ordering
+#' determines which alternative the test has power against, and two sequences
+#' drawn from the same fit under different orderings are otherwise
+#' indistinguishable. The default subtitle reports the observed number of
+#' runs, its null expectation and the p-value, so that the figure can be read
+#' without the printed test beside it.
+#'
+#' Successive runs are drawn in different colors, recycled from
 #' \code{run_colors}, so that a long run appears as a monochrome block and
-#' the number of colour changes is the observed number of runs less one.
-#' Colouring is used in preference to vertical rules at every sign change,
+#' the number of color changes is the observed number of runs less one.
+#' Coloring is used in preference to vertical rules at every sign change,
 #' which saturate the display once the sequence runs to a few hundred
-#' observations. Note that colouring by run parity alone would carry no
-#' information, since consecutive runs differ in sign by definition and are
-#' therefore already separated on the vertical axis; at least three colours
-#' are required. Dotted grid lines mark the boundaries
-#' between clusters, which makes it possible to see how many clusters have
-#' residuals of a common sign; this is the pattern that drives the statistic
-#' downwards under the natural ordering. Cluster boundaries are only
-#' interpretable when the sequence is ordered naturally, since any other
-#' ordering interleaves the clusters, and a warning is issued if they are
-#' requested for such an ordering.
+#' observations. At least three colors are required: with two, the color
+#' alternates exactly with the sign, so it reproduces the vertical axis and
+#' carries no information of its own.
+#'
+#' Dotted grid lines mark the boundaries between clusters, which makes it
+#' possible to see how many clusters have residuals of a common sign; this is
+#' the pattern that drives the statistic downwards under the natural ordering.
+#' Cluster boundaries are only interpretable when the sequence is ordered
+#' naturally, since any other ordering interleaves the clusters, and a warning
+#' is issued if they are requested for such an ordering.
 #'
 #' @return
 #' Invisibly, a data frame with one row per tested residual and columns
@@ -77,6 +92,7 @@
 #' )
 #'
 #' plot(runs_test(fit))
+#' plot(runs_test(fit, order_by = "fitted"), ylim = c(-2, 2))
 #'
 #' @export
 plot.geer_runs_test <- function(x,
@@ -87,8 +103,9 @@ plot.geer_runs_test <- function(x,
                                   "Okabe-Ito"
                                 ),
                                 pch = 1L,
-                                cex = 1L,
+                                cex = NULL,
                                 main = NULL,
+                                sub = NULL,
                                 xlab = NULL,
                                 ylab = NULL,
                                 ...) {
@@ -99,6 +116,17 @@ plot.geer_runs_test <- function(x,
   if (!is.numeric(signs) || length(signs) < 2L) {
     stop(
       "'x' must contain the tested sign sequence: refit with runs_test()",
+      call. = FALSE
+    )
+  }
+  sequence_length <- length(signs)
+  cluster <- x$cluster
+  if (length(cluster) != sequence_length) {
+    stop(
+      paste0(
+        "'x' is malformed: 'cluster' must have one value per tested ",
+        "residual"
+      ),
       call. = FALSE
     )
   }
@@ -116,15 +144,38 @@ plot.geer_runs_test <- function(x,
     cluster_breaks <- natural
   } else if (cluster_breaks && !natural) {
     warning(
-      "cluster boundaries are only interpretable under the natural cluster/repeated ordering",
+      paste0(
+        "cluster boundaries are only interpretable under the natural ",
+        "cluster/repeated ordering"
+      ),
+      call. = FALSE
+    )
+  }
+  if (is.null(col) && length(run_colors) < 3L) {
+    stop(
+      paste0(
+        "'run_colors' must contain at least three colors: with two the ",
+        "color alternates with the residual sign and duplicates the ",
+        "vertical axis"
+      ),
       call. = FALSE
     )
   }
 
-  sequence_length <- length(signs)
   position <- seq_len(sequence_length)
   if (is.null(main)) {
-    main <- "Residual runs"
+    main <- sprintf("Residual runs ordered by %s", x$order_by)
+  }
+  if (is.null(sub)) {
+    sub <- sprintf(
+      "T = %d, E(T) = %.4g, p = %.3g",
+      x$runs,
+      x$expected_runs,
+      x$p.value
+    )
+    if (isTRUE(x$zero > 0L)) {
+      sub <- sprintf("%s; %d zero residuals omitted", sub, x$zero)
+    }
   }
   if (is.null(xlab)) {
     xlab <- "Position in the tested sequence"
@@ -132,22 +183,48 @@ plot.geer_runs_test <- function(x,
   if (is.null(ylab)) {
     ylab <- "Residual sign"
   }
+  if (is.null(cex)) {
+    ## Open symbols merge into a solid band once the sequence is long, which
+    ## is the regime the run coloring is meant to survive.
+    cex <- max(0.25, min(1, 200 / sequence_length))
+  }
 
-  graphics::plot.default(
-    position,
-    signs,
+  dots <- list(...)
+  dot_names <- names(dots)
+  if (length(dots) && (is.null(dot_names) || !all(nzchar(dot_names)))) {
+    stop("arguments in '...' must all be named", call. = FALSE)
+  }
+  if ("type" %in% dot_names) {
+    stop(
+      paste0(
+        "'type' must not be supplied: the symbols are drawn separately so ",
+        "that they can be colored by run"
+      ),
+      call. = FALSE
+    )
+  }
+  ## The defaults are assembled first and then overwritten by '...', so a
+  ## user-supplied 'ylim' or 'yaxt' replaces the default instead of reaching
+  ## plot.default twice.
+  plot_arguments <- list(
+    x = position,
+    y = signs,
     type = "n",
     yaxt = "n",
     ylim = c(-1.5, 1.5),
     main = main,
+    sub = sub,
     xlab = xlab,
-    ylab = ylab,
-    ...
+    ylab = ylab
   )
-  graphics::axis(2L, at = c(-1, 1), labels = c("-", "+"))
-  if (cluster_breaks && length(x$cluster) == sequence_length) {
+  plot_arguments[dot_names] <- dots
+  do.call(graphics::plot.default, plot_arguments)
+  if (identical(plot_arguments$yaxt, "n")) {
+    graphics::axis(2L, at = c(-1, 1), labels = c("-", "+"))
+  }
+  if (cluster_breaks) {
     boundaries <- which(
-      x$cluster[-1L] != x$cluster[-sequence_length]
+      cluster[-1L] != cluster[-sequence_length]
     ) + 0.5
     if (length(boundaries) > 0L) {
       graphics::abline(v = boundaries, col = "grey70", lty = 3L)
@@ -155,13 +232,10 @@ plot.geer_runs_test <- function(x,
   }
   graphics::abline(h = 0, col = "grey40")
   ## Runs are indexed by the cumulative number of sign changes, so every
-  ## element of a run receives the same colour and the colour changes exactly
+  ## element of a run receives the same color and the color changes exactly
   ## at the run boundaries.
   run_index <- cumsum(c(1L, as.integer(signs[-1L] != signs[-sequence_length])))
   point_colors <- if (is.null(col)) {
-    if (length(run_colors) < 1L) {
-      stop("'run_colors' must contain at least one colour", call. = FALSE)
-    }
     run_colors[(run_index - 1L) %% length(run_colors) + 1L]
   } else {
     col
@@ -173,11 +247,7 @@ plot.geer_runs_test <- function(x,
       position = position,
       sign = signs,
       run = run_index,
-      cluster = if (length(x$cluster) == sequence_length) {
-        x$cluster
-      } else {
-        rep(NA_real_, sequence_length)
-      }
+      cluster = cluster
     )
   )
 }

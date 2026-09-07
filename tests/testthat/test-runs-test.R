@@ -265,7 +265,16 @@ test_that("plot.geer_runs_test accepts point arguments", {
 
   expect_silent(plot(out, col = "black", pch = 20L, cex = 0.5))
   expect_silent(plot(out, run_colors = c("red", "blue", "green")))
-  expect_error(plot(out, run_colors = character(0)), "at least one colour")
+  expect_error(
+    plot(out, run_colors = character(0)),
+    "must contain at least three colors"
+  )
+  expect_error(
+    plot(out, run_colors = c("red", "blue")),
+    "must contain at least three colors"
+  )
+  ## 'col' overrides run coloring, so the minimum does not apply.
+  expect_silent(plot(out, col = "black", run_colors = "red"))
 })
 
 
@@ -292,6 +301,11 @@ test_that("plot.geer_runs_test guards cluster breaks and its input", {
   by_fitted <- runs_test(count_fit, order_by = "fitted")
   expect_false(by_fitted$natural_order)
   expect_silent(plot(by_fitted))
+  ## Graphical parameters that the method also sets must reach plot.default
+  ## exactly once rather than colliding with the defaults.
+  expect_silent(plot(by_fitted, ylim = c(-2, 2)))
+  expect_silent(plot(by_fitted, yaxt = "s"))
+  expect_error(plot(by_fitted, type = "p"), "'type' must not be supplied")
   expect_warning(
     plot(by_fitted, cluster_breaks = TRUE),
     "only interpretable under the natural"

@@ -28,7 +28,6 @@ LazyData: true
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0
 NeedsCompilation: yes
-Packaged: 2026-09-03 22:49:21 UTC; Anestis
 Author: Anestis Touloumis [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-5965-1639>)
 Maintainer: Anestis Touloumis <A.Touloumis@brighton.ac.uk>
