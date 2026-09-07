@@ -35,7 +35,9 @@ model-based or naive estimator (\code{"naive"}). Defaults to
 \item{se.fit}{logical indicating whether approximate standard errors are to
 be returned. Defaults to \code{FALSE}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{not used. Supplying any argument here is an error, so that a
+misspelt \code{type} or \code{cov_type} is reported rather than
+silently ignored.}
 }
 \value{
 If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
@@ -43,6 +45,12 @@ specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
 \item{fit}{numeric vector of predictions.}
 \item{se.fit}{numeric vector of approximate standard errors of the
   predictions.}
+
+When \code{newdata} is supplied both the predictions and their standard
+errors carry the row names of \code{newdata}. When it is omitted both are
+unnamed, because the row names stored with the fitted model refer to the
+data before they were sorted into the internal observation order and would
+therefore identify the wrong rows.
 }
 \description{
 Generates predictions from a fitted \code{geer} object, optionally with
@@ -59,6 +67,14 @@ When \code{se.fit = TRUE}, approximate standard errors are computed by the
 delta method using the covariance matrix specified by \code{cov_type}. On
 the response scale, standard errors are additionally scaled by the absolute
 derivative of the inverse link function.
+
+When \code{newdata} is supplied and the fitted model has an offset, whether
+through \code{offset()} in the formula or through the \code{offset}
+argument, every variable the offset depends on must be present in
+\code{newdata}. An error is signalled otherwise. Without that requirement
+the offset would be resolved in the environment in which the model was
+fitted, so an offset of the right length taken from the original data would
+be accepted silently for a different set of observations.
 }
 \section{Observation order}{
 
@@ -72,6 +88,12 @@ values, assigning the result back to those data will attach values to the
 wrong rows without any warning, because the lengths can still agree. Pass
 the original data as \code{newdata} to obtain predictions in the row order
 of the data.
+
+Rows of \code{newdata} are not dropped when a variable used by the model is
+missing. The model frame is built with \code{na.action = na.pass}, so such
+a row yields \code{NA} for the prediction, and for its standard error when
+\code{se.fit = TRUE}, and the returned vector keeps one element per row of
+\code{newdata}.
 }
 
 \examples{

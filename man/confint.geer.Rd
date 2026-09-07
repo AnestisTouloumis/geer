@@ -17,9 +17,11 @@
 confidence level. Defaults to \code{0.95}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the bias-corrected estimator
-(\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+used for inference on the regression parameters. Options are the
+bias-corrected estimator (\code{"bias-corrected"}), the sandwich or
+robust estimator (\code{"robust"}), the degrees-of-freedom adjusted
+estimator (\code{"df-adjusted"}), the leave-one-cluster jackknife
+estimator
 (\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 

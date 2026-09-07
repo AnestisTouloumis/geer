@@ -20,7 +20,8 @@ for dispersion-scaled signed square roots of the deviance contributions,
 and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
 Defaults to \code{"working"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{not used. Supplying any argument here is an error, so that a
+misspelt \code{type} is reported rather than silently ignored.}
 }
 \value{
 A numeric vector. For \code{type = "working"}, \code{"pearson"}, or

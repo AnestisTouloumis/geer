@@ -9,7 +9,8 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{not used. Supplying any argument here is an error rather than
+being silently ignored.}
 }
 \value{
 A numeric vector of fitted mean values on the response scale, of the same

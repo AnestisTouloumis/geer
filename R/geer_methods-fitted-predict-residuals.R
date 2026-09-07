@@ -1,28 +1,75 @@
+check_prediction_offset_variables <- function(expression, newdata, source) {
+  ## Offset variables are resolved in 'newdata' only. Without this check R
+  ## falls back to the environment in which the model was fitted, where the
+  ## original offset still lives, and an offset of the right length is then
+  ## silently accepted for the wrong observations.
+  needed <- all.vars(expression)
+  absent <- setdiff(needed, names(newdata))
+  if (length(absent)) {
+    stop(
+      sprintf(
+        paste0(
+          "prediction offset variable(s) %s supplied via the %s are not ",
+          "present in 'newdata'; they must be supplied in 'newdata' rather ",
+          "than taken from the environment in which the model was fitted"
+        ),
+        paste(sprintf("'%s'", absent), collapse = ", "),
+        source
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+
 evaluate_prediction_offset <- function(object, newdata, n_obs) {
   offset_formula <- rep.int(0, n_obs)
   pred_terms <- stats::delete.response(object$terms)
-  mf <- stats::model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = stats::na.pass)
+  offset_position <- attr(pred_terms, "offset")
+  if (length(offset_position)) {
+    variable_list <- as.list(attr(pred_terms, "variables"))[-1L]
+    for (expression in variable_list[offset_position]) {
+      check_prediction_offset_variables(expression, newdata, "model formula")
+    }
+  }
+  mf <- stats::model.frame(
+    pred_terms,
+    newdata,
+    xlev = object$xlevels,
+    na.action = stats::na.pass
+  )
   offset_from_formula <- stats::model.offset(mf)
   if (!is.null(offset_from_formula)) {
     if (length(offset_from_formula) == 1L) {
       offset_from_formula <- rep.int(as.numeric(offset_from_formula), n_obs)
     }
-    if (!is.numeric(offset_from_formula) || length(offset_from_formula) != n_obs ||
-        anyNA(offset_from_formula) || any(!is.finite(offset_from_formula))) {
-      stop("formula-based prediction offset must be a finite numeric vector of the correct length",
-           call. = FALSE)
+    if (!is.numeric(offset_from_formula) ||
+        length(offset_from_formula) != n_obs ||
+        any(!is.finite(offset_from_formula))) {
+      stop(
+        paste0(
+          "formula-based prediction offset must be a finite numeric vector ",
+          "of the correct length"
+        ),
+        call. = FALSE
+      )
     }
     offset_formula <- as.numeric(offset_from_formula)
   }
   offset_argument <- rep.int(0, n_obs)
   call_offset <- object$call$offset
   if (!is.null(call_offset)) {
+    check_prediction_offset_variables(call_offset, newdata, "'offset' argument")
     offset_env <- environment(stats::formula(object))
     offset_from_argument <- tryCatch(
       eval(call_offset, envir = newdata, enclos = offset_env),
       error = function(e) {
         stop(
-          "could not evaluate the offset supplied via the 'offset' argument in 'newdata'",
+          paste0(
+            "could not evaluate the offset supplied via the 'offset' ",
+            "argument in 'newdata'"
+          ),
           call. = FALSE
         )
       }
@@ -30,10 +77,14 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
     if (length(offset_from_argument) == 1L) {
       offset_from_argument <- rep.int(as.numeric(offset_from_argument), n_obs)
     }
-    if (!is.numeric(offset_from_argument) || length(offset_from_argument) != n_obs ||
-        anyNA(offset_from_argument) || any(!is.finite(offset_from_argument))) {
+    if (!is.numeric(offset_from_argument) ||
+        length(offset_from_argument) != n_obs ||
+        any(!is.finite(offset_from_argument))) {
       stop(
-        "prediction offset supplied via the 'offset' argument must be a finite numeric vector of the correct length",
+        paste0(
+          "prediction offset supplied via the 'offset' argument must be a ",
+          "finite numeric vector of the correct length"
+        ),
         call. = FALSE
       )
     }
@@ -54,6 +105,8 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
 #' \code{geer} object. \code{fitted.values} is an alias for \code{fitted}.
 #'
 #' @inheritParams coef.geer
+#' @param ... not used. Supplying any argument here is an error rather than
+#'   being silently ignored.
 #'
 #' @return
 #' A numeric vector of fitted mean values on the response scale, of the same
@@ -89,6 +142,7 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
 #'
 #' @export
 fitted.geer <- function(object, ...) {
+  check_unused_dots(list(...), "fitted.geer")
   object <- check_geer_object(object)
   object$fitted.values
 }
@@ -119,7 +173,9 @@ fitted.geer <- function(object, ...) {
 #'   \code{"bias-corrected"}.
 #' @param se.fit logical indicating whether approximate standard errors are to
 #'   be returned. Defaults to \code{FALSE}.
-#' @param ... additional arguments passed to or from other methods.
+#' @param ... not used. Supplying any argument here is an error, so that a
+#'   misspelt \code{type} or \code{cov_type} is reported rather than
+#'   silently ignored.
 #'
 #' @details
 #' Predictions are obtained by computing the model matrix for \code{newdata}
@@ -133,12 +189,26 @@ fitted.geer <- function(object, ...) {
 #' the response scale, standard errors are additionally scaled by the absolute
 #' derivative of the inverse link function.
 #'
+#' When \code{newdata} is supplied and the fitted model has an offset, whether
+#' through \code{offset()} in the formula or through the \code{offset}
+#' argument, every variable the offset depends on must be present in
+#' \code{newdata}. An error is signalled otherwise. Without that requirement
+#' the offset would be resolved in the environment in which the model was
+#' fitted, so an offset of the right length taken from the original data would
+#' be accepted silently for a different set of observations.
+#'
 #' @return
 #' If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
 #' specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
 #' \item{fit}{numeric vector of predictions.}
 #' \item{se.fit}{numeric vector of approximate standard errors of the
 #'   predictions.}
+#'
+#' When \code{newdata} is supplied both the predictions and their standard
+#' errors carry the row names of \code{newdata}. When it is omitted both are
+#' unnamed, because the row names stored with the fitted model refer to the
+#' data before they were sorted into the internal observation order and would
+#' therefore identify the wrong rows.
 #'
 #' @section Observation order:
 #' When \code{newdata} is supplied the predictions follow the row order of
@@ -151,6 +221,12 @@ fitted.geer <- function(object, ...) {
 #' wrong rows without any warning, because the lengths can still agree. Pass
 #' the original data as \code{newdata} to obtain predictions in the row order
 #' of the data.
+#'
+#' Rows of \code{newdata} are not dropped when a variable used by the model is
+#' missing. The model frame is built with \code{na.action = na.pass}, so such
+#' a row yields \code{NA} for the prediction, and for its standard error when
+#' \code{se.fit = TRUE}, and the returned vector keeps one element per row of
+#' \code{newdata}.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{residuals.geer}},
 #'   \code{\link{geewa}}, \code{\link{geewa_binary}},
@@ -182,6 +258,7 @@ predict.geer <- function(object,
                          cov_type = geer_cov_type_choices,
                          se.fit = FALSE,
                          ...) {
+  check_unused_dots(list(...), "predict.geer")
   object <- check_geer_object(object)
   type <- match.arg(type)
   cov_type <- match.arg(cov_type)
@@ -211,15 +288,27 @@ predict.geer <- function(object,
     if (type == "response") {
       se <- se * abs(object$family$mu.eta(eta_vector))
     }
-    ans <- list(fit = out, se.fit = se)
+    ## 'object$x' keeps the model-matrix row names of the data before sorting,
+    ## which no longer identify the rows of the stored fit, so they are
+    ## dropped to match the unnamed 'fit' component.
+    ans <- list(fit = out, se.fit = as.numeric(se))
     return(ans)
   }
   if (!is.data.frame(newdata)) {
     newdata <- as.data.frame(newdata)
   }
   pred_terms <- stats::delete.response(object$terms)
-  mf <- stats::model.frame(pred_terms, newdata, xlev = object$xlevels, na.action = stats::na.pass)
-  design_matrix <- stats::model.matrix(pred_terms, mf, contrasts.arg = object$contrasts)
+  mf <- stats::model.frame(
+    pred_terms,
+    newdata,
+    xlev = object$xlevels,
+    na.action = stats::na.pass
+  )
+  design_matrix <- stats::model.matrix(
+    pred_terms,
+    mf,
+    contrasts.arg = object$contrasts
+  )
   if (is.null(colnames(design_matrix))) {
     stop("prediction model matrix must have column names", call. = FALSE)
   }
@@ -242,7 +331,10 @@ predict.geer <- function(object,
   )
   eta_vector <- eta_vector + offset_vector
   if (!se.fit) {
-    return(if (type == "link") eta_vector else object$family$linkinv(eta_vector))
+    if (type == "link") {
+      return(eta_vector)
+    }
+    return(object$family$linkinv(eta_vector))
   }
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
@@ -308,7 +400,6 @@ compute_mahalanobis_residuals <- function(object) {
       value
     }
   )
-  names(ans) <- cluster_ids
   ans
 }
 
@@ -328,6 +419,8 @@ compute_mahalanobis_residuals <- function(object) {
 #'   for dispersion-scaled signed square roots of the deviance contributions,
 #'   and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
 #'   Defaults to \code{"working"}.
+#' @param ... not used. Supplying any argument here is an error, so that a
+#'   misspelt \code{type} is reported rather than silently ignored.
 #'
 #' @details
 #' Pearson residuals are computed as
@@ -398,12 +491,18 @@ compute_mahalanobis_residuals <- function(object) {
 #'
 #' @export
 residuals.geer <- function(object,
-                           type = c("working", "pearson", "deviance", "mahalanobis"),
+                           type = c(
+                             "working", "pearson", "deviance", "mahalanobis"
+                           ),
                            ...) {
+  check_unused_dots(list(...), "residuals.geer")
   object <- check_geer_object(object)
   type <- match.arg(type)
   if (type %in% c("pearson", "deviance")) {
-    y <- object$y
+    ## object$y carries the model-frame row names while $fitted.values and
+    ## $residuals do not, so the names are dropped to keep every
+    ## observation-level residual type unnamed.
+    y <- as.numeric(object$y)
     mu <- object$fitted.values
     weights <- object$prior.weights
   }
@@ -424,11 +523,25 @@ residuals.geer <- function(object,
   ans <- switch(
     type,
     working = object$residuals,
-    pearson =
-      as.numeric(get_pearson_residuals(object$family$family, y, mu, weights))/sqrt(object$phi),
+    pearson = {
+      pr <- get_pearson_residuals(object$family$family, y, mu, weights)
+      as.numeric(pr) / sqrt(object$phi)
+    },
     deviance = {
-      dr <- sqrt(pmax(object$family$dev.resids(y, mu, weights), 0) / object$phi)
-      sign(y - mu) * dr
+      ## A negative deviance contribution is not a rounding artifact: it means
+      ## the family has returned something the deviance cannot produce, so it
+      ## is reported rather than clamped to zero.
+      dev_contribution <- object$family$dev.resids(y, mu, weights)
+      if (any(!is.finite(dev_contribution)) || any(dev_contribution < 0)) {
+        stop(
+          paste0(
+            "'deviance' residuals require finite nonnegative deviance ",
+            "contributions from the fitted family"
+          ),
+          call. = FALSE
+        )
+      }
+      sign(y - mu) * sqrt(dev_contribution / object$phi)
     },
     mahalanobis = compute_mahalanobis_residuals(object)
   )

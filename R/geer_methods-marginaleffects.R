@@ -194,11 +194,12 @@ get_predict.geer <- function(model,
     newdata <- as.data.frame(newdata)
   }
 
+  ## marginaleffects populates '...' with its own internal arguments, which
+  ## predict.geer does not accept, so they are not forwarded.
   estimate <- stats::predict(
     model,
     newdata = newdata,
-    type = type,
-    ...
+    type = type
   )
   if (is.list(estimate) && !is.null(estimate$fit)) {
     estimate <- estimate$fit

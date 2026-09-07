@@ -9,9 +9,11 @@
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for inference on the regression parameters. Options are the bias-corrected estimator
-#'   (\code{"bias-corrected"}), the sandwich or robust estimator (\code{"robust"}), the degrees-of-freedom adjusted estimator
-#'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
+#'   used for inference on the regression parameters. Options are the
+#'   bias-corrected estimator (\code{"bias-corrected"}), the sandwich or
+#'   robust estimator (\code{"robust"}), the degrees-of-freedom adjusted
+#'   estimator (\code{"df-adjusted"}), the leave-one-cluster jackknife
+#'   estimator
 #'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param ... not used. Supplying any argument here is an error, so that a
@@ -137,7 +139,8 @@ vcov.geer <- function(object,
 #' object. \code{coefficients} is an alias for \code{coef}.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
-#' @param ... additional arguments passed to or from other methods.
+#' @param ... not used. Supplying any argument here is an error rather than
+#'   being silently ignored.
 #'
 #' @return
 #' A named numeric vector of estimated regression coefficients. The names
@@ -167,6 +170,7 @@ vcov.geer <- function(object,
 #'
 #' @export
 coef.geer <- function(object, ...) {
+  check_unused_dots(list(...), "coef.geer")
   object <- check_geer_object(object)
   object$coefficients
 }
