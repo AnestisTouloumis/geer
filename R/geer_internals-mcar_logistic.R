@@ -245,8 +245,6 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     repeated = repeated[current_index],
     occasion = repeated[current_index],
     covariates = covariates[current_index, , drop = FALSE],
-    covariate_names = colnames(covariates),
-    formula = formula,
     intermittent = intermittent
   )
 }

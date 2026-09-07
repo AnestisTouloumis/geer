@@ -143,10 +143,7 @@ test_that("compute_chisq_mixture rejects invalid inputs", {
 
 
 test_that("compute_score_components returns expected matrix components for nested geewa fits", {
-  coeffs_test <- coef(fit_bin_full)
-  coeffs_test[setdiff(names(coeffs_test), names(coef(fit_bin_trt)))] <- 0
-  coeffs_test[names(coef(fit_bin_trt))] <- coef(fit_bin_trt)
-  sc <- compute_score_components(fit_bin_trt, fit_bin_full, coeffs_test)
+  sc <- compute_score_components(fit_bin_trt, fit_bin_full)
   expect_type(sc, "list")
   expect_true(all(c("score_vector", "naive_covariance", "robust_covariance", "bc_covariance") %in% names(sc)))
   expect_true(is.numeric(sc$score_vector))

@@ -16,7 +16,8 @@ used for inference on the regression parameters. Options are the bias-corrected 
 (\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{not used. Supplying any argument here is an error, so that a
+misspelt \code{cov_type} is reported rather than silently ignored.}
 }
 \value{
 A square numeric matrix of estimated covariances between regression
@@ -35,23 +36,25 @@ The form of the covariance estimator is controlled by \code{cov_type}:
   \item{\code{"robust"}}{the sandwich (robust) covariance estimator
   (Liang and Zeger, 1986).}
   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
-  estimator (MacKinnon, 1985).}
-  \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife covariance estimator. Each
-  cluster is deleted in turn and the regression parameters are refitted
-  using the original estimation method while the working association
-  parameters are held fixed at their full-data estimates.}
+  estimator (MacKinnon and White, 1985).}
+  \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife
+  covariance estimator. Each cluster is deleted in turn and the regression
+  parameters are refitted using the original estimation method while the
+  working association parameters are held fixed at their full-data
+  estimates. See the paragraphs below for the exact treatment of the
+  nuisance parameters, which is not identical across estimation methods.}
   \item{\code{"naive"}}{the model-based covariance estimator
   (Liang and Zeger, 1986).}
 }
 
-For \code{cov_type = "jackknife"}, let \eqn{K} denote the number of
+For \code{cov_type = "jackknife"}, let \eqn{N} denote the number of
 clusters, let \eqn{\hat\beta_{(i)}} denote the regression-parameter
 estimate obtained after deleting cluster \eqn{i}, and let
-\eqn{\bar\beta_{(-)} = K^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
-\deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{K-1}{K}
-\sum_{i=1}^K (\hat\beta_{(i)}-\bar\beta_{(-)})
+\eqn{\bar\beta_{(-)} = N^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
+\deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{N-1}{N}
+\sum_{i=1}^N (\hat\beta_{(i)}-\bar\beta_{(-)})
 (\hat\beta_{(i)}-\bar\beta_{(-)})^T,}
-where \eqn{(K-1)/K} is the usual finite-sample correction of the
+where \eqn{(N-1)/N} is the usual finite-sample correction of the
 Quenouille-Tukey jackknife.
 Each \eqn{\hat\beta_{(i)}} is obtained by refitting the model in full on
 the remaining clusters. This is deliberate: no one-step approximation to
@@ -97,9 +100,9 @@ vcov(fit, cov_type = "robust")
 Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 
-MacKinnon, J.G. (1985) Some heteroskedasticity-consistent covariance matrix
-estimators with improved finite sample properties. \emph{Journal of
-Econometrics}, \bold{29}, 305--325.
+MacKinnon, J.G. and White, H. (1985) Some heteroskedasticity-consistent
+covariance matrix estimators with improved finite sample properties.
+\emph{Journal of Econometrics}, \bold{29}, 305--325.
 
 Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
 correction for the variance of GEE estimators. \emph{Biometrical Journal},

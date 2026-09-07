@@ -51,7 +51,10 @@ test_that("frechet_bounds_cor returns a data frame with the correct columns", {
   expect_s3_class(out, "data.frame")
   expect_identical(
     names(out),
-    c("alpha_name", "alpha_value", "lower_max", "upper_min", "n_violated")
+    c(
+      "alpha_name", "alpha_value", "lower_max", "upper_min",
+      "n_clusters", "n_violated"
+    )
   )
 })
 
@@ -69,6 +72,7 @@ test_that("frechet_bounds_cor column types are correct", {
   expect_type(out$alpha_value, "double")
   expect_type(out$lower_max,   "double")
   expect_type(out$upper_min,   "double")
+  expect_type(out$n_clusters,  "integer")
   expect_type(out$n_violated,  "integer")
 })
 
@@ -91,8 +95,10 @@ test_that("frechet_bounds_cor bounds are numerically valid", {
   # Bounds lie within [-1, 1]
   expect_true(all(out$lower_max >= -1))
   expect_true(all(out$upper_min <=  1))
-  # n_violated is non-negative
+  # n_violated is non-negative and cannot exceed the contributing clusters
   expect_true(all(out$n_violated >= 0L))
+  expect_true(all(out$n_violated <= out$n_clusters))
+  expect_true(all(out$n_clusters > 0L))
 })
 
 test_that("frechet_bounds_cor alpha_value matches the fitted working correlation", {
@@ -196,4 +202,49 @@ test_that("frechet_bounds_cor errors on independence association structure", {
     "must not have an 'independence' association structure",
     fixed = TRUE
   )
+})
+
+
+test_that("frechet_bounds_cor errors on degenerate fitted probabilities", {
+  fit_degenerate <- fit_bin_exch_T4
+  fit_degenerate$fitted.values[1L] <- 1
+  expect_error(
+    frechet_bounds_cor(fit_degenerate),
+    "the Frechet bounds are undefined",
+    fixed = TRUE
+  )
+
+  fit_zero <- fit_bin_exch_T4
+  fit_zero$fitted.values[3L] <- 0
+  expect_error(
+    frechet_bounds_cor(fit_zero),
+    "the Frechet bounds are undefined",
+    fixed = TRUE
+  )
+})
+
+test_that("frechet_bounds_cor errors on a non-binary response", {
+  # a grouped binomial fit stores proportions in $y, so the Bernoulli Frechet
+  # bounds do not apply
+  fit_grouped <- fit_bin_exch_T4
+  fit_grouped$y[2L] <- 0.5
+  expect_error(
+    frechet_bounds_cor(fit_grouped),
+    "must have a binary (0/1) response",
+    fixed = TRUE
+  )
+})
+
+test_that("frechet_bounds_cor accepts a quasibinomial fit", {
+  fit_quasi <- geewa(
+    formula = ecg ~ treatment + factor(period),
+    family  = quasibinomial(link = "logit"),
+    data    = test_data$cerebrovascular,
+    id      = id,
+    corstr  = "exchangeable",
+    method  = "gee"
+  )
+  out <- frechet_bounds_cor(fit_quasi)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), 1L)
 })

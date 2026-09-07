@@ -11,7 +11,7 @@ count_runs <- function(signs) {
 
 test_that("runs-test calculation matches the Chang sign-sequence example", {
   signs <- c(1, 1, -1, -1, 1, -1, 1, 1, -1, -1, -1)
-  out <- geer:::compute_runs_statistics(signs)
+  out <- geer:::compute_runs_statistics(signs, "two.sided")
 
   expected_runs <- 71 / 11
   variance_runs <- 294 / 121
@@ -49,7 +49,7 @@ test_that("the statistic does not depend on the residual type", {
 
   stats <- lapply(
     signs,
-    function(x) geer:::compute_runs_statistics(x)
+    function(x) geer:::compute_runs_statistics(x, "two.sided")
   )
   expect_identical(stats[[2L]], stats[[1L]])
   expect_identical(stats[[3L]], stats[[1L]])
@@ -134,8 +134,29 @@ test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
 test_that("compute_runs_statistics rejects an unknown alternative", {
   expect_error(
     geer:::compute_runs_statistics(c(1, -1, 1), "left.sided"),
-    "should be one of"
+    "'alternative' must be one of",
+    fixed = TRUE
   )
+  expect_error(
+    geer:::compute_runs_statistics(c(1, -1, 1), c("less", "greater")),
+    "'alternative' must be a single character value",
+    fixed = TRUE
+  )
+  expect_error(
+    geer:::compute_runs_statistics(c(1, -1, 1), NA_character_),
+    "'alternative' must be a single character value",
+    fixed = TRUE
+  )
+})
+
+
+test_that("compute_runs_statistics returns the retained signs it counted", {
+  out <- geer:::compute_runs_statistics(c(1, 0, -1, -1, 2), "two.sided")
+  expect_identical(out$retained, c(TRUE, FALSE, TRUE, TRUE, TRUE))
+  expect_identical(out$signs, c(1L, -1L, -1L, 1L))
+  expect_identical(out$zero, 1L)
+  expect_identical(out$nonzero, 4L)
+  expect_identical(out$runs, 3L)
 })
 
 
@@ -215,286 +236,6 @@ test_that("zero residuals are omitted from the sign sequence", {
 })
 
 
-test_that("the exact null distribution matches full enumeration", {
-  ## Every arrangement of n_p positive and n_n negative signs is enumerated and
-  ## the resulting tail probabilities compared with the closed-form expression.
-  enumerate_runs <- function(positive_no, negative_no) {
-    n <- positive_no + negative_no
-    positions <- utils::combn(n, positive_no)
-    apply(positions, 2L, function(pos) {
-      s <- rep(-1, n)
-      s[pos] <- 1
-      1L + sum(s[-1L] != s[-n])
-    })
-  }
-
-  for (counts in list(c(4L, 3L), c(5L, 5L), c(2L, 6L), c(7L, 3L))) {
-    np <- counts[[1L]]
-    nn <- counts[[2L]]
-    all_runs <- enumerate_runs(np, nn)
-    for (t in sort(unique(all_runs))) {
-      expect_equal(
-        geer:::compute_runs_exact_p(np, nn, t, "less"),
-        mean(all_runs <= t),
-        tolerance = 1e-12
-      )
-      expect_equal(
-        geer:::compute_runs_exact_p(np, nn, t, "greater"),
-        mean(all_runs >= t),
-        tolerance = 1e-12
-      )
-      expect_equal(
-        geer:::compute_runs_exact_p(np, nn, t, "two.sided"),
-        min(1, 2 * min(mean(all_runs <= t), mean(all_runs >= t))),
-        tolerance = 1e-12
-      )
-    }
-  }
-})
-
-
-test_that("the exact distribution matches the continuity-corrected normal", {
-  ## runs_test applies no continuity correction, following Chang (2000), so the
-  ## exact tail probabilities agree with the *corrected* normal approximation
-  ## and differ from the uncorrected one by roughly that correction even at
-  ## large sign counts.
-  positive_no <- 500L
-  negative_no <- 500L
-  n <- positive_no + negative_no
-  expected_runs <- 2 * positive_no * negative_no / n + 1
-  variance_runs <- 2 * positive_no * negative_no *
-    (2 * positive_no * negative_no - n) / (n^2 * (n - 1))
-
-  for (t in c(510L, 520L, 530L)) {
-    corrected <- stats::pnorm(
-      (t - 0.5 - expected_runs) / sqrt(variance_runs),
-      lower.tail = FALSE
-    )
-    expect_equal(
-      geer:::compute_runs_exact_p(positive_no, negative_no, t, "greater"),
-      corrected,
-      tolerance = 1e-3
-    )
-  }
-
-  ## The uncorrected approximation, which is what exact = FALSE reports, is
-  ## visibly different.
-  uncorrected <- stats::pnorm(
-    (520 - expected_runs) / sqrt(variance_runs),
-    lower.tail = FALSE
-  )
-  expect_gt(
-    abs(
-      geer:::compute_runs_exact_p(positive_no, negative_no, 520L, "greater") -
-        uncorrected
-    ),
-    0.005
-  )
-})
-
-
-test_that("small sign counts use the exact distribution instead of warning", {
-  fit <- count_fit
-  fit$residuals <- c(
-    rep(1, 10),
-    rep(-1, 10),
-    rep(0, fit$obs_no - 20)
-  )
-
-  expect_silent(out <- runs_test(fit))
-  expect_true(out$exact)
-  expect_true(is.na(out$nperm))
-  expect_match(out$method, "exact null distribution")
-  expect_identical(out$positive, 10L)
-  expect_identical(out$negative, 10L)
-  expect_equal(
-    out$p.value,
-    geer:::compute_runs_exact_p(10L, 10L, out$runs, "two.sided"),
-    tolerance = 1e-12
-  )
-
-  ## The normal approximation, and its warning, remain available on request.
-  expect_warning(
-    approximate <- runs_test(fit, exact = FALSE),
-    "normal approximation may be unreliable"
-  )
-  expect_false(approximate$exact)
-  expect_equal(
-    approximate$p.value,
-    2 * stats::pnorm(-abs(unname(approximate$statistic))),
-    tolerance = 1e-12
-  )
-})
-
-
-test_that("exact and nperm cannot both be requested", {
-  expect_error(
-    runs_test(count_fit, nperm = 99, exact = TRUE),
-    "must not both be requested"
-  )
-  expect_error(runs_test(count_fit, exact = "yes"), "single non-missing logical")
-  expect_error(runs_test(count_fit, exact = NA), "single non-missing logical")
-})
-
-
-test_that("large sign counts keep the normal approximation by default", {
-  out <- runs_test(count_fit)
-  expect_false(out$exact)
-  expect_equal(
-    out$p.value,
-    2 * stats::pnorm(-abs(unname(out$statistic))),
-    tolerance = 1e-12
-  )
-})
-
-
-test_that("runs_test warns when the normal approximation is based on small sign counts", {
-  fit <- count_fit
-  fit$residuals <- c(
-    rep(1, 10),
-    rep(-1, 10),
-    rep(0, fit$obs_no - 20)
-  )
-
-  expect_warning(
-    out <- runs_test(fit, exact = FALSE),
-    "normal approximation may be unreliable"
-  )
-  expect_identical(out$positive, 10L)
-  expect_identical(out$negative, 10L)
-})
-
-
-test_that("permutation p-values are Monte Carlo tests on the same statistic", {
-  set.seed(101)
-  out <- runs_test(count_fit, nperm = 199)
-  analytic <- runs_test(count_fit)
-
-  expect_identical(out$nperm, 199L)
-  expect_true(is.na(analytic$nperm))
-  expect_identical(out$runs, analytic$runs)
-  ## The statistic follows the null actually used, so it is standardized by
-  ## the permutation moments rather than by E(T) and V(T).
-  expect_equal(
-    unname(out$statistic),
-    (out$runs - out$permuted_mean) / out$permuted_sd,
-    tolerance = 1e-12
-  )
-  expect_identical(unname(out$null.value), out$permuted_mean)
-  expect_identical(out$expected_runs, analytic$expected_runs)
-  expect_identical(out$variance_runs, analytic$variance_runs)
-  expect_true(is.na(analytic$permuted_mean))
-  expect_true(is.na(analytic$permuted_sd))
-  expect_match(out$method, "199 within-cluster permutations")
-  expect_gt(out$p.value, 0)
-  expect_lte(out$p.value, 1)
-  ## Attainable p-values are multiples of 1 / (nperm + 1), doubled and capped
-  ## for the two-sided case.
-  expect_equal(
-    min(1, round(out$p.value * 200 / 2) * 2 / 200),
-    out$p.value,
-    tolerance = 1e-12
-  )
-})
-
-
-test_that("permutation p-values are reproducible under set.seed", {
-  set.seed(202)
-  first <- runs_test(count_fit, nperm = 99)
-  set.seed(202)
-  second <- runs_test(count_fit, nperm = 99)
-  set.seed(303)
-  third <- runs_test(count_fit, nperm = 99)
-
-  expect_identical(first$p.value, second$p.value)
-  expect_false(is.null(third$p.value))
-})
-
-
-test_that("within-cluster permutation does not reject cluster lopsidedness", {
-  ## Every cluster is internally constant in sign, so the analytic test sees
-  ## far too few runs while no within-cluster permutation can change T.
-  cluster <- rep(seq_len(20L), each = 5L)
-  signs <- rep(rep(c(1, -1), length.out = 20L), each = 5L)
-
-  analytic <- geer:::compute_runs_statistics(signs, "less")
-  expect_identical(analytic$runs, 20L)
-  expect_lt(analytic$statistic, -4)
-  expect_lt(analytic$p_value, 1e-4)
-
-  set.seed(404)
-  expect_warning(
-    permuted <- geer:::compute_runs_permutation(
-      residual_values = signs,
-      cluster = cluster,
-      runs = analytic$runs,
-      alternative = "less",
-      nperm = 99
-    ),
-    "same number of runs"
-  )
-  expect_true(permuted$degenerate)
-  expect_identical(permuted$p_value, 1)
-  expect_identical(permuted$sd, 0)
-  expect_identical(permuted$mean, as.numeric(analytic$runs))
-})
-
-
-test_that("a degenerate permutation null gives a missing statistic", {
-  ## Standardizing by a zero permutation standard deviation is undefined, so
-  ## no statistic is reported rather than the misleading analytic one.
-  fit <- count_fit
-  cluster_sizes <- as.integer(table(fit$id))
-  fit$residuals <- unlist(
-    Map(
-      function(size, s) rep(s, size),
-      cluster_sizes,
-      rep(c(1, -1), length.out = length(cluster_sizes))
-    ),
-    use.names = FALSE
-  )
-
-  set.seed(707)
-  expect_warning(out <- runs_test(fit, nperm = 99), "same number of runs")
-  expect_true(is.na(unname(out$statistic)))
-  expect_identical(out$p.value, 1)
-  expect_identical(out$permuted_sd, 0)
-})
-
-
-test_that("within-cluster permutation still detects a within-cluster pattern", {
-  ## A common sign pattern inside every cluster is destroyed by permutation.
-  cluster <- rep(seq_len(20L), each = 5L)
-  signs <- rep(c(-1, -1, -1, 1, 1), times = 20L)
-  runs_observed <- geer:::compute_runs_statistics(signs, "less")$runs
-
-  set.seed(505)
-  permuted <- geer:::compute_runs_permutation(
-    residual_values = signs,
-    cluster = cluster,
-    runs = runs_observed,
-    alternative = "less",
-    nperm = 199
-  )
-  expect_false(permuted$degenerate)
-  expect_lt(permuted$p_value, 0.05)
-})
-
-
-test_that("permutation ignores zero residuals and validates nperm", {
-  fit <- count_fit
-  fit$residuals <- rep(c(1, 0, -1, 0), length.out = fit$obs_no)
-  set.seed(606)
-  out <- runs_test(fit, nperm = 99)
-  expect_identical(out$nonzero, fit$obs_no - out$zero)
-
-  expect_error(runs_test(count_fit, nperm = 0), "positive whole number")
-  expect_error(runs_test(count_fit, nperm = 2.5), "positive whole number")
-  expect_error(runs_test(count_fit, nperm = c(10, 20)), "positive whole number")
-  expect_error(runs_test(count_fit, nperm = NA), "positive whole number")
-})
-
-
 test_that("the result carries the tested sign sequence", {
   out <- runs_test(count_fit)
 
@@ -517,29 +258,6 @@ test_that("the result carries the tested sign sequence", {
 })
 
 
-test_that("plot.geer_runs_test returns the plotted sequence invisibly", {
-  out <- runs_test(count_fit)
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
-
-  plotted <- plot(out)
-  expect_s3_class(plotted, "data.frame")
-  expect_identical(nrow(plotted), out$nonzero)
-  expect_identical(names(plotted), c("position", "sign", "run", "cluster"))
-  expect_identical(plotted$sign, out$signs)
-  expect_identical(plotted$position, seq_len(out$nonzero))
-  ## Runs are numbered consecutively and there are exactly T of them.
-  expect_identical(max(plotted$run), out$runs)
-  expect_identical(plotted$run[[1L]], 1L)
-  expect_true(all(diff(plotted$run) %in% c(0L, 1L)))
-  ## A colour change happens exactly where the sign changes.
-  expect_identical(
-    which(diff(plotted$run) == 1L),
-    which(plotted$sign[-1L] != plotted$sign[-nrow(plotted)])
-  )
-})
-
-
 test_that("plot.geer_runs_test accepts point arguments", {
   out <- runs_test(count_fit)
   grDevices::pdf(NULL)
@@ -548,6 +266,22 @@ test_that("plot.geer_runs_test accepts point arguments", {
   expect_silent(plot(out, col = "black", pch = 20L, cex = 0.5))
   expect_silent(plot(out, run_colors = c("red", "blue", "green")))
   expect_error(plot(out, run_colors = character(0)), "at least one colour")
+})
+
+
+test_that("natural_order reports the ordering obtained, not the one requested", {
+  ## An ordering with a single distinct value is entirely tied, so the
+  ## tie-break returns the natural order and the flag must say so.
+  tied <- runs_test(count_fit, order_by = rep(1, count_fit$obs_no))
+  natural <- runs_test(count_fit)
+
+  expect_true(tied$natural_order)
+  expect_identical(tied$signs, natural$signs)
+  expect_identical(tied$runs, natural$runs)
+  expect_identical(tied$order_by, "supplied ordering vector")
+
+  ## An ordering that genuinely reorders the residuals must not.
+  expect_false(runs_test(count_fit, order_by = "fitted")$natural_order)
 })
 
 
@@ -597,5 +331,55 @@ test_that("runs_test validates ordering and residual sign requirements", {
   expect_error(
     runs_test(fit),
     "at least one positive and one negative residual"
+  )
+})
+
+
+test_that("large sign counts keep the normal approximation", {
+  out <- runs_test(count_fit)
+  expect_equal(
+    out$p.value,
+    2 * stats::pnorm(-abs(unname(out$statistic))),
+    tolerance = 1e-12
+  )
+})
+
+
+test_that("runs_test warns when the normal approximation is based on small sign counts", {
+  fit <- count_fit
+  fit$residuals <- c(
+    rep(1, 10),
+    rep(-1, 10),
+    rep(0, fit$obs_no - 20)
+  )
+
+  expect_warning(
+    out <- runs_test(fit),
+    "normal approximation may be unreliable"
+  )
+  expect_identical(out$positive, 10L)
+  expect_identical(out$negative, 10L)
+})
+
+
+test_that("plot.geer_runs_test returns the plotted sequence invisibly", {
+  out <- runs_test(count_fit)
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+
+  plotted <- plot(out)
+  expect_s3_class(plotted, "data.frame")
+  expect_identical(nrow(plotted), out$nonzero)
+  expect_identical(names(plotted), c("position", "sign", "run", "cluster"))
+  expect_identical(plotted$sign, out$signs)
+  expect_identical(plotted$position, seq_len(out$nonzero))
+  ## Runs are numbered consecutively and there are exactly T of them.
+  expect_identical(max(plotted$run), out$runs)
+  expect_identical(plotted$run[[1L]], 1L)
+  expect_true(all(diff(plotted$run) %in% c(0L, 1L)))
+  ## A colour change happens exactly where the sign changes.
+  expect_identical(
+    which(diff(plotted$run) == 1L),
+    which(plotted$sign[-1L] != plotted$sign[-nrow(plotted)])
   )
 })

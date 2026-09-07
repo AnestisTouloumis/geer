@@ -3,14 +3,15 @@
 #'
 #' @description
 #' For a fitted \code{geer} model from \code{\link{geewa}} with a
-#' \code{binomial} family and a non-independence association structure,
-#' checks whether each off-diagonal entry of the working correlation matrix
-#' lies within the Frechet bounds implied by the fitted marginal probabilities.
-#' Results are summarized at the time-pair level.
+#' \code{binomial} or \code{quasibinomial} family, a binary response and a
+#' non-independence association structure, checks whether each off-diagonal
+#' entry of the working correlation matrix lies within the Frechet bounds
+#' implied by the fitted marginal probabilities. Results are summarized at the
+#' time-pair level.
 #'
 #' @param object an object of class \code{geer} fitted via \code{\link{geewa}}
-#'   with \code{family = binomial()} and a non-independence association
-#'   structure.
+#'   with \code{family = binomial()} or \code{family = quasibinomial()}, a
+#'   binary (0/1) response and a non-independence association structure.
 #'
 #' @details
 #' For a pair of observations at times \eqn{j} and \eqn{k} within cluster
@@ -36,12 +37,25 @@
 #' (maximum lower bound) and \code{upper_min} (minimum upper bound), are
 #' reported in the returned data frame. The column \code{n_violated} counts
 #' the number of clusters for which \code{alpha_value} falls outside
-#' \eqn{[\ell_{ijk},\, u_{ijk}]}.
+#' \eqn{[\ell_{ijk},\, u_{ijk}]}, out of the \code{n_clusters} clusters that
+#' contribute an observation at both times.
 #'
+#' Both bounds are ratios that are undefined when a fitted probability equals
+#' \eqn{0} or \eqn{1}, because the corresponding marginal distribution is
+#' degenerate and its correlation with any other variable does not exist. Such
+#' fitted values are therefore rejected with an error rather than propagated
+#' as \code{NaN}. They typically indicate separation in the mean model.
+#'
+#' The bounds also assume Bernoulli marginals, so the response must be binary.
+#' Grouped binomial responses supplied as a two-column matrix of successes and
+#' failures are rejected, since their fitted values are Binomial proportions
+#' rather than Bernoulli means.
+#'
+#' Clusters of size one contribute no time pair and are skipped. A time pair
+#' observed in no cluster produces no row.
 #'
 #' @return
-#' a data frame with one row per unique time pair \eqn{(j, k)} and
-#'   columns:
+#' A data frame with one row per unique time pair \eqn{(j, k)} and columns:
 #' \describe{
 #'   \item{\code{alpha_name}}{label of the form \code{alpha_j.k} identifying the
 #'     working correlation entry for this time pair.}
@@ -50,6 +64,9 @@
 #'     giving the tightest lower admissibility constraint.}
 #'   \item{\code{upper_min}}{minimum Frechet upper bound across clusters,
 #'     giving the tightest upper admissibility constraint.}
+#'   \item{\code{n_clusters}}{number of clusters contributing an observation at
+#'     both times, and hence the number of bound pairs summarized in
+#'     \code{lower_max} and \code{upper_min}.}
 #'   \item{\code{n_violated}}{number of clusters for which \code{alpha_value}
 #'     falls outside the cluster-specific Frechet bounds.}
 #' }
@@ -83,7 +100,7 @@ frechet_bounds_cor <- function(object) {
       call. = FALSE
     )
   }
-  if (!grepl("binomial", object$family$family, ignore.case = TRUE)) {
+  if (!(object$family$family %in% c("binomial", "quasibinomial"))) {
     stop(
       "'object' must be a binomial fit: got '", object$family$family, "'",
       call. = FALSE
@@ -95,9 +112,34 @@ frechet_bounds_cor <- function(object) {
       call. = FALSE
     )
   }
+  y <- object$y
+  if (anyNA(y) || !all(y == 0 | y == 1)) {
+    stop(
+      "'object' must have a binary (0/1) response: the Frechet bounds assume ",
+      "Bernoulli marginals, so a grouped binomial response supplied as a ",
+      "two-column matrix of successes and failures is not supported",
+      call. = FALSE
+    )
+  }
   mu <- object$fitted.values
+  degenerate <- !is.finite(mu) | mu <= 0 | mu >= 1
+  if (any(degenerate)) {
+    stop(
+      sprintf(
+        paste0(
+          "the Frechet bounds are undefined: %d of %d fitted probabilities ",
+          "are not strictly between 0 and 1, so the corresponding marginal ",
+          "distributions are degenerate. This usually indicates separation in ",
+          "the mean model"
+        ),
+        sum(degenerate),
+        length(mu)
+      ),
+      call. = FALSE
+    )
+  }
   id <- object$id
-  repeated <- object$repeated
+  repeated <- as.integer(object$repeated)
   time_max <- max(repeated)
   cor_mat <- get_correlation_matrix(
     object$association_structure,
@@ -105,48 +147,57 @@ frechet_bounds_cor <- function(object) {
     time_max
   )
   cluster_index <- split(seq_along(id), id)
-  lower_acc <- matrix(-Inf, nrow = time_max, ncol = time_max)
-  upper_acc <- matrix(Inf, nrow = time_max, ncol = time_max)
-  violated_acc <- matrix(0L, nrow = time_max, ncol = time_max)
-  observed <- matrix(FALSE, nrow = time_max, ncol = time_max)
-  for (idx in cluster_index) {
-    mu_i <- mu[idx]
-    re_i <- repeated[idx]
-    n_i <- length(idx)
-    if (n_i == 1L) next
-    for (j1 in seq_len(n_i - 1L)) {
-      for (j2 in (j1 + 1L):n_i) {
-        p <- mu_i[j1]
-        q <- mu_i[j2]
-        tj <- re_i[j1]
-        tk <- re_i[j2]
-        lo <- max(
-          -sqrt(p * q / ((1 - p) * (1 - q))),
-          -sqrt((1 - p) * (1 - q) / (p * q))
-        )
-        up <- min(
-          sqrt(p * (1 - q) / (q * (1 - p))),
-          sqrt(q * (1 - p) / (p * (1 - q)))
-        )
-        cv <- cor_mat[tj, tk]
-        observed[tj, tk] <- TRUE
-        lower_acc[tj, tk] <- max(lower_acc[tj, tk], lo)
-        upper_acc[tj, tk] <- min(upper_acc[tj, tk], up)
-        violated_acc[tj, tk] <- violated_acc[tj, tk] + (cv < lo || cv > up)
-      }
-    }
+  cluster_index <- cluster_index[lengths(cluster_index) >= 2L]
+  if (length(cluster_index) == 0L) {
+    return(
+      data.frame(
+        alpha_name = character(0),
+        alpha_value = numeric(0),
+        lower_max = numeric(0),
+        upper_min = numeric(0),
+        n_clusters = integer(0),
+        n_violated = integer(0),
+        row.names = NULL,
+        stringsAsFactors = FALSE
+      )
+    )
   }
-  time_pairs <- which(observed, arr.ind = TRUE)
-  ord <- order(time_pairs[, 1L], time_pairs[, 2L])
-  time_j <- time_pairs[ord, 1L]
-  time_k <- time_pairs[ord, 2L]
-  cell <- cbind(time_j, time_k)
+  pair_index <- lapply(
+    cluster_index,
+    function(idx) {
+      combinations <- utils::combn(length(idx), 2L)
+      rbind(idx[combinations[1L, ]], idx[combinations[2L, ]])
+    }
+  )
+  pair_index <- do.call(cbind, pair_index)
+  first <- pair_index[1L, ]
+  second <- pair_index[2L, ]
+  p <- mu[first]
+  q <- mu[second]
+  lower <- pmax(
+    -sqrt(p * q / ((1 - p) * (1 - q))),
+    -sqrt((1 - p) * (1 - q) / (p * q))
+  )
+  upper <- pmin(
+    sqrt(p * (1 - q) / (q * (1 - p))),
+    sqrt(q * (1 - p) / (p * (1 - q)))
+  )
+  time_j <- repeated[first]
+  time_k <- repeated[second]
+  alpha_value <- cor_mat[cbind(time_j, time_k)]
+  violated <- alpha_value < lower | alpha_value > upper
+  pair_key <- factor((time_j - 1L) * time_max + time_k)
+  key_values <- as.integer(levels(pair_key))
+  out_j <- (key_values - 1L) %/% time_max + 1L
+  out_k <- (key_values - 1L) %% time_max + 1L
   data.frame(
-    alpha_name = paste0("alpha_", time_j, ".", time_k),
-    alpha_value = cor_mat[cell],
-    lower_max = lower_acc[cell],
-    upper_min = upper_acc[cell],
-    n_violated = violated_acc[cell],
-    row.names = NULL
+    alpha_name = paste0("alpha_", out_j, ".", out_k),
+    alpha_value = cor_mat[cbind(out_j, out_k)],
+    lower_max = as.numeric(tapply(lower, pair_key, max)),
+    upper_min = as.numeric(tapply(upper, pair_key, min)),
+    n_clusters = as.integer(tapply(violated, pair_key, length)),
+    n_violated = as.integer(tapply(violated, pair_key, sum)),
+    row.names = NULL,
+    stringsAsFactors = FALSE
   )
 }

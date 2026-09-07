@@ -12,7 +12,7 @@ normalize_family <- function(family) {
     }
     family <- family_fun()
   } else if (is.function(family)) {
-    family <- stats::family()
+    family <- family()
   }
   if (!is.list(family) || is.null(family$family) || is.null(family$link)) {
     stop("'family' must be a valid family object", call. = FALSE)
@@ -33,7 +33,6 @@ extract_geer_response_weights <- function(model_frame, family) {
        identical(family$varfun, "mu(1-mu)"))
   y <- stats::model.response(model_frame, "any")
   if (is.null(y)) stop("response variable not found", call. = FALSE)
-  y_raw <- y
   if (is_binomial_like) {
     if (is.factor(y)) {
       if (nlevels(y) != 2L) {

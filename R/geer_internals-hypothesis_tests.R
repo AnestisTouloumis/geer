@@ -166,7 +166,7 @@ compute_chisq_mixture <- function(x, test_stat, pmethod = geer_pmethod_choices) 
 }
 
 
-compute_score_components <- function(object0, object1, test_coefficients) {
+compute_score_components <- function(object0, object1) {
   if (is_geewa_fit(object1)) {
     score_vector <- estimating_equations_gee_cc(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
@@ -303,10 +303,7 @@ score_test <- function(object0, object1,
   obj1 <- nested_models$object1
   index <- nested_models$index
   test_df <- check_test_index(index, "Score test")
-  test_coefficients <- obj1$coefficients
-  test_coefficients[index] <- 0
-  test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- compute_score_components(obj0, obj1, test_coefficients)
+  sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
   cov_test <- switch(
     cov_type,
@@ -347,11 +344,7 @@ working_score_test <- function(object0, object1,
   obj1 <- nested_models$object1
   index <- nested_models$index
   check_test_index(index, "Working score test")
-  test_coefficients <- as.numeric(obj1$coefficients)
-  names(test_coefficients) <- names(obj1$coefficients)
-  test_coefficients[index] <- 0
-  test_coefficients[names(obj0$coefficients)] <- obj0$coefficients
-  sc <- compute_score_components(obj0, obj1, test_coefficients)
+  sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
   naive_mat <- sc$naive_covariance
   robust_mat <- switch(

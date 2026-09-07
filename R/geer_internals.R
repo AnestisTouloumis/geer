@@ -94,3 +94,63 @@ refit_geer <- function(object, formula) {
   }
   eval(refit_call, envir = env)
 }
+
+
+check_unused_dots <- function(dots, context) {
+  if (length(dots) == 0L) {
+    return(invisible(NULL))
+  }
+  dot_names <- names(dots)
+  if (is.null(dot_names)) {
+    dot_names <- rep.int("", length(dots))
+  }
+  labels <- rep.int("<unnamed>", length(dots))
+  named <- nzchar(dot_names)
+  labels[named] <- sprintf("'%s'", dot_names[named])
+  stop(
+    sprintf(
+      "%s does not use the argument(s): %s",
+      context,
+      paste(labels, collapse = ", ")
+    ),
+    call. = FALSE
+  )
+}
+
+
+covariance_standard_errors <- function(vcov_matrix, parm = NULL, context) {
+  variances <- diag(vcov_matrix)
+  if (!is.null(parm)) {
+    variances <- variances[parm]
+  }
+  labels <- names(variances)
+  if (is.null(labels)) {
+    labels <- as.character(seq_along(variances))
+  }
+  invalid <- !is.finite(variances)
+  if (any(invalid)) {
+    stop(
+      sprintf(
+        "%s failed: non-finite variance for %s",
+        context,
+        paste(labels[invalid], collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  negative <- variances < 0
+  if (any(negative)) {
+    stop(
+      sprintf(
+        paste0(
+          "%s failed: negative variance for %s; the covariance estimator is ",
+          "not positive semi-definite, so no standard error is available"
+        ),
+        context,
+        paste(labels[negative], collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  sqrt(variances)
+}

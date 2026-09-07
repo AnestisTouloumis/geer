@@ -589,7 +589,6 @@ mcar_logistic_test <- function(object,
     check.names = FALSE
   )
 
-  beta <- stats::coef(missing_fit)
   covariance <- stats::vcov(missing_fit, cov_type = cov_type)
 
   covariate_map <- if (length(safe_names)) {

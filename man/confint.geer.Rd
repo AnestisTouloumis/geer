@@ -23,7 +23,8 @@ used for inference on the regression parameters. Options are the bias-corrected 
 (\code{"jackknife"}), and the model-based or naive estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{not used. Supplying any argument here is an error, so that a
+misspelt \code{cov_type} is reported rather than silently ignored.}
 }
 \value{
 A matrix with columns giving lower and upper confidence limits for each

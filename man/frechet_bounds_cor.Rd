@@ -8,12 +8,11 @@ frechet_bounds_cor(object)
 }
 \arguments{
 \item{object}{an object of class \code{geer} fitted via \code{\link{geewa}}
-with \code{family = binomial()} and a non-independence association
-structure.}
+with \code{family = binomial()} or \code{family = quasibinomial()}, a
+binary (0/1) response and a non-independence association structure.}
 }
 \value{
-a data frame with one row per unique time pair \eqn{(j, k)} and
-  columns:
+A data frame with one row per unique time pair \eqn{(j, k)} and columns:
 \describe{
   \item{\code{alpha_name}}{label of the form \code{alpha_j.k} identifying the
     working correlation entry for this time pair.}
@@ -22,16 +21,20 @@ a data frame with one row per unique time pair \eqn{(j, k)} and
     giving the tightest lower admissibility constraint.}
   \item{\code{upper_min}}{minimum Frechet upper bound across clusters,
     giving the tightest upper admissibility constraint.}
+  \item{\code{n_clusters}}{number of clusters contributing an observation at
+    both times, and hence the number of bound pairs summarized in
+    \code{lower_max} and \code{upper_min}.}
   \item{\code{n_violated}}{number of clusters for which \code{alpha_value}
     falls outside the cluster-specific Frechet bounds.}
 }
 }
 \description{
 For a fitted \code{geer} model from \code{\link{geewa}} with a
-\code{binomial} family and a non-independence association structure,
-checks whether each off-diagonal entry of the working correlation matrix
-lies within the Frechet bounds implied by the fitted marginal probabilities.
-Results are summarized at the time-pair level.
+\code{binomial} or \code{quasibinomial} family, a binary response and a
+non-independence association structure, checks whether each off-diagonal
+entry of the working correlation matrix lies within the Frechet bounds
+implied by the fitted marginal probabilities. Results are summarized at the
+time-pair level.
 }
 \details{
 For a pair of observations at times \eqn{j} and \eqn{k} within cluster
@@ -57,7 +60,22 @@ probabilities. The tightest bounds across clusters, \code{lower_max}
 (maximum lower bound) and \code{upper_min} (minimum upper bound), are
 reported in the returned data frame. The column \code{n_violated} counts
 the number of clusters for which \code{alpha_value} falls outside
-\eqn{[\ell_{ijk},\, u_{ijk}]}.
+\eqn{[\ell_{ijk},\, u_{ijk}]}, out of the \code{n_clusters} clusters that
+contribute an observation at both times.
+
+Both bounds are ratios that are undefined when a fitted probability equals
+\eqn{0} or \eqn{1}, because the corresponding marginal distribution is
+degenerate and its correlation with any other variable does not exist. Such
+fitted values are therefore rejected with an error rather than propagated
+as \code{NaN}. They typically indicate separation in the mean model.
+
+The bounds also assume Bernoulli marginals, so the response must be binary.
+Grouped binomial responses supplied as a two-column matrix of successes and
+failures are rejected, since their fitted values are Binomial proportions
+rather than Bernoulli means.
+
+Clusters of size one contribute no time pair and are skipped. A time pair
+observed in no cluster produces no row.
 }
 \examples{
 data("cholecystectomy", package = "geer")

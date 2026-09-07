@@ -14,7 +14,8 @@
 #'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
 #'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
-#' @param ... additional arguments passed to or from other methods.
+#' @param ... not used. Supplying any argument here is an error, so that a
+#'   misspelt \code{cov_type} is reported rather than silently ignored.
 #'
 #' @details
 #' The form of the covariance estimator is controlled by \code{cov_type}:
@@ -24,23 +25,25 @@
 #'   \item{\code{"robust"}}{the sandwich (robust) covariance estimator
 #'   (Liang and Zeger, 1986).}
 #'   \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
-#'   estimator (MacKinnon, 1985).}
-#'   \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife covariance estimator. Each
-#'   cluster is deleted in turn and the regression parameters are refitted
-#'   using the original estimation method while the working association
-#'   parameters are held fixed at their full-data estimates.}
+#'   estimator (MacKinnon and White, 1985).}
+#'   \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife
+#'   covariance estimator. Each cluster is deleted in turn and the regression
+#'   parameters are refitted using the original estimation method while the
+#'   working association parameters are held fixed at their full-data
+#'   estimates. See the paragraphs below for the exact treatment of the
+#'   nuisance parameters, which is not identical across estimation methods.}
 #'   \item{\code{"naive"}}{the model-based covariance estimator
 #'   (Liang and Zeger, 1986).}
 #' }
 #'
-#' For \code{cov_type = "jackknife"}, let \eqn{K} denote the number of
+#' For \code{cov_type = "jackknife"}, let \eqn{N} denote the number of
 #' clusters, let \eqn{\hat\beta_{(i)}} denote the regression-parameter
 #' estimate obtained after deleting cluster \eqn{i}, and let
-#' \eqn{\bar\beta_{(-)} = K^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
-#' \deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{K-1}{K}
-#' \sum_{i=1}^K (\hat\beta_{(i)}-\bar\beta_{(-)})
+#' \eqn{\bar\beta_{(-)} = N^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
+#' \deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{N-1}{N}
+#' \sum_{i=1}^N (\hat\beta_{(i)}-\bar\beta_{(-)})
 #' (\hat\beta_{(i)}-\bar\beta_{(-)})^T,}
-#' where \eqn{(K-1)/K} is the usual finite-sample correction of the
+#' where \eqn{(N-1)/N} is the usual finite-sample correction of the
 #' Quenouille-Tukey jackknife.
 #' Each \eqn{\hat\beta_{(i)}} is obtained by refitting the model in full on
 #' the remaining clusters. This is deliberate: no one-step approximation to
@@ -78,9 +81,9 @@
 #' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 #' generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 #'
-#' MacKinnon, J.G. (1985) Some heteroskedasticity-consistent covariance matrix
-#' estimators with improved finite sample properties. \emph{Journal of
-#' Econometrics}, \bold{29}, 305--325.
+#' MacKinnon, J.G. and White, H. (1985) Some heteroskedasticity-consistent
+#' covariance matrix estimators with improved finite sample properties.
+#' \emph{Journal of Econometrics}, \bold{29}, 305--325.
 #'
 #' Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
 #' correction for the variance of GEE estimators. \emph{Biometrical Journal},
@@ -105,6 +108,7 @@
 vcov.geer <- function(object,
                       cov_type = geer_cov_type_choices,
                       ...) {
+  check_unused_dots(list(...), "vcov.geer")
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
   switch(
@@ -116,7 +120,7 @@ vcov.geer <- function(object,
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = object$robust_covariance,
       clusters_no = object$clusters_no,
-      coef_no = ncol(object$robust_covariance),
+      coef_no = object$rank,
       context = "vcov"
     )
   )
@@ -218,13 +222,11 @@ confint.geer <- function(object,
                          level = 0.95,
                          cov_type = geer_cov_type_choices,
                          ...) {
-  if (!is.numeric(level) || length(level) != 1L ||
-      !is.finite(level) || level <= 0 || level >= 1) {
-    stop("'level' must be a single number in (0, 1)", call. = FALSE)
-  }
+  check_unused_dots(list(...), "confint.geer")
   object <- check_geer_object(object)
+  check_probability_open(level, "level")
   cov_type <- match.arg(cov_type)
-  beta <- stats::coef(object)
+  beta <- object$coefficients
   beta_names <- names(beta)
   if (missing(parm)) {
     parm <- beta_names
@@ -247,7 +249,11 @@ confint.geer <- function(object,
     dimnames = list(parm, pct)
   )
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  standard_errors <- sqrt(pmax(diag(vcov_matrix), 0))[parm]
+  standard_errors <- covariance_standard_errors(
+    vcov_matrix,
+    parm = parm,
+    context = "confint.geer"
+  )
   ans[] <- beta[parm] + standard_errors %o% percentiles
   ans
 }

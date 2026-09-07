@@ -154,7 +154,6 @@ jj_pattern_information <- function(x, min_pattern_size) {
     x = x_used,
     group = group,
     group_counts = group_counts,
-    pattern_keys = pattern_levels,
     pattern_matrix = pattern_matrix,
     omitted_patterns = omitted
   )
@@ -254,7 +253,6 @@ jj_distribution_free_impute <- function(x) {
   complete <- stats::complete.cases(x)
   complete_data <- x[complete, , drop = FALSE]
   n_complete <- nrow(complete_data)
-  p <- ncol(x)
 
   if (n_complete < 2L) {
     stop(

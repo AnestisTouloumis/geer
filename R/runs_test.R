@@ -16,28 +16,14 @@
 #'   observation order stored in \code{object}. A name that is not a
 #'   model-matrix column is looked up among the variables of the data used to
 #'   fit the model, so a covariate omitted from the model can be used; see
-#'   Details. Ordering values must be finite
-#'   and non-missing. Ties are resolved using the natural cluster/repeated
-#'   order; see Details for the consequences when the ordering has few
-#'   distinct values.
+#'   Details. Ordering values must be finite and non-missing. Ties are resolved
+#'   using the natural cluster/repeated order; see Details for the consequences
+#'   when the ordering has few distinct values.
 #' @param alternative character string specifying the alternative hypothesis,
 #'   expressed in terms of the observed number of runs \eqn{T} relative to its
 #'   null expectation. Options are \code{"two.sided"}, \code{"less"} (fewer
 #'   runs than expected) and \code{"greater"} (more runs than expected).
 #'   Defaults to \code{"two.sided"}.
-#' @param nperm \code{NULL} or a single positive whole number. The default,
-#'   \code{NULL}, refers the standardized statistic to the normal
-#'   approximation of Chang (2000). A number instead requests a Monte Carlo
-#'   p-value obtained from that many within-cluster permutations of the
-#'   residual signs; see Details.
-#' @param exact \code{NULL} or a single logical value controlling whether the
-#'   exact null distribution of \eqn{T} is used instead of the normal
-#'   approximation. The default, \code{NULL}, uses the exact distribution
-#'   whenever the normal approximation is not recommended, that is when
-#'   \eqn{n_p <= 15} or \eqn{n_n <= 15}. Cannot be combined with
-#'   \code{nperm}. It is ignored, without an error, when \code{nperm} is
-#'   supplied: a permutation reference distribution takes precedence over both
-#'   the exact and the approximate one.
 #'
 #' @details
 #' Let \eqn{n_p} and \eqn{n_n} denote the numbers of positive and negative
@@ -52,22 +38,22 @@
 #' The standardized statistic
 #' \deqn{Z = \frac{T-E(T)}{\sqrt{V(T)}}}
 #' is compared with the standard normal distribution. No continuity correction
-#' is applied, following Chang (2000) and Hardin and Hilbe (2013).
+#' is applied, following Chang (2000) and Hardin and Hilbe (2013). The normal
+#' approximation is the only reference distribution used by either source and
+#' the only one offered here.
 #'
 #' The \code{alternative} argument selects the tail of that distribution.
-#' \code{"less"} tests against too few runs, the alternative implied by sign
-#' clustering, an unmodeled trend, or omitted structure, and is the departure
-#' emphasized by Chang (2000). \code{"greater"} tests against too many runs,
-#' that is, systematic alternation of residual signs. Under the natural
-#' ordering a small lower-tail p-value is ambiguous: too few runs arise both
-#' from a misspecified mean structure and from genuine positive within-cluster
-#' association, because the null distribution of \eqn{T} treats the signs as
-#' exchangeable across observations. The default is therefore two-sided.
-#'
-#' Hardin and Hilbe (2013) report a one-sided p-value for their worked
-#' example, so reproducing their Section 4.2.1 figure requires
-#' \code{alternative = "greater"}; the default two-sided p-value is twice as
-#' large.
+#' \code{"less"} tests against too few runs, the departure implied by sign
+#' clustering, an unmodeled trend, or omitted structure. \code{"greater"}
+#' tests against too many runs, that is, systematic alternation of residual
+#' signs. Chang (2000) rejects on extreme values of \eqn{Z} in either
+#' direction, his two applications reporting \eqn{Z = -9.00} and
+#' \eqn{Z = 24.57}, and reports no p-values at all, so the two-sided default
+#' corresponds to his decision rule. Hardin and Hilbe (2013) instead report a
+#' one-sided p-value in the direction of the observed \eqn{Z}, which is half
+#' the two-sided value, so reproducing their figures requires
+#' \code{"greater"} when \eqn{Z} is positive and \code{"less"} when it is
+#' negative.
 #'
 #' The test uses the residuals only through their signs, and therefore does
 #' not depend on which residual type is extracted from the fitted model. The
@@ -78,7 +64,7 @@
 #' \eqn{n_p}, \eqn{n_n} and \eqn{T}, and hence the same value of \eqn{Z} and
 #' the same p-value, so no residual-type argument is offered. This invariance
 #' is also why Chang (2000), who works with deviance residuals, and Hardin and
-#' Hilbe (2013), who plot raw residuals, describe the same test.
+#' Hilbe (2013), who plot raw and Pearson residuals, describe the same test.
 #'
 #' Residuals equal to zero are omitted from the sign sequence because the test
 #' is defined in terms of positive and negative residuals. Their number is
@@ -90,50 +76,9 @@
 #' analytic weight.
 #'
 #' Chang (2000) recommends the normal approximation only when \eqn{n_p > 15}
-#' and \eqn{n_n > 15}. Outside that range \code{runs_test} evaluates the
-#' exact null distribution of \eqn{T} instead, which for \eqn{T = 2k} and
-#' \eqn{T = 2k+1} respectively is
-#' \deqn{P(T = 2k) = \frac{2\binom{n_p-1}{k-1}\binom{n_n-1}{k-1}}
-#' {\binom{n_p+n_n}{n_p}}, \qquad
-#' P(T = 2k+1) = \frac{\binom{n_p-1}{k}\binom{n_n-1}{k-1} +
-#' \binom{n_p-1}{k-1}\binom{n_n-1}{k}}{\binom{n_p+n_n}{n_p}}.}
-#' Tail probabilities are summed over this distribution and, for a two-sided
-#' test, the smaller tail is doubled and truncated at one. Setting
-#' \code{exact = TRUE} or \code{exact = FALSE} forces or suppresses this
-#' behavior; when the normal approximation is used with small sign counts a
-#' warning is issued instead.
-#'
-#' Exact and approximate p-values do not agree closely even at large sign
-#' counts, because no continuity correction is applied to the normal
-#' approximation. The exact tail probabilities match the continuity-corrected
-#' approximation instead, and the difference between the two is of that order:
-#' with \eqn{n_p = n_n = 500} and \eqn{T = 520}, for instance, the exact
-#' upper-tail probability is about \eqn{0.1209} against \eqn{0.1146} from the
-#' uncorrected approximation. The exact value should be preferred when the two
-#' are compared.
-#'
-#' The ordering is part of the hypothesis being assessed. Chang (2000)
-#' considers only the natural ordering, in which each cluster's measurements
-#' appear consecutively and in ascending time order, and uses it to diagnose
-#' remaining longitudinal or within-cluster structure. Ordering by fitted
-#' values or by a covariate is the amendment of Hardin and Hilbe (2013,
-#' Section 4.2.1): ordering by a continuous covariate can help assess its
-#' functional form, while ordering by fitted values provides a broader
-#' model-adequacy diagnostic.
-#'
-#' Orderings other than the natural one are only well defined up to ties, and
-#' ties are common rather than exceptional. A factor column takes as many
-#' distinct values as it has levels, and fitted values take one distinct value
-#' per covariate pattern, so a design with few covariate patterns yields few
-#' distinct ordering values; the worked example of Hardin and Hilbe (2013) has
-#' three distinct fitted values across eighty observations. Within a group of
-#' tied ordering values the sequence, and therefore \eqn{T}, is arbitrary.
-#' Ties are broken here by the natural cluster/repeated order, which makes the
-#' result reproducible but means that a heavily tied ordering reduces to the
-#' natural ordering within each tie group. Such an ordering should be
-#' interpreted accordingly, and a statistic computed from an ordering with few
-#' distinct values carries correspondingly little information about the
-#' quantity being ordered on.
+#' and \eqn{n_n > 15}. A warning is issued when \eqn{n_p \le 15} or
+#' \eqn{n_n \le 15}, and the normal approximation is still used, since neither
+#' source provides an alternative reference distribution.
 #'
 #' A character \code{order_by} that names neither \code{"natural"},
 #' \code{"fitted"}, nor a column of the model matrix is resolved against the
@@ -146,60 +91,119 @@
 #' the reconstruction is checked against the stored cluster and time indices.
 #' An error is signalled, rather than a possibly misaligned ordering returned,
 #' if the variable introduces additional missing values or if the check fails;
-#' an aligned numeric vector can always be supplied directly instead. Factor
-#' and character variables are ordered by their factor codes.
+#' an aligned numeric vector can always be supplied directly instead. Factor,
+#' character and logical variables are ordered by their factor codes, and
+#' \code{Date}, \code{POSIXct}, \code{POSIXlt} and \code{difftime} variables
+#' by their underlying numeric values.
 #'
 #' Chang (2000) further notes that for models with Poisson responses the
 #' residual sequence should follow the order of measurement rather than the
 #' follow-up time, which the default natural ordering provides.
 #'
-#' \strong{Permutation p-values.} The null distribution of \eqn{T} given
-#' above treats the residual signs as exchangeable across all observations,
-#' that is, as if the observations were independent. Under the natural
-#' ordering this is violated by the within-cluster association that the model
-#' is fitted to accommodate: positively associated residuals produce runs of
-#' a common sign, \eqn{T} is too small, and the test can reject even when the
-#' mean structure is correct. Chang (2000) treats such a rejection as grounds
-#' for abandoning the marginal model in favor of a random-effects model, which
-#' changes the estimand from marginal to conditional.
+#' @section Choice of ordering:
+#' The null hypothesis is the same whatever \code{order_by} is used. The sign
+#' sequence is a permutation of \eqn{n_p} positive and \eqn{n_n} negative
+#' signs, and the null states that all such arrangements are equally likely,
+#' so \eqn{E(T)} and \eqn{V(T)} depend on \eqn{n_p} and \eqn{n_n} alone and
+#' never on the ordering. What the ordering selects is the alternative: it
+#' fixes the direction in which a departure becomes visible. Ordering by a
+#' variable \eqn{v} gives power against the alternative that the sign of the
+#' residual depends on \eqn{v}, too few runs indicating that the sign changes
+#' less often along \eqn{v} than chance would allow, and too many that it
+#' alternates faster.
 #'
-#' Supplying \code{nperm} replaces the normal approximation by a Monte Carlo
-#' test that does not require exchangeability across clusters. The residual
-#' signs are permuted independently within each cluster, the sequence is
-#' re-read in the requested ordering, and \eqn{T} is recomputed; the reported
-#' p-value is \eqn{(1 + m) / (\code{nperm} + 1)}, where \eqn{m} counts the
-#' permutations at least as extreme as the observed \eqn{T} in the direction
-#' given by \code{alternative}. Two-sided p-values are twice the smaller tail
-#' probability, truncated at one. This is a deliberate extension of Chang
-#' (2000), who considers only the normal approximation, and the two p-values
-#' will not agree.
+#' \describe{
+#'   \item{\code{"natural"}}{residual signs block together within a subject or
+#'     drift with time.}
+#'   \item{\code{"fitted"}}{the sign depends on \eqn{\hat\mu}, indicating an
+#'     inadequate scale or link.}
+#'   \item{a covariate in the model}{that covariate enters with the wrong
+#'     functional form.}
+#'   \item{a covariate not in the model}{that covariate has been wrongly
+#'     omitted.}
+#'   \item{a supplied numeric vector}{whatever that vector indexes, such as
+#'     batch, center or date of measurement.}
+#' }
 #'
-#' The permuted null is that residual signs are exchangeable \emph{within}
-#' each cluster. A cluster whose residuals all share one sign contributes the
-#' same number of runs under every permutation, so cluster-level lopsidedness
-#' can no longer produce a rejection on its own, while an ordering-related
-#' pattern within clusters still can. Two consequences follow. If most
-#' clusters are internally constant in sign the permutation distribution is
-#' nearly degenerate and the test has little power; a warning is issued if it
-#' is exactly degenerate. And serial dependence is still confounded with mean
-#' misspecification, since autoregressive residuals are not exchangeable
-#' within a cluster either; the permutation test removes the between-cluster
-#' component of the problem, not the within-cluster one.
+#' Chang (2000) notes that the order is chosen by the investigator and uses
+#' the natural ordering throughout, in which each cluster's measurements
+#' appear consecutively and in ascending time order. Hardin and Hilbe (2013,
+#' Section 4.2.1) also compute the test in the natural ordering, and
+#' additionally sort the residuals by a continuous covariate of interest.
+#' Ordering by fitted values, and ordering by a supplied numeric vector, are
+#' extensions offered here and are used by neither source.
 #'
-#' The reported statistic follows the null that was used. With \code{nperm}
-#' the number of runs is standardized by the mean and standard deviation of
-#' the permutation distribution rather than by \eqn{E(T)} and \eqn{V(T)},
-#' and \code{null.value} reports the permutation mean, so that the printed
-#' statistic and p-value refer to the same reference distribution. The
-#' statistic is \code{NA} when the permutation distribution is degenerate.
-#' The analytic moments remain available in the \code{expected_runs} and
-#' \code{variance_runs} components whichever null is used.
+#' The natural ordering is the one case in which the null can fail even when
+#' the mean structure is correct, because clustered observations are not
+#' exchangeable. A small lower-tail p-value is therefore ambiguous: too few
+#' runs arise both from a misspecified mean structure and from genuine
+#' positive within-cluster association. Chang (2000) treats such a rejection
+#' as grounds for abandoning the marginal model in favor of a random-effects
+#' model, which changes the estimand from marginal to conditional. The test
+#' cannot separate the two explanations, and a rejection under the natural
+#' ordering should be read as evidence that something is wrong rather than
+#' that the mean structure in particular is wrong.
 #'
-#' Permutation p-values are random. Use \code{\link{set.seed}} for
-#' reproducible results, and note that the attainable resolution is
-#' \eqn{1/(\code{nperm}+1)}. The small-sample warning about \eqn{n_p} and
-#' \eqn{n_n} is not issued when \code{nperm} is supplied, since the normal
-#' approximation is then not used.
+#' Ordering by a covariate is the sharpest of the three, because a departure
+#' can be invisible in one ordering and overwhelming in another. In Hardin and
+#' Hilbe (2013, Section 4.2.1) the same fitted model gives \eqn{Z = -0.200}
+#' in the natural ordering and \eqn{Z = -9.510}, with only three runs in one
+#' hundred observations, once the residuals are sorted by the covariate whose
+#' functional form is misspecified.
+#'
+#' A non-natural ordering interleaves observations from different clusters,
+#' which dilutes the within-cluster association described above and makes a
+#' rejection more readily attributable to the mean structure. This holds only
+#' for orderings that vary within a cluster. A baseline or between-subject
+#' covariate, such as a treatment arm, sex or a randomization stratum, takes
+#' one value per cluster and therefore keeps each cluster's observations
+#' adjacent, so ordering on it reproduces the ambiguity of the natural
+#' ordering while appearing to test something else.
+#'
+#' Orderings other than the natural one are also only well defined up to ties,
+#' and ties are common rather than exceptional. A factor column takes as many
+#' distinct values as it has levels, and fitted values take one distinct value
+#' per covariate pattern, so a design with few covariate patterns yields few
+#' distinct ordering values; the residual plot of Hardin and Hilbe (2013,
+#' Section 4.2.1) has three distinct fitted values across eighty observations.
+#' Within a group of tied ordering values the sequence, and therefore
+#' \eqn{T}, is arbitrary. Ties are broken here by the natural cluster/repeated
+#' order, which makes the result reproducible but means that a heavily tied
+#' ordering reduces to the natural ordering within each tie group, blending
+#' the two hypotheses and approaching the natural ordering as the number of
+#' distinct values falls. Factor and character variables are ordered by their
+#' factor codes, so the sequence between levels is usually alphabetical and
+#' carries no meaning of its own.
+#'
+#' @section Reproducing the literature:
+#' Chang (2000) reports values of \eqn{Z} and no p-values, so his results are
+#' matched by the \code{statistic} component and do not depend on
+#' \code{alternative}. Hardin and Hilbe (2013) report a one-sided p-value in
+#' the direction of the observed \eqn{Z}, which is half the two-sided value.
+#'
+#' \preformatted{
+#' runs_test(fit)
+#' runs_test(fit, alternative = "greater")
+#' runs_test(fit, order_by = "x1", alternative = "less")
+#' }
+#'
+#' The first call corresponds to the decision rule of Chang (2000). The second
+#' and third reproduce, respectively, the first and the covariate-ordered
+#' worked examples of Hardin and Hilbe (2013, Section 4.2.1). With
+#' \eqn{n_p = 42}, \eqn{n_n = 38} and \eqn{T = 44} the function returns
+#' \eqn{E(T) = 40.9}, \eqn{V(T) = 19.65} and \eqn{Z = 0.6993}, and
+#' \code{alternative = "greater"} gives \eqn{p = 0.2422}. With
+#' \eqn{n_p = 22} and \eqn{n_n = 78} it returns \eqn{E(T) = 35.32} and
+#' \eqn{V(T) = 11.55}, so the natural ordering, in which \eqn{T = 37}, gives
+#' \eqn{Z = 0.494}, and the covariate ordering, in which \eqn{T = 3}, gives
+#' \eqn{Z = -9.510}.
+#'
+#' The value \eqn{E(T) = 36.32} printed by that source for the second example
+#' under the natural ordering is an arithmetic error, since
+#' \eqn{2(22)(78)/100 + 1 = 35.32}, which is the value the same source uses
+#' for the identical counts under the covariate ordering. The \eqn{Z = 0.200}
+#' and \eqn{p = 0.4207} that follow from it are therefore not reproduced here;
+#' the corresponding values are \eqn{Z = 0.494} and \eqn{p = 0.311}.
 #'
 #' @return
 #' An object of class \code{c("geer_runs_test", "htest")}, so that it prints
@@ -211,25 +215,18 @@
 #' quantities entering the test are shown by the default print method. In
 #' addition, the object contains:
 #' \item{runs}{the observed number of runs, \eqn{T}.}
-#' \item{expected_runs}{the exchangeable null expectation \eqn{E(T)}.}
-#' \item{variance_runs}{the exchangeable null variance \eqn{V(T)}.}
-#' \item{permuted_mean, permuted_sd}{the mean and standard deviation of the
-#'   permutation distribution of \eqn{T}, or \code{NA} when no permutation
-#'   test was performed.}
+#' \item{expected_runs}{the null expectation \eqn{E(T)}.}
+#' \item{variance_runs}{the null variance \eqn{V(T)}.}
 #' \item{positive}{the number of positive residuals, \eqn{n_p}.}
 #' \item{negative}{the number of negative residuals, \eqn{n_n}.}
 #' \item{zero}{the number of zero residuals omitted from the test.}
 #' \item{nonzero}{the number of residuals used in the test.}
-#' \item{nperm}{the number of within-cluster permutations used, or \code{NA}
-#'   when no permutation test was performed.}
-#' \item{exact}{a logical value indicating whether the exact null
-#'   distribution of \eqn{T} was used.}
+#' \item{order_by}{a description of the ordering used.}
 #' \item{natural_order}{a logical value indicating whether the natural
 #'   cluster/repeated ordering was used.}
 #' \item{signs}{the sign sequence whose runs were counted, in the order
 #'   tested and with zero residuals removed.}
 #' \item{cluster}{the cluster identifier of each element of \code{signs}.}
-#' \item{order_by}{a description of the ordering used.}
 #'
 #' @references
 #' Chang, Y.-C. (2000) Residuals analysis of the generalized linear models for
@@ -258,96 +255,48 @@
 #' runs_test(fit, order_by = "lnage")
 #' runs_test(fit, alternative = "less")
 #'
-#' set.seed(1)
-#' runs_test(fit, nperm = 999)
-#'
 #' @export
 runs_test <- function(object,
                       order_by = "natural",
-                      alternative = c("two.sided", "less", "greater"),
-                      nperm = NULL,
-                      exact = NULL) {
+                      alternative = c("two.sided", "less", "greater")) {
   caller_env <- parent.frame()
   object <- check_geer_object(object)
   alternative <- match.arg(alternative)
-  nperm <- normalize_runs_nperm(nperm)
-  exact <- normalize_runs_exact(exact, nperm)
   ordering <- resolve_runs_order(object, order_by, env = caller_env)
   residual_values <-
     stats::residuals(object, type = "working")[ordering$index]
   result <- compute_runs_statistics(residual_values, alternative)
-  retained <- sign(residual_values) != 0
-  signs <- as.integer(sign(residual_values)[retained])
-  cluster <- as.numeric(object$id[ordering$index])[retained]
-  small_counts <- result$positive <= 15L || result$negative <= 15L
-  use_exact <- if (is.null(exact)) is.null(nperm) && small_counts else exact
-  statistic_value <- result$statistic
-  null_runs <- result$expected_runs
-  permuted_mean <- NA_real_
-  permuted_sd <- NA_real_
-  if (!is.null(nperm)) {
-    permutation <- compute_runs_permutation(
-      residual_values = residual_values,
-      cluster = object$id[ordering$index],
-      runs = result$runs,
-      alternative = alternative,
-      nperm = nperm
+  cluster <- object$id[ordering$index][result$retained]
+  if (result$positive <= 15L || result$negative <= 15L) {
+    warning(
+      paste0(
+        "the normal approximation may be unreliable because there are 15 or ",
+        "fewer residuals of at least one sign"
+      ),
+      call. = FALSE
     )
-    result$p_value <- permutation$p_value
-    permuted_mean <- permutation$mean
-    permuted_sd <- permutation$sd
-    null_runs <- permuted_mean
-    statistic_value <- if (is.finite(permuted_sd) && permuted_sd > 0) {
-      (result$runs - permuted_mean) / permuted_sd
-    } else {
-      NA_real_
-    }
-    method <- sprintf(
-      "Wald-Wolfowitz runs test for geer residuals (%d within-cluster permutations)",
-      nperm
-    )
-  } else if (use_exact) {
-    result$p_value <- compute_runs_exact_p(
-      positive_no = result$positive,
-      negative_no = result$negative,
-      runs = result$runs,
-      alternative = alternative
-    )
-    method <- "Wald-Wolfowitz runs test for geer residuals (exact null distribution)"
-  } else {
-    method <- "Wald-Wolfowitz runs test for geer residuals"
-    if (small_counts) {
-      warning(
-        "the normal approximation may be unreliable because there are 15 or fewer residuals of at least one sign",
-        call. = FALSE
-      )
-    }
   }
 
   structure(
     list(
-      statistic = c(Z = statistic_value),
+      statistic = c(Z = result$statistic),
       parameter = c(n_p = result$positive, n_n = result$negative),
       p.value = result$p_value,
       estimate = c("number of runs" = as.numeric(result$runs)),
-      null.value = c("number of runs" = null_runs),
-      method = method,
+      null.value = c("number of runs" = result$expected_runs),
+      method = "Wald-Wolfowitz runs test for geer residuals",
       data.name = sprintf("residuals ordered by %s", ordering$label),
       alternative = alternative,
       runs = result$runs,
       expected_runs = result$expected_runs,
       variance_runs = result$variance_runs,
-      permuted_mean = permuted_mean,
-      permuted_sd = permuted_sd,
       positive = result$positive,
       negative = result$negative,
       zero = result$zero,
       nonzero = result$nonzero,
-      nperm = if (is.null(nperm)) NA_integer_ else nperm,
-      exact = isTRUE(use_exact),
       order_by = ordering$label,
       natural_order = isTRUE(ordering$natural),
-      signs = signs,
+      signs = result$signs,
       cluster = cluster
     ),
     class = c("geer_runs_test", "htest")
