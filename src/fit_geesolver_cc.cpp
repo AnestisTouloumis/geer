@@ -686,9 +686,9 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
     const arma::mat naive_matrix =
       solve_chol_or_lu_mat(naive_matrix_inverse,
                            arma::eye(params_no, params_no));
-    const arma::vec naive_matrix_vectorised = arma::vectorise(naive_matrix);
+    const arma::vec naive_matrix_vectorized = arma::vectorise(naive_matrix);
     const arma::vec lambda_vector =
-      jeffreys_power * (lambda_matrix.t() * naive_matrix_vectorised);
+      jeffreys_power * (lambda_matrix.t() * naive_matrix_vectorized);
     return beta_vector +
       solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector);
 }

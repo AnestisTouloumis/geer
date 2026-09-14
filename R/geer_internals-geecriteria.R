@@ -1,11 +1,65 @@
-compute_n_association_parameters <- function(object) {
-  if (identical(object$association_structure, "independence")) {
-    0L
-  } else if (object$association_structure %in% c("exchangeable", "ar1")) {
-    1L
-  } else {
-    length(object$alpha)
+## A criterion that cannot be evaluated for a particular fit is reported as NA
+## rather than aborting the whole table: geecriteria() compares several models
+## at once, and a single degenerate candidate should not hide the remaining
+## criteria or the remaining models. Failures of argument validation remain
+## ordinary errors, so only this condition class is converted.
+geer_criterion_unavailable <- function(message) {
+  stop(structure(
+    list(message = message, call = NULL),
+    class = c("geer_criterion_unavailable", "error", "condition")
+  ))
+}
+
+
+compute_criterion_or_na <- function(expr) {
+  tryCatch(
+    expr,
+    geer_criterion_unavailable = function(cnd) NA_real_
+  )
+}
+
+
+geer_criteria_columns <- c(
+  "QIC", "QICHH", "QICC", "CIC", "RJC", "QICu", "EQIC", "GESSC",
+  "GPC", "AGPC", "SGPC", "GHYC", "PAC", "PT", "WR", "RMR"
+)
+
+
+geer_criteria_columns_basic <- c(
+  "QIC", "CIC", "RJC", "QICu", "GESSC", "GPC"
+)
+
+
+normalize_geer_criteria <- function(criteria) {
+  if (!is.character(criteria) || length(criteria) < 1L || anyNA(criteria)) {
+    stop(
+      "'criteria' must be a non-missing character vector",
+      call. = FALSE
+    )
   }
+  if (any(toupper(criteria) == "ALL")) {
+    if (length(criteria) > 1L) {
+      stop(
+        "'criteria' must be either \"all\" or a selection of criterion names, not both",
+        call. = FALSE
+      )
+    }
+    return(geer_criteria_columns)
+  }
+  ## Matching ignores case so that the usual lower-case spellings are accepted,
+  ## but the canonical names are returned and the requested order is kept.
+  matched <- match(toupper(criteria), toupper(geer_criteria_columns))
+  if (anyNA(matched)) {
+    stop(
+      sprintf(
+        "unknown entries in 'criteria': %s. Available criteria are %s, or \"all\"",
+        paste(criteria[is.na(matched)], collapse = ", "),
+        paste(geer_criteria_columns, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  geer_criteria_columns[unique(matched)]
 }
 
 
@@ -134,11 +188,30 @@ compute_working_covariance_for_criteria <- function(object, indices) {
 
 compute_ghyc_pac <- function(object) {
   repeated_max <- max(as.integer(object$repeated))
+  cluster_indices <- split(seq_along(object$id), object$id)
+
+  ## Gosho, Hamada and Yoshimura (2011) and Pardo and Alonso (2019) both define
+  ## their criteria for balanced designs: the empirical and working covariance
+  ## matrices are sums of cluster-level matrices, which are only conformable
+  ## when every cluster contributes the same repeated positions. Both criteria
+  ## are therefore reported only when each cluster observes every position
+  ## exactly once.
+  positions <- seq_len(repeated_max)
+  balanced <- all(vapply(
+    cluster_indices,
+    function(indices) {
+      identical(sort(as.integer(object$repeated[indices])), positions)
+    },
+    logical(1L)
+  ))
+  if (!balanced) {
+    return(list(GHYC = NA_real_, PAC = NA_real_))
+  }
+
+  clusters_no <- length(cluster_indices)
   empirical_sum <- matrix(0, repeated_max, repeated_max)
   working_sum <- matrix(0, repeated_max, repeated_max)
-  pair_counts <- matrix(0, repeated_max, repeated_max)
   residuals <- object$y - object$fitted.values
-  cluster_indices <- split(seq_along(object$id), object$id)
 
   for (indices in cluster_indices) {
     repeated <- as.integer(object$repeated[indices])
@@ -148,16 +221,10 @@ compute_ghyc_pac <- function(object) {
     working_sum[repeated, repeated] <-
       working_sum[repeated, repeated, drop = FALSE] +
       compute_working_covariance_for_criteria(object, indices)
-    pair_counts[repeated, repeated] <-
-      pair_counts[repeated, repeated, drop = FALSE] + 1
   }
 
-  if (any(pair_counts <= 0)) {
-    return(list(GHYC = NA_real_, PAC = NA_real_))
-  }
-
-  empirical_mean <- empirical_sum / pair_counts
-  working_mean <- working_sum / pair_counts
+  empirical_mean <- empirical_sum / clusters_no
+  working_mean <- working_sum / clusters_no
 
   working_inverse <- tryCatch(
     solve(working_mean),
@@ -202,6 +269,13 @@ compute_independence_naive_inverse <- function(object,
 }
 
 
+## Fitted means are clamped away from the boundaries of their support before
+## the logarithms are taken. The quasi-likelihood diverges there, and a
+## non-finite first term would propagate to QIC, QICu, QICC and QICHH at once.
+## The clamp keeps those criteria finite and comparable across working
+## association structures, for which the first term is very nearly constant.
+## See the documentation of geecriteria() for the caveat this carries when
+## candidate models differ in whether they produce boundary fitted values.
 compute_quasi_loglikelihood_values <- function(y,
                                                mu,
                                                weights,
@@ -282,17 +356,15 @@ compute_independence_gee_quantities <- function(object) {
   )
   beta <- as.numeric(fit_independence$coefficients)
   if (!isTRUE(fit_independence$converged) || any(!is.finite(beta))) {
-    stop(
-      "QICHH could not be computed because the independence GEE fit did not converge to finite coefficients",
-      call. = FALSE
+    geer_criterion_unavailable(
+      "QICHH could not be computed because the independence GEE fit did not converge to finite coefficients"
     )
   }
   eta <- as.numeric(object$x %*% beta + object$offset)
   mu <- as.numeric(object$family$linkinv(eta))
   if (any(!is.finite(mu))) {
-    stop(
-      "QICHH could not be computed because the independence fitted means are non-finite",
-      call. = FALSE
+    geer_criterion_unavailable(
+      "QICHH could not be computed because the independence fitted means are non-finite"
     )
   }
   family_name <- object$family$family
@@ -303,16 +375,14 @@ compute_independence_gee_quantities <- function(object) {
   } else {
     variance <- object$family$variance(mu)
     if (any(!is.finite(variance)) || any(variance <= 0)) {
-      stop(
-        "QICHH could not be computed because the independence variance function is non-positive or non-finite",
-        call. = FALSE
+      geer_criterion_unavailable(
+        "QICHH could not be computed because the independence variance function is non-positive or non-finite"
       )
     }
     denominator <- object$obs_no - length(beta)
     if (denominator <= 0) {
-      stop(
-        "QICHH could not be computed because the residual degrees of freedom are non-positive",
-        call. = FALSE
+      geer_criterion_unavailable(
+        "QICHH could not be computed because the residual degrees of freedom are non-positive"
       )
     }
     phi <- sum(object$prior.weights * (object$y - mu)^2 / variance) / denominator
@@ -353,12 +423,11 @@ compute_eqic_adjusted_variance <- function(mu, family_name, k = 1 / 6) {
     Gamma = (mu + k)^2,
     inverse.gaussian = (mu + k)^3,
     binomial = (mu + k) * (1 - mu + k),
-    stop("EQIC is not available for this family", call. = FALSE)
+    geer_criterion_unavailable("EQIC is not available for this family")
   )
   if (any(!is.finite(variance)) || any(variance <= 0)) {
-    stop(
-      "EQIC could not be computed because the adjusted variance function is non-positive or non-finite",
-      call. = FALSE
+    geer_criterion_unavailable(
+      "EQIC could not be computed because the adjusted variance function is non-positive or non-finite"
     )
   }
   variance
@@ -397,7 +466,7 @@ compute_eqic_adjusted_deviance <- function(y, mu, family_name, k = 1 / 6) {
           (1 - y + k) * log((1 - y + k) / (1 - mu_safe + k))
       )
     },
-    stop("EQIC is not available for this family", call. = FALSE)
+    geer_criterion_unavailable("EQIC is not available for this family")
   )
 }
 
@@ -412,7 +481,9 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
   )
   deviance <- sum(object$prior.weights * deviance_contributions)
   if (!is.finite(deviance) || deviance < 0) {
-    stop("EQIC could not be computed because the adjusted deviance is invalid", call. = FALSE)
+    geer_criterion_unavailable(
+      "EQIC could not be computed because the adjusted deviance is invalid"
+    )
   }
   if (identical(family_name, "binomial")) {
     phi <- 1
@@ -420,7 +491,11 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
     phi <- object$phi
   } else {
     phi <- deviance / object$obs_no
-    phi <- max(phi, 10 * .Machine$double.eps)
+  }
+  if (!is.finite(phi) || phi <= 0) {
+    geer_criterion_unavailable(
+      "EQIC could not be computed because the dispersion estimate is not a usable positive value"
+    )
   }
   adjusted_variance <- compute_eqic_adjusted_variance(
     mu = object$fitted.values,
@@ -439,12 +514,66 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
 }
 
 
+compute_jang_criteria <- function(beta_covariance, independence_inverse) {
+  failed <- list(PT = NA_real_, WR = NA_real_, RMR = NA_real_)
+  ## The generalized eigenvalues of the sandwich covariance with respect to the
+  ## model-based independence covariance are the eigenvalues of
+  ## beta_covariance %*% independence_inverse. That product of two symmetric
+  ## matrices is not itself symmetric, so it is rewritten as the similar
+  ## symmetric matrix L %*% beta_covariance %*% t(L), where t(L) %*% L is the
+  ## Cholesky factorization of independence_inverse. The eigenvalues are then
+  ## real by construction, and the factorization doubles as a check that the
+  ## independence information matrix is positive definite.
+  chol_factor <- tryCatch(chol(independence_inverse), error = function(e) NULL)
+  if (is.null(chol_factor)) {
+    return(failed)
+  }
+  symmetric_form <- chol_factor %*% beta_covariance %*% t(chol_factor)
+  symmetric_form <- (symmetric_form + t(symmetric_form)) / 2
+  eigenvalues <- tryCatch(
+    eigen(symmetric_form, symmetric = TRUE, only.values = TRUE)$values,
+    error = function(e) NULL
+  )
+  if (is.null(eigenvalues) || any(!is.finite(eigenvalues)) ||
+      any(eigenvalues <= 0)) {
+    return(failed)
+  }
+  ratios <- eigenvalues / (1 + eigenvalues)
+  list(
+    PT = sum(ratios),
+    WR = prod(ratios),
+    RMR = max(ratios)
+  )
+}
+
+
 compute_gee_criteria <- function(object,
                                  cov_type,
                                  digits = NULL,
-                                 include_extended = TRUE) {
-  quasi_loglikelihood <- compute_quasi_loglikelihood(object)
-  sc_wc_stats <- if (is_geewa_fit(object)) {
+                                 include_extended = TRUE,
+                                 criteria = geer_criteria_columns) {
+  ## Only the requested criteria are evaluated; the remaining columns are
+  ## filled with NA so that the shape of the returned table never depends on
+  ## the selection. This matters because several of the blocks below are
+  ## expensive: QICHH refits the model under working independence, GHYC and PAC
+  ## loop over clusters, the eigenvalue criteria factorize a p by p matrix, and
+  ## the sandwich covariance itself costs one deletion refit per cluster when
+  ## cov_type is "jackknife".
+  wanted <- function(...) any(c(...) %in% criteria)
+  needs_quasi_loglikelihood <- wanted("QIC", "QICu", "QICC")
+  needs_covariance <- wanted(
+    "QIC", "QICHH", "QICC", "CIC", "RJC", "EQIC", "PT", "WR", "RMR"
+  )
+  needs_sc_wc <- wanted("GESSC", "GPC", "AGPC", "SGPC")
+
+  quasi_loglikelihood <- if (needs_quasi_loglikelihood) {
+    compute_quasi_loglikelihood(object)
+  } else {
+    NA_real_
+  }
+  sc_wc_stats <- if (!needs_sc_wc) {
+    c(sc = NA_real_, gp = NA_real_)
+  } else if (is_geewa_fit(object)) {
     get_gee_criteria_sc_cw(
       object$y,
       object$id,
@@ -466,48 +595,119 @@ compute_gee_criteria <- function(object,
       object$prior.weights
     )
   }
-  sc_wc_stats <- unlist(sc_wc_stats, use.names = FALSE)
-  naive_covariance <- stats::vcov(object, cov_type = "naive")
-  beta_covariance <- stats::vcov(object, cov_type = cov_type)
-  independence_inverse <- compute_independence_naive_inverse(object)
+  ## The C++ helpers return a named list; the names are kept so that the two
+  ## quantities are addressed by name rather than by position.
+  sc_wc_stats <- unlist(sc_wc_stats)
+  naive_covariance <- if (wanted("RJC")) {
+    stats::vcov(object, cov_type = "naive")
+  } else {
+    NULL
+  }
+  beta_covariance <- if (needs_covariance) {
+    stats::vcov(object, cov_type = cov_type)
+  } else {
+    NULL
+  }
+  independence_inverse <- if (needs_covariance) {
+    compute_independence_naive_inverse(object)
+  } else {
+    NULL
+  }
   p <- length(object$coefficients)
-  association_params_no <- compute_n_association_parameters(object)
-  estimated_association_params_no <- compute_n_estimated_association_parameters(object)
-  gessc <- sc_wc_stats[[1L]] / (object$obs_no - p - association_params_no)
-  gpc <- sc_wc_stats[[2L]]
-  penalized_gpc <- compute_gaussian_pseudolikelihood_criteria(
-    object = object,
-    gpc = gpc,
-    p = p,
-    association_params_no = estimated_association_params_no
-  )
-  qic_u <- 2 * (p - quasi_loglikelihood)
-  cic <- sum(independence_inverse * beta_covariance)
-  qic <- 2 * (cic - quasi_loglikelihood)
-  qicc <- compute_qicc(
-    qic = qic,
-    p = p,
-    association_params_no = estimated_association_params_no,
-    clusters_no = object$clusters_no
-  )
-  q_matrix <- tryCatch(
-    solve(naive_covariance, beta_covariance),
-    error = function(e) {
-      stop(
-        "failed to compute RJC because the naive covariance matrix is singular or invalid",
-        call. = FALSE
+  ## Every criterion that discounts model complexity counts only the
+  ## association parameters that were actually estimated, so a supplied
+  ## correlation or odds-ratio structure contributes none.
+  association_params_no <- compute_n_estimated_association_parameters(object)
+  gessc <- if (wanted("GESSC")) {
+    sc_wc_stats[["sc"]] / (object$obs_no - p - association_params_no)
+  } else {
+    NA_real_
+  }
+  gpc <- sc_wc_stats[["gp"]]
+  penalized_gpc <- if (wanted("AGPC", "SGPC")) {
+    compute_gaussian_pseudolikelihood_criteria(
+      object = object,
+      gpc = gpc,
+      p = p,
+      association_params_no = association_params_no
+    )
+  } else {
+    list(AGPC = NA_real_, SGPC = NA_real_)
+  }
+  qic_u <- if (wanted("QICu")) 2 * (p - quasi_loglikelihood) else NA_real_
+  ## Same quantity as compute_gee_cic(), which exists so that step_p(), add1()
+  ## and drop1() can obtain CIC on its own without building the whole table.
+  ## It is computed inline here because both matrices are already available:
+  ## calling the standalone helper would re-derive the independence
+  ## information matrix and refit the sandwich covariance, which for
+  ## cov_type = "jackknife" means one deletion refit per cluster. Keep the two
+  ## expressions in step.
+  cic <- if (wanted("QIC", "CIC", "QICC")) {
+    sum(independence_inverse * beta_covariance)
+  } else {
+    NA_real_
+  }
+  qic <- if (wanted("QIC", "QICC")) 2 * (cic - quasi_loglikelihood) else NA_real_
+  qicc <- if (wanted("QICC")) {
+    compute_qicc(
+      qic = qic,
+      p = p,
+      association_params_no = association_params_no,
+      clusters_no = object$clusters_no
+    )
+  } else {
+    NA_real_
+  }
+  if (!wanted("CIC")) {
+    cic <- NA_real_
+  }
+  if (!wanted("QIC")) {
+    qic <- NA_real_
+  }
+  rjc <- if (!wanted("RJC")) NA_real_ else compute_criterion_or_na({
+    q_matrix <- tryCatch(
+      solve(naive_covariance, beta_covariance),
+      error = function(e) {
+        geer_criterion_unavailable(
+          "RJC could not be computed because the naive covariance matrix is singular or invalid"
+        )
+      }
+    )
+    ## sum(Q * t(Q)) is the trace of Q squared, as in Hin, Carey and Wang
+    ## (2007), and not the Frobenius norm, which would be sum(Q^2). The two
+    ## coincide only for symmetric Q, and Q is not symmetric here.
+    rjc_trace <- sum(diag(q_matrix)) / p
+    rjc_squared_trace <- sum(q_matrix * t(q_matrix)) / p
+    sqrt((1 - rjc_trace)^2 + (1 - rjc_squared_trace)^2)
+  })
+  if (isTRUE(include_extended)) {
+    eigenvalue_criteria <- if (wanted("PT", "WR", "RMR")) {
+      compute_jang_criteria(
+        beta_covariance = beta_covariance,
+        independence_inverse = independence_inverse
+      )
+    } else {
+      list(PT = NA_real_, WR = NA_real_, RMR = NA_real_)
+    }
+    qichh <- if (!wanted("QICHH")) NA_real_ else compute_criterion_or_na({
+      independence_quantities <- compute_independence_gee_quantities(object)
+      qichh_penalty <- sum(
+        independence_quantities$naive_inverse * beta_covariance
+      )
+      2 * (qichh_penalty - independence_quantities$quasi_loglikelihood)
+    })
+    eqic <- if (!wanted("EQIC")) {
+      NA_real_
+    } else {
+      compute_criterion_or_na(
+        compute_eqic(object, beta_covariance = beta_covariance)
       )
     }
-  )
-  rjc_trace <- sum(diag(q_matrix)) / p
-  rjc_frobenius <- sum(q_matrix * t(q_matrix)) / p
-  rjc <- sqrt((1 - rjc_trace)^2 + (1 - rjc_frobenius)^2)
-  if (isTRUE(include_extended)) {
-    independence_quantities <- compute_independence_gee_quantities(object)
-    qichh_penalty <- sum(independence_quantities$naive_inverse * beta_covariance)
-    qichh <- 2 * (qichh_penalty - independence_quantities$quasi_loglikelihood)
-    eqic <- compute_eqic(object, beta_covariance = beta_covariance)
-    covariance_match <- compute_ghyc_pac(object)
+    covariance_match <- if (wanted("GHYC", "PAC")) {
+      compute_ghyc_pac(object)
+    } else {
+      list(GHYC = NA_real_, PAC = NA_real_)
+    }
     ans <- data.frame(
       QIC = qic,
       QICHH = qichh,
@@ -522,12 +722,12 @@ compute_gee_criteria <- function(object,
       SGPC = penalized_gpc$SGPC,
       GHYC = covariance_match$GHYC,
       PAC = covariance_match$PAC,
+      PT = eigenvalue_criteria$PT,
+      WR = eigenvalue_criteria$WR,
+      RMR = eigenvalue_criteria$RMR,
       Parameters = p
     )
-    numeric_cols <- c(
-      "QIC", "QICHH", "QICC", "CIC", "RJC", "QICu", "EQIC",
-      "GESSC", "GPC", "AGPC", "SGPC", "GHYC", "PAC"
-    )
+    numeric_cols <- geer_criteria_columns
   } else {
     ans <- data.frame(
       QIC = qic,
@@ -538,7 +738,7 @@ compute_gee_criteria <- function(object,
       GPC = gpc,
       Parameters = p
     )
-    numeric_cols <- c("QIC", "CIC", "RJC", "QICu", "GESSC", "GPC")
+    numeric_cols <- geer_criteria_columns_basic
   }
   if (!is.null(digits)) {
     digits <- check_nonnegative_integerish(digits, "digits")
@@ -549,6 +749,9 @@ compute_gee_criteria <- function(object,
 }
 
 
+## Standalone CIC for callers that need this criterion alone. The same
+## expression appears inline in compute_gee_criteria(), where both matrices
+## have already been computed; keep the two in step.
 compute_gee_cic <- function(object, cov_type) {
   independence_inverse <- compute_independence_naive_inverse(object)
   beta_covariance <- stats::vcov(object, cov_type = cov_type)

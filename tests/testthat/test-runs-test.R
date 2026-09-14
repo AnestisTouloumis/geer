@@ -391,7 +391,7 @@ test_that("plot.geer_runs_test returns the plotted sequence invisibly", {
   expect_identical(max(plotted$run), out$runs)
   expect_identical(plotted$run[[1L]], 1L)
   expect_true(all(diff(plotted$run) %in% c(0L, 1L)))
-  ## A colour change happens exactly where the sign changes.
+  ## A color change happens exactly where the sign changes.
   expect_identical(
     which(diff(plotted$run) == 1L),
     which(plotted$sign[-1L] != plotted$sign[-nrow(plotted)])

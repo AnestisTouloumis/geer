@@ -21,7 +21,7 @@ and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
 Defaults to \code{"working"}.}
 
 \item{...}{not used. Supplying any argument here is an error, so that a
-misspelt \code{type} is reported rather than silently ignored.}
+misspelled \code{type} is reported rather than silently ignored.}
 }
 \value{
 A numeric vector. For \code{type = "working"}, \code{"pearson"}, or

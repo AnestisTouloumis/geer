@@ -17,7 +17,7 @@
 #'   (\code{"jackknife"}), and the model-based or naive estimator
 #'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
 #' @param ... not used. Supplying any argument here is an error, so that a
-#'   misspelt \code{cov_type} is reported rather than silently ignored.
+#'   misspelled \code{cov_type} is reported rather than silently ignored.
 #'
 #' @details
 #' The form of the covariance estimator is controlled by \code{cov_type}:

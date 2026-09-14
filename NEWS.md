@@ -1,5 +1,47 @@
 # geer 0.1.1
 
+- `geecriteria()` now evaluates only the criteria named in `criteria`, so
+  restricting the selection also avoids the work those criteria would require:
+  the working-independence refit behind `QICHH`, the per-cluster loop behind
+  `GHYC` and `PAC`, the eigendecomposition behind `PT`, `WR`, and `RMR`, and,
+  when none of the covariance-based criteria is requested, the sandwich
+  covariance itself. Supplying the same model twice no longer fails on
+  duplicate row names.
+
+- `geecriteria()` gains a `criteria` argument selecting which criteria to
+  report. The default, `"all"`, returns every criterion as before. Otherwise a
+  character vector of criterion names is accepted, matched ignoring case, with
+  the columns returned in the order requested; `Parameters` is always included.
+
+- Criteria in `geecriteria()` that cannot be evaluated for a particular fit are
+  now reported as `NA` instead of aborting the whole table. `RJC`, `QICHH`, and
+  `EQIC` previously raised errors, so one degenerate candidate model hid the
+  remaining criteria and the remaining models. Errors from argument validation
+  are unaffected. The `EQIC` dispersion is no longer floored at machine
+  precision; an unusable value now yields `NA`.
+
+- `geecriteria()` gains the three eigenvalue-based criteria of Jang (2011):
+  `PT` (Pillai trace type), `WR` (Wilks ratio type), and `RMR` (Roy maximum
+  root type). All three are functions of the generalized eigenvalues of the
+  covariance estimate with respect to the model-based covariance under working
+  independence, respond to `cov_type`, and prefer smaller values.
+
+- All complexity penalties in `geecriteria()` now count only the
+  working-association parameters that were estimated from the data. `GESSC`
+  previously divided its weighted error sum of squares by `N - p - q` with `q`
+  the full length of the association parameter vector, while `QICC`, `AGPC`,
+  and `SGPC` already used the estimated count. The two disagreed for
+  `corstr = "fixed"` and `orstr = "fixed"`, where a supplied structure costs no
+  degrees of freedom; `GESSC` values change for those fits only.
+
+- `geecriteria()` now reports `GHYC` and `PAC` only for balanced designs, that
+  is when every cluster observes each repeated position exactly once, and
+  returns `NA` otherwise. Both criteria sum cluster-level covariance matrices,
+  which are conformable only in that case, and Gosho, Hamada and Yoshimura
+  (2011) and Pardo and Alonso (2019) both define them under a common cluster
+  size. The previous pairwise-available averaging was an undocumented extension
+  of the published criteria.
+
 - Added `cov_type = "jackknife"` throughout the package wherever `cov_type` is accepted, including `vcov()`, summaries, confidence intervals, prediction, tidiers, `geecriteria()`, `add1()`, `drop1()`, `anova()`, `step_p()`, and `mcar_logistic_test()`. The estimator refits the regression parameters after deleting each cluster in turn while holding the working association structure and association-parameter vector fixed at their full-data values; it uses the centered Quenouille-Tukey jackknife covariance, including the `(K - 1) / K` finite-sample factor, where `K` is the number of clusters, and each leave-one-cluster estimate is obtained by a full refit rather than by a one-step approximation. It is available for all estimation methods. Score-based procedures retain their null-model score/information calculation and use the larger model's full-refit jackknife covariance as the covariance component.
 
 ## New features

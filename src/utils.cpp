@@ -104,7 +104,7 @@ arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y) {
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
-    Rcpp::stop("solve_chol_or_lu_vec: LU factorisation failed -- "
+    Rcpp::stop("solve_chol_or_lu_vec: LU factorization failed -- "
                  "matrix is singular or numerically unstable.");
   }
   const arma::vec permuted_rhs = permutation_matrix * y;
@@ -139,7 +139,7 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
-    Rcpp::stop("solve_chol_or_lu_mat: LU factorisation failed -- "
+    Rcpp::stop("solve_chol_or_lu_mat: LU factorization failed -- "
                  "matrix is singular or numerically unstable.");
   }
   const arma::mat permuted_rhs = permutation_matrix * Y;
@@ -197,7 +197,7 @@ arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
   }
   arma::mat lu_lower, lu_upper, permutation_matrix;
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix, A)) {
-    Rcpp::stop("lambda_from_blocks_chol_or_lu: LU factorisation failed -- "
+    Rcpp::stop("lambda_from_blocks_chol_or_lu: LU factorization failed -- "
                  "matrix is singular or numerically unstable.");
   }
   for (arma::uword r = 0; r < p; ++r) {

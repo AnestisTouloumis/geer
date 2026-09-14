@@ -174,7 +174,7 @@ fitted.geer <- function(object, ...) {
 #' @param se.fit logical indicating whether approximate standard errors are to
 #'   be returned. Defaults to \code{FALSE}.
 #' @param ... not used. Supplying any argument here is an error, so that a
-#'   misspelt \code{type} or \code{cov_type} is reported rather than
+#'   misspelled \code{type} or \code{cov_type} is reported rather than
 #'   silently ignored.
 #'
 #' @details
@@ -420,7 +420,7 @@ compute_mahalanobis_residuals <- function(object) {
 #'   and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
 #'   Defaults to \code{"working"}.
 #' @param ... not used. Supplying any argument here is an error, so that a
-#'   misspelt \code{type} is reported rather than silently ignored.
+#'   misspelled \code{type} is reported rather than silently ignored.
 #'
 #' @details
 #' Pearson residuals are computed as

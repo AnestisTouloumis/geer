@@ -72,7 +72,7 @@ test_that("scope factor helper handles NULL, formula, and list scopes", {
 })
 
 
-test_that("step-path initialiser stores the initial model state", {
+test_that("step-path initializer stores the initial model state", {
   out <- .step_p_init_models(fit_resp_full_indep, cov_type = "robust", steps = 3)
   expect_identical(out$steps, 3L)
   expect_length(out$models, 4L)

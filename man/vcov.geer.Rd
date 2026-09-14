@@ -19,7 +19,7 @@ estimator
 (\code{"naive"}). Defaults to \code{"bias-corrected"}.}
 
 \item{...}{not used. Supplying any argument here is an error, so that a
-misspelt \code{cov_type} is reported rather than silently ignored.}
+misspelled \code{cov_type} is reported rather than silently ignored.}
 }
 \value{
 A square numeric matrix of estimated covariances between regression

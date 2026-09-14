@@ -36,7 +36,7 @@ model-based or naive estimator (\code{"naive"}). Defaults to
 be returned. Defaults to \code{FALSE}.}
 
 \item{...}{not used. Supplying any argument here is an error, so that a
-misspelt \code{type} or \code{cov_type} is reported rather than
+misspelled \code{type} or \code{cov_type} is reported rather than
 silently ignored.}
 }
 \value{

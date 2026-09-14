@@ -89,7 +89,7 @@ carries no information of its own.
 
 Dotted grid lines mark the boundaries between clusters, which makes it
 possible to see how many clusters have residuals of a common sign; this is
-the pattern that drives the statistic downwards under the natural ordering.
+the pattern that drives the statistic downward under the natural ordering.
 Cluster boundaries are only interpretable when the sequence is ordered
 naturally, since any other ordering interleaves the clusters, and a warning
 is issued if they are requested for such an ordering.
