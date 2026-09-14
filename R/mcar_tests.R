@@ -58,13 +58,22 @@
 #' automatically when the data fall in that special bivariate monotone case
 #' and the corresponding Little-statistic identity is reproduced to numerical
 #' tolerance. If the case is detected but the identity is not reproduced, a
-#' warning is issued and the asymptotic chi-squared reference is used instead;
-#' this indicates a numerical problem rather than an inapplicable reference.
+#' warning is issued and the asymptotic chi-squared reference is used instead.
+#' The identity is checked against the statistic obtained from the EM
+#' estimates, so it is sensitive to \code{tol}: at the default the two agree
+#' to well within the comparison tolerance, whereas a substantially looser
+#' \code{tol} can prevent the identity from being reproduced and therefore
+#' cost the exact reference. A warning here indicates insufficient convergence
+#' rather than an inapplicable reference.
 #' For all other missing-data patterns the large-sample chi-squared reference
 #' is used silently, with no warning. Little also derives a more general
 #' small-sample distribution for monotone patterns as a sum of transformed
 #' independent F variables; that nonstandard reference distribution is not
 #' evaluated here.
+#'
+#' Rows with no observed values belong to no missing-data pattern in Little's
+#' construction. They are removed, with a warning, before the statistic and
+#' the sample size \eqn{n} are computed.
 #'
 #' For a \code{geer} fit, only the repeated response is tested. The function
 #' reconstructs a subject-by-repeated-measure matrix from \code{id} and
@@ -589,6 +598,7 @@ mcar_logistic_test <- function(object,
     check.names = FALSE
   )
 
+  beta <- stats::coef(missing_fit)
   covariance <- stats::vcov(missing_fit, cov_type = cov_type)
 
   covariate_map <- if (length(safe_names)) {

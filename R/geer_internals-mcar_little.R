@@ -14,6 +14,22 @@ validate_mcar_little_matrix <- function(x) {
   }
 
   storage.mode(x) <- "double"
+  ## Little (1988) partitions the cases into missing-data patterns S_j, each
+  ## with p_j >= 1 observed variables. A row with no observed variable belongs
+  ## to no such pattern: it contributes nothing to d^2 or to its degrees of
+  ## freedom, yet it would still enter n and so inflate the degrees-of-freedom
+  ## correction n / (n - 1) and the EM denominators. Such rows are removed.
+  empty_rows <- rowSums(!is.na(x)) == 0L
+  if (any(empty_rows)) {
+    warning(
+      sprintf(
+        "dropped %d row(s) with no observed values from Little's MCAR test",
+        sum(empty_rows)
+      ),
+      call. = FALSE
+    )
+    x <- x[!empty_rows, , drop = FALSE]
+  }
   if (nrow(x) < 2L) {
     stop("Little's MCAR test requires at least two rows", call. = FALSE)
   }
@@ -139,25 +155,29 @@ mcar_little_calculate <- function(x, maxit, tol) {
   statistic <- 0
   df_terms <- 0L
 
+  ## Rows with no observed values are removed during validation, so every
+  ## pattern here has at least one observed variable.
   for (rows in pattern_rows) {
     observed <- which(!missing[rows[1L], ])
-    k <- length(observed)
-    df_terms <- df_terms + k
-    if (!k) next
+    df_terms <- df_terms + length(observed)
 
     pattern_mean <- colMeans(x[rows, observed, drop = FALSE])
     difference <- pattern_mean - em$mu[observed]
     sigma_observed <- sigma_corrected[observed, observed, drop = FALSE]
-    solved <- tryCatch(
-      solve(sigma_observed, difference),
-      error = function(e) {
-        stop(
-          "a covariance submatrix required for Little's MCAR statistic is singular",
-          call. = FALSE
-        )
-      }
-    )
-    statistic <- statistic + length(rows) * as.numeric(crossprod(difference, solved))
+    ## The contribution of a pattern is a quadratic form in the positive
+    ## definite submatrix of the degrees-of-freedom-corrected covariance, so a
+    ## Cholesky factor both solves the system and certifies the submatrix. The
+    ## squared norm of the forward-solved difference is then nonnegative by
+    ## construction, and the total needs no clamping.
+    chol_factor <- tryCatch(chol(sigma_observed), error = function(e) NULL)
+    if (is.null(chol_factor)) {
+      stop(
+        "a covariance submatrix required for Little's MCAR statistic is not positive definite",
+        call. = FALSE
+      )
+    }
+    solved <- forwardsolve(t(chol_factor), difference)
+    statistic <- statistic + length(rows) * sum(solved^2)
   }
 
   df <- as.integer(df_terms - p)
@@ -168,7 +188,7 @@ mcar_little_calculate <- function(x, maxit, tol) {
     )
   }
 
-  statistic <- max(as.numeric(statistic), 0)
+  statistic <- as.numeric(statistic)
   asymptotic_p_value <- stats::pchisq(statistic, df = df, lower.tail = FALSE)
   bivariate_exact <- mcar_little_bivariate_exact(x)
 

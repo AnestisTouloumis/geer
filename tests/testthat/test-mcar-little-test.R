@@ -228,3 +228,40 @@ test_that("mcar_little_test validates inputs", {
     "'arg' should be one of"
   )
 })
+
+
+test_that("rows with no observed values are removed before testing", {
+  ## Little's construction assigns every case to a pattern with at least one
+  ## observed variable, so an all-missing row is not a pattern; it must not
+  ## enter n, and hence must not change the degrees-of-freedom correction.
+  set.seed(11)
+  x <- cbind(rnorm(40), rnorm(40))
+  x[1:8, 2L] <- NA
+  augmented <- rbind(x, c(NA_real_, NA_real_), c(NA_real_, NA_real_))
+
+  reference <- mcar_little_test(x)
+  expect_warning(
+    out <- mcar_little_test(augmented),
+    "no observed values"
+  )
+  expect_identical(out$n, reference$n)
+  expect_equal(
+    unname(out$statistic),
+    unname(reference$statistic),
+    tolerance = 1e-10
+  )
+  expect_identical(out$missing.patterns, reference$missing.patterns)
+})
+
+
+test_that("the statistic is nonnegative by construction", {
+  ## The Cholesky route makes each pattern contribution a squared norm, so no
+  ## clamping is needed and a non-positive-definite submatrix is reported.
+  set.seed(12)
+  x <- cbind(rnorm(30), rnorm(30), rnorm(30))
+  x[1:6, 2L] <- NA
+  x[7:12, 3L] <- NA
+  out <- mcar_little_test(x)
+  expect_gte(unname(out$statistic), 0)
+  expect_true(is.finite(unname(out$statistic)))
+})

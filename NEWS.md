@@ -1,5 +1,14 @@
 # geer 0.1.1
 
+- `mcar_little_test()` now follows Little (1988) exactly in two further
+  respects. Rows with no observed values belong to no missing-data pattern in
+  his construction; they are removed with a warning rather than being counted
+  in `n`, where they inflated the degrees-of-freedom correction and the EM
+  denominators. Each pattern contribution is evaluated through a Cholesky
+  factorization, so the statistic is nonnegative by construction and is no
+  longer clamped at zero; a covariance submatrix that is not positive definite
+  is reported instead.
+
 - `geecriteria()` now evaluates only the criteria named in `criteria`, so
   restricting the selection also avoids the work those criteria would require:
   the working-independence refit behind `QICHH`, the per-cluster loop behind
