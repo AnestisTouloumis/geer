@@ -24,7 +24,7 @@ mcar_normal_initial_parameters <- function(x) {
     attempts <- attempts + 1L
     if (attempts > 12L) {
       stop(
-        "initial covariance matrix for Little's MCAR test is singular; check for collinear or nearly constant variables",
+        "initial covariance matrix for normal-theory EM estimation is singular; check for collinear or nearly constant variables",
         call. = FALSE
       )
     }
@@ -75,7 +75,7 @@ mcar_normal_em <- function(x, maxit, tol) {
         solve(sigma_oo),
         error = function(e) {
           stop(
-            "the observed-data covariance matrix became singular while fitting Little's MCAR test",
+            "the observed-data covariance matrix became singular during normal-theory EM estimation",
             call. = FALSE
           )
         }
@@ -119,7 +119,7 @@ mcar_normal_em <- function(x, maxit, tol) {
     sigma <- sigma_new
 
     if (!all(is.finite(mu)) || !all(is.finite(sigma))) {
-      stop("maximum-likelihood estimation for Little's MCAR test produced non-finite values", call. = FALSE)
+      stop("normal-theory maximum-likelihood estimation produced non-finite values", call. = FALSE)
     }
 
     if (difference <= tol * parameter_scale) {
@@ -130,7 +130,7 @@ mcar_normal_em <- function(x, maxit, tol) {
 
   if (!converged) {
     warning(
-      sprintf("Little's MCAR test EM algorithm did not converge within %d iterations", maxit),
+      sprintf("the EM algorithm for normal-theory maximum-likelihood estimation did not converge within %d iterations", maxit),
       call. = FALSE
     )
   }
@@ -139,7 +139,7 @@ mcar_normal_em <- function(x, maxit, tol) {
   scale <- max(1, max(abs(eigenvalues)))
   if (any(eigenvalues <= sqrt(.Machine$double.eps) * scale)) {
     stop(
-      "the maximum-likelihood covariance matrix for Little's MCAR test is singular or nearly singular",
+      "the normal-theory maximum-likelihood covariance matrix is singular or nearly singular",
       call. = FALSE
     )
   }
@@ -176,7 +176,7 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
     eval(mcall, envir = eval_env, enclos = formula_env),
     error = function(e) {
       stop(
-        sprintf("could not reconstruct the original data for Little's MCAR test: %s", conditionMessage(e)),
+        sprintf("could not reconstruct the original data for the MCAR diagnostic: %s", conditionMessage(e)),
         call. = FALSE
       )
     }
@@ -185,17 +185,17 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
   response <- stats::model.response(model_frame)
   if (is.matrix(response) || is.data.frame(response)) {
     stop(
-      "Little's MCAR test for a 'geer' object currently requires a univariate response at each repeated measurement",
+      "MCAR diagnostics for a 'geer' object currently require a univariate response at each repeated measurement",
       call. = FALSE
     )
   }
   if (!is.numeric(response)) {
-    stop("the response used for Little's MCAR test must be numeric", call. = FALSE)
+    stop("the response used for the MCAR diagnostic must be numeric", call. = FALSE)
   }
 
   id_raw <- stats::model.extract(model_frame, "id")
   if (is.null(id_raw)) stop("'id' could not be recovered from the fitted model", call. = FALSE)
-  if (anyNA(id_raw)) stop("'id' cannot contain missing values for Little's MCAR test", call. = FALSE)
+  if (anyNA(id_raw)) stop("'id' cannot contain missing values for the MCAR diagnostic", call. = FALSE)
   id <- as.numeric(factor(id_raw))
 
   repeated_raw <- stats::model.extract(model_frame, "repeated")
@@ -204,7 +204,7 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
     repeated_labels <- as.character(seq_len(max(repeated)))
   } else {
     if (anyNA(repeated_raw)) {
-      stop("'repeated' cannot contain missing values for Little's MCAR test", call. = FALSE)
+      stop("'repeated' cannot contain missing values for the MCAR diagnostic", call. = FALSE)
     }
     repeated_factor <- factor(repeated_raw)
     repeated <- as.numeric(repeated_factor)

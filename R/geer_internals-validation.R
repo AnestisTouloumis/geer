@@ -57,6 +57,20 @@ geer_direction_choices <- c(
   "backward", "forward", "both"
 )
 
+geer_mcar_reference_choices <- c(
+  "auto", "asymptotic"
+)
+
+geer_mcar_orstr_choices <- setdiff(geer_orstr_choices, "fixed")
+
+geer_mcar_homoscedasticity_method_choices <- c(
+  "auto", "nonparametric", "hawkins"
+)
+
+geer_mcar_imputation_choices <- c(
+  "distribution-free", "normal"
+)
+
 geer_integer_tol <- sqrt(.Machine$double.eps)
 
 
@@ -86,6 +100,21 @@ check_nonnegative_integerish <- function(x, name) {
   check_single_numeric(x, name)
   if (x < 0 || abs(x - round(x)) > geer_integer_tol) {
     stop(sprintf("'%s' must be a single non-negative integer", name), call. = FALSE)
+  }
+  as.integer(round(x))
+}
+
+
+check_integer_at_least <- function(x, name, lower = 1L) {
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x) ||
+      x < lower || x > .Machine$integer.max ||
+      abs(x - round(x)) > geer_integer_tol) {
+    message_text <- if (lower == 1L) {
+      "'%s' must be a positive integer"
+    } else {
+      paste0("'%s' must be an integer greater than or equal to ", lower)
+    }
+    stop(sprintf(message_text, name), call. = FALSE)
   }
   as.integer(round(x))
 }

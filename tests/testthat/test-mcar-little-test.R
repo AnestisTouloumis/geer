@@ -216,6 +216,14 @@ test_that("mcar_little_test validates inputs", {
     "positive integer"
   )
   expect_error(
+    mcar_little_test(matrix(1:12, ncol = 2), maxit = "10"),
+    "'maxit' must be a positive integer"
+  )
+  expect_error(
+    mcar_little_test(matrix(1:12, ncol = 2), maxit = 1e12),
+    "'maxit' must be a positive integer"
+  )
+  expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), tol = 0),
     "positive finite"
   )

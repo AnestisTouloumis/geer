@@ -104,19 +104,30 @@
   Little recommends the procedure primarily for quantitative variables.
 
 * Added `mcar_homoscedasticity_test()` implementing the Jamshidian-Jalal
-  (2010) MCAR screening framework. Cases are grouped by their original
-  missingness pattern, completed with either distribution-free residual
-  resampling or conditional normal imputation, and assessed using the modified
-  Hawkins normality/homoscedasticity test and/or the nonparametric k-sample
+  (2010) MCAR screening framework as implemented in `MissMech` (Jamshidian,
+  Jalal and Jansen, 2014). Cases are grouped by their original missingness
+  pattern, completed with either distribution-free residual resampling or
+  conditional normal imputation, and assessed using the modified Hawkins
+  normality/homoscedasticity test and/or the nonparametric k-sample
   Anderson-Darling test. The default `method = "auto"` follows the published
   diagnostic logic, while small pattern groups are omitted using the same
-  seven-case default threshold as the associated `MissMech` implementation.
-  The function works with fitted `geer` objects or numeric wide-format data and
-  is documented as a screening diagnostic that does not condition on the
-  fitted GEE regression structure. Documentation also notes the common-population
-  assumption and that the reported result is based on a single imputation;
-  multiple imputation is treated as a sensitivity diagnostic in the original
-  framework.
+  seven-case default threshold as `MissMech`. The function works with fitted
+  `geer` objects or numeric wide-format data and is documented as a screening
+  diagnostic that does not condition on the fitted GEE regression structure.
+  `n_imputations` repeats the tests on several completed data sets and returns
+  per-imputation statistics, p-values, pattern-specific Neyman p-values and
+  Anderson-Darling contributions for the exploratory assessment described by
+  Jamshidian and Jalal (2010); the primary result is based on the first
+  imputation. `imputed_data` accepts a completed data set from another
+  imputation method, which also allows a test of covariance homogeneity across
+  known groups in complete data. The Anderson-Darling p-value uses the
+  simulated reference quantiles and interpolation of the `kSamples` package
+  rather than the five-point table of Scholz and Stephens (1987), so p-values
+  can differ from `MissMech`, particularly below 0.01. Simulated Neyman
+  p-values use the `(1 + b) / (nrep + 1)` form and the simulated null
+  distribution is reused across imputations. A warning is issued when
+  normal-theory imputation is requested for the nonparametric test, whose size
+  it can inflate for nonnormal data.
 
 * Revised `mcar_logistic_test()` to use a Ridout-style longitudinal risk-set
   formulation. At occasion `t`, the missingness indicator is modeled only when

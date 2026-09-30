@@ -9,7 +9,7 @@ mcar_little_test(
   data = NULL,
   maxit = 1000L,
   tol = 1e-08,
-  reference = c("auto", "asymptotic")
+  reference = geer_mcar_reference_choices
 )
 }
 \arguments{

@@ -173,12 +173,14 @@ force the chi-squared reference. The procedure is intended primarily for
 quantitative variables and warns when binary variables are detected.
 
 A distribution-robust screening diagnostic based on Jamshidian and Jalal
-(2010) is also available:
+(2010), following the MissMech implementation of Jamshidian, Jalal and Jansen
+(2014), is also available:
 
 ``` r
 mcar_homoscedasticity_test(fit)
 mcar_homoscedasticity_test(fit, method = "nonparametric")
 mcar_homoscedasticity_test(fit, method = "hawkins", imputation = "normal")
+mcar_homoscedasticity_test(fit, n_imputations = 20)
 ```
 
 Cases are grouped by their original missingness pattern and the incomplete
@@ -187,13 +189,16 @@ responses are imputed before covariance homogeneity is assessed. The default
 and uses the nonparametric k-sample Anderson-Darling component to distinguish
 nonnormality from covariance heterogeneity when Hawkins rejects.
 Distribution-free residual-resampling imputation is the default when there are
-at least 10 complete cases and at least `2 * p` complete cases; otherwise the
-function warns and falls back to conditional normal imputation. Patterns with
-fewer than seven cases are omitted by default. The diagnostic assumes that,
-apart from missingness patterns, cases arise from a common population, so known
-groups with genuinely different covariance matrices can trigger rejection even
-under MCAR. The reported test uses one imputed data set; multiple imputation is
-best treated as a sensitivity diagnostic for imputation variability. This test
+at least 10 complete cases and at least `2 * p` complete cases among the rows
+retained after omitting small patterns; otherwise the function warns and falls
+back to conditional normal imputation. Patterns with fewer than seven cases
+are omitted by default. The diagnostic assumes that, apart from missingness
+patterns, cases arise from a common population, so known groups with genuinely
+different covariance matrices can trigger rejection even under MCAR. The
+reported test is based on the first imputed data set; `n_imputations` repeats
+the tests on further imputations so that the variability of the p-values and
+the pattern-specific contributions can be examined, and `imputed_data` accepts
+a completed matrix or data frame from another imputation method. This test
 ignores the fitted regression structure and is therefore a screening device
 that complements, rather than replaces, the regression-based MCAR diagnostic
 below.

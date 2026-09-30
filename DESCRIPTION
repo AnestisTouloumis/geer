@@ -2,12 +2,12 @@ Package: geer
 Type: Package
 Title: Bias-Reduced and Penalized Generalized Estimating Equations
 Version: 0.1.1
-Authors@R: 
+Authors@R: c(
     person(given = "Anestis",
            family = "Touloumis",
            role = c("aut", "cre"),
            email = "A.Touloumis@brighton.ac.uk",
-           comment = c(ORCID = "0000-0002-5965-1639"))
+           comment = c(ORCID = "0000-0002-5965-1639")))
 Description: Fits marginal regression models for repeated or clustered
     responses using generalized estimating equations (GEE). Provides ordinary
     GEE estimators, bias-reduced and bias-corrected GEE estimators, and

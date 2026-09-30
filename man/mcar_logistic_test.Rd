@@ -8,7 +8,7 @@ mcar_logistic_test(
   object,
   formula = NULL,
   data = NULL,
-  orstr = c("independence", "exchangeable", "unstructured"),
+  orstr = geer_mcar_orstr_choices,
   test = geer_test_choices,
   cov_type = geer_cov_type_choices,
   pmethod = geer_pmethod_choices,

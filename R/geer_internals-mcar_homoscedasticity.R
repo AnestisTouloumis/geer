@@ -23,6 +23,7 @@ validate_mcar_homoscedasticity_matrix <- function(x) {
   }
 
   storage.mode(x) <- "double"
+  original_nrow <- nrow(x)
   if (nrow(x) < 2L) {
     stop(
       "the Jamshidian-Jalal diagnostic requires at least two rows",
@@ -42,6 +43,7 @@ validate_mcar_homoscedasticity_matrix <- function(x) {
     )
   }
 
+  row_index <- seq_len(original_nrow)
   all_missing <- rowSums(!is.na(x)) == 0L
   if (any(all_missing)) {
     warning(
@@ -52,6 +54,7 @@ validate_mcar_homoscedasticity_matrix <- function(x) {
       call. = FALSE
     )
     x <- x[!all_missing, , drop = FALSE]
+    row_index <- row_index[!all_missing]
   }
 
   if (nrow(x) < 2L) {
@@ -78,7 +81,53 @@ validate_mcar_homoscedasticity_matrix <- function(x) {
     )
   }
 
+  attr(x, "row.index") <- row_index
+  attr(x, "original.nrow") <- original_nrow
   x
+}
+
+validate_mcar_homoscedasticity_imputed <- function(imputed_data, x) {
+  if (is.data.frame(imputed_data)) {
+    numeric_cols <- vapply(imputed_data, is.numeric, logical(1))
+    if (!all(numeric_cols)) {
+      stop("all variables in 'imputed_data' must be numeric", call. = FALSE)
+    }
+    imputed_data <- as.matrix(imputed_data)
+  } else if (!is.matrix(imputed_data) || !is.numeric(imputed_data)) {
+    stop("'imputed_data' must be a numeric matrix or numeric data frame", call. = FALSE)
+  }
+  storage.mode(imputed_data) <- "double"
+
+  original_nrow <- attr(x, "original.nrow")
+  if (nrow(imputed_data) != original_nrow || ncol(imputed_data) != ncol(x)) {
+    stop(
+      sprintf(
+        paste0(
+          "'imputed_data' must have the same dimensions as the incomplete data: ",
+          "%d rows and %d columns"
+        ),
+        original_nrow,
+        ncol(x)
+      ),
+      call. = FALSE
+    )
+  }
+  if (anyNA(imputed_data) || any(!is.finite(imputed_data))) {
+    stop("'imputed_data' cannot contain missing or non-finite values", call. = FALSE)
+  }
+
+  imputed_data <- imputed_data[attr(x, "row.index"), , drop = FALSE]
+  observed <- !is.na(x)
+  discrepancy <- abs(imputed_data[observed] - x[observed])
+  scale <- max(1, abs(x[observed]))
+  if (any(discrepancy > sqrt(.Machine$double.eps) * scale)) {
+    stop(
+      "'imputed_data' must reproduce the observed values of the incomplete data",
+      call. = FALSE
+    )
+  }
+  dimnames(imputed_data) <- dimnames(x)
+  imputed_data
 }
 
 jj_missingness_key <- function(missing) {
@@ -152,6 +201,7 @@ jj_pattern_information <- function(x, min_pattern_size) {
 
   list(
     x = x_used,
+    rows = which(keep),
     group = group,
     group_counts = group_counts,
     pattern_matrix = pattern_matrix,
@@ -190,76 +240,9 @@ jj_covariance_sqrt <- function(sigma, context) {
   diag(sqrt(values), nrow = length(values)) %*% t(eig$vectors)
 }
 
-jj_normal_impute <- function(x, maxit, tol) {
-  em <- mcar_normal_em(x, maxit = maxit, tol = tol)
-  completed <- x
-  missing <- is.na(x)
-  pattern_key <- jj_missingness_key(missing)
-  pattern_rows <- split(seq_len(nrow(x)), pattern_key)
-
-  for (rows in pattern_rows) {
-    missing_cols <- which(missing[rows[1L], ])
-    if (!length(missing_cols)) next
-
-    observed <- which(!missing[rows[1L], ])
-    if (!length(observed)) {
-      stop(
-        "rows with no observed values cannot be imputed by the Jamshidian-Jalal diagnostic",
-        call. = FALSE
-      )
-    }
-
-    sigma_oo <- em$sigma[observed, observed, drop = FALSE]
-    sigma_mo <- em$sigma[missing_cols, observed, drop = FALSE]
-    regression <- sigma_mo %*% jj_solve(
-      sigma_oo,
-      "performing normal-theory imputation"
-    )
-    conditional_cov <- em$sigma[missing_cols, missing_cols, drop = FALSE] -
-      regression %*% em$sigma[observed, missing_cols, drop = FALSE]
-    conditional_cov <- (conditional_cov + t(conditional_cov)) / 2
-
-    observed_block <- x[rows, observed, drop = FALSE]
-    centered <- sweep(observed_block, 2L, em$mu[observed], FUN = "-")
-    conditional_mean <- sweep(
-      centered %*% t(regression),
-      2L,
-      em$mu[missing_cols],
-      FUN = "+"
-    )
-
-    root <- jj_covariance_sqrt(
-      conditional_cov,
-      "performing normal-theory imputation"
-    )
-    innovations <- matrix(
-      stats::rnorm(length(rows) * length(missing_cols)),
-      nrow = length(rows),
-      ncol = length(missing_cols)
-    ) %*% root
-    completed[rows, missing_cols] <- conditional_mean + innovations
-  }
-
-  list(
-    data = completed,
-    mu = em$mu,
-    sigma = em$sigma,
-    iterations = em$iterations,
-    converged = em$converged
-  )
-}
-
-jj_distribution_free_impute <- function(x) {
-  complete <- stats::complete.cases(x)
-  complete_data <- x[complete, , drop = FALSE]
+jj_complete_case_moments <- function(x) {
+  complete_data <- x[stats::complete.cases(x), , drop = FALSE]
   n_complete <- nrow(complete_data)
-
-  if (n_complete < 2L) {
-    stop(
-      "distribution-free imputation requires at least two complete cases",
-      call. = FALSE
-    )
-  }
 
   mu <- colMeans(complete_data)
   sigma <- stats::cov(complete_data)
@@ -277,13 +260,124 @@ jj_distribution_free_impute <- function(x) {
 
   residuals <- sweep(complete_data, 2L, mu, FUN = "-") *
     sqrt(n_complete / (n_complete - 1))
+
+  list(mu = mu, sigma = sigma, residuals = residuals)
+}
+
+jj_imputation_setup <- function(x, imputation, maxit, tol) {
+  p <- ncol(x)
+  n_complete <- sum(stats::complete.cases(x))
+  requested <- imputation
+
+  # Distribution-free imputation requires max(10, 2 * p) complete cases, as in
+  # the MissMech code and its warning message. Jamshidian, Jalal and Jansen
+  # (2014, Sections 2.2 and 3.1) print min(10, 2 * p), which contradicts the
+  # MissMech code and would admit as few as four complete cases when p = 2.
+  if (identical(imputation, "distribution-free") &&
+      (n_complete < 10L || n_complete < 2L * p)) {
+    warning(
+      sprintf(
+        paste0(
+          "distribution-free imputation requires at least 10 complete cases ",
+          "and at least 2*p complete cases; only %d complete cases are available ",
+          "among the retained rows, ",
+          "so normal-theory imputation is used"
+        ),
+        n_complete
+      ),
+      call. = FALSE
+    )
+    imputation <- "normal"
+  }
+
+  if (identical(imputation, "distribution-free")) {
+    moments <- jj_complete_case_moments(x)
+    out <- list(
+      mu = moments$mu,
+      sigma = moments$sigma,
+      residuals = moments$residuals,
+      iterations = NA_integer_,
+      converged = NA
+    )
+  } else {
+    em <- mcar_normal_em(x, maxit = maxit, tol = tol)
+    out <- list(
+      mu = em$mu,
+      sigma = em$sigma,
+      residuals = NULL,
+      iterations = em$iterations,
+      converged = em$converged
+    )
+  }
+
+  out$requested <- requested
+  out$used <- imputation
+  out$n_complete <- n_complete
+  out
+}
+
+jj_normal_impute <- function(x, setup) {
+  completed <- x
+  missing <- is.na(x)
+  pattern_key <- jj_missingness_key(missing)
+  pattern_rows <- split(seq_len(nrow(x)), pattern_key)
+
+  for (rows in pattern_rows) {
+    missing_cols <- which(missing[rows[1L], ])
+    if (!length(missing_cols)) next
+
+    observed <- which(!missing[rows[1L], ])
+    if (!length(observed)) {
+      stop(
+        "rows with no observed values cannot be imputed by the Jamshidian-Jalal diagnostic",
+        call. = FALSE
+      )
+    }
+
+    sigma_oo <- setup$sigma[observed, observed, drop = FALSE]
+    sigma_mo <- setup$sigma[missing_cols, observed, drop = FALSE]
+    regression <- sigma_mo %*% jj_solve(
+      sigma_oo,
+      "performing normal-theory imputation"
+    )
+    conditional_cov <- setup$sigma[missing_cols, missing_cols, drop = FALSE] -
+      regression %*% setup$sigma[observed, missing_cols, drop = FALSE]
+    conditional_cov <- (conditional_cov + t(conditional_cov)) / 2
+
+    observed_block <- x[rows, observed, drop = FALSE]
+    centered <- sweep(observed_block, 2L, setup$mu[observed], FUN = "-")
+    conditional_mean <- sweep(
+      centered %*% t(regression),
+      2L,
+      setup$mu[missing_cols],
+      FUN = "+"
+    )
+
+    root <- jj_covariance_sqrt(
+      conditional_cov,
+      "performing normal-theory imputation"
+    )
+    innovations <- matrix(
+      stats::rnorm(length(rows) * length(missing_cols)),
+      nrow = length(rows),
+      ncol = length(missing_cols)
+    ) %*% root
+    completed[rows, missing_cols] <- conditional_mean + innovations
+  }
+
+  completed
+}
+
+jj_distribution_free_impute <- function(x, setup) {
+  complete <- stats::complete.cases(x)
+  n_complete <- nrow(setup$residuals)
   incomplete_rows <- which(!complete)
   sampled <- sample.int(
     n_complete,
     size = length(incomplete_rows),
     replace = TRUE
   )
-  sampled_residuals <- residuals[sampled, , drop = FALSE]
+  sampled_residuals <- setup$residuals[sampled, , drop = FALSE]
   residual_position <- stats::setNames(
     seq_along(incomplete_rows),
     as.character(incomplete_rows)
@@ -305,15 +399,15 @@ jj_distribution_free_impute <- function(x) {
       )
     }
 
-    s_oo <- sigma[observed, observed, drop = FALSE]
-    a <- sigma[missing_cols, observed, drop = FALSE] %*%
+    s_oo <- setup$sigma[observed, observed, drop = FALSE]
+    a <- setup$sigma[missing_cols, observed, drop = FALSE] %*%
       jj_solve(s_oo, "performing distribution-free imputation")
 
     observed_block <- x[rows, observed, drop = FALSE]
     predicted <- sweep(
-      sweep(observed_block, 2L, mu[observed], FUN = "-") %*% t(a),
+      sweep(observed_block, 2L, setup$mu[observed], FUN = "-") %*% t(a),
       2L,
-      mu[missing_cols],
+      setup$mu[missing_cols],
       FUN = "+"
     )
 
@@ -328,85 +422,68 @@ jj_distribution_free_impute <- function(x) {
     completed[rows, missing_cols] <- predicted + innovation
   }
 
-  list(
-    data = completed,
-    mu = mu,
-    sigma = sigma,
-    iterations = NA_integer_,
-    converged = NA
-  )
+  completed
 }
 
-jj_impute <- function(x, imputation, maxit, tol) {
-  p <- ncol(x)
-  n_complete <- sum(stats::complete.cases(x))
-  requested <- imputation
-
-  if (identical(imputation, "distribution-free") &&
-      (n_complete < 10L || n_complete < 2L * p)) {
-    warning(
-      sprintf(
-        paste0(
-          "distribution-free imputation requires at least 10 complete cases ",
-          "and at least 2*p complete cases; only %d complete cases are available, ",
-          "so normal-theory imputation is used"
-        ),
-        n_complete
-      ),
-      call. = FALSE
-    )
-    imputation <- "normal"
-  }
-
-  out <- if (identical(imputation, "distribution-free")) {
-    jj_distribution_free_impute(x)
+jj_draw_imputation <- function(x, setup) {
+  completed <- if (identical(setup$used, "distribution-free")) {
+    jj_distribution_free_impute(x, setup)
   } else {
-    jj_normal_impute(x, maxit = maxit, tol = tol)
+    jj_normal_impute(x, setup)
   }
-
-  out$requested <- requested
-  out$used <- imputation
-  out$n_complete <- n_complete
-  out
+  if (anyNA(completed) || any(!is.finite(completed))) {
+    stop("imputation produced missing or non-finite completed values", call. = FALSE)
+  }
+  completed
 }
 
-jj_legendre_values <- function(x) {
-  z <- 2 * x - 1
-  p0 <- rep(1, length(x))
+jj_neyman_statistics <- function(u) {
+  z <- 2 * u - 1
   p1 <- z
-  p2 <- (3 * z * p1 - p0) / 2
+  p2 <- (3 * z * p1 - 1) / 2
   p3 <- (5 * z * p2 - 2 * p1) / 3
   p4 <- (7 * z * p3 - 3 * p2) / 4
 
-  cbind(
-    sqrt(3) * p1,
-    sqrt(5) * p2,
-    sqrt(7) * p3,
-    3 * p4
-  )
+  (
+    colSums(sqrt(3) * p1)^2 +
+      colSums(sqrt(5) * p2)^2 +
+      colSums(sqrt(7) * p3)^2 +
+      colSums(3 * p4)^2
+  ) / nrow(u)
 }
 
 jj_neyman_statistic <- function(x) {
-  polynomials <- jj_legendre_values(x)
-  sum(colSums(polynomials)^2) / length(x)
+  jj_neyman_statistics(matrix(x, ncol = 1L))
 }
 
-jj_neyman_p_value <- function(x, nrep, n_min) {
-  statistic <- jj_neyman_statistic(x)
-  n <- length(x)
+jj_neyman_null <- function(n, nrep, block_size = 10000L) {
+  simulated <- numeric(nrep)
+  done <- 0L
+  while (done < nrep) {
+    reps <- min(block_size, nrep - done)
+    u <- matrix(stats::runif(n * reps), nrow = n, ncol = reps)
+    simulated[done + seq_len(reps)] <- jj_neyman_statistics(u)
+    done <- done + reps
+  }
+  simulated
+}
 
-  if (n >= n_min) {
+jj_neyman_nulls <- function(group_counts, nrep, n_min) {
+  lapply(
+    group_counts,
+    function(ni) if (ni < n_min) jj_neyman_null(ni, nrep) else NULL
+  )
+}
+
+jj_neyman_p_value <- function(x, null) {
+  statistic <- jj_neyman_statistic(x)
+
+  if (is.null(null)) {
     p_value <- stats::pchisq(statistic, df = 4, lower.tail = FALSE)
     return(list(statistic = statistic, p.value = p_value, simulated = FALSE))
   }
 
-  simulated <- numeric(nrep)
-  for (i in seq_len(nrep)) {
-    simulated[i] <- jj_neyman_statistic(stats::runif(n))
-  }
-  p_value <- sum(simulated > statistic) / nrep
-  if (p_value == 0) p_value <- 1 / nrep
-
+  p_value <- (1 + sum(null >= statistic)) / (length(null) + 1)
   list(statistic = statistic, p.value = p_value, simulated = TRUE)
 }
 
@@ -414,8 +491,7 @@ jj_hawkins_test <- function(
     completed,
     group,
     group_counts,
-    nrep,
-    n_min,
+    neyman_nulls,
     test_uniformity = TRUE) {
   n <- nrow(completed)
   p <- ncol(completed)
@@ -429,6 +505,12 @@ jj_hawkins_test <- function(
   }
   if (any(group_counts < 2L)) {
     stop("each retained missingness pattern must contain at least two cases", call. = FALSE)
+  }
+  if (test_uniformity && (!is.list(neyman_nulls) || length(neyman_nulls) != g)) {
+    stop(
+      "'neyman_nulls' must be a list with one element per retained missingness pattern",
+      call. = FALSE
+    )
   }
 
   pooled <- matrix(0, nrow = p, ncol = p)
@@ -457,22 +539,22 @@ jj_hawkins_test <- function(
     centered_block <- centered[rows, , drop = FALSE]
     v <- rowSums((centered_block %*% pooled_inverse) * centered_block)
     scaled_v <- ni * v
-    denominator <- p * ((ni - 1) * (n - g) - scaled_v)
 
-    if (any(denominator <= 0)) {
-      tolerance <- sqrt(.Machine$double.eps) *
-        max(1, max(abs(p * (ni - 1) * (n - g))))
-      if (any(denominator < -tolerance)) {
-        stop(
-          paste0(
-            "the Hawkins transformation produced a non-positive denominator; ",
-            "the completed data may be too singular for this diagnostic"
-          ),
-          call. = FALSE
-        )
-      }
-      denominator <- pmax(denominator, .Machine$double.eps)
+    # (ni - 1)(n - g) - ni * v = (ni - 1)(n - g)(1 - u'W^{-1}u), where W is the
+    # pooled within-pattern SSCP matrix and W - uu' is the SSCP matrix with the
+    # case deleted, so the complement is nonnegative and vanishes only when
+    # that deletion leaves a singular pooled covariance matrix.
+    complement <- 1 - scaled_v / ((ni - 1) * (n - g))
+    if (any(complement <= sqrt(.Machine$double.eps))) {
+      stop(
+        paste0(
+          "the Hawkins transformation is undefined because deleting a case ",
+          "leaves a singular pooled covariance matrix"
+        ),
+        call. = FALSE
+      )
     }
+    denominator <- p * ((ni - 1) * (n - g) - scaled_v)
 
     f_i <- ((n - g - p) * scaled_v) / denominator
     a_i <- stats::pf(
@@ -485,7 +567,7 @@ jj_hawkins_test <- function(
     uniform_values[rows] <- a_i
 
     if (test_uniformity) {
-      neyman <- jj_neyman_p_value(a_i, nrep = nrep, n_min = n_min)
+      neyman <- jj_neyman_p_value(a_i, null = neyman_nulls[[i]])
       group_statistics[i] <- neyman$statistic
       group_p_values[i] <- neyman$p.value
       simulated[i] <- neyman$simulated
@@ -516,6 +598,89 @@ jj_hawkins_test <- function(
     simulated = simulated,
     pooled.covariance = pooled,
     group.means = group_means
+  )
+}
+
+# Upper-tail reference quantiles of the standardized k-sample Anderson-Darling
+# statistic A2_kN (Scholz and Stephens, 1987, first version, not adjusted for
+# ties), indexed by m = k - 1. Values are taken from ad.pval() in the kSamples
+# package (Scholz and Zhu, version 1.2-12, GPL (>= 2)), where they were
+# obtained by simulation with 2e6 replications and sample sizes of 500 per
+# group. Rows correspond to jj_ad_probabilities and columns to jj_ad_m_grid.
+jj_ad_m_grid <- c(1, 2, 3, 4, 6, 8, 10, Inf)
+
+jj_ad_probabilities <- c(
+  0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.025, 0.05,
+  0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.925, 0.95,
+  0.975, 0.99, 0.9925, 0.995, 0.9975, 0.999, 0.99925, 0.9995, 0.99975,
+  0.9999, 0.999925, 0.99995, 0.999975, 0.99999
+)
+
+jj_ad_quantiles <- matrix(
+  c(
+     -1.1954,  -1.5806,  -1.8172,  -2.0032,  -2.2526,  -2.4204,  -2.5283,  -4.2649,
+     -1.1786,  -1.5394,  -1.7728,  -1.9426,  -2.1685,  -2.3288,  -2.4374,  -3.8906,
+     -1.1660,  -1.5193,  -1.7462,  -1.9067,  -2.1260,  -2.2818,  -2.3926,  -3.7190,
+     -1.1407,  -1.4659,  -1.6710,  -1.8105,  -2.0048,  -2.1356,  -2.2348,  -3.2905,
+     -1.1253,  -1.4371,  -1.6314,  -1.7619,  -1.9396,  -2.0637,  -2.1521,  -3.0902,
+     -1.0777,  -1.3503,  -1.5102,  -1.6177,  -1.7610,  -1.8537,  -1.9178,  -2.5758,
+     -1.0489,  -1.2984,  -1.4415,  -1.5355,  -1.6625,  -1.7380,  -1.7936,  -2.3263,
+     -0.9978,  -1.2098,  -1.3251,  -1.4007,  -1.4977,  -1.5555,  -1.5941,  -1.9600,
+     -0.9417,  -1.1187,  -1.2090,  -1.2671,  -1.3382,  -1.3790,  -1.4050,  -1.6449,
+     -0.8981,  -1.0491,  -1.1235,  -1.1692,  -1.2249,  -1.2552,  -1.2755,  -1.4395,
+     -0.8598,  -0.9904,  -1.0513,  -1.0879,  -1.1317,  -1.1550,  -1.1694,  -1.2816,
+     -0.7258,  -0.7938,  -0.8188,  -0.8312,  -0.8435,  -0.8471,  -0.8496,  -0.8416,
+     -0.5966,  -0.6170,  -0.6177,  -0.6139,  -0.6073,  -0.5987,  -0.5941,  -0.5244,
+     -0.4572,  -0.4383,  -0.4190,  -0.4033,  -0.3834,  -0.3676,  -0.3587,  -0.2533,
+     -0.2966,  -0.2428,  -0.2078,  -0.1844,  -0.1548,  -0.1346,  -0.1224,   0.0000,
+     -0.1009,  -0.0169,   0.0304,   0.0596,   0.0933,   0.1156,   0.1294,   0.2533,
+      0.1571,   0.2635,   0.3169,   0.3480,   0.3823,   0.4038,   0.4166,   0.5244,
+      0.5357,   0.6496,   0.6992,   0.7246,   0.7528,   0.7683,   0.7771,   0.8416,
+      1.2255,   1.2989,   1.3202,   1.3254,   1.3305,   1.3286,   1.3257,   1.2816,
+      1.5262,   1.5677,   1.5709,   1.5663,   1.5561,   1.5449,   1.5356,   1.4395,
+      1.9633,   1.9430,   1.9190,   1.8975,   1.8641,   1.8389,   1.8212,   1.6449,
+      2.7314,   2.5899,   2.5000,   2.4451,   2.3664,   2.3155,   2.2823,   1.9600,
+      3.7825,   3.4425,   3.2582,   3.1423,   3.0036,   2.9101,   2.8579,   2.3263,
+      4.1241,   3.7160,   3.4984,   3.3651,   3.2003,   3.0928,   3.0311,   2.4324,
+      4.6044,   4.0847,   3.8348,   3.6714,   3.4721,   3.3453,   3.2777,   2.5758,
+      5.4090,   4.7223,   4.4022,   4.1791,   3.9357,   3.7809,   3.6963,   2.8070,
+      6.4954,   5.5823,   5.1456,   4.8657,   4.5506,   4.3275,   4.2228,   3.0902,
+      6.8279,   5.8282,   5.3658,   5.0749,   4.7318,   4.4923,   4.3642,   3.1747,
+      7.2755,   6.1970,   5.6715,   5.3642,   4.9991,   4.7135,   4.5945,   3.2905,
+      8.1885,   6.8537,   6.2077,   5.8499,   5.4246,   5.1137,   4.9555,   3.4808,
+      9.3061,   7.6592,   6.8500,   6.4806,   5.9919,   5.6122,   5.5136,   3.7190,
+      9.6132,   7.9234,   7.1025,   6.6731,   6.1549,   5.8217,   5.7345,   3.7911,
+     10.0989,   8.2395,   7.4326,   6.9567,   6.3908,   6.0110,   5.9566,   3.8906,
+     10.8825,   8.8994,   7.8934,   7.4501,   6.9009,   6.4538,   6.2705,   4.0556,
+     11.8537,   9.5482,   8.5568,   8.0283,   7.4418,   6.9524,   6.6195,   4.2649
+  ),
+  nrow = 35L,
+  ncol = 8L,
+  byrow = TRUE
+)
+
+# Follows kSamples::ad.pval(): the quantiles for each probability are
+# interpolated to 1 / sqrt(m) by smoothing splines (spar = 0.4), and the upper
+# log-odds are then fitted against the interpolated quantiles by a smoothing
+# spline (spar = 0.25), with linear extrapolation beyond the tabulated range.
+jj_ad_p_value <- function(standardized, m) {
+  grid <- 1 / sqrt(jj_ad_m_grid)
+  target <- 1 / sqrt(m)
+  quantiles <- vapply(
+    seq_len(nrow(jj_ad_quantiles)),
+    function(i) {
+      fit <- stats::smooth.spline(grid, jj_ad_quantiles[i, ], spar = 0.4)
+      stats::predict(fit, target)$y
+    },
+    numeric(1)
+  )
+  upper <- 1 - jj_ad_probabilities
+  fit <- stats::smooth.spline(quantiles, stats::qlogis(upper), spar = 0.25)
+  log_odds <- stats::predict(fit, standardized)$y
+
+  list(
+    p.value = stats::plogis(log_odds),
+    extrapolated = standardized < min(quantiles) || standardized > max(quantiles)
   )
 }
 
@@ -586,26 +751,14 @@ jj_anderson_darling_test <- function(x, group, group_counts) {
   }
 
   standardized <- (statistic - (k - 1)) / sqrt(variance)
-
-  alpha_grid <- c(0.25, 0.10, 0.05, 0.025, 0.01)
-  b0 <- c(0.675, 1.281, 1.645, 1.960, 2.326)
-  b1 <- c(-0.245, 0.250, 0.678, 1.149, 1.822)
-  b2 <- c(-0.105, -0.305, -0.362, -0.391, -0.396)
-  logit_alpha <- log((1 - alpha_grid) / alpha_grid)
-  quantiles <- b0 + b1 / sqrt(k - 1) + b2 / (k - 1)
-  interpolation_index <- if (standardized <= quantiles[3L]) 1:4 else 2:5
-  spline_value <- stats::spline(
-    quantiles[interpolation_index],
-    logit_alpha[interpolation_index],
-    xout = standardized
-  )$y
-  p_value <- 1 / (1 + exp(spline_value))
+  reference <- jj_ad_p_value(standardized, m = k - 1)
 
   list(
     statistic = statistic,
     standardized = standardized,
     variance = variance,
-    p.value = p_value,
+    p.value = reference$p.value,
+    extrapolated = reference$extrapolated,
     group.statistics = ad_group
   )
 }
@@ -620,10 +773,6 @@ jj_nonparametric_test <- function(hawkins, group, group_counts) {
 
 jj_with_seed <- function(seed, code) {
   if (is.null(seed)) return(force(code))
-
-  if (length(seed) != 1L || is.na(seed) || !is.finite(seed)) {
-    stop("'seed' must be NULL or a single finite number", call. = FALSE)
-  }
 
   had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
   if (had_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
