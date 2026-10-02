@@ -206,7 +206,7 @@
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
-#' fitted_model_gee <- geewa(
+#' fit_gee <- geewa(
 #'   formula = seizures ~ treatment + lnbaseline + lnage,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
@@ -214,32 +214,32 @@
 #'   corstr = "exchangeable",
 #'   method = "gee"
 #' )
-#' summary(fitted_model_gee, cov_type = "bias-corrected")
+#' summary(fit_gee, cov_type = "bias-corrected")
 #'
-#' fitted_model_brgee_robust <- update(fitted_model_gee, method = "brgee-robust")
-#' summary(fitted_model_brgee_robust, cov_type = "bias-corrected")
+#' fit_brgee_robust <- update(fit_gee, method = "brgee-robust")
+#' summary(fit_brgee_robust, cov_type = "bias-corrected")
 #'
-#' fitted_model_brgee_naive <- update(fitted_model_gee, method = "brgee-naive")
-#' summary(fitted_model_brgee_naive, cov_type = "bias-corrected")
+#' fit_brgee_naive <- update(fit_gee, method = "brgee-naive")
+#' summary(fit_brgee_naive, cov_type = "bias-corrected")
 #'
-#' fitted_model_brgee_empirical <- update(fitted_model_gee, method = "brgee-empirical")
-#' summary(fitted_model_brgee_empirical, cov_type = "bias-corrected")
+#' fit_brgee_empirical <- update(fit_gee, method = "brgee-empirical")
+#' summary(fit_brgee_empirical, cov_type = "bias-corrected")
 #'
-#' fitted_model_bcgee_robust <- update(fitted_model_gee, method = "bcgee-robust")
-#' summary(fitted_model_bcgee_robust, cov_type = "robust")
+#' fit_bcgee_robust <- update(fit_gee, method = "bcgee-robust")
+#' summary(fit_bcgee_robust, cov_type = "robust")
 #'
 #' \donttest{
 #' ## Penalized GEE with custom control
-#' fitted_model_pgee <- geewa(
+#' fit_pgee <- geewa(
 #'   formula = seizures ~ treatment + lnbaseline + lnage,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
+#'   control = geer_control(jeffreys_power = 0.1),
 #'   corstr = "exchangeable",
-#'   method = "pgee-jeffreys",
-#'   control = geer_control(jeffreys_power = 0.1)
+#'   method = "pgee-jeffreys"
 #' )
-#' summary(fitted_model_pgee, cov_type = "robust")
+#' summary(fit_pgee, cov_type = "robust")
 #' }
 #'
 #' @export

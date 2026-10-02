@@ -68,7 +68,7 @@ generics::glance
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
-#' fitmodel <- geewa(
+#' fit <- geewa(
 #'   formula = seizures ~ treatment + lnbaseline + lnage,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
@@ -76,20 +76,20 @@ generics::glance
 #'   corstr = "exchangeable",
 #'   method = "gee"
 #' )
-#' tidy(fitmodel)
-#' tidy(fitmodel, conf.int = TRUE)
-#' tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
-#' tidy(fitmodel, cov_type = "robust")
+#' tidy(fit)
+#' tidy(fit, conf.int = TRUE)
+#' tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+#' tidy(fit, cov_type = "robust")
 #'
 #' data("cerebrovascular", package = "geer")
-#' fitbin <- geewa_binary(
+#' fit_bin <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
 #'   orstr = "exchangeable"
 #' )
-#' tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
+#' tidy(fit_bin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 #'
 #' @export
 tidy.geer <- function(x,
@@ -234,7 +234,7 @@ tidy.geer <- function(x,
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
-#' fitmodel <- geewa(
+#' fit <- geewa(
 #'   formula = seizures ~ treatment + lnbaseline + lnage,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
@@ -242,25 +242,25 @@ tidy.geer <- function(x,
 #'   corstr = "exchangeable",
 #'   method = "gee"
 #' )
-#' glance(fitmodel)
+#' glance(fit)
 #'
 #' data("cerebrovascular", package = "geer")
-#' fitbin <- geewa_binary(
+#' fit_bin <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
 #'   orstr = "exchangeable"
 #' )
-#' glance(fitbin)
+#' glance(fit_bin)
 #'
 #' \donttest{
-#' fitind  <- update(fitmodel, corstr = "independence")
-#' fitar1  <- update(fitmodel, corstr = "ar1")
-#' fitunst <- update(fitmodel, corstr = "unstructured")
+#' fit_ind  <- update(fit, corstr = "independence")
+#' fit_ar1  <- update(fit, corstr = "ar1")
+#' fit_unst <- update(fit, corstr = "unstructured")
 #' do.call(rbind, lapply(
-#'   list(independence = fitind, exchangeable = fitmodel, ar1 = fitar1,
-#'        unstructured = fitunst),
+#'   list(independence = fit_ind, exchangeable = fit, ar1 = fit_ar1,
+#'        unstructured = fit_unst),
 #'   glance
 #' ))[, c("wastr", "QIC", "CIC", "niter")]
 #' }

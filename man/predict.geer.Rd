@@ -111,7 +111,7 @@ head(predict(fit, type = "response"))
 nd <- cerebrovascular[1:5, , drop = FALSE]
 predict(fit, newdata = nd, type = "response")
 
-pred <- predict(fit, type = "response", se.fit = TRUE, cov_type = "robust")
+pred <- predict(fit, type = "response", cov_type = "robust", se.fit = TRUE)
 head(pred$fit)
 head(pred$se.fit)
 

@@ -66,7 +66,7 @@
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #'
-#' fitted_model <- geewa(
+#' fit <- geewa(
 #'   formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
 #'   family = binomial(link = "probit"),
 #'   data = respiratory2,
@@ -76,7 +76,7 @@
 #'   method = "gee"
 #' )
 #' add1(
-#'   fitted_model,
+#'   fit,
 #'   scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
 #'   test = "score"
 #' )
@@ -148,7 +148,7 @@ add1.geer <-
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #'
-#' fitted_model <- geewa(
+#' fit <- geewa(
 #'   formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
 #'   family = binomial(link = "probit"),
 #'   data = respiratory2,
@@ -157,7 +157,7 @@ add1.geer <-
 #'   corstr = "ar1",
 #'   method = "gee"
 #' )
-#' drop1(fitted_model, test = "score")
+#' drop1(fit, test = "score")
 #'
 #' @export
 drop1.geer <- function(object,

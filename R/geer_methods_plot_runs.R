@@ -83,11 +83,11 @@
 #' @examples
 #' data("epilepsy", package = "geer")
 #' fit <- geewa(
-#'   seizures ~ treatment + lnbaseline + lnage,
+#'   formula = seizures ~ treatment + lnbaseline + lnage,
+#'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
 #'   repeated = visit,
-#'   family = poisson(link = "log"),
 #'   corstr = "exchangeable"
 #' )
 #'

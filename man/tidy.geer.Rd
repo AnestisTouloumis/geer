@@ -69,7 +69,7 @@ When \code{exponentiate = TRUE}, only \code{estimate}, \code{conf.low}, and
 }
 \examples{
 data("epilepsy", package = "geer")
-fitmodel <- geewa(
+fit <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
   family = poisson(link = "log"),
   data = epilepsy,
@@ -77,20 +77,20 @@ fitmodel <- geewa(
   corstr = "exchangeable",
   method = "gee"
 )
-tidy(fitmodel)
-tidy(fitmodel, conf.int = TRUE)
-tidy(fitmodel, conf.int = TRUE, exponentiate = TRUE)
-tidy(fitmodel, cov_type = "robust")
+tidy(fit)
+tidy(fit, conf.int = TRUE)
+tidy(fit, conf.int = TRUE, exponentiate = TRUE)
+tidy(fit, cov_type = "robust")
 
 data("cerebrovascular", package = "geer")
-fitbin <- geewa_binary(
+fit_bin <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
   data = cerebrovascular,
   id = id,
   orstr = "exchangeable"
 )
-tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
+tidy(fit_bin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 
 }
 \references{

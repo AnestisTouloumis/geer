@@ -87,7 +87,7 @@
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 #'
-#' full_fit <- geewa_binary(
+#' fit_full <- geewa_binary(
 #'   formula = status ~ (baseline + treatment + gender + visit + age)^2,
 #'   link = "probit",
 #'   data = respiratory2,
@@ -99,25 +99,25 @@
 #'
 #' ## Backward elimination within the initial model terms
 #' step_p(
-#'   full_fit,
+#'   fit_full,
 #'   direction = "backward",
+#'   p_remove = 0.10,
 #'   test = "wald",
-#'   cov_type = "bias-corrected",
-#'   p_remove = 0.10
+#'   cov_type = "bias-corrected"
 #' )
 #'
 #' ## Bidirectional selection with an explicit scope
 #' step_p(
-#'   full_fit,
+#'   fit_full,
 #'   scope = list(
 #'     lower = ~ baseline + treatment,
 #'     upper = ~ (baseline + treatment + gender + visit + age)^2
 #'   ),
 #'   direction = "both",
-#'   test = "score",
-#'   cov_type = "robust",
 #'   p_enter = 0.10,
 #'   p_remove = 0.15,
+#'   test = "score",
+#'   cov_type = "robust",
 #'   steps = 50
 #' )
 #' }

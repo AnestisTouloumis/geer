@@ -55,14 +55,14 @@ summary(fit)
 summary(fit, cov_type = "bias-corrected")
 
 data("cerebrovascular", package = "geer")
-fit2 <- geewa_binary(
+fit_bin <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
   data = cerebrovascular,
   id = id,
   orstr = "exchangeable"
 )
-summary(fit2)
+summary(fit_bin)
 
 }
 \seealso{

@@ -157,11 +157,11 @@ for (i in seq_len(60)) {
 dat <- data.frame(id, time, treatment, y)
 
 fit <- geewa(
-  y ~ treatment + time,
+  formula = y ~ treatment + time,
+  family = gaussian(),
   data = dat,
   id = id,
   repeated = time,
-  family = gaussian(),
   corstr = "independence"
 )
 out <- mcar_logistic_test(fit, formula = ~ treatment, test = "wald")

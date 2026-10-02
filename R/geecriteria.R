@@ -324,7 +324,7 @@
 #'
 #' ## Compare estimation methods
 #' data("cerebrovascular", package = "geer")
-#' fitted_gee <- geewa_binary(
+#' fit_gee <- geewa_binary(
 #'   formula = ecg ~ factor(period) * treatment,
 #'   link = "logit",
 #'   data = cerebrovascular,
@@ -332,8 +332,8 @@
 #'   orstr = "exchangeable",
 #'   method = "gee"
 #' )
-#' fitted_brgee <- update(fitted_gee, method = "brgee-robust")
-#' geecriteria(fitted_gee, fitted_brgee, cov_type = "robust")
+#' fit_brgee <- update(fit_gee, method = "brgee-robust")
+#' geecriteria(fit_gee, fit_brgee, cov_type = "robust")
 #'
 #' @export
 geecriteria <- function(object,
