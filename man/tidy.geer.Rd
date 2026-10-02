@@ -94,9 +94,8 @@ tidy(fitbin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 
 }
 \references{
-Robinson, D., Hayes, A. and Couch, S. (2024)
-\emph{broom: Convert Statistical Objects into Tidy Tibbles}.
-\url{https://broom.tidymodels.org/}.
+Robinson, D., Hayes, A. and Couch, S. (2024) \emph{broom: Convert
+Statistical Objects into Tidy Tibbles}. \url{https://broom.tidymodels.org/}
 }
 \seealso{
 \code{\link{glance.geer}}, \code{\link{vcov.geer}},

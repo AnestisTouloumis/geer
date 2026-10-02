@@ -15,7 +15,7 @@ A data frame with 134 rows and 4 columns:
 }
 \source{
 Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
-Trials}. London: Chapman and Hall/CRC Press.
+Trials}. Chapman and Hall, London.
 }
 \usage{
 cerebrovascular

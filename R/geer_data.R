@@ -23,7 +23,7 @@
 #'
 #' @source
 #' Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
-#' Trials}. London: Chapman and Hall/CRC Press.
+#' Trials}. Chapman and Hall, London.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")
@@ -181,8 +181,8 @@
 #' treatments A and B reduced bacilli abundance compared with placebo.
 #'
 #' @source
-#' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Ames,
-#' Iowa: Iowa State University Press.
+#' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Iowa
+#' State University Press, Ames, Iowa.
 #'
 #' @examples
 #' data("leprosy", package = "geer")
@@ -220,7 +220,7 @@
 #'
 #' @source
 #' Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
-#' Analysis using the SAS System}. Cary, NC: SAS Institute, Inc.
+#' Analysis using the SAS System}. SAS Institute, Cary, NC.
 #'
 #' @examples
 #' data("respiratory", package = "geer")

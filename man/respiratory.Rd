@@ -21,7 +21,7 @@ A data frame with 444 rows and 8 columns:
 }
 \source{
 Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
-Analysis using the SAS System}. Cary, NC: SAS Institute, Inc.
+Analysis using the SAS System}. SAS Institute, Cary, NC.
 }
 \usage{
 respiratory

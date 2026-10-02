@@ -120,13 +120,12 @@
 #' when available, otherwise \code{NULL}.}
 #'
 #' @references
+#' Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
+#' Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
+#'
 #' Little, R.J.A. (1988) A test of missing completely at random for
 #' multivariate data with missing values. \emph{Journal of the American
 #' Statistical Association}, \bold{83}, 1198--1202.
-#' \doi{10.1080/01621459.1988.10478722}
-#'
-#' Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
-#' Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 #'
 #' @seealso \code{\link{runs_test}}, \code{\link{residuals.geer}},
 #'   \code{\link{geewa}}, \code{\link{geewa_binary}}.

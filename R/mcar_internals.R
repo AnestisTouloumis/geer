@@ -14,6 +14,13 @@ compute_mcar_normal_initial_parameters <- function(x) {
     sigma[j, j] <- sum((values - mu[j])^2) / length(values)
   }
 
+  if (anyNA(mu) || !all(is.finite(sigma))) {
+    stop(
+      "initial covariance matrix for normal-theory EM estimation is singular; check for collinear or nearly constant variables",
+      call. = FALSE
+    )
+  }
+
   sigma <- (sigma + t(sigma)) / 2
   scale <- max(c(diag(sigma), 1), na.rm = TRUE)
   ridge <- .Machine$double.eps^0.5 * scale

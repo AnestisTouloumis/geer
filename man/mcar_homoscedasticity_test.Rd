@@ -305,24 +305,22 @@ homoscedasticity. \emph{Technometrics}, \bold{23}, 105--110.
 
 Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity, normality,
 and missing completely at random for incomplete multivariate data.
-\emph{Psychometrika}, \bold{75}, 649--674. \doi{10.1007/s11336-010-9175-3}.
+\emph{Psychometrika}, \bold{75}, 649--674.
 
 Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package for
 testing homoscedasticity, multivariate normality, and missing completely at
 random (MCAR). \emph{Journal of Statistical Software}, \bold{56}, 1--31.
-\doi{10.18637/jss.v056.i06}.
 
 Scholz, F.W. and Stephens, M.A. (1987) K-sample Anderson-Darling tests.
 \emph{Journal of the American Statistical Association}, \bold{82}, 918--924.
 
 Scholz, F. and Zhu, A. (2025) kSamples: K-sample rank tests and their
 combinations. R package version 1.2-12.
-\url{https://CRAN.R-project.org/package=kSamples}.
+\url{https://CRAN.R-project.org/package=kSamples}
 
 Srivastava, M.S. and Dolatabadi, M. (2009) Multiple imputation and other
 resampling schemes for imputing missing observations. \emph{Journal of
 Multivariate Analysis}, \bold{100}, 1919--1937.
-\doi{10.1016/j.jmva.2009.06.003}.
 }
 \seealso{
 \code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}}

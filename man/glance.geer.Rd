@@ -98,16 +98,15 @@ do.call(rbind, lapply(
 
 }
 \references{
+Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure
+identification in generalized estimating equations. \emph{Statistics in
+Medicine}, \bold{28}, 642--658.
+
 Pan, W. (2001) Akaike's information criterion in generalized estimating
 equations. \emph{Biometrics}, \bold{57}, 120--125.
 
-Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure identification
-in generalized estimating equations. \emph{Statistics in Medicine},
-\bold{28}, 642--658.
-
-Robinson, D., Hayes, A. and Couch, S. (2024)
-\emph{broom: Convert Statistical Objects into Tidy Tibbles}.
-\url{https://broom.tidymodels.org/}.
+Robinson, D., Hayes, A. and Couch, S. (2024) \emph{broom: Convert
+Statistical Objects into Tidy Tibbles}. \url{https://broom.tidymodels.org/}
 }
 \seealso{
 \code{\link{tidy.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},

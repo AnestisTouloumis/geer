@@ -68,8 +68,9 @@ geer_control(jeffreys_power = 0.1)
 
 }
 \references{
-Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated Binary
-Data with an Odds-Ratio Parameterization. Preprint.
+Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+with an odds-ratio parameterization. \emph{Preprint}.
+\url{https://arxiv.org/abs/2606.16058}
 }
 \seealso{
 \code{\link{geewa}}, \code{\link{geewa_binary}}.

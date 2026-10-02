@@ -90,12 +90,13 @@
 #' correction step applied to an already-converged fit.
 #'
 #' @references
-#' Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
-#' Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
-#' \url{https://arxiv.org/abs/2606.16058}
+#' Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+#' with odds-ratio extensions. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16043}
 #'
-#' Touloumis, A. (2026) Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.
-#' \emph{Preprint}. \url{https://arxiv.org/abs/2606.16043}
+#' Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+#' with an odds-ratio parameterization. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16058}
 #'
 #'
 #' @seealso

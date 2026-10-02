@@ -264,6 +264,6 @@ for longitudinal data. *Statistics in Medicine*, **19**, 1277--1293.
 Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 
-Touloumis, A. (2026) [Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
+Touloumis, A. (2026) [Bias-reduced GEE via adjusted estimating equations, with odds-ratio extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
 
-Touloumis, A. (2026) [Jeffreys-Type Penalized GEE for Correlated Binary Data with an Odds-Ratio Parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.
+Touloumis, A. (2026) [Jeffreys-type penalized GEE for correlated binary data with an odds-ratio parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.

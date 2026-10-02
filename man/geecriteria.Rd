@@ -308,7 +308,7 @@ Hin, L.Y., Carey, V.J. and Wang, Y.G. (2007) Criteria for
 working-correlation-structure selection in GEE: assessment via simulation.
 \emph{The American Statistician}, \bold{61}, 360--364.
 
-Hin, L.Y. and Wang, Y.G. (2009) Working correlation structure
+Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure
 identification in generalized estimating equations. \emph{Statistics in
 Medicine}, \bold{28}, 642--658.
 

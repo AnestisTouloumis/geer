@@ -114,17 +114,15 @@
 #' }
 #'
 #' @references
-#' Rubin, D.B. (1976) Inference and missing data. \emph{Biometrika},
-#' \bold{63}, 581--592. \doi{10.1093/biomet/63.3.581}
+#' Fitzmaurice, G.M., Heath, A.F. and Clifford, P. (1996) Logistic regression
+#' models for binary panel data with attrition. \emph{Journal of the Royal
+#' Statistical Society: Series A}, \bold{159}, 249--263.
 #'
 #' Ridout, M.S. (1991) Testing for random dropouts in repeated measurement
 #' data. \emph{Biometrics}, \bold{47}, 1617--1619.
-#' \doi{10.2307/2532413}
 #'
-#' Fitzmaurice, G.M., Heath, A.F. and Clifford, P. (1996). Logistic regression
-#' models for binary panel data with attrition. \emph{Journal of the Royal
-#' Statistical Society: Series A}, \bold{159}, 249--263.
-#' \doi{10.2307/2983172}
+#' Rubin, D.B. (1976) Inference and missing data. \emph{Biometrika},
+#' \bold{63}, 581--592.
 #'
 #' @seealso \code{\link{mcar_little_test}}, \code{\link{geewa_binary}},
 #'   \code{\link{runs_test}}.

@@ -15,12 +15,13 @@
 #' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 #' generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 #'
-#' Touloumis, A. (2026) Jeffreys-Type Penalized GEE for Correlated
-#' Binary Data with an Odds-Ratio Parameterization. \emph{Preprint}.
-#' \url{https://arxiv.org/abs/2606.16058}
+#' Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+#' with odds-ratio extensions. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16043}
 #'
-#' Touloumis, A. (2026) Bias-Reduced GEE via Adjusted Estimating Equations, with Odds-Ratio Extensions.
-#' \emph{Preprint}. \url{https://arxiv.org/abs/2606.16043}
+#' Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+#' with an odds-ratio parameterization. \emph{Preprint}.
+#' \url{https://arxiv.org/abs/2606.16058}
 #'
 #' @seealso
 #' Main functions:
