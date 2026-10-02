@@ -189,7 +189,7 @@ mcar_logistic_test <- function(object,
       call. = FALSE
     )
   }
-  covariate_formula <- make_mcar_covariate_formula(object, formula)
+  covariate_formula <- build_mcar_covariate_formula(object, formula)
   prepared <- reconstruct_mcar_transition_frame(
     object,
     formula = covariate_formula,
@@ -318,14 +318,14 @@ mcar_logistic_test <- function(object,
     overall_null_formula, analysis_data, orstr, control
   )
 
-  response_test <- mcar_nested_geer_test(
+  response_test <- compute_mcar_nested_test(
     response_null_fit,
     missing_fit,
     test = test,
     cov_type = cov_type,
     pmethod = pmethod
   )
-  overall_test <- mcar_nested_geer_test(
+  overall_test <- compute_mcar_nested_test(
     overall_null_fit,
     missing_fit,
     test = test,
@@ -341,7 +341,7 @@ mcar_logistic_test <- function(object,
     covariate_null_fit <- fit_mcar_binary_model(
       covariate_null_formula, analysis_data, orstr, control
     )
-    covariate_test <- mcar_nested_geer_test(
+    covariate_test <- compute_mcar_nested_test(
       covariate_null_fit,
       missing_fit,
       test = test,
@@ -350,7 +350,7 @@ mcar_logistic_test <- function(object,
     )
   } else {
     covariate_null_fit <- NULL
-    covariate_test <- mcar_zero_test()
+    covariate_test <- build_mcar_zero_test()
   }
 
   tests <- data.frame(
@@ -379,7 +379,7 @@ mcar_logistic_test <- function(object,
   } else {
     character(0)
   }
-  coefficient_table <- mcar_coefficient_table(
+  coefficient_table <- build_mcar_coefficient_table(
     missing_fit,
     covariance,
     covariate_map

@@ -155,82 +155,31 @@ response profiles fit the working mean/covariance model poorly:
 residuals(fit, type = "mahalanobis")
 ```
 
-For longitudinal data with missing responses, Little's MCAR test can be
-applied directly to a fitted model. The test reconstructs the wide response
-matrix from the original `id` and `repeated` variables:
+For longitudinal data with missing responses, three diagnostics are available
+for assessing whether the missingness is compatible with MCAR. They need a
+fitted model, or wide-format data, that actually contains missing responses,
+so none is run here:
 
-``` r
-mcar_little_test(fit)
-```
+- `mcar_little_test()` implements Little's (1988) test and accepts a fitted
+  `geer` object or a numeric wide-format matrix or data frame. It uses the
+  exact normal-theory F reference in the bivariate monotone case and the
+  chi-squared reference otherwise; `reference = "asymptotic"` forces the
+  latter.
+- `mcar_homoscedasticity_test()` is the Jamshidian-Jalal (2010) screening
+  diagnostic, following the MissMech implementation of Jamshidian, Jalal and
+  Jansen (2014). It accepts the same inputs as `mcar_little_test()`. The
+  `method` argument selects the modified Hawkins test, the nonparametric
+  Anderson-Darling test, or the default `"auto"` logic; `imputation` selects
+  residual-resampling or normal-theory imputation; `n_imputations` repeats the
+  tests over several imputations; and `imputed_data` accepts a completed data
+  set from another imputation method.
+- `mcar_logistic_test()` is a Ridout-style (1991) regression diagnostic that
+  models missingness at occasion `t` from the response at `t - 1` and,
+  optionally, covariates, using `geewa_binary()`. Its `test` argument accepts
+  the same five procedures as `anova.geer()` and `pmethod` selects the
+  Rao-Scott or Satterthwaite approximation for the working tests.
 
-The same function can also be used with a numeric wide-format matrix or data
-frame whose rows are independent units and columns are repeated measurements.
-The implementation uses Little's degrees-of-freedom-corrected covariance
-matrix. For the special bivariate monotone pattern, the exact normal-theory
-F reference from Little (1988) is used automatically; otherwise the usual
-large-sample chi-squared reference is used. Use `reference = "asymptotic"` to
-force the chi-squared reference. The procedure is intended primarily for
-quantitative variables and warns when binary variables are detected.
-
-A distribution-robust screening diagnostic based on Jamshidian and Jalal
-(2010), following the MissMech implementation of Jamshidian, Jalal and Jansen
-(2014), is also available:
-
-``` r
-mcar_homoscedasticity_test(fit)
-mcar_homoscedasticity_test(fit, method = "nonparametric")
-mcar_homoscedasticity_test(fit, method = "hawkins", imputation = "normal")
-mcar_homoscedasticity_test(fit, n_imputations = 20)
-```
-
-Cases are grouped by their original missingness pattern and the incomplete
-responses are imputed before covariance homogeneity is assessed. The default
-`method = "auto"` reports the modified Hawkins normality/homoscedasticity test
-and uses the nonparametric k-sample Anderson-Darling component to distinguish
-nonnormality from covariance heterogeneity when Hawkins rejects.
-Distribution-free residual-resampling imputation is the default when there are
-at least 10 complete cases and at least `2 * p` complete cases among the rows
-retained after omitting small patterns; otherwise the function warns and falls
-back to conditional normal imputation. Patterns with fewer than seven cases
-are omitted by default. The diagnostic assumes that, apart from missingness
-patterns, cases arise from a common population, so known groups with genuinely
-different covariance matrices can trigger rejection even under MCAR. The
-reported test is based on the first imputed data set; `n_imputations` repeats
-the tests on further imputations so that the variability of the p-values and
-the pattern-specific contributions can be examined, and `imputed_data` accepts
-a completed matrix or data frame from another imputation method. This test
-ignores the fitted regression structure and is therefore a screening device
-that complements, rather than replaces, the regression-based MCAR diagnostic
-below.
-
-A complementary Ridout-style diagnostic models longitudinal missingness
-on a transition risk set. At occasion `t`, a row is included when the response
-at `t - 1` is observed; the binary outcome records whether the response at `t`
-is missing. The previous response is included automatically, while occasion
-effects are treated as nuisance terms:
-
-``` r
-out <- mcar_logistic_test(fit)
-out$tests
-mcar_logistic_test(fit, formula = ~ treatment + age, test = "score")
-mcar_logistic_test(fit, test = "working-score", pmethod = "satterthwaite")
-```
-
-The missingness model is fitted with `geewa_binary(..., link = "logit",
-method = "gee")`. The default odds-ratio structure is independence and the
-default covariance is the bias-corrected estimator. The `test` argument
-accepts the same five procedures as `anova.geer()`: `"wald"`, `"score"`,
-`"working-wald"`, `"working-score"`, and `"working-lrt"`. The modified
-working tests support the Rao-Scott and Satterthwaite p-value approximations
-through `pmethod`; the modified working LRT requires independence. The printed
-`htest` result is the response-history test, and `out$tests` also reports the
-covariate and overall tests using the same selected procedure. A significant response-history effect is
-evidence against covariate-dependent MCAR/random dropout. Covariate dependence
-without response-history dependence is compatible with covariate-dependent
-MCAR, although not strict MCAR relative to those covariates. Main occasion
-effects are nuisance parameters and covariate columns aliased with them are
-omitted automatically. Failure to reject does not establish MCAR or rule out
-MNAR.
+None of these tests can establish MCAR; see the help pages for details.
 
 ### Model building and selection
 

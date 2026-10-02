@@ -1,24 +1,24 @@
 testthat::local_edition(3)
 
 
-test_that("validate_step_thresholds accepts valid thresholds and rejects invalid ones", {
-  out <- validate_step_thresholds(0.10, 0.20)
+test_that("check_step_thresholds accepts valid thresholds and rejects invalid ones", {
+  out <- check_step_thresholds(0.10, 0.20)
   expect_type(out, "list")
   expect_identical(out$p_enter, 0.10)
   expect_identical(out$p_remove, 0.20)
-  expect_error(validate_step_thresholds(0, 0.20),    "'p_enter' must be strictly between 0 and 1")
-  expect_error(validate_step_thresholds("0.10", 0.20), "'p_enter' must be a single finite numeric value")
-  expect_error(validate_step_thresholds(0.10, 1.10),  "'p_remove' must be strictly between 0 and 1")
-  expect_error(validate_step_thresholds(0.10, "0.20"), "'p_remove' must be a single finite numeric value")
+  expect_error(check_step_thresholds(0, 0.20),    "'p_enter' must be strictly between 0 and 1")
+  expect_error(check_step_thresholds("0.10", 0.20), "'p_enter' must be a single finite numeric value")
+  expect_error(check_step_thresholds(0.10, 1.10),  "'p_remove' must be strictly between 0 and 1")
+  expect_error(check_step_thresholds(0.10, "0.20"), "'p_remove' must be a single finite numeric value")
 })
 
 
-test_that("validate_step_count accepts valid counts and rejects invalid ones", {
-  expect_identical(validate_step_count(10), 10L)
-  expect_identical(validate_step_count(0),  0L)
-  expect_error(validate_step_count(-1),    "'steps' must be a single non-negative integer")
-  expect_error(validate_step_count(1.5),   "'steps' must be a single non-negative integer")
-  expect_error(validate_step_count(c(1, 2)), "'steps' must be a single finite numeric value")
+test_that("check_step_count accepts valid counts and rejects invalid ones", {
+  expect_identical(check_step_count(10), 10L)
+  expect_identical(check_step_count(0),  0L)
+  expect_error(check_step_count(-1),    "'steps' must be a single non-negative integer")
+  expect_error(check_step_count(1.5),   "'steps' must be a single non-negative integer")
+  expect_error(check_step_count(c(1, 2)), "'steps' must be a single finite numeric value")
 })
 
 

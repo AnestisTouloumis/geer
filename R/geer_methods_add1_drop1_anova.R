@@ -119,11 +119,11 @@ add1.geer <-
       add1_model <- refit_geer(object, stats::as.formula(paste(". ~ . +", tt)))
       value <- switch(
         test,
-        wald = wald_test(object, add1_model, cov_type),
-        score = score_test(object, add1_model, cov_type),
-        `working-wald`  = working_wald_test(object, add1_model, cov_type, pmethod),
-        `working-score` = working_score_test(object, add1_model, cov_type, pmethod),
-        `working-lrt`   = working_lrt_test(object, add1_model, cov_type, pmethod)
+        wald = compute_wald_test(object, add1_model, cov_type),
+        score = compute_score_test(object, add1_model, cov_type),
+        `working-wald`  = compute_working_wald_test(object, add1_model, cov_type, pmethod),
+        `working-score` = compute_working_score_test(object, add1_model, cov_type, pmethod),
+        `working-lrt`   = compute_working_lrt_test(object, add1_model, cov_type, pmethod)
       )
       ans[i + 1L, ] <- c(value$test_df,
                          compute_gee_cic(add1_model, cov_type),
@@ -209,15 +209,15 @@ drop1.geer <- function(object,
     drop1_model <- refit_geer(object, stats::as.formula(paste(". ~ . -", tt)))
     value <- switch(
       test,
-      wald = wald_test(drop1_model, object, cov_type),
-      score = score_test(drop1_model, object, cov_type),
-      `working-wald` = working_wald_test(
+      wald = compute_wald_test(drop1_model, object, cov_type),
+      score = compute_score_test(drop1_model, object, cov_type),
+      `working-wald` = compute_working_wald_test(
         drop1_model, object, cov_type, pmethod
       ),
-      `working-score` = working_score_test(
+      `working-score` = compute_working_score_test(
         drop1_model, object, cov_type, pmethod
       ),
-      `working-lrt` = working_lrt_test(
+      `working-lrt` = compute_working_lrt_test(
         drop1_model, object, cov_type, pmethod
       )
     )
@@ -412,14 +412,14 @@ anova.geer <-
     for (i in seq_len(length(object_list) - 1)) {
       value <- switch(
         test,
-        wald = wald_test(object_list[[i]], object_list[[i + 1]], cov_type),
-        score = score_test(object_list[[i]], object_list[[i + 1]], cov_type),
+        wald = compute_wald_test(object_list[[i]], object_list[[i + 1]], cov_type),
+        score = compute_score_test(object_list[[i]], object_list[[i + 1]], cov_type),
         `working-wald` =
-          working_wald_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
+          compute_working_wald_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
         `working-score` =
-          working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
+          compute_working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
         `working-lrt` =
-          working_lrt_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
+          compute_working_lrt_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
       )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }

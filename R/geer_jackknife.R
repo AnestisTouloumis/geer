@@ -1,4 +1,4 @@
-jackknife_fit_origin <- function(object) {
+extract_jackknife_fit_function <- function(object) {
   if (!is.null(object$fit_function)) {
     return(object$fit_function)
   }
@@ -14,7 +14,7 @@ jackknife_fit_origin <- function(object) {
 }
 
 
-jackknife_pair_subset <- function(alpha, full_max, subset_max) {
+select_jackknife_pair_subset <- function(alpha, full_max, subset_max) {
   if (subset_max < 2L) {
     return(numeric(0))
   }
@@ -33,14 +33,14 @@ jackknife_pair_subset <- function(alpha, full_max, subset_max) {
 }
 
 
-jackknife_cc_alpha <- function(object, repeated) {
+compute_jackknife_alpha_cc <- function(object, repeated) {
   structure <- object$association_structure
   alpha <- as.numeric(object$alpha)
   subset_max <- max(repeated)
   full_max <- max(object$repeated)
 
   if (structure %in% c("unstructured", "fixed")) {
-    return(jackknife_pair_subset(alpha, full_max, subset_max))
+    return(select_jackknife_pair_subset(alpha, full_max, subset_max))
   }
   if (structure %in% c("toeplitz", "m-dependent")) {
     keep <- min(length(alpha), max(subset_max - 1L, 0L))
@@ -50,7 +50,7 @@ jackknife_cc_alpha <- function(object, repeated) {
 }
 
 
-jackknife_or_alpha <- function(object, repeated) {
+compute_jackknife_alpha_or <- function(object, repeated) {
   ## fit_geesolver_or() always indexes alpha_vector by pair position, so it must
   ## have length choose(max(repeated), 2) for every odds-ratio structure. An
   ## independence fit stores the scalar 1 rather than a pair vector, so it is
@@ -58,7 +58,7 @@ jackknife_or_alpha <- function(object, repeated) {
   if (identical(object$association_structure, "independence")) {
     return(rep.int(1, choose(max(repeated), 2L)))
   }
-  jackknife_pair_subset(
+  select_jackknife_pair_subset(
     alpha = object$alpha,
     full_max = max(object$repeated),
     subset_max = max(repeated)
@@ -66,7 +66,7 @@ jackknife_or_alpha <- function(object, repeated) {
 }
 
 
-jackknife_last_criterion <- function(fit) {
+extract_jackknife_last_criterion <- function(fit) {
   index <- ncol(fit$beta_mat) - 1L
   if (index < 1L || length(fit$criterion) < index) {
     return(Inf)
@@ -75,8 +75,8 @@ jackknife_last_criterion <- function(fit) {
 }
 
 
-jackknife_check_convergence <- function(fit, tolerance, cluster_label, stage = NULL) {
-  criterion <- jackknife_last_criterion(fit)
+check_jackknife_convergence <- function(fit, tolerance, cluster_label, stage = NULL) {
+  criterion <- extract_jackknife_last_criterion(fit)
   if (!is.finite(criterion) || criterion > tolerance) {
     stage_text <- if (is.null(stage)) "" else paste0(" during ", stage)
     stop(
@@ -92,7 +92,7 @@ jackknife_check_convergence <- function(fit, tolerance, cluster_label, stage = N
 }
 
 
-jackknife_refit_cc <- function(object, keep, cluster_label) {
+refit_jackknife_cc <- function(object, keep, cluster_label) {
   y <- object$y[keep]
   x <- object$x[keep, , drop = FALSE]
   id <- as.numeric(factor(object$id[keep]))
@@ -102,7 +102,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
   control <- object$control
   tolerance <- control$tolerance
   method <- object$method
-  alpha <- jackknife_cc_alpha(object, repeated)
+  alpha <- compute_jackknife_alpha_cc(object, repeated)
   alpha_fixed <- 1L
   mdependence <- if (identical(object$association_structure, "m-dependent")) {
     length(alpha)
@@ -135,7 +135,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
 
   if (method %in% geer_bcgee_methods) {
     first <- fit_once(beta_start, "gee")
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       sub("bcgee", "brgee", method),
@@ -155,7 +155,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
       fixed_alpha = 1L,
       corstr = "independence"
     )
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       "gee",
@@ -173,7 +173,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
       fixed_alpha = 1L,
       corstr = "independence"
     )
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       "pgee-jeffreys",
@@ -185,7 +185,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
     )
   } else {
     final <- fit_once(beta_start, method)
-    jackknife_check_convergence(final, tolerance, cluster_label)
+    check_jackknife_convergence(final, tolerance, cluster_label)
   }
 
   beta <- as.numeric(final$beta_hat)
@@ -202,7 +202,7 @@ jackknife_refit_cc <- function(object, keep, cluster_label) {
 }
 
 
-jackknife_refit_or <- function(object, keep, cluster_label) {
+refit_jackknife_or <- function(object, keep, cluster_label) {
   y <- object$y[keep]
   x <- object$x[keep, , drop = FALSE]
   id <- as.numeric(factor(object$id[keep]))
@@ -212,7 +212,7 @@ jackknife_refit_or <- function(object, keep, cluster_label) {
   control <- object$control
   tolerance <- control$tolerance
   method <- object$method
-  alpha <- jackknife_or_alpha(object, repeated)
+  alpha <- compute_jackknife_alpha_or(object, repeated)
   alpha_independence <- rep.int(1, choose(max(repeated), 2L))
   beta_start <- as.numeric(object$coefficients)
 
@@ -230,7 +230,7 @@ jackknife_refit_or <- function(object, keep, cluster_label) {
 
   if (method %in% geer_bcgee_methods) {
     first <- fit_once(beta_start, "gee", alpha)
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       sub("bcgee", "brgee", method),
@@ -241,7 +241,7 @@ jackknife_refit_or <- function(object, keep, cluster_label) {
     )
   } else if (identical(method, "hpgee-jeffreys")) {
     first <- fit_once(beta_start, "pgee-jeffreys", alpha_independence)
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       "gee",
@@ -252,7 +252,7 @@ jackknife_refit_or <- function(object, keep, cluster_label) {
     )
   } else if (identical(method, "opgee-jeffreys")) {
     first <- fit_once(beta_start, "pgee-jeffreys", alpha_independence)
-    jackknife_check_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
+    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
     final <- fit_once(
       as.numeric(first$beta_hat),
       "pgee-jeffreys",
@@ -263,7 +263,7 @@ jackknife_refit_or <- function(object, keep, cluster_label) {
     )
   } else {
     final <- fit_once(beta_start, method, alpha)
-    jackknife_check_convergence(final, tolerance, cluster_label)
+    check_jackknife_convergence(final, tolerance, cluster_label)
   }
 
   beta <- as.numeric(final$beta_hat)
@@ -295,15 +295,15 @@ compute_jackknife_delete_estimates <- function(object) {
     ncol = p,
     dimnames = list(cluster_labels, names(object$coefficients))
   )
-  fit_origin <- jackknife_fit_origin(object)
+  fit_origin <- extract_jackknife_fit_function(object)
 
   for (i in seq_along(cluster_indices)) {
     keep <- rep.int(TRUE, length(object$id))
     keep[cluster_indices[[i]]] <- FALSE
     estimates[i, ] <- if (identical(fit_origin, "geewa_binary")) {
-      jackknife_refit_or(object, keep, cluster_labels[[i]])
+      refit_jackknife_or(object, keep, cluster_labels[[i]])
     } else {
-      jackknife_refit_cc(object, keep, cluster_labels[[i]])
+      refit_jackknife_cc(object, keep, cluster_labels[[i]])
     }
   }
   estimates

@@ -1,4 +1,4 @@
-mcar_normal_initial_parameters <- function(x) {
+compute_mcar_normal_initial_parameters <- function(x) {
   n <- nrow(x)
   p <- ncol(x)
   mu <- colMeans(x, na.rm = TRUE)
@@ -34,10 +34,10 @@ mcar_normal_initial_parameters <- function(x) {
 }
 
 
-mcar_normal_em <- function(x, maxit, tol) {
+fit_mcar_normal_em <- function(x, maxit, tol) {
   n <- nrow(x)
   p <- ncol(x)
-  initial <- mcar_normal_initial_parameters(x)
+  initial <- compute_mcar_normal_initial_parameters(x)
   mu <- initial$mu
   sigma <- initial$sigma
   missing <- is.na(x)

@@ -160,8 +160,8 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
     x <- object
   }
 
-  x <- validate_mcar_little_matrix(x)
-  if (anyNA(x) && mcar_little_has_binary_variable(x)) {
+  x <- check_mcar_little_matrix(x)
+  if (anyNA(x) && has_mcar_little_binary_variable(x)) {
     warning(
       paste0(
         "Little (1988) notes that this MCAR test is most appropriate for ",
@@ -172,7 +172,7 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
     )
   }
 
-  result <- mcar_little_calculate(x, maxit = maxit, tol = tol)
+  result <- compute_mcar_little_statistic(x, maxit = maxit, tol = tol)
   exact <- result$bivariate_exact
   use_exact <- identical(reference, "auto") && !is.null(exact)
 

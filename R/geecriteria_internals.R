@@ -3,7 +3,7 @@
 ## at once, and a single degenerate candidate should not hide the remaining
 ## criteria or the remaining models. Failures of argument validation remain
 ## ordinary errors, so only this condition class is converted.
-geer_criterion_unavailable <- function(message) {
+signal_criterion_unavailable <- function(message) {
   stop(structure(
     list(message = message, call = NULL),
     class = c("geer_criterion_unavailable", "error", "condition")
@@ -121,7 +121,7 @@ compute_upper_triangular_pair_index <- function(row, col, dimension) {
 }
 
 
-compute_or_working_covariance <- function(object, indices) {
+compute_working_covariance_or <- function(object, indices) {
   mu <- object$fitted.values[indices]
   weights <- object$prior.weights[indices]
   repeated <- as.integer(object$repeated[indices])
@@ -131,7 +131,7 @@ compute_or_working_covariance <- function(object, indices) {
     return(ans)
   }
   repeated_max <- max(as.integer(object$repeated))
-  alpha <- get_or_alpha(object)
+  alpha <- get_alpha_or(object)
   for (j in seq_len(cluster_size - 1L)) {
     for (k in seq.int(j + 1L, cluster_size)) {
       row_time <- repeated[[j]]
@@ -158,7 +158,7 @@ compute_or_working_covariance <- function(object, indices) {
 }
 
 
-compute_cc_working_covariance <- function(object, indices) {
+compute_working_covariance_cc <- function(object, indices) {
   mu <- object$fitted.values[indices]
   weights <- object$prior.weights[indices]
   repeated <- as.integer(object$repeated[indices])
@@ -179,9 +179,9 @@ compute_cc_working_covariance <- function(object, indices) {
 
 compute_working_covariance_for_criteria <- function(object, indices) {
   if (is_geewa_fit(object)) {
-    compute_cc_working_covariance(object, indices)
+    compute_working_covariance_cc(object, indices)
   } else {
-    compute_or_working_covariance(object, indices)
+    compute_working_covariance_or(object, indices)
   }
 }
 
@@ -318,7 +318,7 @@ compute_quasi_loglikelihood <- function(object) {
 }
 
 
-geer_phi_is_fixed <- function(object) {
+is_phi_fixed <- function(object) {
   if (!is_geewa_fit(object)) {
     return(TRUE)
   }
@@ -356,32 +356,32 @@ compute_independence_gee_quantities <- function(object) {
   )
   beta <- as.numeric(fit_independence$coefficients)
   if (!isTRUE(fit_independence$converged) || any(!is.finite(beta))) {
-    geer_criterion_unavailable(
+    signal_criterion_unavailable(
       "QICHH could not be computed because the independence GEE fit did not converge to finite coefficients"
     )
   }
   eta <- as.numeric(object$x %*% beta + object$offset)
   mu <- as.numeric(object$family$linkinv(eta))
   if (any(!is.finite(mu))) {
-    geer_criterion_unavailable(
+    signal_criterion_unavailable(
       "QICHH could not be computed because the independence fitted means are non-finite"
     )
   }
   family_name <- object$family$family
   if (identical(family_name, "binomial")) {
     phi <- 1
-  } else if (geer_phi_is_fixed(object)) {
+  } else if (is_phi_fixed(object)) {
     phi <- object$phi
   } else {
     variance <- object$family$variance(mu)
     if (any(!is.finite(variance)) || any(variance <= 0)) {
-      geer_criterion_unavailable(
+      signal_criterion_unavailable(
         "QICHH could not be computed because the independence variance function is non-positive or non-finite"
       )
     }
     denominator <- object$obs_no - length(beta)
     if (denominator <= 0) {
-      geer_criterion_unavailable(
+      signal_criterion_unavailable(
         "QICHH could not be computed because the residual degrees of freedom are non-positive"
       )
     }
@@ -423,10 +423,10 @@ compute_eqic_adjusted_variance <- function(mu, family_name, k = 1 / 6) {
     Gamma = (mu + k)^2,
     inverse.gaussian = (mu + k)^3,
     binomial = (mu + k) * (1 - mu + k),
-    geer_criterion_unavailable("EQIC is not available for this family")
+    signal_criterion_unavailable("EQIC is not available for this family")
   )
   if (any(!is.finite(variance)) || any(variance <= 0)) {
-    geer_criterion_unavailable(
+    signal_criterion_unavailable(
       "EQIC could not be computed because the adjusted variance function is non-positive or non-finite"
     )
   }
@@ -466,7 +466,7 @@ compute_eqic_adjusted_deviance <- function(y, mu, family_name, k = 1 / 6) {
           (1 - y + k) * log((1 - y + k) / (1 - mu_safe + k))
       )
     },
-    geer_criterion_unavailable("EQIC is not available for this family")
+    signal_criterion_unavailable("EQIC is not available for this family")
   )
 }
 
@@ -481,19 +481,19 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
   )
   deviance <- sum(object$prior.weights * deviance_contributions)
   if (!is.finite(deviance) || deviance < 0) {
-    geer_criterion_unavailable(
+    signal_criterion_unavailable(
       "EQIC could not be computed because the adjusted deviance is invalid"
     )
   }
   if (identical(family_name, "binomial")) {
     phi <- 1
-  } else if (geer_phi_is_fixed(object)) {
+  } else if (is_phi_fixed(object)) {
     phi <- object$phi
   } else {
     phi <- deviance / object$obs_no
   }
   if (!is.finite(phi) || phi <= 0) {
-    geer_criterion_unavailable(
+    signal_criterion_unavailable(
       "EQIC could not be computed because the dispersion estimate is not a usable positive value"
     )
   }
@@ -591,7 +591,7 @@ compute_gee_criteria <- function(object,
       object$id,
       object$repeated,
       object$fitted.values,
-      get_or_alpha(object),
+      get_alpha_or(object),
       object$prior.weights
     )
   }
@@ -668,7 +668,7 @@ compute_gee_criteria <- function(object,
     q_matrix <- tryCatch(
       solve(naive_covariance, beta_covariance),
       error = function(e) {
-        geer_criterion_unavailable(
+        signal_criterion_unavailable(
           "RJC could not be computed because the naive covariance matrix is singular or invalid"
         )
       }

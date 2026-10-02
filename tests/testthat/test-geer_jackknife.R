@@ -189,7 +189,7 @@ test_that("jackknife covariance works for an independence odds-ratio fit", {
 })
 
 
-test_that("jackknife_or_alpha expands the independence odds-ratio vector", {
+test_that("compute_jackknife_alpha_or expands the independence odds-ratio vector", {
   fit <- geewa_binary(
     y ~ time + group,
     data = jackknife_binary_data,
@@ -198,15 +198,15 @@ test_that("jackknife_or_alpha expands the independence odds-ratio vector", {
     orstr = "independence",
     method = "gee"
   )
-  alpha <- jackknife_or_alpha(fit, fit$repeated)
+  alpha <- compute_jackknife_alpha_or(fit, fit$repeated)
   expect_length(alpha, choose(max(fit$repeated), 2L))
   expect_true(all(alpha == 1))
 })
 
 
-test_that("jackknife_pair_subset rejects an alpha of the wrong length", {
+test_that("select_jackknife_pair_subset rejects an alpha of the wrong length", {
   expect_error(
-    jackknife_pair_subset(1, full_max = 4L, subset_max = 3L),
+    select_jackknife_pair_subset(1, full_max = 4L, subset_max = 3L),
     "failed to map the fitted association parameters"
   )
 })
@@ -266,7 +266,7 @@ test_that("jackknife covariance applies the (K - 1) / K finite-sample factor", {
 test_that("jackknife association mapping preserves pair identities when maximum occasion drops", {
   alpha <- c(12, 13, 14, 23, 24, 34)
   expect_equal(
-    jackknife_pair_subset(alpha, full_max = 4L, subset_max = 3L),
+    select_jackknife_pair_subset(alpha, full_max = 4L, subset_max = 3L),
     c(12, 13, 23)
   )
 })
@@ -328,20 +328,20 @@ test_that("all hypothesis-test helpers accept jackknife covariance", {
     method = "gee"
   )
 
-  expect_jackknife_test_result(wald_test(fit0, fit1, cov_type = "jackknife"))
-  expect_jackknife_test_result(score_test(fit0, fit1, cov_type = "jackknife"))
+  expect_jackknife_test_result(compute_wald_test(fit0, fit1, cov_type = "jackknife"))
+  expect_jackknife_test_result(compute_score_test(fit0, fit1, cov_type = "jackknife"))
   expect_jackknife_test_result(
-    working_wald_test(
+    compute_working_wald_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )
   )
   expect_jackknife_test_result(
-    working_score_test(
+    compute_working_score_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )
   )
   expect_jackknife_test_result(
-    working_lrt_test(
+    compute_working_lrt_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )
   )

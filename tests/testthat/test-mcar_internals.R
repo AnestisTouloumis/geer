@@ -10,13 +10,13 @@ mcar_internals_matrix <- function() {
 }
 
 
-## ----------------------------------------------- mcar_normal_initial_parameters ----
+## ----------------------------------------------- compute_mcar_normal_initial_parameters ----
 
 test_that("initial parameters use available-case means and a valid covariance", {
   x <- mcar_internals_matrix()
   x[c(2, 5), 2] <- NA
 
-  out <- geer:::mcar_normal_initial_parameters(x)
+  out <- geer:::compute_mcar_normal_initial_parameters(x)
 
   expect_equal(out$mu, colMeans(x, na.rm = TRUE))
   expect_true(isSymmetric(out$sigma))
@@ -32,7 +32,7 @@ test_that("initial parameters use available-case means and a valid covariance", 
 test_that("initial parameters add a ridge to a singular covariance", {
   x <- cbind(a = as.numeric(1:6), b = 2 * as.numeric(1:6))
 
-  out <- geer:::mcar_normal_initial_parameters(x)
+  out <- geer:::compute_mcar_normal_initial_parameters(x)
 
   expect_true(all(is.finite(out$sigma)))
   expect_no_error(chol(out$sigma))
@@ -43,18 +43,18 @@ test_that("initial parameters fail when a variable has no observed values", {
   x <- cbind(a = c(1, 2, 3, 4), b = NA_real_)
 
   expect_error(
-    geer:::mcar_normal_initial_parameters(x),
+    geer:::compute_mcar_normal_initial_parameters(x),
     "initial covariance matrix for normal-theory EM estimation is singular"
   )
 })
 
 
-## ------------------------------------------------------------ mcar_normal_em ----
+## ------------------------------------------------------------ fit_mcar_normal_em ----
 
 test_that("EM reproduces the complete-data maximum-likelihood estimates", {
   x <- mcar_internals_matrix()
 
-  out <- geer:::mcar_normal_em(x, maxit = 100L, tol = 1e-10)
+  out <- geer:::fit_mcar_normal_em(x, maxit = 100L, tol = 1e-10)
 
   expect_true(out$converged)
   expect_equal(out$mu, colMeans(x), tolerance = 1e-8)
@@ -73,8 +73,8 @@ test_that("EM ignores rows with no observed values", {
   x[9, 3] <- NA
   with_empty_row <- rbind(x, c(NA_real_, NA_real_, NA_real_))
 
-  reference <- geer:::mcar_normal_em(x, maxit = 5000L, tol = 1e-12)
-  out <- geer:::mcar_normal_em(with_empty_row, maxit = 5000L, tol = 1e-12)
+  reference <- geer:::fit_mcar_normal_em(x, maxit = 5000L, tol = 1e-12)
+  out <- geer:::fit_mcar_normal_em(with_empty_row, maxit = 5000L, tol = 1e-12)
 
   expect_true(out$converged)
   expect_equal(out$mu, reference$mu, tolerance = 1e-6)
@@ -88,7 +88,7 @@ test_that("EM warns when the iteration limit is reached", {
   x[9, 3] <- NA
 
   expect_warning(
-    out <- geer:::mcar_normal_em(x, maxit = 1L, tol = 1e-14),
+    out <- geer:::fit_mcar_normal_em(x, maxit = 1L, tol = 1e-14),
     "did not converge within 1 iterations"
   )
   expect_false(out$converged)
@@ -101,7 +101,7 @@ test_that("EM rejects a singular maximum-likelihood covariance", {
   x[, 3] <- x[, 1] + x[, 2]
 
   expect_error(
-    geer:::mcar_normal_em(x, maxit = 100L, tol = 1e-10),
+    geer:::fit_mcar_normal_em(x, maxit = 100L, tol = 1e-10),
     "singular or nearly singular"
   )
 })

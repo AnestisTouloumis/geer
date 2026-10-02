@@ -404,7 +404,7 @@ test_that("an unavailable criterion is reported as NA, not an error", {
 
   expect_identical(
     geer:::compute_criterion_or_na(
-      geer:::geer_criterion_unavailable("nope")
+      geer:::signal_criterion_unavailable("nope")
     ),
     NA_real_
   )

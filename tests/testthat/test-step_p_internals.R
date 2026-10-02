@@ -18,29 +18,29 @@ test_that("scope validator accepts valid specifications", {
   scope_formula <- ~ baseline + treatment
   scope_char <- "~ baseline + treatment"
   scope_list <- list(lower = ~ baseline, upper = ~ baseline + treatment)
-  expect_null(.step_p_validate_scope(NULL))
-  expect_identical(.step_p_validate_scope(scope_formula), scope_formula)
-  expect_identical(.step_p_validate_scope(scope_char), scope_char)
-  expect_identical(.step_p_validate_scope(scope_list), scope_list)
+  expect_null(check_step_scope(NULL))
+  expect_identical(check_step_scope(scope_formula), scope_formula)
+  expect_identical(check_step_scope(scope_char), scope_char)
+  expect_identical(check_step_scope(scope_list), scope_list)
 })
 
 
 test_that("scope validator rejects malformed scope objects", {
-  expect_error(.step_p_validate_scope(1), "scope")
-  expect_error(.step_p_validate_scope(list()), "lower.*upper|upper.*lower")
-  expect_error(.step_p_validate_scope(list(foo = ~ baseline)), "scope")
-  expect_error(.step_p_validate_scope(list(lower = 1)), "scope\\$lower")
-  expect_error(.step_p_validate_scope(list(upper = 1)), "scope\\$upper")
+  expect_error(check_step_scope(1), "scope")
+  expect_error(check_step_scope(list()), "lower.*upper|upper.*lower")
+  expect_error(check_step_scope(list(foo = ~ baseline)), "scope")
+  expect_error(check_step_scope(list(lower = 1)), "scope\\$lower")
+  expect_error(check_step_scope(list(upper = 1)), "scope\\$upper")
 })
 
 
 test_that("scope term helper returns factor matrices and empty output for NULL", {
   base_formula <- stats::formula(fit_resp_full_indep)
-  expect_identical(.step_p_scope_terms(base_formula, NULL), numeric())
-  factors_formula <- .step_p_scope_terms(base_formula, ~ baseline + treatment)
+  expect_identical(extract_step_scope_terms(base_formula, NULL), numeric())
+  factors_formula <- extract_step_scope_terms(base_formula, ~ baseline + treatment)
   expect_true(is.matrix(factors_formula))
   expect_true(all(c("baseline", "treatment") %in% colnames(factors_formula)))
-  factors_char <- .step_p_scope_terms(base_formula, "~ baseline + treatment")
+  factors_char <- extract_step_scope_terms(base_formula, "~ baseline + treatment")
   expect_equal(dim(factors_char), dim(factors_formula))
   expect_equal(colnames(factors_char), colnames(factors_formula))
 })
@@ -49,10 +49,10 @@ test_that("scope term helper returns factor matrices and empty output for NULL",
 test_that("scope factor helper handles NULL, formula, and list scopes", {
   model_terms <- stats::terms(fit_resp_full_indep)
   model_factors <- attr(model_terms, "factors")
-  out_null <- .step_p_scope_factors(fit_resp_full_indep, NULL, model_terms)
+  out_null <- extract_step_scope_factors(fit_resp_full_indep, NULL, model_terms)
   expect_equal(out_null$add, model_factors)
   expect_identical(out_null$drop, numeric())
-  out_formula <- .step_p_scope_factors(
+  out_formula <- extract_step_scope_factors(
     fit_resp_full_indep,
     ~ baseline + treatment,
     model_terms
@@ -60,7 +60,7 @@ test_that("scope factor helper handles NULL, formula, and list scopes", {
   expect_true(is.matrix(out_formula$add))
   expect_true(all(c("baseline", "treatment") %in% colnames(out_formula$add)))
   expect_identical(out_formula$drop, numeric())
-  out_list <- .step_p_scope_factors(
+  out_list <- extract_step_scope_factors(
     fit_resp_full_indep,
     list(lower = ~ baseline, upper = ~ baseline + treatment),
     model_terms
@@ -73,7 +73,7 @@ test_that("scope factor helper handles NULL, formula, and list scopes", {
 
 
 test_that("step-path initializer stores the initial model state", {
-  out <- .step_p_init_models(fit_resp_full_indep, cov_type = "robust", steps = 3)
+  out <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 3)
   expect_identical(out$steps, 3L)
   expect_length(out$models, 4L)
   expect_identical(out$models_no, 1L)
@@ -84,8 +84,8 @@ test_that("step-path initializer stores the initial model state", {
 
 
 test_that("append-model helper increments the path correctly", {
-  init <- .step_p_init_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
-  out <- .step_p_append_model(
+  init <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
+  out <- append_step_model(
     models = init$models,
     models_no = init$models_no,
     change = "- gender",
@@ -104,8 +104,8 @@ test_that("append-model helper increments the path correctly", {
 
 
 test_that("result helper stores an anova table on the fitted model", {
-  init <- .step_p_init_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
-  out_models <- .step_p_append_model(
+  init <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
+  out_models <- append_step_model(
     models = init$models,
     models_no = init$models_no,
     change = "- gender",
@@ -114,7 +114,7 @@ test_that("result helper stores an anova table on the fitted model", {
     pval = 0.06,
     cic = 12.3
   )
-  out <- .step_p_results(
+  out <- build_step_results(
     models = out_models$models[seq_len(out_models$models_no)],
     fit = fit_resp_full_indep,
     object = fit_resp_full_indep
@@ -141,12 +141,12 @@ test_that("update-fit helper applies the requested model change for binary and c
     orstr = "independence",
     method = "pgee-jeffreys"
   )
-  out <- .step_p_update_fit(fit_resp_full_indep, "- gender", obs_no = fit_resp_full_indep$obs_no)
+  out <- update_step_fit(fit_resp_full_indep, "- gender", obs_no = fit_resp_full_indep$obs_no)
   expect_s3_class(out, "geer")
   expect_false("gender" %in% attr(stats::terms(out), "term.labels"))
   expect_identical(out$obs_no, fit_resp_full_indep$obs_no)
 
-  updated <- .step_p_update_fit(
+  updated <- update_step_fit(
     fitted_model = fit_geewa_pois_exch,
     change = "- lnage",
     obs_no = fit_geewa_pois_exch$obs_no
@@ -167,7 +167,7 @@ test_that("backward selector prioritizes zero-df drops", {
     check.names = FALSE
   )
   rownames(aod) <- c("<none>", "- x1", "- x2", "- x3")
-  expect_identical(.step_p_selected_row_backward(aod), 3L)
+  expect_identical(select_step_row_backward(aod), 3L)
 })
 
 
@@ -179,7 +179,7 @@ test_that("backward selector otherwise uses the first maximum p-value", {
     check.names = FALSE
   )
   rownames(aod) <- c("<none>", "- a", "- b", "- c")
-  expect_identical(.step_p_selected_row_backward(aod), 2L)
+  expect_identical(select_step_row_backward(aod), 2L)
 })
 
 
@@ -205,10 +205,10 @@ test_that("backward stop helper honors zero-df candidates and threshold logic", 
     check.names = FALSE
   )
   rownames(aod_continue) <- c("<none>", "- x1")
-  expect_false(.step_p_backward_should_stop(aod_zdf, 2L, pvalue = 0.15))
-  expect_true(.step_p_backward_should_stop(aod_stop, 2L, pvalue = 0.15))
-  expect_false(.step_p_backward_should_stop(aod_continue, 2L, pvalue = 0.15))
-  expect_true(.step_p_backward_should_stop(aod_continue, NA_integer_, pvalue = 0.15))
+  expect_false(should_stop_step_backward(aod_zdf, 2L, pvalue = 0.15))
+  expect_true(should_stop_step_backward(aod_stop, 2L, pvalue = 0.15))
+  expect_false(should_stop_step_backward(aod_continue, 2L, pvalue = 0.15))
+  expect_true(should_stop_step_backward(aod_continue, NA_integer_, pvalue = 0.15))
 })
 
 
@@ -220,7 +220,7 @@ test_that("forward selector uses the first minimum p-value", {
     check.names = FALSE
   )
   rownames(aod) <- c("<none>", "+ x1", "+ x2", "+ x3")
-  expect_identical(.step_p_selected_row_forward(aod), 2L)
+  expect_identical(select_step_row_forward(aod), 2L)
 })
 
 
@@ -239,25 +239,25 @@ test_that("forward stop helper stops only when the selected p-value is above thr
     check.names = FALSE
   )
   rownames(aod_continue) <- c("<none>", "+ x1")
-  row_stop <- .step_p_selected_row_forward(aod_stop)
-  row_continue <- .step_p_selected_row_forward(aod_continue)
-  expect_true(.step_p_forward_should_stop(aod_stop, row_stop, pvalue = 0.15))
-  expect_false(.step_p_forward_should_stop(aod_continue, row_continue, pvalue = 0.15))
-  expect_true(.step_p_forward_should_stop(aod_continue, NA_integer_, pvalue = 0.15))
+  row_stop <- select_step_row_forward(aod_stop)
+  row_continue <- select_step_row_forward(aod_continue)
+  expect_true(should_stop_step_forward(aod_stop, row_stop, pvalue = 0.15))
+  expect_false(should_stop_step_forward(aod_continue, row_continue, pvalue = 0.15))
+  expect_true(should_stop_step_forward(aod_continue, NA_integer_, pvalue = 0.15))
 })
 
 
 test_that("term helper returns the expected values", {
-  expect_identical(.step_p_selected_term("+ x1"), "x1")
-  expect_identical(.step_p_selected_term("- x2"), "x2")
-  expect_identical(.step_p_selected_term(NA_character_), NA_character_)
-  expect_identical(.step_p_selected_term(""), NA_character_)
+  expect_identical(extract_step_term("+ x1"), "x1")
+  expect_identical(extract_step_term("- x2"), "x2")
+  expect_identical(extract_step_term(NA_character_), NA_character_)
+  expect_identical(extract_step_term(""), NA_character_)
 })
 
 
 test_that("cycle detection depends on the underlying term", {
-  expect_true(.step_p_is_cycle("+ x1", "- x1"))
-  expect_true(.step_p_is_cycle("- x1", "+ x1"))
-  expect_false(.step_p_is_cycle("+ x1", "- x2"))
-  expect_false(.step_p_is_cycle("+ x1", NA_character_))
+  expect_true(is_step_cycle("+ x1", "- x1"))
+  expect_true(is_step_cycle("- x1", "+ x1"))
+  expect_false(is_step_cycle("+ x1", "- x2"))
+  expect_false(is_step_cycle("+ x1", NA_character_))
 })

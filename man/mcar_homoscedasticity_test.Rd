@@ -21,24 +21,24 @@ mcar_homoscedasticity_test(
 )
 }
 \arguments{
-\item{object}{A fitted \code{geer} object, a numeric matrix, or a numeric data
+\item{object}{a fitted \code{geer} object, a numeric matrix, or a numeric data
 frame containing missing values. For a fitted \code{geer} object, the
 original response measurements are reconstructed in subject-by-occasion
 form, with rows ordered by the sorted cluster identifiers, before rows
 omitted by the model fit are removed.}
 
-\item{data}{Optional original data used to fit \code{object}. This is only
+\item{data}{optional original data used to fit \code{object}. This is only
 used when \code{object} is a \code{geer} fit and is useful when the
 original data cannot be recovered from the fitted object.}
 
-\item{method}{Character string selecting the diagnostic. \code{"hawkins"}
+\item{method}{character string selecting the diagnostic. \code{"hawkins"}
 uses the modified Hawkins normal-theory test, \code{"nonparametric"} uses
 the k-sample Anderson-Darling test, and \code{"auto"} follows the
 diagnostic logic of Jamshidian and Jalal: the Hawkins test is examined
 first and the nonparametric test distinguishes nonnormality from covariance
 heterogeneity when Hawkins rejects. Defaults to \code{"auto"}.}
 
-\item{imputation}{Imputation method used before the diagnostics are
+\item{imputation}{imputation method used before the diagnostics are
 calculated. \code{"distribution-free"} adds resampled complete-case
 residuals to best linear predictors of the missing values, in the spirit
 of Srivastava and Dolatabadi (2009), with the location vector and
@@ -59,14 +59,14 @@ cases are available, although the same caution applies. Must not be
 supplied together with \code{imputed_data}. Defaults to
 \code{"distribution-free"}.}
 
-\item{n_imputations}{Positive integer giving the number of imputed data
+\item{n_imputations}{positive integer giving the number of imputed data
 sets. The primary statistic, p-value, detailed components and
 interpretation are based on the first imputation, as in \pkg{MissMech};
 the results for all imputations are returned in \code{imputations}. The
 estimates used for imputation are held fixed across imputations. Must be
 \code{1} when \code{imputed_data} is supplied. Defaults to \code{1}.}
 
-\item{imputed_data}{Optional numeric matrix or numeric data frame containing
+\item{imputed_data}{optional numeric matrix or numeric data frame containing
 a completed version of the incomplete data, for example obtained by
 another imputation method. It must have the same dimensions and row order
 as the matrix or data frame supplied in \code{object}, including any rows
@@ -77,24 +77,24 @@ This argument is intended for matrix or data-frame input: for a fitted
 returned, so a conformable completed data set cannot be guaranteed.
 Defaults to \code{NULL}.}
 
-\item{min_pattern_size}{Integer greater than or equal to 2 specifying the
+\item{min_pattern_size}{integer greater than or equal to 2 specifying the
 minimum number of cases required for a missingness pattern to be retained.
 Defaults to \code{7}, corresponding to omitting patterns with six or fewer
 cases, as in the simulations of Jamshidian and Jalal (2010) and the
 \pkg{MissMech} default.}
 
-\item{nrep}{Positive integer giving the number of simulated uniform samples
+\item{nrep}{positive integer giving the number of simulated uniform samples
 used to approximate the null distribution of a pattern-specific Neyman
 smooth statistic when the pattern contains fewer than \code{n_min} cases.
 Not used when \code{method = "nonparametric"}. Defaults to \code{10000}.}
 
-\item{n_min}{Integer greater than or equal to 2 specifying the pattern size
+\item{n_min}{integer greater than or equal to 2 specifying the pattern size
 from which the chi-squared approximation with four degrees of freedom is
 used for the Neyman smooth statistic instead of its simulated null
 distribution. Not used when \code{method = "nonparametric"}. Defaults to
 \code{30}.}
 
-\item{alpha}{A single number strictly between 0 and 1 specifying the
+\item{alpha}{a single number strictly between 0 and 1 specifying the
 significance level used by the automatic diagnostic rule and its
 interpretation. With \code{method = "auto"}, the nonparametric diagnostic
 is selected when the modified Hawkins test has p-value less than or equal
@@ -106,10 +106,10 @@ random-number seed used for imputation and simulated Neyman p-values. The
 previous R random-number state is restored on exit. Use \code{NULL} to use
 the current random-number stream. Defaults to \code{110}.}
 
-\item{maxit}{Positive integer giving the maximum number of EM iterations for
+\item{maxit}{positive integer giving the maximum number of EM iterations for
 normal-theory imputation. Defaults to \code{1000}.}
 
-\item{tol}{A single positive finite number specifying the relative
+\item{tol}{a single positive finite number specifying the relative
 convergence tolerance for the EM algorithm. Defaults to \code{1e-8}.}
 }
 \value{

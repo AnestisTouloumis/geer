@@ -155,9 +155,9 @@ test_that("compute_score_components returns expected matrix components for neste
 })
 
 
-test_that("wald_test returns a valid result for nested models and is order-invariant", {
-  res1 <- wald_test(fit_bin_trt, fit_bin_full, cov_type = "robust")
-  res2 <- wald_test(fit_bin_full, fit_bin_trt, cov_type = "robust")
+test_that("compute_wald_test returns a valid result for nested models and is order-invariant", {
+  res1 <- compute_wald_test(fit_bin_trt, fit_bin_full, cov_type = "robust")
+  res2 <- compute_wald_test(fit_bin_full, fit_bin_trt, cov_type = "robust")
   expect_test_result(res1)
   expect_test_result(res2)
   expect_identical(
@@ -167,14 +167,14 @@ test_that("wald_test returns a valid result for nested models and is order-invar
   expect_equal(res1$test_stat, res2$test_stat, tolerance = 1e-8)
   expect_equal(res1$test_p, res2$test_p, tolerance = 1e-8)
   expect_error(
-    wald_test(fit_bin_trt, fit_bin_trt),
+    compute_wald_test(fit_bin_trt, fit_bin_trt),
     "different numbers of coefficients"
   )
 })
 
 
-test_that("working_wald_test returns a valid result for nested models", {
-  res <- working_wald_test(
+test_that("compute_working_wald_test returns a valid result for nested models", {
+  res <- compute_working_wald_test(
     fit_bin_trt,
     fit_bin_full,
     cov_type = "robust",
@@ -184,8 +184,8 @@ test_that("working_wald_test returns a valid result for nested models", {
 })
 
 
-test_that("working_lrt_test returns a valid result and checks phi consistency", {
-  res <- working_lrt_test(
+test_that("compute_working_lrt_test returns a valid result and checks phi consistency", {
+  res <- compute_working_lrt_test(
     fit_bin_trt,
     fit_bin_full,
     cov_type = "robust",
@@ -195,30 +195,30 @@ test_that("working_lrt_test returns a valid result and checks phi consistency", 
   fit_bad_phi <- fit_bin_full
   fit_bad_phi$phi <- fit_bad_phi$phi + 1
   expect_error(
-    working_lrt_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
+    compute_working_lrt_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
     "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models"
   )
 })
 
 
-test_that("score_test returns a valid result for supported covariance types", {
-  res_robust <- score_test(fit_bin_trt, fit_bin_full, cov_type = "robust")
-  res_naive <- score_test(fit_bin_trt, fit_bin_full, cov_type = "naive")
-  res_df <- score_test(fit_bin_trt, fit_bin_full, cov_type = "df-adjusted")
+test_that("compute_score_test returns a valid result for supported covariance types", {
+  res_robust <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "robust")
+  res_naive <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "naive")
+  res_df <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "df-adjusted")
   expect_test_result(res_robust)
   expect_test_result(res_naive)
   expect_test_result(res_df)
 })
 
 
-test_that("working_score_test returns a valid result for supported covariance types", {
-  res_robust <- working_score_test(
+test_that("compute_working_score_test returns a valid result for supported covariance types", {
+  res_robust <- compute_working_score_test(
     fit_bin_trt,
     fit_bin_full,
     cov_type = "robust",
     pmethod = "rao-scott"
   )
-  res_bc <- working_score_test(
+  res_bc <- compute_working_score_test(
     fit_bin_trt,
     fit_bin_full,
     cov_type = "bias-corrected",

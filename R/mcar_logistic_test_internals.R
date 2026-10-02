@@ -1,4 +1,4 @@
-make_mcar_covariate_formula <- function(object, formula) {
+build_mcar_covariate_formula <- function(object, formula) {
   if (is.null(formula)) {
     object_formula <- stats::formula(object)
     term_labels <- attr(object$terms, "term.labels")
@@ -311,22 +311,22 @@ fit_mcar_binary_model <- function(formula, analysis_data, orstr, control) {
 }
 
 
-mcar_nested_geer_test <- function(object0,
+compute_mcar_nested_test <- function(object0,
                                   object1,
                                   test,
                                   cov_type,
                                   pmethod) {
   value <- switch(
     test,
-    wald = wald_test(object0, object1, cov_type),
-    score = score_test(object0, object1, cov_type),
-    `working-wald` = working_wald_test(
+    wald = compute_wald_test(object0, object1, cov_type),
+    score = compute_score_test(object0, object1, cov_type),
+    `working-wald` = compute_working_wald_test(
       object0, object1, cov_type, pmethod
     ),
-    `working-score` = working_score_test(
+    `working-score` = compute_working_score_test(
       object0, object1, cov_type, pmethod
     ),
-    `working-lrt` = working_lrt_test(
+    `working-lrt` = compute_working_lrt_test(
       object0, object1, cov_type, pmethod
     )
   )
@@ -338,12 +338,12 @@ mcar_nested_geer_test <- function(object0,
 }
 
 
-mcar_zero_test <- function() {
+build_mcar_zero_test <- function() {
   list(statistic = 0, df = 0, p_value = 1)
 }
 
 
-mcar_coefficient_table <- function(fit, covariance, covariate_map) {
+build_mcar_coefficient_table <- function(fit, covariance, covariate_map) {
   beta <- stats::coef(fit)
   standard_error <- sqrt(diag(covariance))
   z_value <- as.numeric(beta) / standard_error

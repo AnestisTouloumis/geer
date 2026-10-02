@@ -1,4 +1,4 @@
-validate_mcar_homoscedasticity_matrix <- function(x) {
+check_mcar_homoscedasticity_matrix <- function(x) {
   if (is.data.frame(x)) {
     numeric_cols <- vapply(x, is.numeric, logical(1))
     if (!all(numeric_cols)) {
@@ -86,7 +86,7 @@ validate_mcar_homoscedasticity_matrix <- function(x) {
   x
 }
 
-validate_mcar_homoscedasticity_imputed <- function(imputed_data, x) {
+check_mcar_homoscedasticity_imputed <- function(imputed_data, x) {
   if (is.data.frame(imputed_data)) {
     numeric_cols <- vapply(imputed_data, is.numeric, logical(1))
     if (!all(numeric_cols)) {
@@ -130,7 +130,7 @@ validate_mcar_homoscedasticity_imputed <- function(imputed_data, x) {
   imputed_data
 }
 
-jj_missingness_key <- function(missing) {
+compute_missingness_key <- function(missing) {
   apply(
     missing,
     1L,
@@ -138,9 +138,9 @@ jj_missingness_key <- function(missing) {
   )
 }
 
-jj_pattern_information <- function(x, min_pattern_size) {
+compute_pattern_information <- function(x, min_pattern_size) {
   missing <- is.na(x)
-  key <- jj_missingness_key(missing)
+  key <- compute_missingness_key(missing)
   counts <- table(key)
 
   keep_keys <- names(counts)[counts >= min_pattern_size]
@@ -209,7 +209,7 @@ jj_pattern_information <- function(x, min_pattern_size) {
   )
 }
 
-jj_solve <- function(a, context) {
+invert_covariance_matrix <- function(a, context) {
   out <- tryCatch(
     solve(a),
     error = function(e) NULL
@@ -223,7 +223,7 @@ jj_solve <- function(a, context) {
   out
 }
 
-jj_covariance_sqrt <- function(sigma, context) {
+compute_covariance_sqrt <- function(sigma, context) {
   sigma <- (sigma + t(sigma)) / 2
   eig <- eigen(sigma, symmetric = TRUE)
   scale <- max(1, max(abs(eig$values)))
@@ -240,7 +240,7 @@ jj_covariance_sqrt <- function(sigma, context) {
   diag(sqrt(values), nrow = length(values)) %*% t(eig$vectors)
 }
 
-jj_complete_case_moments <- function(x) {
+compute_complete_case_moments <- function(x) {
   complete_data <- x[stats::complete.cases(x), , drop = FALSE]
   n_complete <- nrow(complete_data)
 
@@ -264,7 +264,7 @@ jj_complete_case_moments <- function(x) {
   list(mu = mu, sigma = sigma, residuals = residuals)
 }
 
-jj_imputation_setup <- function(x, imputation, maxit, tol) {
+build_imputation_setup <- function(x, imputation, maxit, tol) {
   p <- ncol(x)
   n_complete <- sum(stats::complete.cases(x))
   requested <- imputation
@@ -291,7 +291,7 @@ jj_imputation_setup <- function(x, imputation, maxit, tol) {
   }
 
   if (identical(imputation, "distribution-free")) {
-    moments <- jj_complete_case_moments(x)
+    moments <- compute_complete_case_moments(x)
     out <- list(
       mu = moments$mu,
       sigma = moments$sigma,
@@ -300,7 +300,7 @@ jj_imputation_setup <- function(x, imputation, maxit, tol) {
       converged = NA
     )
   } else {
-    em <- mcar_normal_em(x, maxit = maxit, tol = tol)
+    em <- fit_mcar_normal_em(x, maxit = maxit, tol = tol)
     out <- list(
       mu = em$mu,
       sigma = em$sigma,
@@ -316,10 +316,10 @@ jj_imputation_setup <- function(x, imputation, maxit, tol) {
   out
 }
 
-jj_normal_impute <- function(x, setup) {
+impute_normal <- function(x, setup) {
   completed <- x
   missing <- is.na(x)
-  pattern_key <- jj_missingness_key(missing)
+  pattern_key <- compute_missingness_key(missing)
   pattern_rows <- split(seq_len(nrow(x)), pattern_key)
 
   for (rows in pattern_rows) {
@@ -336,7 +336,7 @@ jj_normal_impute <- function(x, setup) {
 
     sigma_oo <- setup$sigma[observed, observed, drop = FALSE]
     sigma_mo <- setup$sigma[missing_cols, observed, drop = FALSE]
-    regression <- sigma_mo %*% jj_solve(
+    regression <- sigma_mo %*% invert_covariance_matrix(
       sigma_oo,
       "performing normal-theory imputation"
     )
@@ -353,7 +353,7 @@ jj_normal_impute <- function(x, setup) {
       FUN = "+"
     )
 
-    root <- jj_covariance_sqrt(
+    root <- compute_covariance_sqrt(
       conditional_cov,
       "performing normal-theory imputation"
     )
@@ -368,7 +368,7 @@ jj_normal_impute <- function(x, setup) {
   completed
 }
 
-jj_distribution_free_impute <- function(x, setup) {
+impute_distribution_free <- function(x, setup) {
   complete <- stats::complete.cases(x)
   n_complete <- nrow(setup$residuals)
   incomplete_rows <- which(!complete)
@@ -385,7 +385,7 @@ jj_distribution_free_impute <- function(x, setup) {
 
   completed <- x
   missing <- is.na(x)
-  pattern_key <- jj_missingness_key(missing)
+  pattern_key <- compute_missingness_key(missing)
   pattern_rows <- split(incomplete_rows, pattern_key[incomplete_rows])
 
   for (rows in pattern_rows) {
@@ -401,7 +401,7 @@ jj_distribution_free_impute <- function(x, setup) {
 
     s_oo <- setup$sigma[observed, observed, drop = FALSE]
     a <- setup$sigma[missing_cols, observed, drop = FALSE] %*%
-      jj_solve(s_oo, "performing distribution-free imputation")
+      invert_covariance_matrix(s_oo, "performing distribution-free imputation")
 
     observed_block <- x[rows, observed, drop = FALSE]
     predicted <- sweep(
@@ -425,11 +425,11 @@ jj_distribution_free_impute <- function(x, setup) {
   completed
 }
 
-jj_draw_imputation <- function(x, setup) {
+draw_imputation <- function(x, setup) {
   completed <- if (identical(setup$used, "distribution-free")) {
-    jj_distribution_free_impute(x, setup)
+    impute_distribution_free(x, setup)
   } else {
-    jj_normal_impute(x, setup)
+    impute_normal(x, setup)
   }
   if (anyNA(completed) || any(!is.finite(completed))) {
     stop("imputation produced missing or non-finite completed values", call. = FALSE)
@@ -437,7 +437,7 @@ jj_draw_imputation <- function(x, setup) {
   completed
 }
 
-jj_neyman_statistics <- function(u) {
+compute_neyman_statistics <- function(u) {
   z <- 2 * u - 1
   p1 <- z
   p2 <- (3 * z * p1 - 1) / 2
@@ -452,31 +452,31 @@ jj_neyman_statistics <- function(u) {
   ) / nrow(u)
 }
 
-jj_neyman_statistic <- function(x) {
-  jj_neyman_statistics(matrix(x, ncol = 1L))
+compute_neyman_statistic <- function(x) {
+  compute_neyman_statistics(matrix(x, ncol = 1L))
 }
 
-jj_neyman_null <- function(n, nrep, block_size = 10000L) {
+simulate_neyman_null <- function(n, nrep, block_size = 10000L) {
   simulated <- numeric(nrep)
   done <- 0L
   while (done < nrep) {
     reps <- min(block_size, nrep - done)
     u <- matrix(stats::runif(n * reps), nrow = n, ncol = reps)
-    simulated[done + seq_len(reps)] <- jj_neyman_statistics(u)
+    simulated[done + seq_len(reps)] <- compute_neyman_statistics(u)
     done <- done + reps
   }
   simulated
 }
 
-jj_neyman_nulls <- function(group_counts, nrep, n_min) {
+simulate_neyman_nulls <- function(group_counts, nrep, n_min) {
   lapply(
     group_counts,
-    function(ni) if (ni < n_min) jj_neyman_null(ni, nrep) else NULL
+    function(ni) if (ni < n_min) simulate_neyman_null(ni, nrep) else NULL
   )
 }
 
-jj_neyman_p_value <- function(x, null) {
-  statistic <- jj_neyman_statistic(x)
+compute_neyman_p_value <- function(x, null) {
+  statistic <- compute_neyman_statistic(x)
 
   if (is.null(null)) {
     p_value <- stats::pchisq(statistic, df = 4, lower.tail = FALSE)
@@ -487,7 +487,7 @@ jj_neyman_p_value <- function(x, null) {
   list(statistic = statistic, p.value = p_value, simulated = TRUE)
 }
 
-jj_hawkins_test <- function(
+compute_hawkins_test <- function(
     completed,
     group,
     group_counts,
@@ -525,7 +525,7 @@ jj_hawkins_test <- function(
     pooled <- pooled + (length(rows) - 1) * stats::cov(block)
   }
   pooled <- pooled / (n - g)
-  pooled_inverse <- jj_solve(pooled, "calculating the Hawkins statistic")
+  pooled_inverse <- invert_covariance_matrix(pooled, "calculating the Hawkins statistic")
 
   f_values <- numeric(n)
   uniform_values <- numeric(n)
@@ -567,7 +567,7 @@ jj_hawkins_test <- function(
     uniform_values[rows] <- a_i
 
     if (test_uniformity) {
-      neyman <- jj_neyman_p_value(a_i, null = neyman_nulls[[i]])
+      neyman <- compute_neyman_p_value(a_i, null = neyman_nulls[[i]])
       group_statistics[i] <- neyman$statistic
       group_p_values[i] <- neyman$p.value
       simulated[i] <- neyman$simulated
@@ -606,17 +606,17 @@ jj_hawkins_test <- function(
 # ties), indexed by m = k - 1. Values are taken from ad.pval() in the kSamples
 # package (Scholz and Zhu, version 1.2-12, GPL (>= 2)), where they were
 # obtained by simulation with 2e6 replications and sample sizes of 500 per
-# group. Rows correspond to jj_ad_probabilities and columns to jj_ad_m_grid.
-jj_ad_m_grid <- c(1, 2, 3, 4, 6, 8, 10, Inf)
+# group. Rows correspond to geer_mcar_ad_probabilities and columns to geer_mcar_ad_m_grid.
+geer_mcar_ad_m_grid <- c(1, 2, 3, 4, 6, 8, 10, Inf)
 
-jj_ad_probabilities <- c(
+geer_mcar_ad_probabilities <- c(
   0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.025, 0.05,
   0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.925, 0.95,
   0.975, 0.99, 0.9925, 0.995, 0.9975, 0.999, 0.99925, 0.9995, 0.99975,
   0.9999, 0.999925, 0.99995, 0.999975, 0.99999
 )
 
-jj_ad_quantiles <- matrix(
+geer_mcar_ad_quantiles <- matrix(
   c(
      -1.1954,  -1.5806,  -1.8172,  -2.0032,  -2.2526,  -2.4204,  -2.5283,  -4.2649,
      -1.1786,  -1.5394,  -1.7728,  -1.9426,  -2.1685,  -2.3288,  -2.4374,  -3.8906,
@@ -663,18 +663,18 @@ jj_ad_quantiles <- matrix(
 # interpolated to 1 / sqrt(m) by smoothing splines (spar = 0.4), and the upper
 # log-odds are then fitted against the interpolated quantiles by a smoothing
 # spline (spar = 0.25), with linear extrapolation beyond the tabulated range.
-jj_ad_p_value <- function(standardized, m) {
-  grid <- 1 / sqrt(jj_ad_m_grid)
+compute_ad_p_value <- function(standardized, m) {
+  grid <- 1 / sqrt(geer_mcar_ad_m_grid)
   target <- 1 / sqrt(m)
   quantiles <- vapply(
-    seq_len(nrow(jj_ad_quantiles)),
+    seq_len(nrow(geer_mcar_ad_quantiles)),
     function(i) {
-      fit <- stats::smooth.spline(grid, jj_ad_quantiles[i, ], spar = 0.4)
+      fit <- stats::smooth.spline(grid, geer_mcar_ad_quantiles[i, ], spar = 0.4)
       stats::predict(fit, target)$y
     },
     numeric(1)
   )
-  upper <- 1 - jj_ad_probabilities
+  upper <- 1 - geer_mcar_ad_probabilities
   fit <- stats::smooth.spline(quantiles, stats::qlogis(upper), spar = 0.25)
   log_odds <- stats::predict(fit, standardized)$y
 
@@ -684,7 +684,7 @@ jj_ad_p_value <- function(standardized, m) {
   )
 }
 
-jj_anderson_darling_test <- function(x, group, group_counts) {
+compute_anderson_darling_test <- function(x, group, group_counts) {
   k <- length(group_counts)
   n <- length(x)
   if (k < 2L) {
@@ -751,7 +751,7 @@ jj_anderson_darling_test <- function(x, group, group_counts) {
   }
 
   standardized <- (statistic - (k - 1)) / sqrt(variance)
-  reference <- jj_ad_p_value(standardized, m = k - 1)
+  reference <- compute_ad_p_value(standardized, m = k - 1)
 
   list(
     statistic = statistic,
@@ -763,15 +763,15 @@ jj_anderson_darling_test <- function(x, group, group_counts) {
   )
 }
 
-jj_nonparametric_test <- function(hawkins, group, group_counts) {
-  jj_anderson_darling_test(
+compute_nonparametric_test <- function(hawkins, group, group_counts) {
+  compute_anderson_darling_test(
     x = hawkins$f.values,
     group = group,
     group_counts = group_counts
   )
 }
 
-jj_with_seed <- function(seed, code) {
+run_with_seed <- function(seed, code) {
   if (is.null(seed)) return(force(code))
 
   had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
@@ -788,7 +788,7 @@ jj_with_seed <- function(seed, code) {
   force(code)
 }
 
-jj_interpret <- function(method, hawkins, nonparametric, alpha) {
+interpret_homoscedasticity_test <- function(method, hawkins, nonparametric, alpha) {
   if (identical(method, "hawkins")) {
     if (hawkins$p.value <= alpha) {
       return(

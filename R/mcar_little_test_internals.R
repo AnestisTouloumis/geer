@@ -1,4 +1,4 @@
-validate_mcar_little_matrix <- function(x) {
+check_mcar_little_matrix <- function(x) {
   if (is.data.frame(x)) {
     numeric_cols <- vapply(x, is.numeric, logical(1))
     if (!all(numeric_cols)) {
@@ -81,7 +81,7 @@ validate_mcar_little_matrix <- function(x) {
 }
 
 
-mcar_little_bivariate_exact <- function(x) {
+compute_mcar_little_bivariate_exact <- function(x) {
   n <- nrow(x)
   if (ncol(x) != 2L || n <= 2L) return(NULL)
 
@@ -125,7 +125,7 @@ mcar_little_bivariate_exact <- function(x) {
 }
 
 
-mcar_little_calculate <- function(x, maxit, tol) {
+compute_mcar_little_statistic <- function(x, maxit, tol) {
   missing <- is.na(x)
   n <- nrow(x)
   p <- ncol(x)
@@ -150,7 +150,7 @@ mcar_little_calculate <- function(x, maxit, tol) {
     ))
   }
 
-  em <- mcar_normal_em(x, maxit = maxit, tol = tol)
+  em <- fit_mcar_normal_em(x, maxit = maxit, tol = tol)
   sigma_corrected <- (n / (n - 1)) * em$sigma
   statistic <- 0
   df_terms <- 0L
@@ -190,7 +190,7 @@ mcar_little_calculate <- function(x, maxit, tol) {
 
   statistic <- as.numeric(statistic)
   asymptotic_p_value <- stats::pchisq(statistic, df = df, lower.tail = FALSE)
-  bivariate_exact <- mcar_little_bivariate_exact(x)
+  bivariate_exact <- compute_mcar_little_bivariate_exact(x)
 
   if (!is.null(bivariate_exact) &&
       !isTRUE(all.equal(
@@ -224,7 +224,7 @@ mcar_little_calculate <- function(x, maxit, tol) {
 }
 
 
-mcar_little_has_binary_variable <- function(x) {
+has_mcar_little_binary_variable <- function(x) {
   any(vapply(
     seq_len(ncol(x)),
     function(j) {

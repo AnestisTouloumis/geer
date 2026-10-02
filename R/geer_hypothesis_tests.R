@@ -130,7 +130,7 @@ is_geewa_fit <- function(object) {
 }
 
 
-get_or_alpha <- function(object) {
+get_alpha_or <- function(object) {
   if (length(object$alpha) == 1L) {
     rep(object$alpha, choose(max(as.integer(object$repeated)), 2))
   } else {
@@ -181,7 +181,7 @@ compute_score_components <- function(object0, object1) {
       object1$association_structure, object1$alpha, object1$phi
     )
   } else {
-    association_alpha <- get_or_alpha(object1)
+    association_alpha <- get_alpha_or(object1)
     score_vector <- estimating_equations_gee_or(
       object1$y, object1$x, object1$id, object1$repeated, object1$prior.weights,
       object1$family$link,
@@ -204,7 +204,7 @@ compute_score_components <- function(object0, object1) {
 }
 
 
-wald_test <- function(object0, object1,
+compute_wald_test <- function(object0, object1,
                       cov_type = geer_cov_type_choices) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
@@ -226,7 +226,7 @@ wald_test <- function(object0, object1,
 }
 
 
-working_wald_test <- function(object0, object1,
+compute_working_wald_test <- function(object0, object1,
                               cov_type = geer_cov_type_choices,
                               pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
@@ -259,7 +259,7 @@ working_wald_test <- function(object0, object1,
 }
 
 
-working_lrt_test <- function(object0, object1,
+compute_working_lrt_test <- function(object0, object1,
                              cov_type = geer_cov_type_choices,
                              pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
@@ -295,7 +295,7 @@ working_lrt_test <- function(object0, object1,
 }
 
 
-score_test <- function(object0, object1,
+compute_score_test <- function(object0, object1,
                        cov_type = geer_cov_type_choices) {
   cov_type <- match.arg(cov_type)
   nested_models <- check_nested_models(object0, object1)
@@ -334,7 +334,7 @@ score_test <- function(object0, object1,
 }
 
 
-working_score_test <- function(object0, object1,
+compute_working_score_test <- function(object0, object1,
                                cov_type = geer_cov_type_choices,
                                pmethod = geer_pmethod_choices) {
   cov_type <- match.arg(cov_type)
@@ -456,11 +456,11 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   for (i in 2:models_no) {
     value <- switch(
       test,
-      wald = wald_test(object[[i - 1L]], object[[i]], cov_type),
-      score = score_test(object[[i - 1L]], object[[i]], cov_type),
-      `working-wald` = working_wald_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
-      `working-score` = working_score_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
-      `working-lrt` = working_lrt_test(object[[i - 1L]], object[[i]], cov_type, pmethod)
+      wald = compute_wald_test(object[[i - 1L]], object[[i]], cov_type),
+      score = compute_score_test(object[[i - 1L]], object[[i]], cov_type),
+      `working-wald` = compute_working_wald_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
+      `working-score` = compute_working_score_test(object[[i - 1L]], object[[i]], cov_type, pmethod),
+      `working-lrt` = compute_working_lrt_test(object[[i - 1L]], object[[i]], cov_type, pmethod)
     )
     table[i, -1L] <- c(value$test_df, value$test_stat, value$test_p)
   }

@@ -66,7 +66,7 @@
 NULL
 
 
-validate_marginaleffects_vcov <- function(vcov_matrix, coef_names) {
+check_marginaleffects_vcov <- function(vcov_matrix, coef_names) {
   if (!is.matrix(vcov_matrix) || !is.numeric(vcov_matrix)) {
     stop("'vcov' must be a numeric matrix", call. = FALSE)
   }
@@ -161,7 +161,7 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
     out <- vcov
   }
 
-  validate_marginaleffects_vcov(out, coef_names)
+  check_marginaleffects_vcov(out, coef_names)
 }
 
 

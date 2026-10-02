@@ -211,7 +211,7 @@ normalize_geer_test_options <- function(test,
 }
 
 
-validate_step_thresholds <- function(p_enter, p_remove) {
+check_step_thresholds <- function(p_enter, p_remove) {
   check_probability_open(p_enter, "p_enter")
   check_probability_open(p_remove, "p_remove")
   list(
@@ -221,7 +221,7 @@ validate_step_thresholds <- function(p_enter, p_remove) {
 }
 
 
-validate_step_count <- function(steps) {
+check_step_count <- function(steps) {
   check_nonnegative_integerish(steps, "steps")
 }
 

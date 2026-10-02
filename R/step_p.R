@@ -134,13 +134,13 @@ step_p <- function(object,
                    steps = 1000) {
   object <- check_geer_object(object)
   direction <- match_direction_type(direction[1L])
-  step_args <- validate_step_thresholds(
+  step_args <- check_step_thresholds(
     p_enter = p_enter,
     p_remove = p_remove
   )
   p_enter <- step_args$p_enter
   p_remove <- step_args$p_remove
-  steps <- validate_step_count(steps)
+  steps <- check_step_count(steps)
   opts <- normalize_geer_test_options(
     test = test[1L],
     cov_type = cov_type[1L],
@@ -153,7 +153,7 @@ step_p <- function(object,
   scope_value <- if (missing(scope)) NULL else scope
   switch(
     direction,
-    backward = .step_p_run_backward(
+    backward = run_step_backward(
       object = object,
       scope = scope_value,
       test = test,
@@ -162,7 +162,7 @@ step_p <- function(object,
       pvalue = p_remove,
       steps = steps
     ),
-    forward = .step_p_run_forward(
+    forward = run_step_forward(
       object = object,
       scope = scope_value,
       test = test,
@@ -171,7 +171,7 @@ step_p <- function(object,
       pvalue = p_enter,
       steps = steps
     ),
-    both = .step_p_run_both(
+    both = run_step_both(
       object = object,
       scope = scope_value,
       test = test,

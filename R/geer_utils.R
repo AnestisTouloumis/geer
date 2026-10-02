@@ -51,7 +51,7 @@ refit_geer <- function(object, formula) {
 }
 
 
-covariance_standard_errors <- function(vcov_matrix, parm = NULL, context) {
+compute_covariance_standard_errors <- function(vcov_matrix, parm = NULL, context) {
   variances <- diag(vcov_matrix)
   if (!is.null(parm)) {
     variances <- variances[parm]

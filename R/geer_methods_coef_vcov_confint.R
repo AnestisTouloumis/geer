@@ -253,7 +253,7 @@ confint.geer <- function(object,
     dimnames = list(parm, pct)
   )
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  standard_errors <- covariance_standard_errors(
+  standard_errors <- compute_covariance_standard_errors(
     vcov_matrix,
     parm = parm,
     context = "confint.geer"

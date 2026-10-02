@@ -10,21 +10,21 @@
 #' pattern groups. It is a screening diagnostic for MCAR and does not condition
 #' on the regression model fitted by \code{geer}.
 #'
-#' @param object A fitted \code{geer} object, a numeric matrix, or a numeric data
+#' @param object a fitted \code{geer} object, a numeric matrix, or a numeric data
 #'   frame containing missing values. For a fitted \code{geer} object, the
 #'   original response measurements are reconstructed in subject-by-occasion
 #'   form, with rows ordered by the sorted cluster identifiers, before rows
 #'   omitted by the model fit are removed.
-#' @param data Optional original data used to fit \code{object}. This is only
+#' @param data optional original data used to fit \code{object}. This is only
 #'   used when \code{object} is a \code{geer} fit and is useful when the
 #'   original data cannot be recovered from the fitted object.
-#' @param method Character string selecting the diagnostic. \code{"hawkins"}
+#' @param method character string selecting the diagnostic. \code{"hawkins"}
 #'   uses the modified Hawkins normal-theory test, \code{"nonparametric"} uses
 #'   the k-sample Anderson-Darling test, and \code{"auto"} follows the
 #'   diagnostic logic of Jamshidian and Jalal: the Hawkins test is examined
 #'   first and the nonparametric test distinguishes nonnormality from covariance
 #'   heterogeneity when Hawkins rejects. Defaults to \code{"auto"}.
-#' @param imputation Imputation method used before the diagnostics are
+#' @param imputation imputation method used before the diagnostics are
 #'   calculated. \code{"distribution-free"} adds resampled complete-case
 #'   residuals to best linear predictors of the missing values, in the spirit
 #'   of Srivastava and Dolatabadi (2009), with the location vector and
@@ -44,13 +44,13 @@
 #'   cases are available, although the same caution applies. Must not be
 #'   supplied together with \code{imputed_data}. Defaults to
 #'   \code{"distribution-free"}.
-#' @param n_imputations Positive integer giving the number of imputed data
+#' @param n_imputations positive integer giving the number of imputed data
 #'   sets. The primary statistic, p-value, detailed components and
 #'   interpretation are based on the first imputation, as in \pkg{MissMech};
 #'   the results for all imputations are returned in \code{imputations}. The
 #'   estimates used for imputation are held fixed across imputations. Must be
 #'   \code{1} when \code{imputed_data} is supplied. Defaults to \code{1}.
-#' @param imputed_data Optional numeric matrix or numeric data frame containing
+#' @param imputed_data optional numeric matrix or numeric data frame containing
 #'   a completed version of the incomplete data, for example obtained by
 #'   another imputation method. It must have the same dimensions and row order
 #'   as the matrix or data frame supplied in \code{object}, including any rows
@@ -60,21 +60,21 @@
 #'   \code{geer} object the reconstructed subject-by-occasion matrix is not
 #'   returned, so a conformable completed data set cannot be guaranteed.
 #'   Defaults to \code{NULL}.
-#' @param min_pattern_size Integer greater than or equal to 2 specifying the
+#' @param min_pattern_size integer greater than or equal to 2 specifying the
 #'   minimum number of cases required for a missingness pattern to be retained.
 #'   Defaults to \code{7}, corresponding to omitting patterns with six or fewer
 #'   cases, as in the simulations of Jamshidian and Jalal (2010) and the
 #'   \pkg{MissMech} default.
-#' @param nrep Positive integer giving the number of simulated uniform samples
+#' @param nrep positive integer giving the number of simulated uniform samples
 #'   used to approximate the null distribution of a pattern-specific Neyman
 #'   smooth statistic when the pattern contains fewer than \code{n_min} cases.
 #'   Not used when \code{method = "nonparametric"}. Defaults to \code{10000}.
-#' @param n_min Integer greater than or equal to 2 specifying the pattern size
+#' @param n_min integer greater than or equal to 2 specifying the pattern size
 #'   from which the chi-squared approximation with four degrees of freedom is
 #'   used for the Neyman smooth statistic instead of its simulated null
 #'   distribution. Not used when \code{method = "nonparametric"}. Defaults to
 #'   \code{30}.
-#' @param alpha A single number strictly between 0 and 1 specifying the
+#' @param alpha a single number strictly between 0 and 1 specifying the
 #'   significance level used by the automatic diagnostic rule and its
 #'   interpretation. With \code{method = "auto"}, the nonparametric diagnostic
 #'   is selected when the modified Hawkins test has p-value less than or equal
@@ -84,9 +84,9 @@
 #'   random-number seed used for imputation and simulated Neyman p-values. The
 #'   previous R random-number state is restored on exit. Use \code{NULL} to use
 #'   the current random-number stream. Defaults to \code{110}.
-#' @param maxit Positive integer giving the maximum number of EM iterations for
+#' @param maxit positive integer giving the maximum number of EM iterations for
 #'   normal-theory imputation. Defaults to \code{1000}.
-#' @param tol A single positive finite number specifying the relative
+#' @param tol a single positive finite number specifying the relative
 #'   convergence tolerance for the EM algorithm. Defaults to \code{1e-8}.
 #'
 #' @details
@@ -348,7 +348,7 @@ mcar_homoscedasticity_test <- function(
     }
     x <- object
   }
-  x <- validate_mcar_homoscedasticity_matrix(x)
+  x <- check_mcar_homoscedasticity_matrix(x)
   if (!anyNA(x)) {
     stop(
       "the Jamshidian-Jalal diagnostic requires missing values",
@@ -356,11 +356,11 @@ mcar_homoscedasticity_test <- function(
     )
   }
   if (user_imputed) {
-    imputed_data <- validate_mcar_homoscedasticity_imputed(imputed_data, x)
+    imputed_data <- check_mcar_homoscedasticity_imputed(imputed_data, x)
   }
 
-  pattern_info <- jj_pattern_information(x, min_pattern_size = min_pattern_size)
-  x_used <- validate_mcar_homoscedasticity_matrix(pattern_info$x)
+  pattern_info <- compute_pattern_information(x, min_pattern_size = min_pattern_size)
+  x_used <- check_mcar_homoscedasticity_matrix(pattern_info$x)
   attr(x_used, "row.index") <- NULL
   attr(x_used, "original.nrow") <- NULL
   if (!anyNA(x_used)) {
@@ -385,7 +385,7 @@ mcar_homoscedasticity_test <- function(
   run_hawkins <- !identical(method, "nonparametric")
   run_nonparametric <- method %in% c("auto", "nonparametric")
 
-  result <- jj_with_seed(seed, {
+  result <- run_with_seed(seed, {
     if (user_imputed) {
       setup <- list(
         mu = NULL,
@@ -398,7 +398,7 @@ mcar_homoscedasticity_test <- function(
       )
       completed <- list(imputed_data[pattern_info$rows, , drop = FALSE])
     } else {
-      setup <- jj_imputation_setup(
+      setup <- build_imputation_setup(
         x_used,
         imputation = imputation,
         maxit = maxit,
@@ -406,12 +406,12 @@ mcar_homoscedasticity_test <- function(
       )
       completed <- lapply(
         seq_len(n_imputations),
-        function(i) jj_draw_imputation(x_used, setup)
+        function(i) draw_imputation(x_used, setup)
       )
     }
 
     neyman_nulls <- if (run_hawkins) {
-      jj_neyman_nulls(pattern_info$group_counts, nrep = nrep, n_min = n_min)
+      simulate_neyman_nulls(pattern_info$group_counts, nrep = nrep, n_min = n_min)
     } else {
       NULL
     }
@@ -419,7 +419,7 @@ mcar_homoscedasticity_test <- function(
     analyses <- lapply(
       completed,
       function(completed_data) {
-        hawkins <- jj_hawkins_test(
+        hawkins <- compute_hawkins_test(
           completed = completed_data,
           group = pattern_info$group,
           group_counts = pattern_info$group_counts,
@@ -428,7 +428,7 @@ mcar_homoscedasticity_test <- function(
         )
         nonparametric <- NULL
         if (run_nonparametric) {
-          nonparametric <- jj_nonparametric_test(
+          nonparametric <- compute_nonparametric_test(
             hawkins = hawkins,
             group = pattern_info$group,
             group_counts = pattern_info$group_counts
@@ -579,7 +579,7 @@ mcar_homoscedasticity_test <- function(
     method.requested = method,
     selected.test = selected_test,
     alpha = alpha,
-    interpretation = jj_interpret(
+    interpretation = interpret_homoscedasticity_test(
       method = method,
       hawkins = hawkins,
       nonparametric = nonparametric,

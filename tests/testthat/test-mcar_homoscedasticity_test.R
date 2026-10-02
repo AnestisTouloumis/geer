@@ -18,7 +18,7 @@ test_that("internal Anderson-Darling calculation follows Scholz-Stephens", {
     -0.8, -0.1, 0.2, 0.45, 0.7, 1.0, 1.4, 1.7, 2.0
   )
   group <- rep(1:3, c(7, 8, 9))
-  out <- geer:::jj_anderson_darling_test(x, group, c(7L, 8L, 9L))
+  out <- geer:::compute_anderson_darling_test(x, group, c(7L, 8L, 9L))
 
   expect_equal(out$statistic, 0.8000654142, tolerance = 1e-9)
   expect_equal(
@@ -52,11 +52,11 @@ test_that("internal modified Hawkins calculation follows the published transform
   completed <- rbind(g1, g2, g3)
   group <- rep(1:3, each = 8)
 
-  out <- geer:::jj_hawkins_test(
+  out <- geer:::compute_hawkins_test(
     completed,
     group = group,
     group_counts = c(8L, 8L, 8L),
-    neyman_nulls = geer:::jj_neyman_nulls(c(8L, 8L, 8L), nrep = 20L, n_min = 2L)
+    neyman_nulls = geer:::simulate_neyman_nulls(c(8L, 8L, 8L), nrep = 20L, n_min = 2L)
   )
 
   expect_equal(
@@ -329,16 +329,16 @@ test_that("Hawkins transformed statistics match MissMech on deterministic data",
     1.7747780658, 0.9693748385, 1.6217738517, 0.6906485960, 0.7873700661
   )
 
-  hawkins <- geer:::jj_hawkins_test(
+  hawkins <- geer:::compute_hawkins_test(
     completed,
     group = group,
     group_counts = counts,
-    neyman_nulls = geer:::jj_neyman_nulls(counts, nrep = 10L, n_min = 2L)
+    neyman_nulls = geer:::simulate_neyman_nulls(counts, nrep = 10L, n_min = 2L)
   )
   expect_equal(hawkins$f.values, missmech_fij, tolerance = 1e-9)
   expect_equal(hawkins$group.statistics[1L], 5.7707840618, tolerance = 1e-9)
 
-  ad <- geer:::jj_anderson_darling_test(hawkins$f.values, group, counts)
+  ad <- geer:::compute_anderson_darling_test(hawkins$f.values, group, counts)
   expect_equal(ad$statistic, 0.8206642148, tolerance = 1e-9)
   expect_equal(ad$variance, 0.9910839542, tolerance = 1e-9)
   expect_equal(
@@ -354,7 +354,7 @@ test_that("Anderson-Darling statistic reproduces the published MissMech example"
   set.seed(50)
   x <- c(stats::rnorm(30), stats::runif(45), stats::rnorm(60, 2, 3))
   counts <- c(30L, 45L, 60L)
-  out <- geer:::jj_anderson_darling_test(x, rep(1:3, counts), counts)
+  out <- geer:::compute_anderson_darling_test(x, rep(1:3, counts), counts)
 
   # Jamshidian, Jalal and Jansen (2014, Section 5.1).
   expect_equal(out$statistic, 18.62008, tolerance = 1e-6)
@@ -383,46 +383,46 @@ test_that("Anderson-Darling p-values match kSamples reference quantiles", {
   )
 
   p_values <- mapply(
-    function(standardized, m) geer:::jj_ad_p_value(standardized, m)$p.value,
+    function(standardized, m) geer:::compute_ad_p_value(standardized, m)$p.value,
     reference$standardized,
     reference$m
   )
   expect_equal(p_values, reference$p.value, tolerance = 1e-6)
 
-  expect_identical(dim(geer:::jj_ad_quantiles), c(35L, 8L))
+  expect_identical(dim(geer:::geer_mcar_ad_quantiles), c(35L, 8L))
   expect_equal(
-    geer:::jj_ad_quantiles[1L, ],
+    geer:::geer_mcar_ad_quantiles[1L, ],
     c(-1.1954, -1.5806, -1.8172, -2.0032, -2.2526, -2.4204, -2.5283, -4.2649)
   )
   expect_equal(
-    geer:::jj_ad_quantiles[35L, ],
+    geer:::geer_mcar_ad_quantiles[35L, ],
     c(11.8537, 9.5482, 8.5568, 8.0283, 7.4418, 6.9524, 6.6195, 4.2649)
   )
-  expect_false(geer:::jj_ad_p_value(2, 4)$extrapolated)
+  expect_false(geer:::compute_ad_p_value(2, 4)$extrapolated)
 })
 
 
 test_that("simulated Neyman p-values use the (1 + b) / (nrep + 1) form", {
   set.seed(31)
   x <- stats::runif(12)
-  null <- geer:::jj_neyman_null(12L, nrep = 499L)
-  out <- geer:::jj_neyman_p_value(x, null = null)
+  null <- geer:::simulate_neyman_null(12L, nrep = 499L)
+  out <- geer:::compute_neyman_p_value(x, null = null)
 
   expect_true(out$simulated)
   expect_equal(
     out$p.value,
-    (1 + sum(null >= geer:::jj_neyman_statistic(x))) / 500
+    (1 + sum(null >= geer:::compute_neyman_statistic(x))) / 500
   )
   expect_gte(out$p.value, 1 / 500)
 
   set.seed(8)
   looped <- vapply(
     seq_len(25L),
-    function(i) geer:::jj_neyman_statistic(stats::runif(7L)),
+    function(i) geer:::compute_neyman_statistic(stats::runif(7L)),
     numeric(1)
   )
   set.seed(8)
-  blocked <- geer:::jj_neyman_null(7L, nrep = 25L, block_size = 10L)
+  blocked <- geer:::simulate_neyman_null(7L, nrep = 25L, block_size = 10L)
   expect_equal(blocked, looped, tolerance = 1e-12)
 })
 
@@ -434,7 +434,7 @@ test_that("Hawkins transformation stops when a case deletion is singular", {
     c(0, 1), c(1, 2), c(2, 3)
   )
   expect_error(
-    geer:::jj_hawkins_test(
+    geer:::compute_hawkins_test(
       completed,
       group = rep(1:3, each = 3L),
       group_counts = c(3L, 3L, 3L),
@@ -503,8 +503,8 @@ test_that("user-supplied completed data bypass imputation", {
     method = "nonparametric",
     imputed_data = complete
   )
-  direct <- geer:::jj_anderson_darling_test(
-    geer:::jj_hawkins_test(
+  direct <- geer:::compute_anderson_darling_test(
+    geer:::compute_hawkins_test(
       complete,
       group = rep(1:3, c(50L, 40L, 30L)),
       group_counts = c(50L, 40L, 30L),
@@ -563,11 +563,11 @@ test_that("user-supplied completed data bypass imputation", {
   )
 })
 
-test_that("jj_hawkins_test requires one Neyman null entry per pattern", {
+test_that("compute_hawkins_test requires one Neyman null entry per pattern", {
   x <- make_jj_screening_data()
   x[is.na(x)] <- 0
   expect_error(
-    geer:::jj_hawkins_test(
+    geer:::compute_hawkins_test(
       x,
       group = rep(1:3, c(30L, 15L, 15L)),
       group_counts = c(30L, 15L, 15L),
