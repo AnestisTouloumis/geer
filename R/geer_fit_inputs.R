@@ -1,0 +1,248 @@
+build_geer_model_frame <- function(model_call, env = parent.frame()) {
+  model_call$drop.unused.levels <- TRUE
+  keep <- c(
+    "formula", "data", "subset", "na.action",
+    "id", "repeated", "weights", "offset"
+  )
+  model_call <- model_call[c(1L, match(keep, names(model_call), 0L))]
+  model_call[[1L]] <- quote(stats::model.frame)
+  enclos <- env
+  if (!is.null(model_call$formula)) {
+    formula_obj <- tryCatch(eval(model_call$formula, envir = env), error = function(e) NULL)
+    if (inherits(formula_obj, "formula") && !is.null(environment(formula_obj))) {
+      enclos <- environment(formula_obj)
+    }
+  }
+  eval(model_call, envir = env, enclos = enclos)
+}
+
+
+extract_geer_offset <- function(model_frame, y_length) {
+  offset <- stats::model.offset(model_frame)
+  if (is.null(offset)) {
+    offset <- rep.int(0, y_length)
+  } else {
+    if (!is.numeric(offset)) {
+      stop("'offset' must be a numeric vector", call. = FALSE)
+    }
+    if (length(offset) == 1L) {
+      offset <- rep.int(as.numeric(offset), y_length)
+    }
+    if (length(offset) != y_length) {
+      stop("response variable and 'offset' are not of same length", call. = FALSE)
+    }
+    if (anyNA(offset) || any(!is.finite(offset))) {
+      stop("'offset' must be finite", call. = FALSE)
+    }
+    offset <- as.double(offset)
+  }
+  offset
+}
+
+
+build_geer_design_matrix <- function(model_frame) {
+  model_terms <- attr(model_frame, "terms")
+  model_matrix <- stats::model.matrix(model_terms, model_frame)
+  xnames <- colnames(model_matrix)
+  if (length(xnames) == 1L) {
+    model_matrix <- matrix(model_matrix, ncol = 1L)
+  }
+  qr_model_matrix <- qr(model_matrix)
+  if (qr_model_matrix$rank < ncol(model_matrix)) {
+    stop("rank-deficient model matrix", call. = FALSE)
+  }
+  list(
+    terms = model_terms,
+    x = model_matrix,
+    xnames = xnames,
+    qr = qr_model_matrix,
+    assign = attr(model_matrix, "assign"),
+    contrasts = attr(model_matrix, "contrasts")
+  )
+}
+
+
+normalize_geer_control <- function(control) {
+  if (is.null(control)) {
+    return(geer_control())
+  }
+  if (!is.list(control)) {
+    stop(
+      "'control' must be NULL or a list, typically created by geer_control()",
+      call. = FALSE
+    )
+  }
+  control <- utils::modifyList(geer_control(), control)
+  do.call(geer_control, control)
+}
+
+
+normalize_family <- function(family) {
+  if (is.character(family)) {
+    family_fun <- tryCatch(
+      match.fun(family),
+      error = function(e) NULL
+    )
+    if (is.null(family_fun)) {
+      stop(
+        "'family' must be a family object, a family function, or the name of one",
+        call. = FALSE
+      )
+    }
+    family <- family_fun()
+  } else if (is.function(family)) {
+    family <- family()
+  }
+  if (!is.list(family) || is.null(family$family) || is.null(family$link)) {
+    stop("'family' must be a valid family object", call. = FALSE)
+  }
+  check_choice(family$family, geer_family_choices, "family")
+  link <- as.character(family$link)
+  check_choice(link, geer_link_choices, "link")
+  family
+}
+
+
+extract_geer_response_weights <- function(model_frame, family) {
+  is_binomial_like <-
+    identical(family$family, "binomial") ||
+    identical(family$family, "quasibinomial") ||
+    (identical(family$family, "quasi") &&
+       !is.null(family$varfun) &&
+       identical(family$varfun, "mu(1-mu)"))
+  y <- stats::model.response(model_frame, "any")
+  if (is.null(y)) stop("response variable not found", call. = FALSE)
+  if (is_binomial_like) {
+    if (is.factor(y)) {
+      if (nlevels(y) != 2L) {
+        stop(
+          "for binomial-type models, a factor response must have exactly two levels",
+          call. = FALSE
+        )
+      }
+      y <- as.numeric(y == levels(y)[2L])
+    } else if (is.character(y)) {
+      yfac <- factor(y)
+      if (nlevels(yfac) != 2L) {
+        stop(
+          "for binomial-type models, a character response must have exactly two distinct values",
+          call. = FALSE
+        )
+      }
+      y <- as.numeric(yfac == levels(yfac)[2L])
+    } else if (is.matrix(y) && ncol(y) != 2L) {
+      stop(
+        "for binomial-type models, a matrix response must have exactly two columns",
+        call. = FALSE
+      )
+    }
+  }
+  n_obs <- if (is.matrix(y)) nrow(y) else length(y)
+  weights <- as.vector(stats::model.weights(model_frame))
+  if (is.null(weights)) {
+    weights <- rep.int(1, n_obs)
+  } else {
+    if (!is.numeric(weights)) {
+      stop("'weights' must be a numeric vector", call. = FALSE)
+    }
+    if (anyNA(weights) || any(!is.finite(weights))) {
+      stop("'weights' must be finite", call. = FALSE)
+    }
+    if (any(weights <= 0)) {
+      stop("'weights' must be strictly positive", call. = FALSE)
+    }
+    if (length(weights) != n_obs) {
+      stop("'weights' and the response must have the same length", call. = FALSE)
+    }
+  }
+  weights <- as.numeric(weights)
+  if (is_binomial_like && is.matrix(y) && ncol(y) == 2L) {
+    if (anyNA(y) || any(!is.finite(y))) {
+      stop(
+        "for binomial matrix responses, all entries must be finite",
+        call. = FALSE
+      )
+    }
+    if (any(y < 0)) {
+      stop(
+        "for binomial matrix responses, all counts must be nonnegative",
+        call. = FALSE
+      )
+    }
+    trials <- rowSums(y)
+    if (any(trials <= 0)) {
+      stop(
+        "for binomial matrix responses, row sums (trials) must be positive",
+        call. = FALSE
+      )
+    }
+    weights <- weights * trials
+    y <- y[, 1L] / trials
+  }
+  y <- as.numeric(y)
+  if (any(!is.finite(y))) {
+    stop("response variable contains non-finite values", call. = FALSE)
+  }
+  if (is_binomial_like) {
+    if (any(y < 0 | y > 1)) {
+      stop(
+        "for binomial-type models, the response must be coded as 0/1, proportions in [0, 1], or a two-column matrix",
+        call. = FALSE
+      )
+    }
+  }
+  list(y = y, weights = weights)
+}
+
+
+extract_geer_id_repeated <- function(model_frame, y_length) {
+  id_raw <- stats::model.extract(model_frame, "id")
+  if (is.null(id_raw)) stop("'id' not found", call. = FALSE)
+  if (anyNA(id_raw)) stop("'id' cannot contain missing values", call. = FALSE)
+  id <- as.numeric(factor(id_raw))
+  if (length(id) != y_length) {
+    stop("response variable and 'id' are not of same length", call. = FALSE)
+  }
+  repeated <- stats::model.extract(model_frame, "repeated")
+  if (is.null(repeated)) {
+    repeated <- stats::ave(id, id, FUN = seq_along)
+  } else {
+    if (anyNA(repeated)) stop("'repeated' cannot contain missing values", call. = FALSE)
+    repeated <- as.numeric(factor(repeated))
+  }
+  if (length(repeated) != y_length) {
+    stop("response variable and 'repeated' are not of same length", call. = FALSE)
+  }
+  if (any(unlist(lapply(split(repeated, id), duplicated)))) {
+    stop("'repeated' does not have unique values per 'id'", call. = FALSE)
+  }
+  list(id = id, repeated = repeated)
+}
+
+
+normalize_phi <- function(phi_fixed, phi_value) {
+  if (!is.logical(phi_fixed) || length(phi_fixed) != 1L || is.na(phi_fixed)) {
+    stop("'phi_fixed' must be a single non-missing logical value", call. = FALSE)
+  }
+  if (phi_fixed) {
+    phi_value <- as.numeric(phi_value)
+    if (length(phi_value) != 1L || !is.finite(phi_value) || phi_value <= 0) {
+      stop(
+        "'phi_value' must be a single positive number when 'phi_fixed = TRUE'",
+        call. = FALSE
+      )
+    }
+  } else {
+    phi_value <- 1
+  }
+  list(phi_fixed = phi_fixed, phi_value = phi_value)
+}
+
+
+normalize_use_p <- function(use_p) {
+  if (!is.logical(use_p) || length(use_p) != 1L || is.na(use_p)) {
+    stop("'use_p' must be a single non-missing logical value", call. = FALSE)
+  }
+  use_p
+}
+

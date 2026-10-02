@@ -1,5 +1,5 @@
 #define ARMA_WARN_LEVEL 1
-#include "family_utils.h"
+#include "family_codes.h"
 #include "variance_functions.h"
 
 

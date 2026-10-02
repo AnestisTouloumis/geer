@@ -3,12 +3,12 @@
 #include "nuisance_quantities_cc.h"
 #include "utils.h"
 #include "link_functions.h"
-#include "link_utils.h"
-#include "family_utils.h"
+#include "link_codes.h"
+#include "family_codes.h"
 #include "variance_functions.h"
 #include "covariance_matrices.h"
 #include "cluster_utils.h"
-#include "method_dispatch.h"
+#include "method_codes.h"
 #include <cmath>
 
 

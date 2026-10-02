@@ -246,7 +246,7 @@ geewa_binary <- function(formula,
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
   if (method %in% geer_bcgee_methods) {
     ## pass 1: plain GEE to convergence
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       beta_zero, offset, maxiter, tolerance,
       control$step_maxiter, control$step_multiplier,
@@ -257,7 +257,7 @@ geewa_binary <- function(formula,
       stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge", call. = FALSE)
     }
     ## pass 2: one BR-GEE step warm-started from converged GEE solution
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(geesolver_fit$beta_hat), offset,
       1L, tolerance, 1L, 1L,
@@ -265,7 +265,7 @@ geewa_binary <- function(formula,
     )
   } else if (method == "hpgee-jeffreys") {
     ## pass 1: PGEE under independence to convergence
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       beta_zero, offset, maxiter, tolerance,
       control$step_maxiter, control$step_multiplier,
@@ -276,7 +276,7 @@ geewa_binary <- function(formula,
       stop("hpgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
     }
     ## pass 2: one step GEE from penalized solution
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(geesolver_fit$beta_hat), offset,
       1L, tolerance, 1L, 1L,
@@ -284,7 +284,7 @@ geewa_binary <- function(formula,
     )
   } else if (method == "opgee-jeffreys") {
     ## pass 1: PGEE under independence to convergence
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       beta_zero, offset, maxiter, tolerance,
       control$step_maxiter, control$step_multiplier,
@@ -295,7 +295,7 @@ geewa_binary <- function(formula,
       stop("opgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
     }
     ## pass 2: one step PGEE from penalized solution
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(geesolver_fit$beta_hat), offset,
       1L, tolerance, 1L, 1L,
@@ -303,7 +303,7 @@ geewa_binary <- function(formula,
     )
   } else {
     ## single pass: gee, brgee-*, or pgee-jeffreys
-    geesolver_fit <- fit_bingee_or(
+    geesolver_fit <- fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       beta_zero, offset, maxiter, tolerance,
       control$step_maxiter, control$step_multiplier,

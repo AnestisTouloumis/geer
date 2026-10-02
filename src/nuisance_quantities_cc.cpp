@@ -1,7 +1,7 @@
 #define ARMA_WARN_LEVEL 1
 #include "nuisance_quantities_cc.h"
 #include "cluster_utils.h"
-#include "family_utils.h"
+#include "family_codes.h"
 #include "utils.h"
 #include "variance_functions.h"
 #include <cfloat>

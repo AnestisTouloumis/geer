@@ -2,7 +2,7 @@
 #define NUISANCE_QUANTITIES_CC_H
 
 #include <RcppArmadillo.h>
-#include "family_utils.h"
+#include "family_codes.h"
 
 // char* overload (R-facing)
 arma::vec get_pearson_residuals(const char* family,

@@ -1,4 +1,4 @@
-## C++17 is required: std::string_view is used in family_utils.h and link_utils.h.
+## C++17 is required: std::string_view is used in family_codes.h and link_codes.h.
 ## R >= 4.0 on all CRAN platforms supports CXX17 via RcppArmadillo.
 CXX_STD = CXX17
 

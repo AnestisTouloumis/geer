@@ -2,7 +2,7 @@
 #define VARIANCE_FUNCTIONS_H
 
 #include <RcppArmadillo.h>
-#include "family_utils.h"
+#include "family_codes.h"
 
 arma::vec variance(FamilyCode fc,    const arma::vec& mu_vector);
 arma::vec variancemu(FamilyCode fc,  const arma::vec& mu_vector);

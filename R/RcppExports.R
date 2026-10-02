@@ -9,12 +9,20 @@ get_covariance_matrices_or <- function(y_vector, model_matrix, id_vector, repeat
     .Call(`_geer_get_covariance_matrices_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 
+estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_estimating_equations_gee_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
+estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
+}
+
 fit_geesolver_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed) {
     .Call(`_geer_fit_geesolver_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed)
 }
 
-fit_bingee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {
-    .Call(`_geer_fit_bingee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
+fit_geesolver_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {
+    .Call(`_geer_fit_geesolver_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
 }
 
 get_naive_matrix_inverse_independence <- function(model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector) {
@@ -39,13 +47,5 @@ get_correlation_matrix <- function(correlation_structure, alpha_vector, dimensio
 
 get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure) {
     .Call(`_geer_get_marginalized_odds_ratios`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
-}
-
-estimating_equations_gee_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
-    .Call(`_geer_estimating_equations_gee_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
-}
-
-estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector) {
-    .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 

@@ -2,7 +2,7 @@
 #define LINK_FUNCTIONS_H
 
 #include <RcppArmadillo.h>
-#include "link_utils.h"
+#include "link_codes.h"
 
 arma::vec linkinv(LinkCode lc,
                   const arma::vec& eta_vector);

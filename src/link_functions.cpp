@@ -1,7 +1,7 @@
 #define ARMA_WARN_LEVEL 1
 #include "link_functions.h"
-#include "family_utils.h"
-#include "link_utils.h"
+#include "family_codes.h"
+#include "link_codes.h"
 #include "utils.h"
 #include <cfloat>
 #include <cmath>

@@ -1,12 +1,12 @@
 #define ARMA_WARN_LEVEL 1
 #include <RcppArmadillo.h>
 #include "link_functions.h"
-#include "link_utils.h"
+#include "link_codes.h"
 #include "utils.h"
 #include "nuisance_quantities_or.h"
 #include "covariance_matrices.h"
 #include "cluster_utils.h"
-#include "method_dispatch.h"
+#include "method_codes.h"
 #include <cmath>
 
 
@@ -699,7 +699,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
 
 //=========================== fitting function =================================
 // [[Rcpp::export]]
-Rcpp::List fit_bingee_or(const arma::vec& y_vector,
+Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                          const arma::mat& model_matrix,
                          const arma::vec& id_vector,
                          const arma::vec& repeated_vector,
