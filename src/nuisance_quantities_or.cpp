@@ -3,7 +3,6 @@
 #include "cluster_utils.h"
 #include <algorithm>
 #include <cmath>
-#include "utils.h"
 
 namespace {
 inline arma::uword upper_triangular_pairs(const arma::uword n) {

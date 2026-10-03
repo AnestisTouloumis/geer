@@ -458,9 +458,8 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
     cor_mat = correlation_mdependent(alpha_vector, dimension);
   } else if (std::strcmp(correlation_structure, "toeplitz") == 0) {
     cor_mat = correlation_toeplitz(alpha_vector, dimension);
-  } else if (std::strcmp(correlation_structure, "unstructured") == 0) {
-    cor_mat = correlation_unstructured(alpha_vector, dimension);
-  } else if (std::strcmp(correlation_structure, "fixed") == 0) {
+  } else if (std::strcmp(correlation_structure, "unstructured") == 0 ||
+             std::strcmp(correlation_structure, "fixed") == 0) {
     cor_mat = correlation_unstructured(alpha_vector, dimension);
   } else {
     Rcpp::stop("get_correlation_matrix: unsupported correlation structure \"%s\".",
