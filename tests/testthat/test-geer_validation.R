@@ -74,27 +74,7 @@ test_that("literal choice defaults in public signatures match the constants", {
     expect_identical(default_of(fn, "pmethod"), geer:::geer_pmethod_choices)
   }
   expect_identical(
-    default_of(geecriteria, "cov_type"),
-    geer:::geer_criteria_cov_type_choices
-  )
-  expect_identical(
     default_of(step_p, "direction"),
     geer:::geer_direction_choices
-  )
-  expect_identical(
-    default_of(mcar_little_test, "reference"),
-    geer:::geer_mcar_reference_choices
-  )
-  expect_identical(
-    default_of(mcar_logistic_test, "orstr"),
-    geer:::geer_mcar_orstr_choices
-  )
-  expect_identical(
-    default_of(mcar_homoscedasticity_test, "method"),
-    geer:::geer_mcar_homoscedasticity_method_choices
-  )
-  expect_identical(
-    default_of(mcar_homoscedasticity_test, "imputation"),
-    geer:::geer_mcar_imputation_choices
   )
 })

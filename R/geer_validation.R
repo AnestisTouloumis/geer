@@ -42,33 +42,12 @@ geer_cov_type_choices <- c(
   "bias-corrected", "robust", "df-adjusted", "jackknife", "naive"
 )
 
-## geecriteria() reports criteria based on the robust covariance by
-## default, unlike the rest of the package, because the CIC and related
-## criteria are classically defined that way. Same set, robust first.
-geer_criteria_cov_type_choices <- c(
-  "robust", setdiff(geer_cov_type_choices, "robust")
-)
-
 geer_pmethod_choices <- c(
   "rao-scott", "satterthwaite"
 )
 
 geer_direction_choices <- c(
   "backward", "forward", "both"
-)
-
-geer_mcar_reference_choices <- c(
-  "auto", "asymptotic"
-)
-
-geer_mcar_orstr_choices <- setdiff(geer_orstr_choices, "fixed")
-
-geer_mcar_homoscedasticity_method_choices <- c(
-  "auto", "nonparametric", "hawkins"
-)
-
-geer_mcar_imputation_choices <- c(
-  "distribution-free", "normal"
 )
 
 geer_integer_tol <- sqrt(.Machine$double.eps)
