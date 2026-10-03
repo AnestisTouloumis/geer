@@ -22,7 +22,8 @@ every pair of variables. Infinite values are not allowed.}
 
 \item{data}{optional original data used to fit \code{object}. This is only
 used when \code{object} is a \code{geer} fit and is useful when the
-original data cannot be recovered from the fitted object.}
+original data cannot be recovered from the fitted object. Defaults to
+\code{NULL}.}
 
 \item{maxit}{positive integer giving the maximum number of EM iterations
 used to obtain the multivariate-normal maximum-likelihood estimates.
@@ -114,7 +115,7 @@ construction. They are removed, with a warning, before the statistic and
 the sample size \eqn{n} are computed.
 
 For a \code{geer} fit, only the repeated response is tested. The function
-reconstructs a subject-by-repeated-measure matrix from \code{id} and
+reconstructs a cluster-by-repeated-measure matrix from \code{id} and
 \code{repeated}. If \code{repeated} was omitted during fitting, the
 within-cluster row order in the original data defines the repeated-measure
 positions. Consequently, an entirely absent row cannot be distinguished

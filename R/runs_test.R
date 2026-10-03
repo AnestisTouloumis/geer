@@ -113,7 +113,7 @@
 #' alternates faster.
 #'
 #' \describe{
-#'   \item{\code{"natural"}}{residual signs block together within a subject or
+#'   \item{\code{"natural"}}{residual signs block together within a cluster or
 #'     drift with time.}
 #'   \item{\code{"fitted"}}{the sign depends on \eqn{\hat\mu}, indicating an
 #'     inadequate scale or link.}
@@ -154,7 +154,7 @@
 #' A non-natural ordering interleaves observations from different clusters,
 #' which dilutes the within-cluster association described above and makes a
 #' rejection more readily attributable to the mean structure. This holds only
-#' for orderings that vary within a cluster. A baseline or between-subject
+#' for orderings that vary within a cluster. A baseline or between-cluster
 #' covariate, such as a treatment arm, sex or a randomization stratum, takes
 #' one value per cluster and therefore keeps each cluster's observations
 #' adjacent, so ordering on it reproduces the ambiguity of the natural

@@ -3,8 +3,8 @@
 #'
 #' @description
 #' Fits a marginal model for repeated or clustered responses using
-#' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' generalized estimating equations (GEE). Supported estimation methods include
+#' the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
 #' Jeffreys-type penalized GEE.
 #'
 #' @param formula \code{formula} expression of the form
@@ -19,7 +19,7 @@
 #'        \code{gaussian(link = "identity")}.
 #' @param data optional data frame containing variables referenced in
 #'        \code{formula}, \code{id}, \code{repeated}, \code{weights}, and
-#'        \code{offset}.
+#'        \code{offset}. Defaults to \code{parent.frame()}.
 #' @param id variable identifying the clusters.
 #' @param repeated optional variable identifying the order of observations
 #'        within each cluster.
@@ -35,7 +35,7 @@
 #'        dependence). Must be set explicitly when lags other than 1 are
 #'        intended. Ignored when \code{corstr != "m-dependent"}.
 #' @param method character string specifying the estimation method. Options are
-#'        the traditional GEE (\code{"gee"}), bias-reducing methods
+#'        the traditional GEE (\code{"gee"}), bias-reduced methods
 #'        (\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
 #'        bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
 #'        \code{"bcgee-naive"}), the fully iterated Jeffreys-type penalized GEE
@@ -45,8 +45,9 @@
 #' @param weights optional numeric vector of observation weights. Must be finite
 #'        and strictly positive. If not supplied, all weights are 1.
 #' @param beta_start optional numeric vector of starting values for the
-#'        regression parameters. If \code{NULL} (default), starting values
-#'        are obtained from an auxiliary generalized linear model fit, using
+#'        regression parameters. Defaults to \code{NULL}, in which case
+#'        starting values are obtained from an auxiliary generalized linear
+#'        model fit, using
 #'        \code{\link[brglm2]{brglmFit}} where appropriate.
 #' @param offset this can be used to specify an a priori known component to be
 #'        included in the linear predictor during fitting. This should be
@@ -56,18 +57,20 @@
 #'        specified their sum is used.
 #' @param control_glm optional list of control parameters interpreted by
 #'        \code{\link[brglm2]{brglm_control}} when computing GLM-based
-#'        starting values. Ignored when \code{beta_start} is supplied.
+#'        starting values. Ignored when \code{beta_start} is supplied. Defaults
+#'        to \code{list(...)}, that is, the arguments supplied through
+#'        \code{...}.
 #' @param use_p logical indicating whether to apply a degrees-of-freedom
 #'        correction by subtracting the number of regression parameters from
 #'        the relevant denominator when estimating the scale and working
 #'        correlation parameters. Defaults to \code{TRUE}.
-#' @param alpha_vector numeric vector of fixed association parameters used only
-#'        when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)}
+#' @param alpha_vector numeric vector of fixed working correlation parameters
+#'        used only when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)}
 #'        where \code{T = max(repeated)} after recoding, and the resulting
 #'        working correlation matrix must be positive definite. Ignored
-#'        otherwise.
+#'        otherwise. Defaults to \code{NULL}.
 #' @param phi_fixed logical indicating whether the scale parameter is fixed at
-#'        the value of \code{phi_value}. Defaults to \code{phi_fixed = FALSE}.
+#'        the value of \code{phi_value}. Defaults to \code{FALSE}.
 #' @param phi_value positive number giving the fixed value of the scale
 #'        parameter. Used only when \code{phi_fixed = TRUE}. Defaults to
 #'        \code{1}.
@@ -124,8 +127,8 @@
 #' A term of the form \code{offset(expression)} is allowed in the right-hand
 #' side of \code{formula}.
 #'
-#' The length of \code{id} and of \code{repeated} or \code{weights} (when
-#' provided) must equal the number of observations.
+#' The length of \code{id} and, when provided, of \code{repeated} and
+#' \code{weights} must equal the number of observations.
 #'
 #' @return
 #' An object of class \code{"geer"}, a list with components:
@@ -189,14 +192,15 @@
 #' For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 #' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
 #' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
-#' returned object.
+#' returned object, because these methods produce their estimate via a single
+#' correction step applied to an already-converged fit.
 #'
 #' @references
-#' Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+#' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
 #' with odds-ratio extensions. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16043}
 #'
-#' Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+#' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
 #' with an odds-ratio parameterization. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16058}
 #'

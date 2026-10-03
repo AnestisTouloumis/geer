@@ -3,8 +3,8 @@
 #'
 #' @description
 #' Fits marginal models for repeated or clustered responses using
-#' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' generalized estimating equations (GEE). Supported estimation methods include
+#' the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
 #' Jeffreys-type penalized GEE. Continuous, binary and count responses are handled by
 #' \code{\link{geewa}}, while binary responses can also be handled by
 #' \code{\link{geewa_binary}} through an odds-ratio parameterization.
@@ -15,11 +15,11 @@
 #' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 #' generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 #'
-#' Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+#' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
 #' with odds-ratio extensions. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16043}
 #'
-#' Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+#' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
 #' with an odds-ratio parameterization. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16058}
 #'

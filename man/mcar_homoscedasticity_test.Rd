@@ -23,13 +23,14 @@ mcar_homoscedasticity_test(
 \arguments{
 \item{object}{a fitted \code{geer} object, a numeric matrix, or a numeric data
 frame containing missing values. For a fitted \code{geer} object, the
-original response measurements are reconstructed in subject-by-occasion
+original response measurements are reconstructed in cluster-by-occasion
 form, with rows ordered by the sorted cluster identifiers, before rows
 omitted by the model fit are removed.}
 
 \item{data}{optional original data used to fit \code{object}. This is only
 used when \code{object} is a \code{geer} fit and is useful when the
-original data cannot be recovered from the fitted object.}
+original data cannot be recovered from the fitted object. Defaults to
+\code{NULL}.}
 
 \item{method}{character string selecting the diagnostic. \code{"hawkins"}
 uses the modified Hawkins normal-theory test, \code{"nonparametric"} uses
@@ -73,7 +74,7 @@ as the matrix or data frame supplied in \code{object}, including any rows
 with no observed values, contain no missing or non-finite values and
 reproduce the observed values. When supplied, no imputation is performed.
 This argument is intended for matrix or data-frame input: for a fitted
-\code{geer} object the reconstructed subject-by-occasion matrix is not
+\code{geer} object the reconstructed cluster-by-occasion matrix is not
 returned, so a conformable completed data set cannot be guaranteed.
 Defaults to \code{NULL}.}
 

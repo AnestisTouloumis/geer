@@ -12,12 +12,13 @@
 #'
 #' @param object a fitted \code{geer} object, a numeric matrix, or a numeric data
 #'   frame containing missing values. For a fitted \code{geer} object, the
-#'   original response measurements are reconstructed in subject-by-occasion
+#'   original response measurements are reconstructed in cluster-by-occasion
 #'   form, with rows ordered by the sorted cluster identifiers, before rows
 #'   omitted by the model fit are removed.
 #' @param data optional original data used to fit \code{object}. This is only
 #'   used when \code{object} is a \code{geer} fit and is useful when the
-#'   original data cannot be recovered from the fitted object.
+#'   original data cannot be recovered from the fitted object. Defaults to
+#'   \code{NULL}.
 #' @param method character string selecting the diagnostic. \code{"hawkins"}
 #'   uses the modified Hawkins normal-theory test, \code{"nonparametric"} uses
 #'   the k-sample Anderson-Darling test, and \code{"auto"} follows the
@@ -57,7 +58,7 @@
 #'   with no observed values, contain no missing or non-finite values and
 #'   reproduce the observed values. When supplied, no imputation is performed.
 #'   This argument is intended for matrix or data-frame input: for a fitted
-#'   \code{geer} object the reconstructed subject-by-occasion matrix is not
+#'   \code{geer} object the reconstructed cluster-by-occasion matrix is not
 #'   returned, so a conformable completed data set cannot be guaranteed.
 #'   Defaults to \code{NULL}.
 #' @param min_pattern_size integer greater than or equal to 2 specifying the

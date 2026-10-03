@@ -3,8 +3,8 @@
 #'
 #' @description
 #' Fits a marginal model for repeated or clustered binary responses using
-#' Generalized Estimating Equations (GEE). Supported estimation methods include
-#' the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+#' generalized estimating equations (GEE). Supported estimation methods include
+#' the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
 #' Jeffreys-type penalized GEE.
 #'
 #' @inheritParams geewa
@@ -22,14 +22,14 @@
 #'        when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
 #'        where \code{T = max(repeated)} after recoding, and all elements must
 #'        be finite and strictly positive. Ignored for all other values of
-#'        \code{orstr}.
+#'        \code{orstr}. Defaults to \code{NULL}.
 #'
 #' @details
 #' \code{method} specifies the estimation approach. If \code{method = "gee"},
 #' the standard GEE are solved with no adjustment. If \code{method} is one of
 #' \code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
 #' an adjustment vector is added to produce naive, robust or empirical
-#' bias-reducing estimators, respectively. If \code{method} is one of
+#' bias-reduced estimators, respectively. If \code{method} is one of
 #' \code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
 #' the corresponding bias-corrected estimators are produced via a one-step
 #' correction applied to the converged GEE solution. If
@@ -70,9 +70,8 @@
 #' A term of the form \code{offset(expression)} is allowed in the right-hand
 #' side of \code{formula}.
 #'
-#' The length of \code{id} must equal the number of observations. When
-#' provided, \code{repeated} and \code{weights} must also have the same
-#' length.
+#' The length of \code{id} and, when provided, of \code{repeated} and
+#' \code{weights} must equal the number of observations.
 #'
 #' @inherit geewa return
 #'
@@ -90,11 +89,11 @@
 #' correction step applied to an already-converged fit.
 #'
 #' @references
-#' Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+#' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
 #' with odds-ratio extensions. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16043}
 #'
-#' Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+#' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
 #' with an odds-ratio parameterization. \emph{Preprint}.
 #' \url{https://arxiv.org/abs/2606.16058}
 #'

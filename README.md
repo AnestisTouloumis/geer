@@ -7,8 +7,8 @@
 ## Overview
 
 `geer` fits marginal models for independent, repeated, or clustered
-responses using Generalized Estimating Equations (GEE). Supported
-estimation methods include the traditional GEE, bias-reducing GEE,
+responses using generalized estimating equations (GEE). Supported
+estimation methods include the traditional GEE, bias-reduced GEE,
 bias-corrected GEE, and Jeffreys-type penalized GEE. Continuous,
 binary, and count responses are handled by `geewa`, while binary
 responses can also be handled by `geewa_binary` through an odds-ratio
@@ -33,7 +33,7 @@ library("geer")
 
 ### Quick example
 
-Fit a bias-reducing GEE with an exchangeable working correlation to the
+Fit a bias-reduced GEE with an exchangeable working correlation to the
 epilepsy seizure count data:
 
 ``` r
@@ -83,7 +83,7 @@ Both functions support the following estimation methods via the
 | Method | Description |
 |---|---|
 | `"gee"` | Traditional GEE |
-| `"brgee-robust"`, `"brgee-naive"`, `"brgee-empirical"` | Bias-reducing GEE (differing in the bias adjustment used: robust, model-based, or empirical) |
+| `"brgee-robust"`, `"brgee-naive"`, `"brgee-empirical"` | Bias-reduced GEE (differing in the bias adjustment used: robust, model-based, or empirical) |
 | `"bcgee-robust"`, `"bcgee-naive"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
 | `"pgee-jeffreys"` | Fully iterated Jeffreys-type penalized GEE |
 | `"opgee-jeffreys"` | One-step penalized GEE |
@@ -264,6 +264,6 @@ for longitudinal data. *Statistics in Medicine*, **19**, 1277--1293.
 Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 
-Touloumis, A. (2026) [Bias-reduced GEE via adjusted estimating equations, with odds-ratio extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
+Touloumis, A. (2026a) [Bias-reduced GEE via adjusted estimating equations, with odds-ratio extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
 
-Touloumis, A. (2026) [Jeffreys-type penalized GEE for correlated binary data with an odds-ratio parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.
+Touloumis, A. (2026b) [Jeffreys-type penalized GEE for correlated binary data with an odds-ratio parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.

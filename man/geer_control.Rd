@@ -30,7 +30,8 @@ step-halving attempts allowed within an iteration. Defaults to \code{10}.}
 
 \item{step_multiplier}{positive integer used to scale the proposed step
 before step-halving begins. A value greater than \code{1} enlarges the
-initial step; the default of \code{1} leaves the scoring step unscaled.}
+initial step. Defaults to \code{1}, which leaves the scoring step
+unscaled.}
 
 \item{jeffreys_power}{strictly positive constant giving the power of the
 Jeffreys-type penalty. Defaults to \code{0.5}, which corresponds to the
@@ -68,7 +69,7 @@ geer_control(jeffreys_power = 0.1)
 
 }
 \references{
-Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
 with an odds-ratio parameterization. \emph{Preprint}.
 \url{https://arxiv.org/abs/2606.16058}
 }

@@ -24,10 +24,12 @@ covariates of response missingness, for example
 and should not be included in \code{formula}. If omitted, the right-hand
 side of the fitted GEE mean model is used. Terms aliased with the
 occasion effects, such as a main linear time effect, are omitted
-automatically and reported in \code{dropped_covariates}.}
+automatically and reported in \code{dropped_covariates}. Defaults to
+\code{NULL}.}
 
 \item{data}{optional original data used to fit \code{object}. This is only
-needed when the original data cannot be recovered from the fitted object.}
+needed when the original data cannot be recovered from the fitted object.
+Defaults to \code{NULL}.}
 
 \item{orstr}{working odds-ratio structure for the binary missingness GEE.
 One of \code{"independence"}, \code{"exchangeable"}, or
@@ -69,9 +71,9 @@ components, it contains:
   \item \code{missing}, \code{observed}, and \code{transitions}: numbers
   of missing outcomes, observed outcomes, and total transitions in the risk
   set.
-  \item \code{clusters}: number of subjects represented in the risk set.
+  \item \code{clusters}: number of clusters represented in the risk set.
   \item \code{intermittent}: whether an observed response occurs after a
-  missing response for at least one subject.
+  missing response for at least one cluster.
   \item \code{orstr}, \code{test}, \code{cov_type}, and
   \code{pmethod}: association, testing, covariance, and working-test
   approximation choices used for inference.
@@ -87,7 +89,7 @@ assess response-history dependence, covariate dependence, and their joint
 contribution.
 }
 \details{
-For each subject, the diagnostic considers transitions from occasion
+For each cluster, the diagnostic considers transitions from occasion
 \eqn{t-1} to occasion \eqn{t}. A transition enters the risk set only when
 \eqn{Y_{i,t-1}} is observed. The binary response is
 \deqn{R_{it}=I(Y_{it}\text{ is missing}),}
@@ -96,7 +98,7 @@ and the fitted mean model has the form
 = \alpha_t + X_{it}^T\gamma + \delta Y_{i,t-1}.}
 The occasion-specific effects \eqn{\alpha_t} are nuisance parameters.
 The model is fitted with \code{geewa_binary(..., link = "logit",
-method = "gee")} using the original subject identifiers.
+method = "gee")} using the original cluster identifiers.
 If a score-based procedure is combined with \code{cov_type = "jackknife"},
 the score and model-based information are evaluated under the corresponding
 null model, while the covariance component is obtained from full
@@ -122,11 +124,11 @@ in \code{anova.geer}.
 
 The approach is closely related to Ridout's logistic-regression formulation
 for studying random dropout. Using GEE for the binary indicators allows
-correlation among repeated missingness indicators within a subject. The
+correlation among repeated missingness indicators within a cluster. The
 procedure is diagnostic: failure to reject does not prove MCAR and does not
 rule out dependence on unobserved responses (MNAR).
 
-With monotone dropout, the risk-set construction contributes each subject up
+With monotone dropout, the risk-set construction contributes each cluster up
 to the first missing response. With intermittent missingness, transitions are
 included whenever the immediately preceding response is observed. A warning is
 issued in that case because the result should be interpreted as a local

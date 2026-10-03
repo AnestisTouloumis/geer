@@ -34,7 +34,7 @@ model. Options are \code{"logit"}, \code{"probit"},
 
 \item{data}{optional data frame containing variables referenced in
 \code{formula}, \code{id}, \code{repeated}, \code{weights}, and
-\code{offset}.}
+\code{offset}. Defaults to \code{parent.frame()}.}
 
 \item{id}{variable identifying the clusters.}
 
@@ -52,7 +52,7 @@ within-cluster association. Options are
 \code{"independence"}.}
 
 \item{method}{character string specifying the estimation method. Options are
-the traditional GEE (\code{"gee"}), bias-reducing methods
+the traditional GEE (\code{"gee"}), bias-reduced methods
 (\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
 bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
 \code{"bcgee-naive"}), the fully iterated Jeffreys-type penalized GEE
@@ -64,8 +64,9 @@ bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
 and strictly positive. If not supplied, all weights are 1.}
 
 \item{beta_start}{optional numeric vector of starting values for the
-regression parameters. If \code{NULL} (default), starting values
-are obtained from an auxiliary generalized linear model fit, using
+regression parameters. Defaults to \code{NULL}, in which case
+starting values are obtained from an auxiliary generalized linear
+model fit, using
 \code{\link[brglm2]{brglmFit}} where appropriate.}
 
 \item{offset}{this can be used to specify an a priori known component to be
@@ -77,13 +78,15 @@ specified their sum is used.}
 
 \item{control_glm}{optional list of control parameters interpreted by
 \code{\link[brglm2]{brglm_control}} when computing GLM-based
-starting values. Ignored when \code{beta_start} is supplied.}
+starting values. Ignored when \code{beta_start} is supplied. Defaults
+to \code{list(...)}, that is, the arguments supplied through
+\code{...}.}
 
 \item{alpha_vector}{numeric vector of fixed odds-ratio parameters used only
 when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
 where \code{T = max(repeated)} after recoding, and all elements must
 be finite and strictly positive. Ignored for all other values of
-\code{orstr}.}
+\code{orstr}. Defaults to \code{NULL}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
@@ -142,8 +145,8 @@ An object of class \code{"geer"}, a list with components:
 }
 \description{
 Fits a marginal model for repeated or clustered binary responses using
-Generalized Estimating Equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reducing GEE, bias-corrected GEE, and
+generalized estimating equations (GEE). Supported estimation methods include
+the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
 Jeffreys-type penalized GEE.
 }
 \details{
@@ -151,7 +154,7 @@ Jeffreys-type penalized GEE.
 the standard GEE are solved with no adjustment. If \code{method} is one of
 \code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
 an adjustment vector is added to produce naive, robust or empirical
-bias-reducing estimators, respectively. If \code{method} is one of
+bias-reduced estimators, respectively. If \code{method} is one of
 \code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
 the corresponding bias-corrected estimators are produced via a one-step
 correction applied to the converged GEE solution. If
@@ -192,9 +195,8 @@ and \code{repeated}.
 A term of the form \code{offset(expression)} is allowed in the right-hand
 side of \code{formula}.
 
-The length of \code{id} must equal the number of observations. When
-provided, \code{repeated} and \code{weights} must also have the same
-length.
+The length of \code{id} and, when provided, of \code{repeated} and
+\code{weights} must equal the number of observations.
 }
 \section{Note on returned components}{
 
@@ -266,11 +268,11 @@ summary(fit_pgee, cov_type = "robust")
 
 }
 \references{
-Touloumis, A. (2026) Bias-reduced GEE via adjusted estimating equations,
+Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
 with odds-ratio extensions. \emph{Preprint}.
 \url{https://arxiv.org/abs/2606.16043}
 
-Touloumis, A. (2026) Jeffreys-type penalized GEE for correlated binary data
+Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
 with an odds-ratio parameterization. \emph{Preprint}.
 \url{https://arxiv.org/abs/2606.16058}
 }
