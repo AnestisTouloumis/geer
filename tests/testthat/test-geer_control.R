@@ -24,6 +24,15 @@ test_that("normalize_geer_control validates malformed partial control lists", {
     normalize_geer_control(list(maxiter = "bad", tolerance = -1)),
     "positive"
   )
+  expect_error(
+    normalize_geer_control("tight"),
+    "'control' must be NULL or a list"
+  )
+})
+
+
+test_that("normalize_geer_control maps NULL to the default control", {
+  expect_identical(normalize_geer_control(NULL), geer_control())
 })
 
 

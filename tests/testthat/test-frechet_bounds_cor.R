@@ -141,14 +141,6 @@ test_that("under unstructured the labels and values match the fitted alpha", {
 
 # ── Error paths ───────────────────────────────────────────────────────────────
 
-test_that("frechet_bounds_cor errors on non-geer input", {
-  expect_error(
-    frechet_bounds_cor(list()),
-    "'object' must be of 'geer' class",
-    fixed = TRUE
-  )
-})
-
 test_that("frechet_bounds_cor errors on a geewa_binary fit", {
   expect_error(
     frechet_bounds_cor(fit_geewa_bin_exch),

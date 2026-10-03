@@ -131,25 +131,6 @@ test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
 })
 
 
-test_that("compute_runs_statistics rejects an unknown alternative", {
-  expect_error(
-    geer:::compute_runs_statistics(c(1, -1, 1), "left.sided"),
-    "'alternative' must be one of",
-    fixed = TRUE
-  )
-  expect_error(
-    geer:::compute_runs_statistics(c(1, -1, 1), c("less", "greater")),
-    "'alternative' must be a single character value",
-    fixed = TRUE
-  )
-  expect_error(
-    geer:::compute_runs_statistics(c(1, -1, 1), NA_character_),
-    "'alternative' must be a single character value",
-    fixed = TRUE
-  )
-})
-
-
 test_that("compute_runs_statistics returns the retained signs it counted", {
   out <- geer:::compute_runs_statistics(c(1, 0, -1, -1, 2), "two.sided")
   expect_identical(out$retained, c(TRUE, FALSE, TRUE, TRUE, TRUE))

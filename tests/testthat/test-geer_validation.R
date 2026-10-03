@@ -1,6 +1,16 @@
 testthat::local_edition(3)
 
 
+test_that("check_geer_object accepts geer fits and rejects anything else", {
+  expect_identical(check_geer_object(fit_geewa_pois_exch), fit_geewa_pois_exch)
+  expect_error(check_geer_object(list()), "'object' must be of 'geer' class")
+  expect_error(
+    check_geer_object(list(), name = "object1"),
+    "'object1' must be of 'geer' class"
+  )
+})
+
+
 test_that("check_step_thresholds accepts valid thresholds and rejects invalid ones", {
   out <- check_step_thresholds(0.10, 0.20)
   expect_type(out, "list")

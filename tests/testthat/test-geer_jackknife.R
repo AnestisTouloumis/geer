@@ -1,23 +1,5 @@
 testthat::local_edition(3)
 
-expect_jackknife_test_result <- function(x) {
-  expect_type(x, "list")
-  expect_true(all(c("test_stat", "test_df", "test_p") %in% names(x)))
-  expect_true(is.numeric(x$test_stat))
-  expect_true(is.numeric(x$test_df))
-  expect_true(is.numeric(x$test_p))
-  expect_length(x$test_stat, 1L)
-  expect_length(x$test_df, 1L)
-  expect_length(x$test_p, 1L)
-  expect_true(is.finite(x$test_stat))
-  expect_true(is.finite(x$test_df))
-  expect_true(is.finite(x$test_p))
-  expect_gte(x$test_stat, 0)
-  expect_gt(x$test_df, 0)
-  expect_gte(x$test_p, 0)
-  expect_lte(x$test_p, 1)
-}
-
 jackknife_gaussian_data <- data.frame(
   id = rep(seq_len(8), each = 3),
   time = rep(seq_len(3), times = 8),
@@ -63,16 +45,15 @@ test_that("jackknife covariance uses full leave-one-cluster refits with fixed co
     corstr = "exchangeable",
     method = "gee"
   )
-
-  ids <- unique(jackknife_gaussian_data$id)
   fixed_alpha <- rep(as.numeric(fit$alpha), choose(max(jackknife_gaussian_data$time), 2L))
-  delete_estimates <- t(vapply(
-    ids,
-    function(id_out) {
-      fit_i <- geewa(
+  delete_estimates <- jackknife_delete_estimates_by_refit(
+    fit,
+    jackknife_gaussian_data,
+    function(d) {
+      geewa(
         y ~ time + group,
         family = gaussian(),
-        data = jackknife_gaussian_data[jackknife_gaussian_data$id != id_out, ],
+        data = d,
         id = id,
         repeated = time,
         corstr = "fixed",
@@ -80,112 +61,60 @@ test_that("jackknife covariance uses full leave-one-cluster refits with fixed co
         method = "gee",
         beta_start = coef(fit)
       )
-      coef(fit_i)
-    },
-    numeric(length(coef(fit)))
-  ))
-  dimnames(delete_estimates) <- list(as.character(ids), names(coef(fit)))
-  centered <- sweep(delete_estimates, 2L, colMeans(delete_estimates), `-`)
-  expected <- ((nrow(delete_estimates) - 1L) / nrow(delete_estimates)) *
-    crossprod(centered)
-  dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
-
-  observed_estimates <- compute_jackknife_delete_estimates(fit)
-  observed <- vcov(fit, cov_type = "jackknife")
-
-  expect_equal(observed_estimates, delete_estimates, tolerance = 1e-7)
-  expect_equal(observed, expected, tolerance = 1e-7)
-  expect_equal(observed, t(observed), tolerance = 1e-12)
+    }
+  )
+  expect_jackknife_vcov(fit, delete_estimates)
 })
 
 
-test_that("jackknife covariance fixes the full-data odds-ratio vector for geewa_binary", {
-  fit <- geewa_binary(
-    y ~ time + group,
-    data = jackknife_binary_data,
-    id = id,
-    repeated = time,
-    orstr = "exchangeable",
-    method = "gee"
-  )
-
-  ids <- unique(jackknife_binary_data$id)
-  delete_estimates <- t(vapply(
-    ids,
-    function(id_out) {
-      fit_i <- geewa_binary(
-        y ~ time + group,
-        data = jackknife_binary_data[jackknife_binary_data$id != id_out, ],
-        id = id,
-        repeated = time,
-        orstr = "fixed",
-        alpha_vector = as.numeric(fit$alpha),
-        method = "gee",
-        beta_start = coef(fit)
-      )
-      coef(fit_i)
-    },
-    numeric(length(coef(fit)))
-  ))
-  dimnames(delete_estimates) <- list(as.character(ids), names(coef(fit)))
-  centered <- sweep(delete_estimates, 2L, colMeans(delete_estimates), `-`)
-  expected <- ((nrow(delete_estimates) - 1L) / nrow(delete_estimates)) *
-    crossprod(centered)
-  dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
-
-  expect_equal(
-    compute_jackknife_delete_estimates(fit),
-    delete_estimates,
-    tolerance = 1e-7
-  )
-  expect_equal(vcov(fit, cov_type = "jackknife"), expected, tolerance = 1e-7)
-})
-
-
-test_that("jackknife covariance works for an independence odds-ratio fit", {
-  # Regression guard. fit_geesolver_or() indexes alpha_vector by pair position, so
-  # it needs length choose(max(repeated), 2), but an independence geewa_binary()
-  # fit stores the scalar 1. Passing that scalar straight through read past the
-  # end of the vector, which Armadillo does not bounds-check.
-  fit <- geewa_binary(
-    y ~ time + group,
-    data = jackknife_binary_data,
-    id = id,
-    repeated = time,
-    orstr = "independence",
-    method = "gee"
-  )
-  expect_length(fit$alpha, 1L)
-
-  ids <- unique(jackknife_binary_data$id)
-  delete_estimates <- t(vapply(
-    ids,
-    function(id_out) {
-      fit_i <- geewa_binary(
-        y ~ time + group,
-        data = jackknife_binary_data[jackknife_binary_data$id != id_out, ],
-        id = id,
-        repeated = time,
-        orstr = "independence",
-        method = "gee",
-        beta_start = coef(fit)
-      )
-      coef(fit_i)
-    },
-    numeric(length(coef(fit)))
-  ))
-  dimnames(delete_estimates) <- list(as.character(ids), names(coef(fit)))
-  centered <- sweep(delete_estimates, 2L, colMeans(delete_estimates), `-`)
-  expected <- ((nrow(delete_estimates) - 1L) / nrow(delete_estimates)) *
-    crossprod(centered)
-  dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
-
-  expect_equal(
-    compute_jackknife_delete_estimates(fit),
-    delete_estimates,
-    tolerance = 1e-7
-  )
-  expect_equal(vcov(fit, cov_type = "jackknife"), expected, tolerance = 1e-7)
+test_that("jackknife covariance refits geewa_binary with the correct odds-ratio vector", {
+  # The independence case is a regression guard. fit_geesolver_or() indexes
+  # alpha_vector by pair position, so it needs length choose(max(repeated), 2),
+  # but an independence geewa_binary() fit stores the scalar 1. Passing that
+  # scalar straight through read past the end of the vector, which Armadillo
+  # does not bounds-check.
+  for (orstr in c("exchangeable", "independence")) {
+    fit <- geewa_binary(
+      y ~ time + group,
+      data = jackknife_binary_data,
+      id = id,
+      repeated = time,
+      orstr = orstr,
+      method = "gee"
+    )
+    if (orstr == "independence") {
+      expect_length(fit$alpha, 1L)
+    }
+    delete_estimates <- jackknife_delete_estimates_by_refit(
+      fit,
+      jackknife_binary_data,
+      function(d) {
+        if (orstr == "independence") {
+          geewa_binary(
+            y ~ time + group,
+            data = d,
+            id = id,
+            repeated = time,
+            orstr = "independence",
+            method = "gee",
+            beta_start = coef(fit)
+          )
+        } else {
+          geewa_binary(
+            y ~ time + group,
+            data = d,
+            id = id,
+            repeated = time,
+            orstr = "fixed",
+            alpha_vector = as.numeric(fit$alpha),
+            method = "gee",
+            beta_start = coef(fit)
+          )
+        }
+      }
+    )
+    expect_jackknife_vcov(fit, delete_estimates)
+  }
 })
 
 
@@ -328,19 +257,19 @@ test_that("all hypothesis-test helpers accept jackknife covariance", {
     method = "gee"
   )
 
-  expect_jackknife_test_result(compute_wald_test(fit0, fit1, cov_type = "jackknife"))
-  expect_jackknife_test_result(compute_score_test(fit0, fit1, cov_type = "jackknife"))
-  expect_jackknife_test_result(
+  expect_test_result(compute_wald_test(fit0, fit1, cov_type = "jackknife"))
+  expect_test_result(compute_score_test(fit0, fit1, cov_type = "jackknife"))
+  expect_test_result(
     compute_working_wald_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )
   )
-  expect_jackknife_test_result(
+  expect_test_result(
     compute_working_score_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )
   )
-  expect_jackknife_test_result(
+  expect_test_result(
     compute_working_lrt_test(
       fit0, fit1, cov_type = "jackknife", pmethod = "rao-scott"
     )

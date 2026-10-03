@@ -57,25 +57,6 @@ fit_bin_full_exch <- geewa(
   method = "gee"
 )
 
-expect_test_result <- function(x) {
-  expect_type(x, "list")
-  expect_true(all(c("test_stat", "test_df", "test_p") %in% names(x)))
-  expect_true(is.numeric(x$test_stat))
-  expect_true(is.numeric(x$test_df))
-  expect_true(is.numeric(x$test_p))
-  expect_length(x$test_stat, 1L)
-  expect_length(x$test_df, 1L)
-  expect_length(x$test_p, 1L)
-  expect_true(is.finite(x$test_stat))
-  expect_true(is.finite(x$test_df))
-  expect_true(is.finite(x$test_p))
-  expect_gte(x$test_stat, 0)
-  expect_gt(x$test_df, 0)
-  expect_gte(x$test_p, 0)
-  expect_lte(x$test_p, 1)
-}
-
-
 test_that("check_nested_models validates class and nesting requirements", {
   expect_error(
     check_nested_models(1, fit_bin_full),

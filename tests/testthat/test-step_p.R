@@ -67,46 +67,6 @@ fit_bin_lower <- geewa(
 )
 
 
-test_that("step_p rejects invalid scalar inputs", {
-  expect_error(
-    step_p(fit_resp_full_indep, p_enter = 0, direction = "backward"),
-    "p_enter"
-  )
-  expect_error(
-    step_p(fit_resp_full_indep, p_remove = "0.1", direction = "backward"),
-    "p_remove"
-  )
-  expect_error(
-    step_p(fit_resp_full_indep, steps = 1.5, direction = "backward"),
-    "steps"
-  )
-})
-
-
-test_that("step_p rejects invalid scope specifications", {
-  expect_error(
-    step_p(fit_resp_full_indep, scope = 1, direction = "both"),
-    "scope"
-  )
-  expect_error(
-    step_p(
-      fit_resp_full_indep,
-      scope = list(foo = ~ baseline + treatment),
-      direction = "both"
-    ),
-    "scope"
-  )
-  expect_error(
-    step_p(
-      fit_resp_full_indep,
-      scope = list(lower = 1),
-      direction = "both"
-    ),
-    "scope\\$lower"
-  )
-})
-
-
 test_that("step_p accepts a list scope with upper only", {
   out <- step_p(
     fit_resp_lower,

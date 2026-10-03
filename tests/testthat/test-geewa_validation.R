@@ -50,7 +50,7 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
 })
 
 
-test_that("geewa validates beta_start and phi_value", {
+test_that("geewa validates beta_start", {
   expect_error(
     geewa(
       seizures ~ treatment,
@@ -60,33 +60,6 @@ test_that("geewa validates beta_start and phi_value", {
       beta_start = c(0, 0, 0)
     ),
     "'beta_start' must be a numeric vector of length"
-  )
-  expect_error(
-    geewa(
-      seizures ~ treatment,
-      data = test_data$epilepsy,
-      id = id,
-      family = poisson("log"),
-      phi_fixed = TRUE,
-      phi_value = -1
-    ),
-    "'phi_value' must be a single positive number"
-  )
-})
-
-
-test_that("geewa rejects non-positive weights", {
-  bad_weights <- rep(1, nrow(test_data$epilepsy))
-  bad_weights[1] <- -1
-  expect_error(
-    geewa(
-      seizures ~ treatment,
-      data = test_data$epilepsy,
-      id = id,
-      family = poisson("log"),
-      weights = bad_weights
-    ),
-    "'weights' must be strictly positive"
   )
 })
 

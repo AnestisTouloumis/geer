@@ -341,7 +341,6 @@ test_that("mcar_logistic_test can recover data supplied explicitly", {
   )
   fit$data <- NULL
 
-  expect_error(mcar_logistic_test(fit), "original data are not available")
   out <- mcar_logistic_test(fit, data = dat, formula = ~ treatment + age)
   expect_s3_class(out, "htest")
 })

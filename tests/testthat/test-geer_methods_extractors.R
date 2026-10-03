@@ -223,11 +223,3 @@ test_that("model.matrix does not depend on the stored data component", {
   fit$data <- new.env()
   expect_equal(model.matrix(fit), count_fit$x)
 })
-
-
-test_that("model.matrix.geer rejects non-geer objects", {
-  expect_error(
-    model.matrix.geer(list(terms = terms(~ 1), data = data.frame(x = 1))),
-    "'object' must be of 'geer' class"
-  )
-})

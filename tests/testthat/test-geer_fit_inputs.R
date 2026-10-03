@@ -115,27 +115,6 @@ test_that("build_geer_design_matrix rejects a rank-deficient design", {
 })
 
 
-## -------------------------------------------------------------- control ----
-
-test_that("normalize_geer_control fills in defaults and validates its input", {
-  expect_identical(geer:::normalize_geer_control(NULL), geer_control())
-
-  out <- geer:::normalize_geer_control(list(maxiter = 7, tolerance = 1e-4))
-  expect_equal(out$maxiter, 7)
-  expect_equal(out$tolerance, 1e-4)
-  expect_identical(out$or_adding, geer_control()$or_adding)
-
-  expect_error(
-    geer:::normalize_geer_control("tight"),
-    "'control' must be NULL or a list"
-  )
-  expect_error(
-    geer:::normalize_geer_control(list(maxiter = -1)),
-    "'maxiter' must be a positive integer"
-  )
-})
-
-
 ## --------------------------------------------------------------- family ----
 
 test_that("normalize_family accepts names, functions and family objects", {

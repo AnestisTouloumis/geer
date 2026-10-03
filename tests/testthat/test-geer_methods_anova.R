@@ -110,12 +110,6 @@ test_that("anova.geer rejects working-lrt for non-independence models", {
   )
 })
 
-
-test_that("anova.geer rejects non-geer first argument", {
-  expect_error(anova.geer(list()), "'object' must be of 'geer' class")
-})
-
-
 test_that("anova.geer silently drops non-geer objects from dots", {
   out <- anova(fit_null, fit_trt, "not_a_model",
                test = "wald", cov_type = "robust")

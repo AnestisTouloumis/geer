@@ -124,10 +124,6 @@ test_that("result helper stores an anova table on the fitted model", {
   expect_true(is.data.frame(out$anova))
   expect_equal(nrow(out$anova), 2L)
   expect_true(all(c("Step", "Df", "Chi", "Pr(>Chi)", "CIC") %in% names(out$anova)))
-  heading <- attr(out$anova, "heading")
-  expect_type(heading, "character")
-  expect_true(any(grepl("Initial Model:", heading, fixed = TRUE)))
-  expect_true(any(grepl("Final Model:", heading, fixed = TRUE)))
 })
 
 

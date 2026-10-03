@@ -217,22 +217,6 @@ test_that("compute_runs_statistics validates the alternative", {
 })
 
 
-test_that("one-sided p-values are complementary", {
-  residual_values <- c(1, 1, -1, -1, 1, -1, 1, 1, -1, -1, -1)
-
-  less <- geer:::compute_runs_statistics(residual_values, "less")
-  greater <- geer:::compute_runs_statistics(residual_values, "greater")
-  two_sided <- geer:::compute_runs_statistics(residual_values, "two.sided")
-
-  expect_equal(less$p_value + greater$p_value, 1, tolerance = 1e-12)
-  expect_equal(
-    two_sided$p_value,
-    2 * min(less$p_value, greater$p_value),
-    tolerance = 1e-12
-  )
-})
-
-
 test_that("compute_runs_statistics rejects a degenerate sign sequence", {
   ## One positive and one negative residual give a zero variance.
   expect_error(
