@@ -255,7 +255,8 @@ fitted.geer <- function(object, ...) {
 predict.geer <- function(object,
                          newdata = NULL,
                          type = c("link", "response"),
-                         cov_type = geer_cov_type_choices,
+                         cov_type = c("bias-corrected", "robust",
+                                      "df-adjusted", "jackknife", "naive"),
                          se.fit = FALSE,
                          ...) {
   check_unused_dots(list(...), "predict.geer")

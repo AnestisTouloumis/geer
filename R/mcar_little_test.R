@@ -140,7 +140,7 @@
 #'
 #' @export
 mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
-                             reference = geer_mcar_reference_choices) {
+                             reference = c("auto", "asymptotic")) {
   data_name <- deparse1(substitute(object))
   maxit <- check_integer_at_least(maxit, "maxit")
   if (!is_positive_scalar(tol)) {

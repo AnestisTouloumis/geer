@@ -25,8 +25,9 @@ generics::glance
 #'   z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.
 #' @param cov_type character string specifying the covariance estimator used to
 #'   compute standard errors and Wald z-statistics. Options are
-#'   \code{"bias-corrected"} (default), \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, and \code{"naive"} (model-based). See \code{\link{vcov.geer}} for details.
+#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+#'   \code{"jackknife"}, and \code{"naive"} (model-based). See
+#'   \code{\link{vcov.geer}} for details. Defaults to \code{"bias-corrected"}.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
@@ -96,7 +97,8 @@ tidy.geer <- function(x,
                       conf.int = FALSE,
                       conf.level = 0.95,
                       exponentiate = FALSE,
-                      cov_type = geer_cov_type_choices,
+                      cov_type = c("bias-corrected", "robust", "df-adjusted",
+                                   "jackknife", "naive"),
                       ...) {
   object <- check_geer_object(x)
   cov_type <- match.arg(cov_type)

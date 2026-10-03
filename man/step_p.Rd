@@ -7,12 +7,12 @@
 step_p(
   object,
   scope,
-  direction = geer_direction_choices,
+  direction = c("backward", "forward", "both"),
   p_enter = 0.15,
   p_remove = 0.15,
-  test = geer_test_choices,
-  cov_type = geer_cov_type_choices,
-  pmethod = geer_pmethod_choices,
+  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  pmethod = c("rao-scott", "satterthwaite"),
   steps = 1000
 )
 }
@@ -58,7 +58,7 @@ the p-value for the modified working tests. Options are the Rao--Scott
 approximation (\code{"rao-scott"}) and the Satterthwaite approximation
 (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
 
-\item{steps}{non-negative integer giving the maximum number of accepted
+\item{steps}{nonnegative integer giving the maximum number of accepted
 steps to perform. If \code{steps = 0}, the initial model is returned with
 an initial-model row in its \code{anova} component. Defaults to
 \code{1000}.}

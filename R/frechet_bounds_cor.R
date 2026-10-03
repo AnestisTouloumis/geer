@@ -2,12 +2,12 @@
 #' Frechet Bounds for a Working Correlation Matrix
 #'
 #' @description
-#' For a fitted \code{geer} model from \code{\link{geewa}} with a
+#' Checks, for a fitted \code{geer} model from \code{\link{geewa}} with a
 #' \code{binomial} or \code{quasibinomial} family, a binary response and a
-#' non-independence association structure, checks whether each off-diagonal
-#' entry of the working correlation matrix lies within the Frechet bounds
-#' implied by the fitted marginal probabilities. Results are summarized at the
-#' time-pair level.
+#' non-independence association structure, whether each off-diagonal entry of
+#' the working correlation matrix lies within the Frechet bounds implied by
+#' the fitted marginal probabilities. Results are summarized at the time-pair
+#' level.
 #'
 #' @param object an object of class \code{geer} fitted via \code{\link{geewa}}
 #'   with \code{family = binomial()} or \code{family = quasibinomial()}, a

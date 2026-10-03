@@ -166,10 +166,14 @@
 mcar_logistic_test <- function(object,
                                formula = NULL,
                                data = NULL,
-                               orstr = geer_mcar_orstr_choices,
-                               test = geer_test_choices,
-                               cov_type = geer_cov_type_choices,
-                               pmethod = geer_pmethod_choices,
+                               orstr = c("independence", "exchangeable",
+                                         "unstructured"),
+                               test = c("wald", "score", "working-wald",
+                                        "working-score", "working-lrt"),
+                               cov_type = c("bias-corrected", "robust",
+                                            "df-adjusted", "jackknife",
+                                            "naive"),
+                               pmethod = c("rao-scott", "satterthwaite"),
                                control = geer_control()) {
   object <- check_geer_object(object)
   orstr <- match.arg(orstr)

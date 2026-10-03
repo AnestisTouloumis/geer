@@ -99,7 +99,7 @@ check_summary_geer_object <- function(x, name = "x") {
 check_nonnegative_integerish <- function(x, name) {
   check_single_numeric(x, name)
   if (x < 0 || abs(x - round(x)) > geer_integer_tol) {
-    stop(sprintf("'%s' must be a single non-negative integer", name), call. = FALSE)
+    stop(sprintf("'%s' must be a single nonnegative integer", name), call. = FALSE)
   }
   as.integer(round(x))
 }

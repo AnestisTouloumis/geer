@@ -84,7 +84,7 @@ validate_geer <- function(x) {
     if (!is.numeric(x$obs_no) || length(x$obs_no) != 1L ||
         !is.finite(x$obs_no) || x$obs_no < 0 ||
         abs(x$obs_no - round(x$obs_no)) > geer_integer_tol) {
-      stop("'obs_no' must be a single non-negative integer", call. = FALSE)
+      stop("'obs_no' must be a single nonnegative integer", call. = FALSE)
     }
     if (x$obs_no != n_obs) {
       stop("'obs_no' is inconsistent with observation-level components", call. = FALSE)
@@ -135,7 +135,7 @@ validate_geer <- function(x) {
     if (!is.numeric(x$rank) || length(x$rank) != 1L ||
         !is.finite(x$rank) || x$rank < 0 ||
         abs(x$rank - round(x$rank)) > geer_integer_tol) {
-      stop("'rank' must be a single non-negative integer", call. = FALSE)
+      stop("'rank' must be a single nonnegative integer", call. = FALSE)
     }
   }
   if ("converged" %in% names(x)) {

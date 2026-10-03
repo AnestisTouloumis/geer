@@ -4,7 +4,11 @@
 \alias{vcov.geer}
 \title{Extract Variance-Covariance Matrix from a geer Object}
 \usage{
-\method{vcov}{geer}(object, cov_type = geer_cov_type_choices, ...)
+\method{vcov}{geer}(
+  object,
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  ...
+)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}

@@ -18,7 +18,7 @@
 #' @param p_remove numeric value strictly between 0 and 1 specifying the p-value
 #'   threshold for removing a term during backward steps. Defaults to
 #'   \code{0.15}.
-#' @param steps non-negative integer giving the maximum number of accepted
+#' @param steps nonnegative integer giving the maximum number of accepted
 #'   steps to perform. If \code{steps = 0}, the initial model is returned with
 #'   an initial-model row in its \code{anova} component. Defaults to
 #'   \code{1000}.
@@ -125,12 +125,14 @@
 #' @export
 step_p <- function(object,
                    scope,
-                   direction = geer_direction_choices,
+                   direction = c("backward", "forward", "both"),
                    p_enter = 0.15,
                    p_remove = 0.15,
-                   test = geer_test_choices,
-                   cov_type = geer_cov_type_choices,
-                   pmethod = geer_pmethod_choices,
+                   test = c("wald", "score", "working-wald", "working-score",
+                            "working-lrt"),
+                   cov_type = c("bias-corrected", "robust", "df-adjusted",
+                                "jackknife", "naive"),
+                   pmethod = c("rao-scott", "satterthwaite"),
                    steps = 1000) {
   object <- check_geer_object(object)
   direction <- match_direction_type(direction[1L])

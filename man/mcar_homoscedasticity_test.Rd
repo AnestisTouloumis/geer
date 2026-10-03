@@ -7,8 +7,8 @@
 mcar_homoscedasticity_test(
   object,
   data = NULL,
-  method = geer_mcar_homoscedasticity_method_choices,
-  imputation = geer_mcar_imputation_choices,
+  method = c("auto", "nonparametric", "hawkins"),
+  imputation = c("distribution-free", "normal"),
   n_imputations = 1L,
   imputed_data = NULL,
   min_pattern_size = 7L,

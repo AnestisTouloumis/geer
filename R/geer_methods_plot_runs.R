@@ -12,20 +12,21 @@
 #' @param x an object of class \code{"geer_runs_test"}, as returned by
 #'   \code{\link{runs_test}}.
 #' @param cluster_breaks logical value indicating whether vertical grid lines
-#'   should mark the boundaries between clusters. The default, \code{NULL},
-#'   draws them when the test used the natural cluster/repeated ordering and
-#'   omits them otherwise.
-#' @param col color of the plotting symbols. The default, \code{NULL},
-#'   colors the symbols by run using \code{run_colors}. A single color
-#'   suppresses that and draws every symbol alike; a vector is recycled across
-#'   the tested residuals by \code{\link[graphics]{points}}.
-#' @param run_colors vector of at least three colors recycled across
-#'   successive runs when \code{col} is \code{NULL}. Fewer than three is an
-#'   error; see Details.
+#'   should mark the boundaries between clusters. If \code{NULL}, they are drawn
+#'   when the test used the natural cluster/repeated ordering and omitted
+#'   otherwise. Defaults to \code{NULL}.
+#' @param col color of the plotting symbols. If \code{NULL}, the symbols are
+#'   colored by run using \code{run_colors}. A single color suppresses that and
+#'   draws every symbol alike; a vector is recycled across the tested residuals
+#'   by \code{\link[graphics]{points}}. Defaults to \code{NULL}.
+#' @param run_colors vector of at least three colors recycled across successive
+#'   runs when \code{col} is \code{NULL}. Fewer than three is an error; see
+#'   Details. Defaults to \code{grDevices::palette.colors(4L, "Okabe-Ito")}.
 #' @param pch plotting symbol, passed to \code{\link[graphics]{points}}.
-#' @param cex symbol expansion, passed to \code{\link[graphics]{points}}. The
-#'   default, \code{NULL}, shrinks the symbols as the sequence lengthens so
-#'   that long sequences remain readable.
+#'   Defaults to \code{1L}.
+#' @param cex symbol expansion, passed to \code{\link[graphics]{points}}. If
+#'   \code{NULL}, the symbols shrink as the sequence lengthens so that long
+#'   sequences remain readable. Defaults to \code{NULL}.
 #' @param main,sub,xlab,ylab character strings giving the title, subtitle and
 #'   axis labels. Defaults are supplied when these are \code{NULL}; use
 #'   \code{""} to suppress one.

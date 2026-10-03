@@ -108,7 +108,8 @@
 #'
 #' @export
 vcov.geer <- function(object,
-                      cov_type = geer_cov_type_choices,
+                      cov_type = c("bias-corrected", "robust", "df-adjusted",
+                                   "jackknife", "naive"),
                       ...) {
   check_unused_dots(list(...), "vcov.geer")
   object <- check_geer_object(object)
@@ -224,7 +225,8 @@ coef.geer <- function(object, ...) {
 confint.geer <- function(object,
                          parm,
                          level = 0.95,
-                         cov_type = geer_cov_type_choices,
+                         cov_type = c("bias-corrected", "robust",
+                                      "df-adjusted", "jackknife", "naive"),
                          ...) {
   check_unused_dots(list(...), "confint.geer")
   object <- check_geer_object(object)

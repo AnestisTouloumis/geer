@@ -104,7 +104,8 @@ print.geer <- function(x, ...) {
 #'
 #' @export
 summary.geer <- function(object,
-                         cov_type = geer_cov_type_choices,
+                         cov_type = c("bias-corrected", "robust",
+                                      "df-adjusted", "jackknife", "naive"),
                          ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)

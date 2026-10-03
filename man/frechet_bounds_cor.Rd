@@ -29,12 +29,12 @@ A data frame with one row per unique time pair \eqn{(j, k)} and columns:
 }
 }
 \description{
-For a fitted \code{geer} model from \code{\link{geewa}} with a
+Checks, for a fitted \code{geer} model from \code{\link{geewa}} with a
 \code{binomial} or \code{quasibinomial} family, a binary response and a
-non-independence association structure, checks whether each off-diagonal
-entry of the working correlation matrix lies within the Frechet bounds
-implied by the fitted marginal probabilities. Results are summarized at the
-time-pair level.
+non-independence association structure, whether each off-diagonal entry of
+the working correlation matrix lies within the Frechet bounds implied by
+the fitted marginal probabilities. Results are summarized at the time-pair
+level.
 }
 \details{
 For a pair of observations at times \eqn{j} and \eqn{k} within cluster

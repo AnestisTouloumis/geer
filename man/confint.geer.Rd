@@ -4,7 +4,13 @@
 \alias{confint.geer}
 \title{Confidence Intervals for Model Parameters from a geer Object}
 \usage{
-\method{confint}{geer}(object, parm, level = 0.95, cov_type = geer_cov_type_choices, ...)
+\method{confint}{geer}(
+  object,
+  parm,
+  level = 0.95,
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  ...
+)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}

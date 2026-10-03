@@ -7,9 +7,9 @@
 \method{anova}{geer}(
   object,
   ...,
-  test = geer_test_choices,
-  cov_type = geer_cov_type_choices,
-  pmethod = geer_pmethod_choices
+  test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  pmethod = c("rao-scott", "satterthwaite")
 )
 }
 \arguments{

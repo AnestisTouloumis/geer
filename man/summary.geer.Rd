@@ -4,7 +4,11 @@
 \alias{summary.geer}
 \title{Summarize a geer Object}
 \usage{
-\method{summary}{geer}(object, cov_type = geer_cov_type_choices, ...)
+\method{summary}{geer}(
+  object,
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  ...
+)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}

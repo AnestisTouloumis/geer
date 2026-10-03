@@ -8,7 +8,7 @@
   object,
   newdata = NULL,
   type = c("link", "response"),
-  cov_type = geer_cov_type_choices,
+  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
   se.fit = FALSE,
   ...
 )

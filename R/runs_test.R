@@ -7,18 +7,18 @@
 #' generalized estimating equation model.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
-#' @param order_by specifies the ordering of the residual sequence. The default,
-#'   \code{"natural"}, orders observations by cluster identifier and then by
-#'   the within-cluster \code{repeated} index. \code{"fitted"} orders by fitted
+#' @param order_by specifies the ordering of the residual sequence.
+#'   \code{"natural"} orders observations by cluster identifier and then by the
+#'   within-cluster \code{repeated} index. \code{"fitted"} orders by fitted
 #'   values. A single model-matrix column name can be supplied to order by that
-#'   covariate, or a numeric vector with one value per fitted observation can
-#'   be supplied directly. Numeric vectors must already be aligned with the
+#'   covariate, or a numeric vector with one value per fitted observation can be
+#'   supplied directly. Numeric vectors must already be aligned with the
 #'   observation order stored in \code{object}. A name that is not a
 #'   model-matrix column is looked up among the variables of the data used to
 #'   fit the model, so a covariate omitted from the model can be used; see
 #'   Details. Ordering values must be finite and non-missing. Ties are resolved
 #'   using the natural cluster/repeated order; see Details for the consequences
-#'   when the ordering has few distinct values.
+#'   when the ordering has few distinct values. Defaults to \code{"natural"}.
 #' @param alternative character string specifying the alternative hypothesis,
 #'   expressed in terms of the observed number of runs \eqn{T} relative to its
 #'   null expectation. Options are \code{"two.sided"}, \code{"less"} (fewer

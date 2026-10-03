@@ -149,7 +149,7 @@ test_that("validate_geer checks fitted values, residuals, id, y, and repeated al
   expect_error(validate_geer(obj), "'obs_no' is inconsistent with observation-level components")
   obj <- make_valid_geer_object()
   obj$obs_no <- 2.5
-  expect_error(validate_geer(obj), "'obs_no' must be a single non-negative integer")
+  expect_error(validate_geer(obj), "'obs_no' must be a single nonnegative integer")
   obj <- make_valid_geer_object()
   obj$repeated <- obj$repeated[-1]
   expect_error(validate_geer(obj), "'repeated' must match number of observations")
@@ -210,7 +210,7 @@ test_that("validate_geer checks alpha, association_structure, method, and df.res
 test_that("validate_geer checks scalar metadata: rank, converged, phi", {
   obj <- make_valid_geer_object()
   obj$rank <- -1
-  expect_error(validate_geer(obj), "'rank' must be a single non-negative integer")
+  expect_error(validate_geer(obj), "'rank' must be a single nonnegative integer")
   obj <- make_valid_geer_object()
   obj$converged <- NA
   expect_error(validate_geer(obj), "'converged' must be a single non-missing logical value")

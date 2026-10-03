@@ -8,7 +8,7 @@ geecriteria(
   object,
   ...,
   criteria = "all",
-  cov_type = geer_criteria_cov_type_choices,
+  cov_type = c("robust", "bias-corrected", "df-adjusted", "jackknife", "naive"),
   digits = 2
 )
 }
@@ -43,7 +43,7 @@ classical covariance-based definitions of QIC, QICHH, QICC, CIC, RJC, and EQIC.
 With \code{cov_type = "jackknife"} a full set of leave-one-cluster refits
 is performed for each model supplied; see \code{\link{vcov.geer}}.}
 
-\item{digits}{non-negative integer giving the number of decimal places used
+\item{digits}{nonnegative integer giving the number of decimal places used
 to round the reported criteria. Defaults to \code{2}.}
 }
 \value{

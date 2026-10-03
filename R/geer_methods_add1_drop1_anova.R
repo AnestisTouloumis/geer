@@ -85,9 +85,11 @@
 add1.geer <-
   function(object,
            scope,
-           test = geer_test_choices,
-           cov_type = geer_cov_type_choices,
-           pmethod = geer_pmethod_choices,
+           test = c("wald", "score", "working-wald", "working-score",
+                    "working-lrt"),
+           cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife",
+                        "naive"),
+           pmethod = c("rao-scott", "satterthwaite"),
            ...) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
@@ -162,9 +164,11 @@ add1.geer <-
 #' @export
 drop1.geer <- function(object,
                        scope,
-                       test = geer_test_choices,
-                       cov_type = geer_cov_type_choices,
-                       pmethod = geer_pmethod_choices,
+                       test = c("wald", "score", "working-wald",
+                                "working-score", "working-lrt"),
+                       cov_type = c("bias-corrected", "robust", "df-adjusted",
+                                    "jackknife", "naive"),
+                       pmethod = c("rao-scott", "satterthwaite"),
                        ...) {
   object <- check_geer_object(object)
   opts <- normalize_geer_test_options(
@@ -336,9 +340,11 @@ drop1.geer <- function(object,
 anova.geer <-
   function(object,
            ...,
-           test = geer_test_choices,
-           cov_type = geer_cov_type_choices,
-           pmethod = geer_pmethod_choices) {
+           test = c("wald", "score", "working-wald", "working-score",
+                    "working-lrt"),
+           cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife",
+                        "naive"),
+           pmethod = c("rao-scott", "satterthwaite")) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
       test = test[1L],
