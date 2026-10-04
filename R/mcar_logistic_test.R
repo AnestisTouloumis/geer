@@ -90,7 +90,7 @@
 #' longitudinal data. Completely absent measurement rows cannot be detected
 #' unless they are explicitly represented in the supplied data.
 #'
-#' @return An object of class \code{"htest"}. In addition to the usual
+#' @return An object of class \code{c("geer_htest", "htest")}. In addition to the usual
 #' components, it contains:
 #' \itemize{
 #'   \item \code{tests}: data frame containing the response-history,
@@ -254,7 +254,7 @@ mcar_logistic_test <- function(object,
         cov_type = cov_type,
         pmethod = pmethod
       ),
-      class = "htest"
+      class = c("geer_htest", "htest")
     ))
   }
   if (observed_no == 0L) {
@@ -414,7 +414,7 @@ mcar_logistic_test <- function(object,
       cov_type = cov_type,
       pmethod = pmethod
     ),
-    class = "htest"
+    class = c("geer_htest", "htest")
   )
 }
 

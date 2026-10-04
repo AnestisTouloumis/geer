@@ -299,7 +299,7 @@ compute_quasi_loglikelihood_values <- function(y,
     },
     inverse.gaussian = {
       mu_safe <- pmax(mu, eps)
-      -sum(weights * (mu_safe - 0.5 * y) / mu_safe^2)
+      sum(weights * (mu_safe - 0.5 * y) / mu_safe^2)
     },
     stop("'family' is not a recognized distribution", call. = FALSE)
   )
@@ -322,14 +322,13 @@ is_phi_fixed <- function(object) {
   if (!is_geewa_fit(object)) {
     return(TRUE)
   }
-  phi_fixed <- object$call$phi_fixed
-  if (is.null(phi_fixed)) {
-    return(FALSE)
-  }
+  ## The fit stores the validated flag. Reading the call is only a fallback
+  ## and recognizes a literal TRUE or FALSE, not a variable or an expression.
+  phi_fixed <- object$phi_fixed
   if (is.logical(phi_fixed) && length(phi_fixed) == 1L && !is.na(phi_fixed)) {
-    return(isTRUE(phi_fixed))
+    return(phi_fixed)
   }
-  FALSE
+  isTRUE(object$call$phi_fixed)
 }
 
 
@@ -756,4 +755,43 @@ compute_gee_cic <- function(object, cov_type) {
   independence_inverse <- compute_independence_naive_inverse(object)
   beta_covariance <- stats::vcov(object, cov_type = cov_type)
   sum(independence_inverse * beta_covariance)
+}
+
+
+## Criteria computed from different responses or from different quasi-likelihood
+## families cannot be compared across models. A different link function for the
+## same response and family is a legitimate comparison and is not flagged.
+check_geecriteria_comparability <- function(models) {
+  if (length(models) < 2L) {
+    return(invisible(NULL))
+  }
+  family_names <- vapply(
+    models,
+    function(model) as.character(model$family$family),
+    character(1)
+  )
+  if (length(unique(family_names)) > 1L) {
+    warning(
+      "models do not use the same distribution family (",
+      paste(unique(family_names), collapse = ", "),
+      "); the criteria are not comparable across families",
+      call. = FALSE
+    )
+  }
+  responses <- lapply(models, function(model) as.numeric(model$y))
+  if (length(unique(lengths(responses))) == 1L) {
+    same_response <- vapply(
+      responses[-1L],
+      function(y) isTRUE(all.equal(y, responses[[1L]], check.attributes = FALSE)),
+      logical(1)
+    )
+    if (!all(same_response)) {
+      warning(
+        "models do not have the same response values; the criteria are not ",
+        "comparable across different responses",
+        call. = FALSE
+      )
+    }
+  }
+  invisible(NULL)
 }

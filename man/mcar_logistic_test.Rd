@@ -54,7 +54,7 @@ working tests. One of \code{"rao-scott"} or
 the binary GEE fit. Defaults to \code{geer_control()}.}
 }
 \value{
-An object of class \code{"htest"}. In addition to the usual
+An object of class \code{c("geer_htest", "htest")}. In addition to the usual
 components, it contains:
 \itemize{
   \item \code{tests}: data frame containing the response-history,

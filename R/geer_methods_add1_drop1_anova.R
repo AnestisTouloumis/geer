@@ -139,7 +139,7 @@ add1.geer <-
       paste("Single term additions using", test_type, "test:"),
       "\nModel:", formula_txt
     )
-    structure(aod, heading = head, class = c("anova", "data.frame"))
+    structure(aod, heading = head, class = c("geer_anova", "anova", "data.frame"))
   }
 
 
@@ -239,7 +239,7 @@ drop1.geer <- function(object,
     paste("Single term deletions using", test_type, "test:"),
     "\nModel:", formula_txt
   )
-  structure(aod, heading = head, class = c("anova", "data.frame"))
+  structure(aod, heading = head, class = c("geer_anova", "anova", "data.frame"))
 }
 
 
@@ -293,7 +293,10 @@ drop1.geer <- function(object,
 #' When comparing two or more models, the data must be identical across all
 #' fits and each consecutive pair of models must be nested. Models with a
 #' working association structure different from Model 1 are omitted with a
-#' warning.
+#' warning. Any other difference in the fitting settings (fitting function,
+#' estimation method, dispersion handling, \code{use_p}, the order of an
+#' m-dependent structure, fixed association parameters or contrasts) is an
+#' error.
 #'
 #' @return
 #' An object of class \code{c("anova", "data.frame")}. With a single model,
@@ -438,5 +441,5 @@ anova.geer <-
       "\n\nTerms added sequentially (first to last)\n\n",
       sep = ""
     )
-    structure(table, heading = title, class = c("anova", "data.frame"))
+    structure(table, heading = title, class = c("geer_anova", "anova", "data.frame"))
   }

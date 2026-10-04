@@ -111,7 +111,7 @@ summary.geer <- function(object,
   cov_type <- match.arg(cov_type)
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- sqrt(pmax(0, diag(vcov_matrix)))
+  se <- standard_errors_or_na(diag(vcov_matrix), "summary.geer")
   z_stat <- rep.int(NA_real_, length(beta))
   pval <- rep.int(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
@@ -189,7 +189,9 @@ print.summary.geer <- function(x, ...) {
   cat("Family       :", x$family$family, "\n")
   cat("Link Function:", x$family$link, "\n")
   cat("\nCoefficients:\n")
-  stats::printCoefmat(x$coefficients)
+  print_with_small_pvalues(function() {
+    stats::printCoefmat(x$coefficients, eps.Pvalue = 1e-04)
+  })
   cat("Std. Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
   cat("\nDispersion Parameter:", round(x$phi, digits = 4), "\n")
   cat("\nAssociation Structure:", x$association_structure, "\n")

@@ -239,7 +239,9 @@ dispersion is used in the independence information matrix entering its
 covariance penalty.
 
 If the supplied models do not all have the same number of observations, a
-warning is issued.
+warning is issued. A warning is also issued when the models do not all use
+the same distribution family or do not all have the same response values,
+because the criteria are then not comparable across models.
 }
 \examples{
 ## Single model

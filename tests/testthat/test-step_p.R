@@ -291,3 +291,23 @@ test_that("step_p preserves the original data call for downstream update", {
   expect_s3_class(out, "geer")
   expect_no_error(update(out, orstr = "exchangeable"))
 })
+
+test_that("step_p rejects p_enter above p_remove for the both direction", {
+  expect_error(
+    step_p(
+      fit_resp_mid,
+      direction = "both",
+      p_enter = 0.30,
+      p_remove = 0.10,
+      test = "wald"
+    ),
+    "'p_enter' must not exceed 'p_remove'"
+  )
+})
+
+test_that("step_model_key identifies a model by its terms and intercept", {
+  key_full <- step_model_key(fit_bin_full_indep)
+  expect_identical(key_full, step_model_key(fit_bin_full_indep))
+  expect_false(identical(key_full, step_model_key(fit_bin_lower)))
+  expect_true(grepl("^1\\|", key_full))
+})

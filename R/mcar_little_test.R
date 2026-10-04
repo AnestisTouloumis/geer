@@ -99,7 +99,7 @@
 #' the function returns a test statistic of 0 with p-value 1.
 #'
 #' @return
-#' An object of class \code{"htest"}. In addition to the standard components,
+#' An object of class \code{c("geer_htest", "htest")}. In addition to the standard components,
 #' the object contains:
 #' \item{missing.patterns}{the number of distinct missing-data patterns.}
 #' \item{n}{the number of independent rows or clusters tested.}
@@ -212,7 +212,7 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
       exact.p.value = if (is.null(exact)) NULL else exact$p_value,
       exact.f.statistic = if (is.null(exact)) NULL else exact$statistic
     ),
-    class = "htest"
+    class = c("geer_htest", "htest")
   )
 }
 

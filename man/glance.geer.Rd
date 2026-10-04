@@ -58,10 +58,8 @@ The returned one-row data frame contains the following columns:
 QIC and CIC are computed using the same formulas as
 \code{geecriteria(object, cov_type = "robust")}. QICu does not depend on
 the covariance estimator. If computation fails, the corresponding values
-are returned as \code{NA_real_}. For the full set of
-model selection criteria, including QICHH, QICC, EQIC, RJC, GESSC, GPC,
-AGPC, SGPC, GHYC, and PAC, see
-\code{\link{geecriteria}}.
+are returned as \code{NA_real_}. For the full set of model selection
+criteria, see \code{\link{geecriteria}}.
 }
 \examples{
 data("epilepsy", package = "geer")

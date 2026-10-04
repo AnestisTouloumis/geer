@@ -39,7 +39,7 @@ distribution. \code{"asymptotic"} always uses the chi-squared reference.
 Defaults to \code{"auto"}.}
 }
 \value{
-An object of class \code{"htest"}. In addition to the standard components,
+An object of class \code{c("geer_htest", "htest")}. In addition to the standard components,
 the object contains:
 \item{missing.patterns}{the number of distinct missing-data patterns.}
 \item{n}{the number of independent rows or clusters tested.}

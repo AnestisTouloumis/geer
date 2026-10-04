@@ -137,7 +137,7 @@ build_step_results <- function(models, fit, object) {
     "\nFinal Model:", paste(deparse(stats::formula(fit)), collapse = " "), "\n"
   )
   attr(aod, "heading") <- heading
-  class(aod) <- c("anova", "data.frame")
+  class(aod) <- c("geer_anova", "anova", "data.frame")
   fit$anova <- aod
   fit
 }
@@ -205,6 +205,13 @@ extract_step_term <- function(step_label) {
     return(NA_character_)
   }
   sub("^[+-][[:space:]]*", "", step_label)
+}
+
+
+step_model_key <- function(model) {
+  labels <- attr(stats::terms(model), "term.labels")
+  intercept <- attr(stats::terms(model), "intercept")
+  paste0(intercept, "|", paste(sort(labels), collapse = "+"))
 }
 
 
@@ -399,6 +406,7 @@ run_step_both <- function(object,
   obs_no <- object$obs_no
   fitted_model <- object
   previous_change <- NA_character_
+  visited <- step_model_key(fitted_model)
   while (steps > 0L) {
     steps <- steps - 1L
     ffac <- attr(model_terms, "factors")
@@ -427,7 +435,15 @@ run_step_both <- function(object,
     if (is_step_cycle(candidate$change, previous_change)) {
       break
     }
-    fitted_model <- update_step_fit(fitted_model, candidate$change, obs_no)
+    updated_model <- update_step_fit(fitted_model, candidate$change, obs_no)
+    ## Stop rather than revisit a model already reached, which would otherwise
+    ## cycle until 'steps' runs out (p-values change as terms enter and leave).
+    updated_key <- step_model_key(updated_model)
+    if (updated_key %in% visited) {
+      break
+    }
+    visited <- c(visited, updated_key)
+    fitted_model <- updated_model
     model_terms <- stats::terms(fitted_model)
     out <- append_step_model(
       models = models,

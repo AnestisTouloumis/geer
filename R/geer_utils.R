@@ -87,3 +87,35 @@ compute_covariance_standard_errors <- function(vcov_matrix, parm = NULL, context
   }
   sqrt(variances)
 }
+
+
+## Standard errors from variances that may be unusable. A negative or
+## non-finite variance (the bias-corrected covariance estimator is not
+## guaranteed to be positive semi-definite in small samples) gives NA and a
+## warning that names the affected entries, instead of a silent NA or NaN.
+## confint() is stricter and stops, see compute_covariance_standard_errors().
+standard_errors_or_na <- function(variances, context, what = "coefficient") {
+  bad <- !is.finite(variances) | variances < 0
+  if (any(bad)) {
+    labels <- names(variances)
+    if (is.null(labels)) {
+      labels <- as.character(seq_along(variances))
+    }
+    warning(
+      sprintf(
+        paste0(
+          "%s: the variance is negative or non-finite for %s %s, so its ",
+          "standard error is set to NA"
+        ),
+        context,
+        what,
+        paste(labels[bad], collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  se <- rep.int(NA_real_, length(variances))
+  se[!bad] <- sqrt(variances[!bad])
+  names(se) <- names(variances)
+  se
+}

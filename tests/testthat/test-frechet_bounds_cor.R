@@ -162,11 +162,21 @@ test_that("the geewa_binary guard is not shadowed by the other error paths", {
   expect_identical(fit_geewa_bin_exch$fit_function, "geewa_binary")
 })
 
-test_that("frechet_bounds_cor errors when fit_function is absent", {
+test_that("frechet_bounds_cor recovers the fit function from the call when the tag is absent", {
   fit_no_tag <- fit_bin_exch_T2
   fit_no_tag$fit_function <- NULL
-  expect_error(
+  expect_identical(
     frechet_bounds_cor(fit_no_tag),
+    frechet_bounds_cor(fit_bin_exch_T2)
+  )
+})
+
+test_that("frechet_bounds_cor errors when the fit function cannot be determined", {
+  fit_unknown <- fit_bin_exch_T2
+  fit_unknown$fit_function <- NULL
+  fit_unknown$call[[1L]] <- quote(some_wrapper)
+  expect_error(
+    frechet_bounds_cor(fit_unknown),
     "must be fitted by 'geewa'",
     fixed = TRUE
   )

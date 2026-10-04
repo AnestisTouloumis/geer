@@ -1,13 +1,13 @@
 #' @title
-#' Frechet Bounds for a Working Correlation Matrix
+#' \enc{Fréchet}{Frechet} Bounds for a Working Correlation Matrix
 #'
 #' @description
 #' Checks, for a fitted \code{geer} model from \code{\link{geewa}} with a
 #' \code{binomial} or \code{quasibinomial} family, a binary response and a
 #' non-independence association structure, whether each off-diagonal entry of
-#' the working correlation matrix lies within the Frechet bounds implied by
-#' the fitted marginal probabilities. Results are summarized at the time-pair
-#' level.
+#' the working correlation matrix lies within the \enc{Fréchet}{Frechet}
+#' bounds implied by the fitted marginal probabilities. Results are summarized at
+#' the time-pair level.
 #'
 #' @param object an object of class \code{geer} fitted via \code{\link{geewa}}
 #'   with \code{family = binomial()} or \code{family = quasibinomial()}, a
@@ -16,7 +16,7 @@
 #' @details
 #' For a pair of observations at times \eqn{j} and \eqn{k} within cluster
 #' \eqn{i}, with fitted marginal probabilities \eqn{\pi_{ij}} and
-#' \eqn{\pi_{ik}}, the Frechet bounds on their correlation are
+#' \eqn{\pi_{ik}}, the \enc{Fréchet}{Frechet} bounds on their correlation are
 #' \deqn{
 #'   \ell_{ijk} = \max\!\left(
 #'     -\sqrt{\frac{\pi_{ij}\pi_{ik}}{(1-\pi_{ij})(1-\pi_{ik})}},\;
@@ -60,15 +60,15 @@
 #'   \item{\code{alpha_name}}{label of the form \code{alpha_j.k} identifying the
 #'     working correlation entry for this time pair.}
 #'   \item{\code{alpha_value}}{working correlation value for the time pair.}
-#'   \item{\code{lower_max}}{maximum Frechet lower bound across clusters,
-#'     giving the tightest lower admissibility constraint.}
-#'   \item{\code{upper_min}}{minimum Frechet upper bound across clusters,
-#'     giving the tightest upper admissibility constraint.}
+#'   \item{\code{lower_max}}{maximum \enc{Fréchet}{Frechet} lower bound
+#'     across clusters, giving the tightest lower admissibility constraint.}
+#'   \item{\code{upper_min}}{minimum \enc{Fréchet}{Frechet} upper bound
+#'     across clusters, giving the tightest upper admissibility constraint.}
 #'   \item{\code{n_clusters}}{number of clusters contributing an observation at
 #'     both times, and hence the number of bound pairs summarized in
 #'     \code{lower_max} and \code{upper_min}.}
 #'   \item{\code{n_violated}}{number of clusters for which \code{alpha_value}
-#'     falls outside the cluster-specific Frechet bounds.}
+#'     falls outside the cluster-specific \enc{Fréchet}{Frechet} bounds.}
 #' }
 #'
 #' @seealso
@@ -91,7 +91,7 @@
 #' @export
 frechet_bounds_cor <- function(object) {
   object <- check_geer_object(object)
-  if (!identical(object$fit_function, "geewa")) {
+  if (!identical(get_geer_fit_function(object), "geewa")) {
     stop(
       "'object' must be fitted by 'geewa': 'geewa_binary' parameterizes the ",
       "within-cluster association through marginalized odds ratios rather than ",

@@ -103,16 +103,33 @@ test_that("compute_chisq_mixture computes Rao-Scott and Satterthwaite approximat
   rs <- compute_chisq_mixture(x, test_stat, pmethod = "rao-scott")
   expect_equal(rs$test_df, 3)
   expect_equal(rs$test_stat, test_stat / mean(x))
-  expect_equal(rs$test_p, 1 - stats::pchisq(rs$test_stat, df = rs$test_df))
+  expect_equal(
+    rs$test_p,
+    stats::pchisq(rs$test_stat, df = rs$test_df, lower.tail = FALSE)
+  )
   sat <- compute_chisq_mixture(x, test_stat, pmethod = "satterthwaite")
   x_bar <- mean(x)
   cv2 <- sum((x - x_bar)^2) / (length(x) * x_bar^2)
   expected_df <- length(x) / (1 + cv2)
   expected_stat <- test_stat / ((1 + cv2) * x_bar)
-  expected_p <- 1 - stats::pchisq(expected_stat, df = expected_df)
+  expected_p <- stats::pchisq(expected_stat, df = expected_df, lower.tail = FALSE)
   expect_equal(sat$test_df, expected_df)
   expect_equal(sat$test_stat, expected_stat)
   expect_equal(sat$test_p, expected_p)
+})
+
+
+test_that("compute_chisq_mixture keeps extreme p-values above zero", {
+  ## 1 - pchisq() would return exactly 0 here; the upper tail must not.
+  x <- c(1, 1)
+  rs <- compute_chisq_mixture(x, 200, pmethod = "rao-scott")
+  expect_gt(rs$test_p, 0)
+  expect_equal(
+    rs$test_p,
+    stats::pchisq(200, df = 2, lower.tail = FALSE)
+  )
+  sat <- compute_chisq_mixture(x, 200, pmethod = "satterthwaite")
+  expect_gt(sat$test_p, 0)
 })
 
 
@@ -175,8 +192,10 @@ test_that("compute_working_lrt_test returns a valid result and checks phi consis
   expect_test_result(res)
   fit_bad_phi <- fit_bin_full
   fit_bad_phi$phi <- fit_bad_phi$phi + 1
+  fit_bad_phi0 <- fit_bin_trt
+  fit_bad_phi0$phi <- fit_bad_phi0$phi + 1
   expect_error(
-    compute_working_lrt_test(fit_bin_trt, fit_bad_phi, cov_type = "robust"),
+    compute_working_lrt_test(fit_bad_phi0, fit_bad_phi, cov_type = "robust"),
     "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models"
   )
 })
@@ -234,4 +253,97 @@ test_that("compute_anova_geer_list filters non-independence models for working-l
     ),
     "the modified working LRT requires all models to use an independence working structure"
   )
+})
+test_that("get_geer_fit_function prefers the stored fit function over the call", {
+  fit <- fit_bin_full
+  expect_identical(get_geer_fit_function(fit), "geewa")
+  fit$call[[1L]] <- quote(geer::geewa)
+  expect_identical(get_geer_fit_function(fit), "geewa")
+  expect_true(is_geewa_fit(fit))
+  fit$call[[1L]] <- quote(some_wrapper)
+  expect_true(is_geewa_fit(fit))
+  expect_false(is_geewa_fit(fit_geewa_bin_exch))
+})
+
+
+test_that("the fit function is recovered from the call when it is not stored", {
+  fit <- fit_bin_full
+  fit$fit_function <- NULL
+  expect_identical(get_geer_fit_function(fit), "geewa")
+  fit$call[[1L]] <- quote(geer::geewa)
+  expect_identical(get_geer_fit_function(fit), "geewa")
+  fit$call[[1L]] <- quote(geer::geewa_binary)
+  expect_identical(get_geer_fit_function(fit), "geewa_binary")
+  fit$call[[1L]] <- quote(some_wrapper)
+  expect_true(is.na(get_geer_fit_function(fit)))
+  expect_error(is_geewa_fit(fit), "cannot determine whether the model was fitted")
+})
+
+
+test_that("score tests do not depend on how geewa was called", {
+  reference <- compute_score_test(fit_bin_trt, fit_bin_full)
+  fit0 <- fit_bin_trt
+  fit1 <- fit_bin_full
+  fit0$fit_function <- NULL
+  fit1$fit_function <- NULL
+  fit0$call[[1L]] <- quote(geer::geewa)
+  fit1$call[[1L]] <- quote(geer::geewa)
+  expect_equal(compute_score_test(fit0, fit1), reference)
+})
+
+
+test_that("is_phi_fixed uses the stored flag rather than parsing the call", {
+  fixed_flag <- TRUE
+  fit_flag <- geewa(
+    formula = ecg ~ treatment,
+    id = id,
+    family = binomial(link = "logit"),
+    phi_fixed = fixed_flag,
+    phi_value = 1,
+    data = cerebrovascular,
+    corstr = "independence",
+    method = "gee"
+  )
+  expect_true(is_phi_fixed(fit_flag))
+  expect_true(is_phi_fixed(fit_bin_trt))
+  expect_false(is_phi_fixed(fit_geewa_pois_indep))
+  expect_true(is_phi_fixed(fit_geewa_bin_exch))
+})
+
+test_that("check_nested_models rejects fits with different settings", {
+  fit_other_method <- geewa(
+    formula = ecg ~ treatment + factor(period),
+    id = id,
+    family = binomial(link = "logit"),
+    phi_fixed = TRUE,
+    phi_value = 1,
+    data = cerebrovascular,
+    corstr = "independence",
+    method = "brgee-robust"
+  )
+  expect_error(
+    check_nested_models(fit_bin_trt, fit_other_method),
+    "models differ in the estimation method"
+  )
+  expect_error(
+    check_nested_models(fit_bin_trt, fit_bin_full_exch),
+    "models differ in the working association structure"
+  )
+  fit_free_phi <- geewa(
+    formula = ecg ~ treatment + factor(period),
+    id = id,
+    family = binomial(link = "logit"),
+    data = cerebrovascular,
+    corstr = "independence",
+    method = "gee"
+  )
+  expect_error(
+    check_nested_models(fit_bin_trt, fit_free_phi),
+    "models differ in the treatment of the dispersion parameter"
+  )
+  expect_error(
+    check_comparable_fit_settings(fit_bin_trt, fit_geewa_bin_exch),
+    "models differ in the fitting function"
+  )
+  expect_silent(check_comparable_fit_settings(fit_bin_trt, fit_bin_full))
 })

@@ -16,6 +16,12 @@ parameterization.
 
 ## Installation
 
+You can install the released version of `geer` from CRAN:
+
+``` r
+install.packages("geer")
+```
+
 You can install the development version of `geer` from GitHub:
 
 ``` r
@@ -116,7 +122,7 @@ Standard S3 methods are available for fitted `geer` objects:
 - `mcar_logistic_test()` — Ridout-style longitudinal MCAR diagnostic that
   models response missingness from the previous observed response and covariates
   using `geewa_binary()`.
-- `frechet_bounds_cor()` — Frechet bounds on the working correlations of a
+- `frechet_bounds_cor()` — Fréchet bounds on the working correlations of a
   binomial `geewa()` fit, with a count of clusters violating them.
 - `model.matrix()` — design matrix.
 - `tidy()`, `glance()` — tidy summaries following
@@ -188,7 +194,7 @@ None of these tests can establish MCAR; see the help pages for details.
   hypothesis tests and CIC.
 - `step_p()` — stepwise model selection by hypothesis testing.
 - `geecriteria()` — QIC, QICHH, QICC, CIC, RJC, QICu, EQIC, GESSC, GPC,
-  AGPC, SGPC, GHYC, and PAC model selection criteria.
+  AGPC, SGPC, GHYC, PAC, PT, WR, and RMR model selection criteria.
   For `geecriteria()`, `cov_type = "robust"` is the default so the classical
   covariance-based definitions are returned unless another covariance estimator
   is requested explicitly.

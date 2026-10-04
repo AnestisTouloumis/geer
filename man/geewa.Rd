@@ -289,5 +289,6 @@ with an odds-ratio parameterization. \emph{Preprint}.
 }
 \seealso{
 \code{\link{geewa_binary}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
-\code{\link{geecriteria}}.
+\code{\link{vcov.geer}}, \code{\link{anova.geer}}, \code{\link{step_p}},
+\code{\link{geecriteria}}, \code{\link{runs_test}}.
 }

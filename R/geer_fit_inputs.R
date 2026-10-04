@@ -246,3 +246,51 @@ normalize_use_p <- function(use_p) {
   use_p
 }
 
+
+## Input preparation shared by geewa() and geewa_binary(): builds the model
+## frame, extracts the response, weights, cluster identifiers, offset and design
+## matrix, sorts everything by cluster and then by repeated index, and
+## normalizes the control list and the estimation method. 'family' must already
+## be normalized and 'env' is the environment in which the model frame is
+## evaluated (the caller's parent frame).
+prepare_geer_inputs <- function(mcall, family, env, control, method) {
+  model_frame <- build_geer_model_frame(mcall, env = env)
+  response_weights <- extract_geer_response_weights(model_frame, family)
+  y <- response_weights$y
+  weights <- response_weights$weights
+  id_repeated <- extract_geer_id_repeated(model_frame, length(y))
+  id <- id_repeated$id
+  repeated <- id_repeated$repeated
+  offset <- extract_geer_offset(model_frame, y_length = length(y))
+  design <- build_geer_design_matrix(model_frame)
+  model_matrix <- design$x
+  ## sort by id then repeated
+  ord <- order(id, repeated)
+  y <- y[ord]
+  model_matrix <- model_matrix[ord, , drop = FALSE]
+  weights <- weights[ord]
+  offset <- offset[ord]
+  id <- id[ord]
+  repeated <- repeated[ord]
+  attr(model_matrix, "assign") <- design$assign
+  attr(model_matrix, "contrasts") <- design$contrasts
+  ## control (supports either a control object or a list of args)
+  control <- normalize_geer_control(control)
+  ## method
+  method <- as.character(method)
+  check_choice(method, geer_method_choices, "method")
+  list(
+    model_frame = model_frame,
+    y = y,
+    weights = weights,
+    id = id,
+    repeated = repeated,
+    offset = offset,
+    model_matrix = model_matrix,
+    model_terms = design$terms,
+    xnames = design$xnames,
+    qr_model_matrix = design$qr,
+    control = control,
+    method = method
+  )
+}

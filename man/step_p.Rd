@@ -32,7 +32,9 @@ search: backward elimination (\code{"backward"}), forward selection
 \code{"backward"}.}
 
 \item{p_enter}{numeric value strictly between 0 and 1 specifying the p-value
-threshold for adding a term during forward steps. Defaults to \code{0.15}.}
+threshold for adding a term during forward steps. With
+\code{direction = "both"} it must not exceed \code{p_remove}. Defaults to
+\code{0.15}.}
 
 \item{p_remove}{numeric value strictly between 0 and 1 specifying the p-value
 threshold for removing a term during backward steps. Defaults to
@@ -101,7 +103,8 @@ With \code{direction = "both"}, backward elimination is attempted first at
 each step. A forward addition is considered only if no eligible backward
 deletion is found. The algorithm stops when no candidate move satisfies the
 relevant p-value threshold, when the maximum number of steps is reached, or
-when an immediate add-remove cycle involving the same term would occur.
+when a move would return to a model that has already been visited,
+including an immediate add-remove cycle involving the same term.
 
 Details of the hypothesis tests controlled by \code{test} are given in
 Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is

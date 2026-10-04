@@ -213,7 +213,9 @@
 #' covariance penalty.
 #'
 #' If the supplied models do not all have the same number of observations, a
-#' warning is issued.
+#' warning is issued. A warning is also issued when the models do not all use
+#' the same distribution family or do not all have the same response values,
+#' because the criteria are then not comparable across models.
 #'
 #' @return
 #' A data frame with one row per fitted model, holding the columns selected by
@@ -360,6 +362,7 @@ geecriteria <- function(object,
       warning("models do not have the same number of observations", call. = FALSE)
     }
   }
+  check_geecriteria_comparability(models)
   out_list <- lapply(
     models,
     compute_gee_criteria,

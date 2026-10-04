@@ -121,7 +121,7 @@ tidy.geer <- function(x,
   }
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- sqrt(pmax(0, diag(vcov_matrix)))
+  se <- standard_errors_or_na(diag(vcov_matrix), "tidy.geer")
   z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]
@@ -208,10 +208,8 @@ tidy.geer <- function(x,
 #' QIC and CIC are computed using the same formulas as
 #' \code{geecriteria(object, cov_type = "robust")}. QICu does not depend on
 #' the covariance estimator. If computation fails, the corresponding values
-#' are returned as \code{NA_real_}. For the full set of
-#' model selection criteria, including QICHH, QICC, EQIC, RJC, GESSC, GPC,
-#' AGPC, SGPC, GHYC, and PAC, see
-#' \code{\link{geecriteria}}.
+#' are returned as \code{NA_real_}. For the full set of model selection
+#' criteria, see \code{\link{geecriteria}}.
 #'
 #' @return
 #' A one-row data frame with columns as described in the Details section.

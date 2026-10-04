@@ -119,7 +119,7 @@ vcov.geer <- function(object,
     robust = object$robust_covariance,
     naive = object$naive_covariance,
     `bias-corrected` = object$bias_corrected_covariance,
-    jackknife = compute_jackknife_covariance(object),
+    jackknife = get_cached_jackknife_covariance(object),
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = object$robust_covariance,
       clusters_no = object$clusters_no,

@@ -73,7 +73,10 @@ jackknife covariance from the larger fitted model.
 When comparing two or more models, the data must be identical across all
 fits and each consecutive pair of models must be nested. Models with a
 working association structure different from Model 1 are omitted with a
-warning.
+warning. Any other difference in the fitting settings (fitting function,
+estimation method, dispersion handling, \code{use_p}, the order of an
+m-dependent structure, fixed association parameters or contrasts) is an
+error.
 }
 \examples{
 data("cerebrovascular", package = "geer")

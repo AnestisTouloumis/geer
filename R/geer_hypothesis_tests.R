@@ -1,4 +1,51 @@
 ## nested-model checks
+## Settings that must agree for two fits to be compared. Nesting by coefficient
+## names alone does not guarantee that the two models differ only in their mean
+## structure: a Wald or score comparison of, say, a bcgee-robust fit with a
+## brgee-naive fit, or of fits with different dispersion handling, would
+## otherwise run silently.
+check_comparable_fit_settings <- function(object0, object1) {
+  same_or_stop <- function(value0, value1, what) {
+    if (!identical(value0, value1)) {
+      stop("models differ in ", what, call. = FALSE)
+    }
+  }
+  same_or_stop(get_geer_fit_function(object0), get_geer_fit_function(object1),
+               "the fitting function ('geewa' or 'geewa_binary')")
+  same_or_stop(object0$method, object1$method, "the estimation method")
+  same_or_stop(object0$association_structure, object1$association_structure,
+               "the working association structure")
+  structure_name <- object0$association_structure
+  if (identical(structure_name, "m-dependent")) {
+    same_or_stop(length(object0$alpha), length(object1$alpha),
+                 "the order of the m-dependent working structure")
+  }
+  if (identical(structure_name, "fixed")) {
+    same_or_stop(as.numeric(object0$alpha), as.numeric(object1$alpha),
+                 "the fixed association parameters")
+  }
+  if (identical(get_geer_fit_function(object0), "geewa")) {
+    phi_fixed0 <- is_phi_fixed(object0)
+    phi_fixed1 <- is_phi_fixed(object1)
+    same_or_stop(phi_fixed0, phi_fixed1, "the treatment of the dispersion parameter")
+    if (phi_fixed0) {
+      same_or_stop(as.numeric(object0$phi), as.numeric(object1$phi),
+                   "the fixed dispersion value")
+    }
+    use_p0 <- if (is.null(object0$use_p)) TRUE else isTRUE(object0$use_p)
+    use_p1 <- if (is.null(object1$use_p)) TRUE else isTRUE(object1$use_p)
+    same_or_stop(use_p0, use_p1, "'use_p'")
+  }
+  contrasts0 <- object0$contrasts
+  contrasts1 <- object1$contrasts
+  shared <- intersect(names(contrasts0), names(contrasts1))
+  if (length(shared)) {
+    same_or_stop(contrasts0[shared], contrasts1[shared], "the contrasts")
+  }
+  invisible(TRUE)
+}
+
+
 check_nested_models <- function(object0, object1) {
   object0 <- check_geer_object(object0, "object0")
   object1 <- check_geer_object(object1, "object1")
@@ -24,6 +71,7 @@ check_nested_models <- function(object0, object1) {
       !identical(object0$family$link, object1$family$link)) {
     stop("family or link differs between models", call. = FALSE)
   }
+  check_comparable_fit_settings(object0, object1)
   coef_names0 <- names(object0$coefficients)
   coef_names1 <- names(object1$coefficients)
   if (is.null(coef_names0) || is.null(coef_names1)) {
@@ -125,8 +173,38 @@ get_model_sample_size <- function(object) {
 }
 
 
+## The fitting function is recorded in the fit. The call is parsed only as a
+## fallback for objects that do not carry it, and then only its last component,
+## so that geer::geewa(...) is recognized. Parsing the call alone is not
+## reliable: the head of geer::geewa(...) is `::`, and do.call(geewa, ...)
+## stores the function object itself.
+get_geer_fit_function <- function(object) {
+  fit_function <- object$fit_function
+  if (is.character(fit_function) && length(fit_function) == 1L &&
+      !is.na(fit_function)) {
+    return(fit_function)
+  }
+  call_head <- if (is.null(object$call)) NULL else object$call[[1L]]
+  if (is.name(call_head) || is.call(call_head)) {
+    call_head <- as.character(call_head)
+    call_head <- call_head[[length(call_head)]]
+    if (call_head %in% c("geewa", "geewa_binary")) {
+      return(call_head)
+    }
+  }
+  NA_character_
+}
+
+
 is_geewa_fit <- function(object) {
-  identical(as.character(object$call[[1L]]), "geewa")
+  fit_function <- get_geer_fit_function(object)
+  if (is.na(fit_function)) {
+    stop(
+      "cannot determine whether the model was fitted by 'geewa' or 'geewa_binary'",
+      call. = FALSE
+    )
+  }
+  identical(fit_function, "geewa")
 }
 
 
@@ -155,12 +233,12 @@ compute_chisq_mixture <- function(x, test_stat, pmethod = geer_pmethod_choices) 
   }
   if (identical(pmethod, "rao-scott")) {
     test_stat <- test_stat / x_bar
-    test_p <- 1 - stats::pchisq(test_stat, df = test_df)
+    test_p <- stats::pchisq(test_stat, df = test_df, lower.tail = FALSE)
   } else {
     satt_cv2 <- sum((x - x_bar)^2) / (test_df * x_bar^2)
     test_df <- test_df / (1 + satt_cv2)
     test_stat <- test_stat / ((1 + satt_cv2) * x_bar)
-    test_p <- 1 - stats::pchisq(test_stat, df = test_df)
+    test_p <- stats::pchisq(test_stat, df = test_df, lower.tail = FALSE)
   }
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
@@ -221,7 +299,7 @@ compute_wald_test <- function(object0, object1,
     }
   )
   test_stat <- check_test_statistic(test_stat, "Wald test")
-  test_p <- 1 - stats::pchisq(test_stat, df = test_df)
+  test_p <- stats::pchisq(test_stat, df = test_df, lower.tail = FALSE)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
@@ -329,7 +407,7 @@ compute_score_test <- function(object0, object1,
   )
   test_stat <- as.numeric((t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol)
   test_stat <- check_test_statistic(test_stat, "Score test")
-  test_p <- 1 - stats::pchisq(test_stat, df = test_df)
+  test_p <- stats::pchisq(test_stat, df = test_df, lower.tail = FALSE)
   list(test_stat = test_stat, test_df = test_df, test_p = test_p)
 }
 
@@ -481,6 +559,6 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   structure(
     table,
     heading = c(title, topnote),
-    class = c("anova", "data.frame")
+    class = c("geer_anova", "anova", "data.frame")
   )
 }

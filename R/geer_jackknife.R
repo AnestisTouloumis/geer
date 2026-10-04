@@ -1,11 +1,7 @@
 extract_jackknife_fit_function <- function(object) {
-  if (!is.null(object$fit_function)) {
-    return(object$fit_function)
-  }
-  call_head <- as.character(object$call[[1L]])
-  call_head <- call_head[[length(call_head)]]
-  if (call_head %in% c("geewa", "geewa_binary")) {
-    return(call_head)
+  fit_function <- get_geer_fit_function(object)
+  if (!is.na(fit_function)) {
+    return(fit_function)
   }
   stop(
     "jackknife covariance could not determine whether the model was fitted by 'geewa' or 'geewa_binary'",
@@ -115,76 +111,43 @@ refit_jackknife_cc <- function(object, keep, cluster_label) {
   phi_value <- if (phi_fixed) object$phi else 1
   beta_start <- as.numeric(object$coefficients)
 
-  fit_once <- function(beta, fit_method, maxiter = control$maxiter,
-                       step_maxiter = control$step_maxiter,
-                       step_multiplier = control$step_multiplier,
-                       alpha_value = alpha,
-                       fixed_alpha = alpha_fixed,
-                       corstr = object$association_structure,
-                       phi = phi_value,
-                       fixed_phi = as.integer(phi_fixed)) {
+  fit_pass <- function(beta, pass, previous) {
+    iterations <- if (pass$one_step) {
+      c(1L, 1L, 1L)
+    } else {
+      c(control$maxiter, control$step_maxiter, control$step_multiplier)
+    }
+    if (pass$carry_nuisance) {
+      phi_pass <- previous$phi
+      phi_fixed_pass <- 1L
+    } else {
+      phi_pass <- phi_value
+      phi_fixed_pass <- as.integer(phi_fixed)
+    }
     fit_geesolver_cc(
       y, x, id, repeated, weights,
-      object$family$link, object$family$family, beta, offset,
-      maxiter, tolerance, step_maxiter, step_multiplier,
-      control$jeffreys_power, fit_method, use_params,
-      alpha_value, fixed_alpha, corstr, mdependence,
-      phi, fixed_phi
+      object$family$link, object$family$family, as.numeric(beta), offset,
+      iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
+      control$jeffreys_power, pass$method, use_params,
+      if (pass$independence) 0 else alpha, alpha_fixed,
+      if (pass$independence) "independence" else object$association_structure,
+      mdependence, phi_pass, phi_fixed_pass
     )
   }
-
-  if (method %in% geer_bcgee_methods) {
-    first <- fit_once(beta_start, "gee")
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      sub("bcgee", "brgee", method),
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L,
-      alpha_value = alpha,
-      fixed_alpha = 1L,
-      phi = first$phi,
-      fixed_phi = 1L
-    )
-  } else if (identical(method, "hpgee-jeffreys")) {
-    first <- fit_once(
-      beta_start,
-      "pgee-jeffreys",
-      alpha_value = 0,
-      fixed_alpha = 1L,
-      corstr = "independence"
-    )
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      "gee",
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L,
-      alpha_value = alpha,
-      fixed_alpha = 1L
-    )
-  } else if (identical(method, "opgee-jeffreys")) {
-    first <- fit_once(
-      beta_start,
-      "pgee-jeffreys",
-      alpha_value = 0,
-      fixed_alpha = 1L,
-      corstr = "independence"
-    )
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      "pgee-jeffreys",
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L,
-      alpha_value = alpha,
-      fixed_alpha = 1L
-    )
-  } else {
-    final <- fit_once(beta_start, method)
+  final <- run_geer_estimation_passes(
+    fit_pass = fit_pass,
+    method = method,
+    beta_start = beta_start,
+    check_first = function(fit, method) {
+      stage <- if (method %in% geer_bcgee_methods) {
+        "the preliminary GEE fit"
+      } else {
+        "the preliminary independence PGEE fit"
+      }
+      check_jackknife_convergence(fit, tolerance, cluster_label, stage)
+    }
+  )
+  if (!(method %in% geer_onestep_methods)) {
     check_jackknife_convergence(final, tolerance, cluster_label)
   }
 
@@ -216,53 +179,34 @@ refit_jackknife_or <- function(object, keep, cluster_label) {
   alpha_independence <- rep.int(1, choose(max(repeated), 2L))
   beta_start <- as.numeric(object$coefficients)
 
-  fit_once <- function(beta, fit_method, alpha_value,
-                       maxiter = control$maxiter,
-                       step_maxiter = control$step_maxiter,
-                       step_multiplier = control$step_multiplier) {
+  fit_pass <- function(beta, pass, previous) {
+    iterations <- if (pass$one_step) {
+      c(1L, 1L, 1L)
+    } else {
+      c(control$maxiter, control$step_maxiter, control$step_multiplier)
+    }
     fit_geesolver_or(
       y, x, id, repeated, weights, object$family$link,
-      beta, offset, maxiter, tolerance,
-      step_maxiter, step_multiplier,
-      control$jeffreys_power, fit_method, alpha_value
+      as.numeric(beta), offset,
+      iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
+      control$jeffreys_power, pass$method,
+      if (pass$independence) alpha_independence else alpha
     )
   }
-
-  if (method %in% geer_bcgee_methods) {
-    first <- fit_once(beta_start, "gee", alpha)
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary GEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      sub("bcgee", "brgee", method),
-      alpha,
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L
-    )
-  } else if (identical(method, "hpgee-jeffreys")) {
-    first <- fit_once(beta_start, "pgee-jeffreys", alpha_independence)
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      "gee",
-      alpha,
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L
-    )
-  } else if (identical(method, "opgee-jeffreys")) {
-    first <- fit_once(beta_start, "pgee-jeffreys", alpha_independence)
-    check_jackknife_convergence(first, tolerance, cluster_label, "the preliminary independence PGEE fit")
-    final <- fit_once(
-      as.numeric(first$beta_hat),
-      "pgee-jeffreys",
-      alpha,
-      maxiter = 1L,
-      step_maxiter = 1L,
-      step_multiplier = 1L
-    )
-  } else {
-    final <- fit_once(beta_start, method, alpha)
+  final <- run_geer_estimation_passes(
+    fit_pass = fit_pass,
+    method = method,
+    beta_start = beta_start,
+    check_first = function(fit, method) {
+      stage <- if (method %in% geer_bcgee_methods) {
+        "the preliminary GEE fit"
+      } else {
+        "the preliminary independence PGEE fit"
+      }
+      check_jackknife_convergence(fit, tolerance, cluster_label, stage)
+    }
+  )
+  if (!(method %in% geer_onestep_methods)) {
     check_jackknife_convergence(final, tolerance, cluster_label)
   }
 
@@ -323,4 +267,30 @@ compute_jackknife_covariance <- function(object) {
   coefficient_names <- names(object$coefficients)
   dimnames(ans) <- list(coefficient_names, coefficient_names)
   ans
+}
+
+
+## The jackknife covariance needs one full refit per cluster, and summary(),
+## confint(), tidy(), predict(se.fit = TRUE) and every test that uses it would
+## otherwise repeat that work. The result is kept in the 'cache' environment
+## created with the fit. It is reused only while the stored coefficients are
+## identical to the current ones, so a modified copy of the fit (for example
+## through set_coef()) is recomputed rather than served stale.
+get_cached_jackknife_covariance <- function(object) {
+  cache <- object$cache
+  if (is.environment(cache)) {
+    stored <- cache$jackknife
+    if (!is.null(stored) && identical(stored$coefficients, object$coefficients)) {
+      return(stored$covariance)
+    }
+  }
+  covariance <- compute_jackknife_covariance(object)
+  if (is.environment(cache)) {
+    assign(
+      "jackknife",
+      list(coefficients = object$coefficients, covariance = covariance),
+      envir = cache
+    )
+  }
+  covariance
 }

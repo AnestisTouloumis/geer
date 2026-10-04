@@ -150,3 +150,62 @@
   `SGPC` already used the estimated count. The two disagreed for `corstr =
   "fixed"` and `orstr = "fixed"`, where a supplied structure costs no degrees of
   freedom; `GESSC` values change for those fits only.
+
+* P-values from the Wald, score, working Wald, working score and working LRT
+  tests (used by `anova()`, `add1()`, `drop1()`, `step_p()` and
+  `mcar_logistic_test()`) are now computed from the upper tail of the
+  chi-square distribution. Previously they were computed as `1 - pchisq()`,
+  which returns exactly 0 for test statistics larger than about 38 instead of
+  the correct, very small p-value.
+
+* Fixed how the fitting function (`geewa()` or `geewa_binary()`) and a fixed
+  dispersion are recognized in score tests, `anova()`, `add1()`, `drop1()`,
+  `step_p()`, `geecriteria()`, `glance()`, and Mahalanobis residuals. They
+  previously parsed the stored call, so a model fitted as `geer::geewa(...)`, or
+  with `phi_fixed` supplied as a variable, was handled as an odds-ratio fit or
+  as having an estimated dispersion. The recorded `fit_function` and `phi_fixed`
+  are now used, and an undeterminable fitting function is an error.
+
+* `print()` of `summary()` and of the `anova`-type tables returned by `anova()`,
+  `add1()`, `drop1()` and `step_p()` now shows p-values below 0.0001 as
+  `<0.0001`. `stats`, `utils` and `grDevices` are declared in `Imports`.
+
+* Internal refactor: the two-pass logic of `bcgee-*`, `hpgee-jeffreys` and
+  `opgee-jeffreys` is now implemented once (`run_geer_estimation_passes()`)
+  and shared by `geewa()`, `geewa_binary()` and the jackknife refits, so the
+  jackknife can no longer drift from the main fit. Results are unchanged.
+
+* Nested-model comparisons (`anova()`, score and Wald tests) now stop when the two
+  fits differ in fitting function, estimation method, working association
+  structure, dispersion handling, `use_p`, m-dependence order, fixed
+  association parameters or contrasts, instead of comparing them silently.
+
+* Standard errors from a negative or non-finite variance (the bias-corrected
+  covariance is not guaranteed to be positive semi-definite) are now `NA` with a
+  warning naming the affected coefficients in `summary()`, `tidy()` and
+  `predict(se.fit = TRUE)`, instead of silent `NA`/`NaN`. `confint()` still stops.
+* The leave-one-cluster jackknife covariance is cached on the fit, so repeated
+  calls to `summary()`, `confint()`, `tidy()`, `predict()` and the tests no longer
+  refit the model once per cluster each time. The cache is ignored when the
+  coefficients change.
+* `frechet_bounds_cor()` uses the same fit-function detection as the rest of the
+  package; "Fréchet" is now typeset with `\enc{}` in the help page.
+* Internal: input preparation shared by `geewa()` and `geewa_binary()` now lives
+  in `prepare_geer_inputs()`.
+
+* `print()` of `runs_test()`, `mcar_little_test()`, `mcar_logistic_test()` and
+  `mcar_homoscedasticity_test()` results now shows p-values below 0.0001 as
+  `p-value < 0.0001`. These objects gain the class `"geer_htest"` ahead of
+  `"htest"`; stored p-values are unchanged.
+
+* `step_p(direction = "both")` now requires `p_enter <= p_remove` and stops when a
+  move would return to a model already visited, instead of cycling until `steps`
+  is exhausted.
+
+* Fixed the sign of the inverse-Gaussian quasi-log-likelihood. It entered `QIC`,
+  `QICu`, `QICC`, `QICHH` and the modified working LRT with the wrong sign for
+  `inverse.gaussian` fits; the other families were correct. The quasi-
+  log-likelihood of every family is now tested against minus half the unit
+  deviance.
+* `geecriteria()` now also warns when the supplied models differ in distribution
+  family or in response values, not only in the number of observations.

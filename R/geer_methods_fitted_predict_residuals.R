@@ -285,7 +285,10 @@ predict.geer <- function(object,
       stop("'object$x' must have column names", call. = FALSE)
     }
     design_matrix <- design_matrix[, coef_names, drop = FALSE]
-    se <- sqrt(rowSums((design_matrix %*% vcov_matrix) * design_matrix))
+    se <- standard_errors_or_na(
+    rowSums((design_matrix %*% vcov_matrix) * design_matrix),
+    "predict.geer", what = "prediction"
+  )
     if (type == "response") {
       se <- se * abs(object$family$mu.eta(eta_vector))
     }
@@ -339,7 +342,10 @@ predict.geer <- function(object,
   }
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-  se <- sqrt(rowSums((design_matrix %*% vcov_matrix) * design_matrix))
+  se <- standard_errors_or_na(
+    rowSums((design_matrix %*% vcov_matrix) * design_matrix),
+    "predict.geer", what = "prediction"
+  )
   if (type == "response") {
     mu_vector <- object$family$linkinv(eta_vector)
     se <- se * abs(object$family$mu.eta(eta_vector))

@@ -206,8 +206,9 @@
 #' the corresponding values are \eqn{Z = 0.494} and \eqn{p = 0.311}.
 #'
 #' @return
-#' An object of class \code{c("geer_runs_test", "htest")}, so that it prints
-#' through \code{\link[stats]{print.htest}} and can be drawn with
+#' An object of class \code{c("geer_runs_test", "geer_htest", "htest")}, so that
+#' it prints like \code{\link[stats]{print.htest}} (with p-values below 0.0001
+#' shown as \code{<0.0001}) and can be drawn with
 #' \code{\link{plot.geer_runs_test}}. The standard components are used as
 #' follows: \code{statistic} holds \eqn{Z}, \code{parameter} holds
 #' \eqn{n_p} and \eqn{n_n}, \code{estimate} holds the observed number of
@@ -299,6 +300,6 @@ runs_test <- function(object,
       signs = result$signs,
       cluster = cluster
     ),
-    class = c("geer_runs_test", "htest")
+    class = c("geer_runs_test", "geer_htest", "htest")
   )
 }

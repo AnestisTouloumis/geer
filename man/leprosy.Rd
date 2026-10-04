@@ -17,7 +17,7 @@ A data frame with 60 rows and 4 columns:
 }
 \source{
 Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Iowa
-State University Press, Ames, Iowa.
+State University Press, Ames.
 }
 \usage{
 leprosy

@@ -585,6 +585,6 @@ mcar_homoscedasticity_test <- function(
       alpha = alpha
     )
   )
-  class(out) <- c("mcar_homoscedasticity_test", "htest")
+  class(out) <- c("mcar_homoscedasticity_test", "geer_htest", "htest")
   out
 }

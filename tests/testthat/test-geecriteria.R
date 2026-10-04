@@ -727,3 +727,51 @@ test_that("odds-ratio pair indexing matches upper-triangular ordering", {
     seq_len(6L)
   )
 })
+
+test_that("the quasi-log-likelihood differs from its value at mu = y by minus half the unit deviance", {
+  ## Q(mu; y) - Q(y; y) = -dev(y, mu) / 2 holds for every family, so this
+  ## pins down the sign and the scale of each branch.
+  cases <- list(
+    gaussian = list(family = stats::gaussian(), y = 1.3, mu = 0.7),
+    binomial = list(family = stats::binomial(), y = 0.3, mu = 0.6),
+    poisson = list(family = stats::poisson(), y = 2.5, mu = 4),
+    Gamma = list(family = stats::Gamma(), y = 1.3, mu = 2.2),
+    inverse.gaussian = list(family = stats::inverse.gaussian(), y = 1.3, mu = 2.2)
+  )
+  for (name in names(cases)) {
+    case <- cases[[name]]
+    q_mu <- geer:::compute_quasi_loglikelihood_values(
+      y = case$y, mu = case$mu, weights = 1, family_name = name, phi = 1
+    )
+    q_y <- geer:::compute_quasi_loglikelihood_values(
+      y = case$y, mu = case$y, weights = 1, family_name = name, phi = 1
+    )
+    deviance <- case$family$dev.resids(case$y, case$mu, 1)
+    expect_equal(q_mu - q_y, -deviance / 2, tolerance = 1e-10, info = name)
+    expect_lt(q_mu, q_y)
+  }
+})
+
+
+test_that("geecriteria warns when models differ in family or response", {
+  fit_pois <- fit_geewa_pois_exch
+  fit_gauss <- geewa(
+    formula = seizures ~ treatment + lnbaseline + lnage,
+    data = test_data$epilepsy,
+    id = id,
+    family = gaussian(link = "identity"),
+    corstr = "exchangeable",
+    method = "gee"
+  )
+  expect_warning(
+    geecriteria(fit_pois, fit_gauss),
+    "do not use the same distribution family"
+  )
+  fit_other_y <- fit_pois
+  fit_other_y$y <- fit_other_y$y + 1
+  expect_warning(
+    geecriteria(fit_pois, fit_other_y),
+    "do not have the same response values"
+  )
+  expect_no_warning(geecriteria(fit_pois, fit_pois))
+})

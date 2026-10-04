@@ -100,7 +100,8 @@
 #'
 #' @seealso
 #' \code{\link{geewa}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
-#' \code{\link{geecriteria}}.
+#' \code{\link{vcov.geer}}, \code{\link{anova.geer}}, \code{\link{step_p}},
+#' \code{\link{geecriteria}}, \code{\link{runs_test}}.
 #'
 #' @examples
 #' \donttest{
@@ -170,49 +171,33 @@ geewa_binary <- function(formula,
                          control_glm = list(...),
                          alpha_vector = NULL,
                          ...) {
-  ## call and model frame
+  ## call, family and common input preparation
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
-  model_frame <- build_geer_model_frame(mcall, env = parent.frame())
-  ## link function
-  family <- stats::binomial(link = link)
-  family <- normalize_family(family)
+  caller_env <- parent.frame()
+  family <- normalize_family(stats::binomial(link = link))
   link <- family$link
-  ## response
-  response_weights <- extract_geer_response_weights(model_frame, family)
-  y <- response_weights$y
-  weights <- response_weights$weights
-  ## id and repeated
-  id_repeated <- extract_geer_id_repeated(model_frame, length(y))
-  id <- id_repeated$id
-  repeated <- id_repeated$repeated
-  ## offset
-  offset <- extract_geer_offset(model_frame, y_length = length(y))
-  ## model matrix
-  design <- build_geer_design_matrix(model_frame)
-  model_terms <- design$terms
-  model_matrix <- design$x
-  xnames <- design$xnames
-  qr_model_matrix <- design$qr
-  x_assign <- design$assign
-  x_contrasts <- design$contrasts
-  ## sort by id then repeated
-  ord <- order(id, repeated)
-  y <- y[ord]
-  model_matrix <- model_matrix[ord, , drop = FALSE]
-  weights <- weights[ord]
-  offset <- offset[ord]
-  id <- id[ord]
-  repeated <- repeated[ord]
-  attr(model_matrix, "assign") <- x_assign
-  attr(model_matrix, "contrasts") <- x_contrasts
-  ## control
-  control <- normalize_geer_control(control)
+  inputs <- prepare_geer_inputs(
+    mcall = mcall,
+    family = family,
+    env = caller_env,
+    control = control,
+    method = method
+  )
+  model_frame <- inputs$model_frame
+  y <- inputs$y
+  weights <- inputs$weights
+  id <- inputs$id
+  repeated <- inputs$repeated
+  offset <- inputs$offset
+  model_matrix <- inputs$model_matrix
+  model_terms <- inputs$model_terms
+  xnames <- inputs$xnames
+  qr_model_matrix <- inputs$qr_model_matrix
+  control <- inputs$control
+  method <- inputs$method
   maxiter <- control$maxiter
   tolerance <- control$tolerance
-  ## method
-  method <- as.character(method)
-  check_choice(method, geer_method_choices, "method")
   ## initial beta
   beta_zero <- compute_geer_binary_start_values(
     model_matrix = model_matrix,
@@ -244,72 +229,26 @@ geewa_binary <- function(formula,
   }
   ## fit
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
-  if (method %in% geer_bcgee_methods) {
-    ## pass 1: plain GEE to convergence
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      beta_zero, offset, maxiter, tolerance,
-      control$step_maxiter, control$step_multiplier,
-      control$jeffreys_power, "gee", alpha_vector
-    )
-    last_criterion <- geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1L]
-    if (last_criterion > tolerance) {
-      stop("bias-corrected estimator is undefined because the corresponding GEE model did not converge", call. = FALSE)
+  fit_pass <- function(beta, pass, previous) {
+    iterations <- if (pass$one_step) {
+      c(1L, 1L, 1L)
+    } else {
+      c(maxiter, control$step_maxiter, control$step_multiplier)
     }
-    ## pass 2: one BR-GEE step warm-started from converged GEE solution
-    geesolver_fit <- fit_geesolver_or(
+    fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
-      as.numeric(geesolver_fit$beta_hat), offset,
-      1L, tolerance, 1L, 1L,
-      control$jeffreys_power, sub("bcgee", "brgee", method), alpha_vector
-    )
-  } else if (method == "hpgee-jeffreys") {
-    ## pass 1: PGEE under independence to convergence
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      beta_zero, offset, maxiter, tolerance,
-      control$step_maxiter, control$step_multiplier,
-      control$jeffreys_power, "pgee-jeffreys", alpha_independence
-    )
-    last_criterion <- geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1L]
-    if (last_criterion > tolerance) {
-      stop("hpgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
-    }
-    ## pass 2: one step GEE from penalized solution
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      as.numeric(geesolver_fit$beta_hat), offset,
-      1L, tolerance, 1L, 1L,
-      control$jeffreys_power, "gee", alpha_vector
-    )
-  } else if (method == "opgee-jeffreys") {
-    ## pass 1: PGEE under independence to convergence
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      beta_zero, offset, maxiter, tolerance,
-      control$step_maxiter, control$step_multiplier,
-      control$jeffreys_power, "pgee-jeffreys", alpha_independence
-    )
-    last_criterion <- geesolver_fit$criterion[ncol(geesolver_fit$beta_mat) - 1L]
-    if (last_criterion > tolerance) {
-      stop("opgee-jeffreys estimator is undefined because the independence pgee-jeffreys model did not converge", call. = FALSE)
-    }
-    ## pass 2: one step PGEE from penalized solution
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      as.numeric(geesolver_fit$beta_hat), offset,
-      1L, tolerance, 1L, 1L,
-      control$jeffreys_power, "pgee-jeffreys", alpha_vector
-    )
-  } else {
-    ## single pass: gee, brgee-*, or pgee-jeffreys
-    geesolver_fit <- fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      beta_zero, offset, maxiter, tolerance,
-      control$step_maxiter, control$step_multiplier,
-      control$jeffreys_power, method, alpha_vector
+      as.numeric(beta), offset,
+      iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
+      control$jeffreys_power, pass$method,
+      if (pass$independence) alpha_independence else alpha_vector
     )
   }
+  geesolver_fit <- run_geer_estimation_passes(
+    fit_pass = fit_pass,
+    method = method,
+    beta_start = beta_zero,
+    check_first = function(fit, method) check_geer_first_pass(fit, method, tolerance)
+  )
   ## output
   fit <- build_geer_output(
     geesolver_fit = geesolver_fit,

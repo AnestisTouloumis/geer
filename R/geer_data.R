@@ -182,7 +182,7 @@
 #'
 #' @source
 #' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Iowa
-#' State University Press, Ames, Iowa.
+#' State University Press, Ames.
 #'
 #' @examples
 #' data("leprosy", package = "geer")
@@ -220,7 +220,7 @@
 #'
 #' @source
 #' Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
-#' Analysis using the SAS System}. SAS Institute, Cary, NC.
+#' Analysis using the SAS System}. SAS Institute, Cary.
 #'
 #' @examples
 #' data("respiratory", package = "geer")

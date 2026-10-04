@@ -30,6 +30,9 @@ new_geer <- function(x) {
   if (!("xlevels" %in% names(x))) {
     x$xlevels <- list()
   }
+  if (!is.environment(x$cache)) {
+    x$cache <- new.env(parent = emptyenv())
+  }
   class(x) <- unique(c("geer", class(x)))
   x
 }
