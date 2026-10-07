@@ -7,18 +7,6 @@
 
 
 namespace {
-inline bool all_finite(const Rcpp::NumericVector& x) {
-  return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x)));
-}
-  inline bool all_positive_finite(const Rcpp::NumericVector& x) {
-    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x > 0.0)));
-  }
-  inline bool all_nonzero_finite(const Rcpp::NumericVector& x) {
-    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x != 0.0)));
-  }
-  inline bool all_open_unit_interval(const Rcpp::NumericVector& x) {
-    return Rcpp::is_true(Rcpp::all(Rcpp::is_finite(x) & (x > 0.0) & (x < 1.0)));
-  }
   inline arma::vec arma_logistic_mu(const arma::vec& eta) {
     const arma::vec eta_clipped = arma::clamp(eta, -30.0, 30.0);
     const arma::vec p = 1.0 / (1.0 + arma::exp(-eta_clipped));
@@ -202,28 +190,6 @@ arma::vec mueta3(LinkCode lc, const arma::vec& eta) {
 //==============================================================================
 
 
-//============================ valid eta =======================================
-bool valideta(const char* link,
-              const Rcpp::NumericVector& eta_vector) {
-  switch (parse_link(link)) {
-  case LinkCode::logit:
-  case LinkCode::probit:
-  case LinkCode::cauchit:
-  case LinkCode::cloglog:
-  case LinkCode::identity:
-  case LinkCode::log:
-    return all_finite(eta_vector);
-  case LinkCode::sqrt:
-  case LinkCode::inverse_mu_squared:
-    return all_positive_finite(eta_vector);
-  case LinkCode::inverse:
-    return all_nonzero_finite(eta_vector);
-  }
-  Rcpp::stop("Unsupported link.");
-}
-//==============================================================================
-
-
 //============================ valid eta - arma (enum) =========================
 bool valideta(LinkCode lc,
               const arma::vec& eta_vector) {
@@ -280,24 +246,6 @@ bool validmu(FamilyCode fc,
       if (!(std::isfinite(x[i]) && x[i] > 0.0)) return false;
     }
     return true;
-  }
-  Rcpp::stop("Unsupported family.");
-}
-//==============================================================================
-
-
-//============================ valid mu ========================================
-bool validmu(const char* family,
-             const Rcpp::NumericVector& mu_vector) {
-  switch (parse_family(family)) {
-  case FamilyCode::gaussian:
-    return all_finite(mu_vector);
-  case FamilyCode::binomial:
-    return all_open_unit_interval(mu_vector);
-  case FamilyCode::poisson:
-  case FamilyCode::gamma:
-  case FamilyCode::inverse_gaussian:
-    return all_positive_finite(mu_vector);
   }
   Rcpp::stop("Unsupported family.");
 }

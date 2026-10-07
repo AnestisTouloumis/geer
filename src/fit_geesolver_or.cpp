@@ -14,6 +14,8 @@
 #include <vector>
 
 
+namespace {
+
 //============================ update beta - gee OR ============================
 arma::vec update_beta_gee_or(const arma::vec& y_vector,
                              const arma::mat& model_matrix,
@@ -44,10 +46,6 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
       const arma::vec odds_ratios_vector_i =
@@ -59,10 +57,6 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
                                    weights_vector.subvec(a, b));
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
@@ -123,14 +117,8 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
       const arma::vec mu_vector_i = mu_vector.subvec(a, b);
       const arma::vec weights_vector_i = weights_vector.subvec(a, b);
       const arma::vec s_vector_i = s_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-      if (d_matrix_trans_i.n_rows != params_no || d_matrix_trans_i.n_cols != m) {
-        d_matrix_trans_i.set_size(params_no, m);
-      }
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
         get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
@@ -141,10 +129,6 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
                                    weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(m, m));
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = d_matrix_trans_i * v_matrix_inverse_i;
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       const arma::vec u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector_i;
@@ -247,14 +231,8 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
       const arma::vec mu_vector_i = mu_vector.subvec(a, b);
       const arma::vec weights_vector_i = weights_vector.subvec(a, b);
       const arma::vec s_vector_i = s_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-      if (d_matrix_trans_i.n_rows != params_no || d_matrix_trans_i.n_cols != m) {
-        d_matrix_trans_i.set_size(params_no, m);
-      }
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
         get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
@@ -265,10 +243,6 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                    weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(m, m));
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = d_matrix_trans_i * v_matrix_inverse_i;
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       const arma::vec u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector_i;
@@ -399,14 +373,8 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       const arma::vec mu_vector_i = mu_vector.subvec(a, b);
       const arma::vec s_vector_i = s_vector.subvec(a, b);
       const arma::vec weights_vector_i = weights_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-      if (d_matrix_trans_i.n_rows != params_no || d_matrix_trans_i.n_cols != m) {
-        d_matrix_trans_i.set_size(params_no, m);
-      }
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
         get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
@@ -609,9 +577,6 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
       const arma::uword m = cl.end - cl.start;
       const arma::vec mu_vector_i = mu_vector.subvec(a, b);
       const arma::vec weights_vector_i = weights_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
       const arma::vec odds_ratios_vector_i =
@@ -623,10 +588,6 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                    weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(m, m));
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = d_matrix_i.t() * v_matrix_inverse_i;
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
@@ -736,6 +697,8 @@ arma::vec update_beta_or(const arma::vec& y_vector,
 }
 //==============================================================================
 
+
+} // namespace
 
 //=========================== fitting function =================================
 // [[Rcpp::export]]

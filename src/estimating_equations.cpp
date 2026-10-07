@@ -72,11 +72,7 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
 
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
 
@@ -132,10 +128,6 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
 

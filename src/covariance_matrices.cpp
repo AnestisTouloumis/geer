@@ -100,10 +100,6 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
       v_matrix_i = get_v_matrix_cc(family,
@@ -114,10 +110,6 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                    weights_vector.subvec(a, b));
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
       u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
@@ -165,10 +157,6 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
       const arma::vec odds_ratios_vector_i =
@@ -180,10 +168,6 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
                                    weights_vector.subvec(a, b));
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
       u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
       naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;

@@ -106,6 +106,8 @@ arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
 //==============================================================================
 
 
+namespace {
+
 //============================ bivariate distribution ==========================
 double get_bivariate_distribution(const double& row_prob,
                                   const double& col_prob,
@@ -130,6 +132,8 @@ double get_bivariate_distribution(const double& row_prob,
 }
 //==============================================================================
 
+
+} // namespace
 
 //============================ v matrix ========================================
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,
@@ -158,6 +162,8 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
 //==============================================================================
 
 
+
+namespace {
 
 //============================ first derivative wrt row probability ============
 double get_bivariate_distribution_murow(const double& row_prob,
@@ -206,6 +212,8 @@ double get_bivariate_distribution_murowcol(const double& row_prob,
 }
 //==============================================================================
 
+
+} // namespace
 
 //============================ derivatives g_matrix ============================
 arma::mat get_g_matrix(const arma::vec& mu_vector,

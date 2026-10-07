@@ -70,6 +70,8 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
 //==============================================================================
 
 
+namespace {
+
 //============================ exchangeable alpha hat ==========================
 double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
                               const arma::vec& id_vector,
@@ -273,6 +275,8 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
 //==============================================================================
 
 
+} // namespace
+
 //============================ alpha hat =======================================
 arma::vec get_alpha_hat(const char* correlation_structure,
                         const arma::vec& pearson_residuals_vector,
@@ -330,6 +334,8 @@ arma::vec get_alpha_hat(const char* correlation_structure,
 }
 //==============================================================================
 
+
+namespace {
 
 //============================ independence ====================================
 arma::mat correlation_independence(const arma::uword dimension) {
@@ -409,6 +415,8 @@ arma::mat correlation_unstructured(const arma::vec& alpha_vector,
 }
 //==============================================================================
 
+
+} // namespace
 
 //============================ correlation matrix given rho vector =============
 // [[Rcpp::export]]

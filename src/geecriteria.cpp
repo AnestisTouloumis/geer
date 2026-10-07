@@ -30,10 +30,6 @@ arma::mat get_naive_matrix_inverse_independence(const arma::mat& model_matrix,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
       d_matrix_i = model_matrix.rows(a, b);
       d_matrix_i.each_col() %= delta_vector.subvec(a, b);
       const arma::vec scale_i =

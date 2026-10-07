@@ -16,6 +16,8 @@
 #include <vector>
 
 
+namespace {
+
 //============================ update beta - gee ===============================
 arma::vec update_beta_gee_cc(const arma::vec& y_vector,
                              const arma::mat& model_matrix,
@@ -53,7 +55,6 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
     try {
       const arma::uword a = cl.start;
       const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
       const auto delta_vector_i = delta_vector.subvec(a, b);
       const auto s_vector_i = s_vector.subvec(a, b);
       d_matrix_i = model_matrix.rows(a, b);
@@ -252,8 +253,6 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
         const auto s_vector_i = s_vector.subvec(a, b);
         const auto alpha_star_vector_i =
           alpha_star_vector.subvec(a, b);
-        const auto delta_star_vector_i =
-          delta_star_vector.subvec(a, b);
         const auto alpha_star_plus_delta_star_vector_i =
           alpha_star_plus_delta_star_vector.subvec(a, b);
         d_matrix_i = model_matrix.rows(a, b);
@@ -759,6 +758,8 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
 }
 //==============================================================================
 
+
+} // namespace
 
 //=========================== fitting function =================================
 // [[Rcpp::export]]

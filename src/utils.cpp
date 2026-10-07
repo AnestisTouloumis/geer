@@ -3,13 +3,6 @@
 #include <cmath>
 
 
-//============================ arma to vec =====================================
-Rcpp::NumericVector arma2vec(const arma::vec& x) {
-  return Rcpp::NumericVector(x.begin(), x.end());
-}
-//==============================================================================
-
-
 //============================ subset matrix x[y, y] ===========================
 arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
   arma::uvec z = arma::conv_to<arma::uvec>::from(y);

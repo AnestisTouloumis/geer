@@ -13,21 +13,9 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
 arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
                                            const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector);
-double get_bivariate_distribution(const double& row_prob,
-                                  const double& col_prob,
-                                  const double& odds_ratio);
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,
                           const arma::vec& odds_ratios_vector,
                           const arma::vec& weights_vector);
-double get_bivariate_distribution_murow(const double& row_prob,
-                                        const double& col_prob,
-                                        const double& odds_ratio);
-double get_bivariate_distribution_murow2(const double& row_prob,
-                                         const double& col_prob,
-                                         const double& odds_ratio);
-double get_bivariate_distribution_murowcol(const double& row_prob,
-                                           const double& col_prob,
-                                           const double& odds_ratio);
 arma::mat get_g_matrix(const arma::vec& mu_vector,
                        const arma::vec& odds_ratios_vector);
 arma::mat get_g_matrix_mu(const arma::vec& mu_vector,
