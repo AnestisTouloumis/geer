@@ -84,9 +84,13 @@
 #'
 #' For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 #' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
-#' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+#' \code{"hpgee-jeffreys"}, \code{converged} is \code{TRUE} in the
 #' returned object, because these methods produce their estimate via a single
-#' correction step applied to an already-converged fit.
+#' correction step applied to an already-converged fit. The exception is a
+#' numerical failure in that correction step: a warning is then issued, the
+#' preliminary estimates of the first stage are returned and \code{converged}
+#' is \code{FALSE}. The working odds ratios in \code{alpha} are computed once
+#' from the data, so they are the same in both stages.
 #'
 #' @references
 #' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
@@ -170,7 +174,13 @@ geewa_binary <- function(formula,
                          offset,
                          control_glm = list(...),
                          alpha_vector = NULL,
+                         subset,
+                         na.action,
                          ...) {
+  ## when both 'control' and 'control_glm' are supplied, nothing consumes '...'
+  if (!missing(control) && !missing(control_glm)) {
+    check_unused_dots(list(...), "geewa_binary")
+  }
   ## call, family and common input preparation
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
@@ -231,9 +241,9 @@ geewa_binary <- function(formula,
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
   fit_pass <- function(beta, pass, previous) {
     iterations <- if (pass$one_step) {
-      c(1L, 1L, 1L)
+      list(1L, 1L, 1)
     } else {
-      c(maxiter, control$step_maxiter, control$step_multiplier)
+      list(maxiter, control$step_maxiter, control$step_multiplier)
     }
     fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
@@ -267,7 +277,8 @@ geewa_binary <- function(formula,
     model_terms = model_terms,
     control = control,
     method = method,
-    association_structure = orstr
+    association_structure = orstr,
+    row_order = inputs$row_order
   )
   fit <- finalize_geer_fit(
     fit = fit,

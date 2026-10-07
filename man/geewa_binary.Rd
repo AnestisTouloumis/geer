@@ -18,6 +18,8 @@ geewa_binary(
   offset,
   control_glm = list(...),
   alpha_vector = NULL,
+  subset,
+  na.action,
   ...
 )
 }
@@ -87,6 +89,14 @@ when \code{orstr = "fixed"}. Must have length \code{choose(T, 2)}
 where \code{T = max(repeated)} after recoding, and all elements must
 be finite and strictly positive. Ignored for all other values of
 \code{orstr}. Defaults to \code{NULL}.}
+
+\item{subset}{an optional vector specifying a subset of observations to be
+used in the fitting process. It is evaluated in \code{data}, as in
+\code{\link[stats]{model.frame}}.}
+
+\item{na.action}{a function indicating what should happen when the data
+contain \code{NA}s, as in \code{\link[stats]{model.frame}}. Defaults
+to \code{getOption("na.action")}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
@@ -208,9 +218,13 @@ component stores the value of \code{orstr}. Under
 
 For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
-\code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+\code{"hpgee-jeffreys"}, \code{converged} is \code{TRUE} in the
 returned object, because these methods produce their estimate via a single
-correction step applied to an already-converged fit.
+correction step applied to an already-converged fit. The exception is a
+numerical failure in that correction step: a warning is then issued, the
+preliminary estimates of the first stage are returned and \code{converged}
+is \code{FALSE}. The working odds ratios in \code{alpha} are computed once
+from the data, so they are the same in both stages.
 }
 
 \examples{

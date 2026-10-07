@@ -23,6 +23,11 @@ test_that("summary.geer respects the requested covariance type", {
     expect_s3_class(out, "summary.geer")
     expect_identical(out$cov_type, cov_type)
     expect_equal(nrow(out$coefficients), length(coef(count_fit)))
+    expect_equal(
+      unname(out$coefficients[, "Std. Error"]),
+      unname(sqrt(diag(vcov(count_fit, cov_type = cov_type)))),
+      tolerance = 1e-8
+    )
   }
 })
 
@@ -34,10 +39,7 @@ test_that("summary.geer handles zero standard errors without crashing", {
   fit$bias_corrected_covariance[, ] <- 0
   out <- summary(fit)
   expect_s3_class(out, "summary.geer")
-  expect_true(all(
-    is.na(out$coefficients[, "z value"]) |
-      is.finite(out$coefficients[, "z value"])
-  ))
+  expect_true(all(is.na(out$coefficients[, "z value"])))
 })
 
 

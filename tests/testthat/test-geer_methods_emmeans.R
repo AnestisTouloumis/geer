@@ -2,7 +2,7 @@ testthat::local_edition(3)
 
 cerebrovascular <- test_data$cerebrovascular
 skip_if_no_emmeans <- function() {
-  testthat::skip_if_not_installed("emmeans")
+  testthat::skip_if_not_installed("emmeans", minimum_version = "2.0.0")
 }
 
 

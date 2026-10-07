@@ -74,6 +74,12 @@
 #' @param phi_value positive number giving the fixed value of the scale
 #'        parameter. Used only when \code{phi_fixed = TRUE}. Defaults to
 #'        \code{1}.
+#' @param subset an optional vector specifying a subset of observations to be
+#'        used in the fitting process. It is evaluated in \code{data}, as in
+#'        \code{\link[stats]{model.frame}}.
+#' @param na.action a function indicating what should happen when the data
+#'        contain \code{NA}s, as in \code{\link[stats]{model.frame}}. Defaults
+#'        to \code{getOption("na.action")}.
 #' @param ... additional arguments passed to or from other methods.
 #'
 #' @details
@@ -191,9 +197,20 @@
 #'
 #' For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 #' \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
-#' \code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+#' \code{"hpgee-jeffreys"}, \code{converged} is \code{TRUE} in the
 #' returned object, because these methods produce their estimate via a single
-#' correction step applied to an already-converged fit.
+#' correction step applied to an already-converged fit. The exception is a
+#' numerical failure in that correction step: a warning is then issued, the
+#' preliminary estimates of the first stage are returned and \code{converged}
+#' is \code{FALSE}.
+#'
+#' For the bias-corrected methods, \code{alpha} and \code{phi} are those of the
+#' converged GEE solution and are held fixed in the correction step. For
+#' \code{"opgee-jeffreys"} and \code{"hpgee-jeffreys"} they are estimated
+#' once, under the requested working correlation structure, at the converged
+#' independence penalized estimate of the regression parameters, and are held
+#' fixed in the one-step update; the returned \code{alpha}, \code{phi} and
+#' covariance matrices use these values.
 #'
 #' @references
 #' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
@@ -265,7 +282,13 @@ geewa <- function(formula,
                   alpha_vector = NULL,
                   phi_fixed = FALSE,
                   phi_value = 1,
+                  subset,
+                  na.action,
                   ...) {
+  ## when both 'control' and 'control_glm' are supplied, nothing consumes '...'
+  if (!missing(control) && !missing(control_glm)) {
+    check_unused_dots(list(...), "geewa")
+  }
   ## call, family and common input preparation
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
@@ -364,9 +387,9 @@ geewa <- function(formula,
   ## fit
   fit_pass <- function(beta, pass, previous) {
     iterations <- if (pass$one_step) {
-      c(1L, 1L, 1L)
+      list(1L, 1L, 1)
     } else {
-      c(maxiter, control$step_maxiter, control$step_multiplier)
+      list(maxiter, control$step_maxiter, control$step_multiplier)
     }
     if (pass$carry_nuisance) {
       alpha_pass <- previous$alpha
@@ -381,8 +404,10 @@ geewa <- function(formula,
       phi_pass <- phi_value
       phi_fixed_pass <- phi_fixed
     } else if (identical(pass$stage, "second")) {
-      alpha_pass <- 0
-      alpha_fixed_pass <- 0
+      ## A fixed working correlation is never estimated, so the second pass
+      ## must use the supplied association parameters.
+      alpha_pass <- if (identical(corstr, "fixed")) alpha_vector else 0
+      alpha_fixed_pass <- if (identical(corstr, "fixed")) alpha_fixed else 0
       corstr_pass <- corstr
       phi_pass <- phi_value
       phi_fixed_pass <- phi_fixed
@@ -399,7 +424,7 @@ geewa <- function(formula,
       iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
       control$jeffreys_power, pass$method, subtract_p,
       alpha_pass, alpha_fixed_pass, corstr_pass, Mv,
-      phi_pass, phi_fixed_pass
+      phi_pass, phi_fixed_pass, as.integer(isTRUE(pass$hold_nuisance))
     )
   }
   geesolver_fit <- run_geer_estimation_passes(
@@ -426,7 +451,8 @@ geewa <- function(formula,
     model_terms = model_terms,
     control = control,
     method = method,
-    association_structure = corstr
+    association_structure = corstr,
+    row_order = inputs$row_order
   )
   fit <- finalize_geer_fit(
     fit = fit,

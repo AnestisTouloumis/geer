@@ -106,3 +106,13 @@ test_that("geewa rejects unsupported quasi variance functions early", {
     "'variance'"
   )
 })
+
+
+test_that("geewa_binary rejects a non-finite 'beta_start'", {
+  cer <- test_data$cerebrovascular
+  expect_error(
+    geewa_binary(ecg ~ treatment, data = cer, id = id, repeated = period,
+                 beta_start = c(NA, 0)),
+    "'beta_start' must contain only finite values"
+  )
+})

@@ -3,6 +3,7 @@
 
 #include <RcppArmadillo.h>
 #include "link_codes.h"
+#include "family_codes.h"
 
 arma::vec linkinv(LinkCode lc,
                   const arma::vec& eta_vector);
@@ -18,5 +19,11 @@ bool valideta(const char* link,
               const Rcpp::NumericVector& eta_vector);
 bool validmu(const char* family,
              const Rcpp::NumericVector& mu_vector);
+// Same checks as above, but they take the parsed codes and an arma::vec so
+// that the solvers can validate trial points without copying the vector.
+bool valideta(LinkCode lc,
+              const arma::vec& eta_vector);
+bool validmu(FamilyCode fc,
+             const arma::vec& mu_vector);
 
 #endif

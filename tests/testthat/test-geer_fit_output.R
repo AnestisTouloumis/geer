@@ -10,10 +10,12 @@ finalize_fit <- function(criterion = 1e-8,
                          alpha = 0.3,
                          fit_function = "geewa",
                          tolerance = 1e-6,
-                         iter = 1L) {
+                         iter = 1L,
+                         failure = NULL) {
   geer:::finalize_geer_fit(
     fit = list(iter = iter, fitted.values = fitted),
-    geesolver_fit = list(criterion = criterion, alpha = alpha),
+    geesolver_fit = list(criterion = criterion, alpha = alpha,
+                         failure = failure),
     tolerance = tolerance,
     method = method,
     family = family,
@@ -166,4 +168,119 @@ test_that("a non-converging fit warns through the public interface", {
     ),
     "geewa_binary: algorithm did not converge"
   )
+})
+
+
+test_that("the bias-corrected covariance is NA and warned about when clusters do not exceed parameters", {
+  few_clusters <- data.frame(
+    id = rep(1:2, each = 5),
+    y = c(1, 2, 0, 3, 1, 2, 1, 4, 0, 2),
+    x1 = rep(c(-2, -1, 0, 1, 2), times = 2),
+    x2 = c(1, 0, 1, 0, 1, 0, 1, 0, 1, 0)
+  )
+  expect_warning(
+    fit <- geewa(
+      formula = y ~ x1 + x2,
+      family = poisson(link = "log"),
+      id = id,
+      data = few_clusters,
+      corstr = "independence",
+      method = "gee"
+    ),
+    "geewa: the bias-corrected covariance matrix is undefined"
+  )
+  expect_true(all(is.na(fit$bias_corrected_covariance)))
+  expect_true(all(is.na(vcov(fit))))
+  expect_true(all(is.finite(fit$robust_covariance)))
+  expect_true(all(is.finite(vcov(fit, cov_type = "robust"))))
+})
+
+
+test_that("the bias-corrected covariance is available when clusters exceed parameters", {
+  fit <- geewa(
+    formula = ecg ~ period + treatment,
+    family = binomial(link = "logit"),
+    id = id,
+    data = test_data$cerebrovascular,
+    corstr = "exchangeable",
+    method = "gee"
+  )
+  expect_true(all(is.finite(fit$bias_corrected_covariance)))
+})
+
+
+collect_warnings <- function(expr) {
+  messages <- character()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(w) {
+      messages <<- c(messages, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, messages = messages)
+}
+
+
+test_that("a solver failure marks the fit as not converged and warns with the reason", {
+  reason <- "update_beta_gee_cc: cluster 3 (id = 3): singular"
+  res <- collect_warnings(
+    finalize_fit(criterion = c(1, Inf), iter = 2L, failure = reason)
+  )
+  expect_false(res$value$converged)
+  expect_length(res$messages, 2L)
+  expect_match(
+    res$messages[[1L]],
+    paste0("geewa: the fitting algorithm stopped early because of a numerical ",
+           "failure (", reason, "); returning the estimates from the last ",
+           "accepted iteration"),
+    fixed = TRUE
+  )
+  expect_match(res$messages[[2L]], "geewa: algorithm did not converge",
+               fixed = TRUE)
+})
+
+
+test_that("a solver failure overrides the converged flag of one-step methods", {
+  res <- collect_warnings(
+    finalize_fit(criterion = Inf, method = "bcgee-robust",
+                 failure = "singular", fit_function = "geewa_binary")
+  )
+  expect_false(res$value$converged)
+  expect_match(res$messages[[1L]],
+               "geewa_binary: the fitting algorithm stopped early")
+  expect_match(res$messages[[1L]],
+               "returning the preliminary estimates of the first stage",
+               fixed = TRUE)
+})
+
+
+test_that("an empty failure message leaves the convergence logic unchanged", {
+  expect_no_warning(out <- finalize_fit(failure = ""))
+  expect_true(out$converged)
+})
+
+
+test_that("a damped step_multiplier reaches the same solution", {
+  fit_default <- geewa(
+    formula = seizures ~ treatment + lnbaseline + lnage,
+    data = epilepsy,
+    id = id,
+    family = poisson(link = "log"),
+    corstr = "exchangeable",
+    method = "gee",
+    control = geer_control(tolerance = 1e-8)
+  )
+  fit_damped <- geewa(
+    formula = seizures ~ treatment + lnbaseline + lnage,
+    data = epilepsy,
+    id = id,
+    family = poisson(link = "log"),
+    corstr = "exchangeable",
+    method = "gee",
+    control = geer_control(tolerance = 1e-8, step_multiplier = 0.5)
+  )
+  expect_true(fit_damped$converged)
+  expect_equal(fit_damped$coefficients, fit_default$coefficients,
+               tolerance = 1e-6)
 })

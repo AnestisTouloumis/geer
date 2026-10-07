@@ -269,7 +269,10 @@ tidy.geer <- function(x,
 glance.geer <- function(x, ...) {
   object <- check_geer_object(x)
   crit <- tryCatch(
-    compute_gee_criteria(object, cov_type = "robust", digits = 15L, include_extended = FALSE),
+    compute_gee_criteria(
+      object, cov_type = "robust", digits = 15L, include_extended = FALSE,
+      criteria = c("QIC", "QICu", "CIC")
+    ),
     error = function(e) NULL
   )
   qic <- if (is.null(crit)) NA_real_ else crit$QIC

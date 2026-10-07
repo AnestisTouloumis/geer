@@ -14,7 +14,8 @@ build_geer_output <- function(geesolver_fit,
                               model_terms,
                               control,
                               method,
-                              association_structure) {
+                              association_structure,
+                              row_order = NULL) {
   fit <- list()
   fit$coefficients <- as.numeric(geesolver_fit$beta_hat)
   names(fit$coefficients) <- xnames
@@ -48,6 +49,8 @@ build_geer_output <- function(geesolver_fit,
   fit$bias_corrected_covariance <- geesolver_fit$bc_covariance
   dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
   fit$association_structure <- association_structure
+  ## permutation that sorted the model-frame rows by cluster and occasion
+  fit$row_order <- row_order
   fit$alpha <- as.numeric(geesolver_fit$alpha)
   fit$phi <- geesolver_fit$phi
   fit$obs_no <- nrow(model_matrix)
@@ -68,9 +71,13 @@ finalize_geer_fit <- function(fit,
                               repeated,
                               fit_function) {
   fit$fit_function <- fit_function
-  fit$converged <- (geesolver_fit$criterion[fit$iter] <= tolerance)
+  fit$converged <- isTRUE(geesolver_fit$criterion[fit$iter] <= tolerance)
   if (method %in% geer_onestep_methods) {
     fit$converged <- TRUE
+  }
+  solver_failure <- geer_solver_failure(geesolver_fit)
+  if (nzchar(solver_failure)) {
+    fit$converged <- FALSE
   }
   independence_value <- if (identical(fit_function, "geewa_binary")) 1 else 0
   fit$alpha <- if (identical(association_structure, "independence")) {
@@ -78,7 +85,9 @@ finalize_geer_fit <- function(fit,
   } else {
     as.numeric(geesolver_fit$alpha)
   }
-  if (association_structure %in% c("unstructured", "fixed")) {
+  ## with a single repeated index there are no pairs to name
+  if (association_structure %in% c("unstructured", "fixed") &&
+      max(repeated) >= 2L) {
     pairs_matrix <- utils::combn(max(repeated), 2)
     names(fit$alpha) <-
       paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
@@ -86,8 +95,30 @@ finalize_geer_fit <- function(fit,
   if (association_structure %in% c("toeplitz", "m-dependent")) {
     names(fit$alpha) <- paste0("alpha_lag", seq_along(fit$alpha))
   }
+  if (nzchar(solver_failure)) {
+    returned <- if (method %in% geer_onestep_methods) {
+      "the preliminary estimates of the first stage"
+    } else {
+      "the estimates from the last accepted iteration"
+    }
+    warning(
+      fit_function, ": the fitting algorithm stopped early because of a ",
+      "numerical failure (", solver_failure, "); returning ", returned,
+      call. = FALSE
+    )
+  }
   if (!fit$converged) {
     warning(fit_function, ": algorithm did not converge", call. = FALSE)
+  }
+  if (isTRUE(fit$clusters_no <= length(fit$coefficients))) {
+    warning(
+      fit_function, ": the bias-corrected covariance matrix is undefined and ",
+      "set to NA because the number of clusters (", fit$clusters_no,
+      ") does not exceed the number of regression parameters (",
+      length(fit$coefficients), "); use cov_type = \"robust\" or ",
+      "\"jackknife\" instead",
+      call. = FALSE
+    )
   }
   ## Matches the boundary threshold and wording used by stats::glm.fit().
   eps <- 10 * .Machine$double.eps

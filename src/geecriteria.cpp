@@ -23,20 +23,27 @@ arma::mat get_naive_matrix_inverse_independence(const arma::mat& model_matrix,
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat ans(params_no, params_no, arma::fill::zeros);
   arma::mat d_matrix_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
+      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+        d_matrix_i.set_size(m, params_no);
+      }
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+      const arma::vec scale_i =
+        weights_vector.subvec(a, b) / variance_vector.subvec(a, b);
+      arma::mat d_scaled_i = d_matrix_i;
+      d_scaled_i.each_col() %= scale_i;
+      ans += d_matrix_i.t() * d_scaled_i;
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("get_naive_matrix_inverse_independence", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-    const arma::vec scale_i =
-      weights_vector.subvec(a, b) / variance_vector.subvec(a, b);
-    arma::mat d_scaled_i = d_matrix_i;
-    d_scaled_i.each_col() %= scale_i;
-    ans += d_matrix_i.t() * d_scaled_i;
   }
   return ans / phi;
 }
@@ -62,31 +69,38 @@ Rcpp::List get_gee_criteria_sc_cw(const arma::vec& y_vector,
   const auto clusters = clusters_from_sorted_id(id_vector);
   double sc_criterion = 0.0;
   double sum_log_det = 0.0;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::vec s_vector_i = s_vector.subvec(a, b);
-    const arma::mat v_matrix_i =
-      get_v_matrix_cc(family,
-                      mu_vector.subvec(a, b),
-                      repeated_vector.subvec(a, b),
-                      phi,
-                      correlation_matrix,
-                      weights_vector.subvec(a, b));
-    sc_criterion +=
-      arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
-    double ld;
-    double ld_sign;
-    arma::log_det(ld, ld_sign, v_matrix_i);
-    if (ld_sign <= 0.0) {
-      Rcpp::stop(
-        "get_gee_criteria_sc_cw: working covariance V_i is not positive "
-        "definite for cluster at index %d -- check correlation parameters "
-        "and model specification.",
-        static_cast<int>(cl.start)
-      );
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::vec s_vector_i = s_vector.subvec(a, b);
+      const arma::mat v_matrix_i =
+        get_v_matrix_cc(family,
+                        mu_vector.subvec(a, b),
+                        repeated_vector.subvec(a, b),
+                        phi,
+                        correlation_matrix,
+                        weights_vector.subvec(a, b));
+      sc_criterion +=
+        arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
+      double ld;
+      double ld_sign;
+      arma::log_det(ld, ld_sign, v_matrix_i);
+      if (ld_sign <= 0.0) {
+        Rcpp::stop(
+          "get_gee_criteria_sc_cw: working covariance V_i is not positive "
+          "definite for cluster at index %d -- check correlation parameters "
+          "and model specification.",
+          static_cast<int>(cl.start)
+        );
+      }
+      sum_log_det += ld;
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("get_gee_criteria_sc_cw", cluster_index, id_vector[cl.start], e);
     }
-    sum_log_det += ld;
   }
   return Rcpp::List::create(
     Rcpp::Named("sc") = sc_criterion,
@@ -110,32 +124,39 @@ Rcpp::List get_gee_criteria_sc_cw_or(const arma::vec& y_vector,
   const auto clusters = clusters_from_sorted_id(id_vector);
   double sc_criterion = 0.0;
   double sum_log_det = 0.0;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::vec s_vector_i = s_vector.subvec(a, b);
-    const arma::vec odds_ratios_vector_i =
-      get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
-                                       repeated_max,
-                                       alpha_vector);
-    const arma::mat v_matrix_i =
-      get_v_matrix_or(mu_vector.subvec(a, b),
-                      odds_ratios_vector_i,
-                      weights_vector.subvec(a, b));
-    sc_criterion +=
-      arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
-    double ld;
-    double ld_sign;
-    arma::log_det(ld, ld_sign, v_matrix_i);
-    if (ld_sign <= 0.0) {
-      Rcpp::stop(
-        "get_gee_criteria_sc_cw_or: working covariance V_i is not positive "
-        "definite for cluster at index %d -- check odds-ratio parameters "
-        "and model specification.",
-        static_cast<int>(cl.start)
-      );
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::vec s_vector_i = s_vector.subvec(a, b);
+      const arma::vec odds_ratios_vector_i =
+        get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
+                                         repeated_max,
+                                         alpha_vector);
+      const arma::mat v_matrix_i =
+        get_v_matrix_or(mu_vector.subvec(a, b),
+                        odds_ratios_vector_i,
+                        weights_vector.subvec(a, b));
+      sc_criterion +=
+        arma::dot(s_vector_i, solve_chol_or_lu_vec(v_matrix_i, s_vector_i));
+      double ld;
+      double ld_sign;
+      arma::log_det(ld, ld_sign, v_matrix_i);
+      if (ld_sign <= 0.0) {
+        Rcpp::stop(
+          "get_gee_criteria_sc_cw_or: working covariance V_i is not positive "
+          "definite for cluster at index %d -- check odds-ratio parameters "
+          "and model specification.",
+          static_cast<int>(cl.start)
+        );
+      }
+      sum_log_det += ld;
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("get_gee_criteria_sc_cw_or", cluster_index, id_vector[cl.start], e);
     }
-    sum_log_det += ld;
   }
   return Rcpp::List::create(
     Rcpp::Named("sc") = sc_criterion,

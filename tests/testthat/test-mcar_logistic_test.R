@@ -423,3 +423,38 @@ test_that("mcar_logistic_test validates its covariate formula and odds-ratio str
     "independence working model"
   )
 })
+
+
+test_that("build_mcar_null_formula falls back to an intercept-only model", {
+  expect_identical(
+    deparse(build_mcar_null_formula(character(0))),
+    "mcar_missing ~ 1"
+  )
+  expect_identical(
+    deparse(build_mcar_null_formula(c("a", "b"))),
+    "mcar_missing ~ a + b"
+  )
+})
+
+
+test_that("mcar_logistic_test works on data with only two occasions", {
+  dat <- make_mcar_dropout_data()
+  dat2 <- dat[dat$visit <= 2L, , drop = FALSE]
+  fit2 <- geewa(
+    y ~ treatment + age,
+    data = dat2,
+    id = id,
+    repeated = visit,
+    family = gaussian(),
+    corstr = "independence"
+  )
+  out2 <- mcar_logistic_test(
+    fit2,
+    formula = ~ treatment + age,
+    orstr = "independence"
+  )
+  expect_s3_class(out2, "htest")
+  expect_true(is.finite(out2$statistic))
+  expect_gte(out2$p.value, 0)
+  expect_lte(out2$p.value, 1)
+})

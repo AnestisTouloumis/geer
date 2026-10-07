@@ -22,6 +22,8 @@ geewa(
   alpha_vector = NULL,
   phi_fixed = FALSE,
   phi_value = 1,
+  subset,
+  na.action,
   ...
 )
 }
@@ -109,6 +111,14 @@ the value of \code{phi_value}. Defaults to \code{FALSE}.}
 \item{phi_value}{positive number giving the fixed value of the scale
 parameter. Used only when \code{phi_fixed = TRUE}. Defaults to
 \code{1}.}
+
+\item{subset}{an optional vector specifying a subset of observations to be
+used in the fitting process. It is evaluated in \code{data}, as in
+\code{\link[stats]{model.frame}}.}
+
+\item{na.action}{a function indicating what should happen when the data
+contain \code{NA}s, as in \code{\link[stats]{model.frame}}. Defaults
+to \code{getOption("na.action")}.}
 
 \item{...}{additional arguments passed to or from other methods.}
 }
@@ -234,9 +244,20 @@ component stores the value of \code{corstr}. Under
 
 For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
 \code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
-\code{"hpgee-jeffreys"}, \code{converged} is always \code{TRUE} in the
+\code{"hpgee-jeffreys"}, \code{converged} is \code{TRUE} in the
 returned object, because these methods produce their estimate via a single
-correction step applied to an already-converged fit.
+correction step applied to an already-converged fit. The exception is a
+numerical failure in that correction step: a warning is then issued, the
+preliminary estimates of the first stage are returned and \code{converged}
+is \code{FALSE}.
+
+For the bias-corrected methods, \code{alpha} and \code{phi} are those of the
+converged GEE solution and are held fixed in the correction step. For
+\code{"opgee-jeffreys"} and \code{"hpgee-jeffreys"} they are estimated
+once, under the requested working correlation structure, at the converged
+independence penalized estimate of the regression parameters, and are held
+fixed in the one-step update; the returned \code{alpha}, \code{phi} and
+covariance matrices use these values.
 }
 
 \examples{

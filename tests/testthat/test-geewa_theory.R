@@ -74,7 +74,6 @@ test_that("geewa under independence matches the corresponding GLM", {
 
 
 test_that("brgee-naive matches brglm2 AS_mean for representative links", {
-  skip_if_not_installed("brglm2")
   fit_glm_as_mean_probit <- update(
     fit_glm_probit,
     method = brglm2::brglmFit,
@@ -122,7 +121,6 @@ test_that("pgee-jeffreys matches brgee-naive for logit but not for probit", {
 
 
 test_that("pgee-jeffreys matches brglm2 Jeffreys fits for representative links", {
-  skip_if_not_installed("brglm2")
   fit_glm_jeffreys_logit <- update(
     fit_glm_logit,
     method = brglm2::brglmFit,

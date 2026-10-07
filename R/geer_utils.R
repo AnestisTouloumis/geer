@@ -41,13 +41,46 @@ format_test_label <- function(test) {
 }
 
 
+## Offsets written inside the model formula, as character strings such as
+## "offset(log(n))". stats::update.formula() drops them whenever the right-hand
+## side is replaced, so refits that rebuild the right-hand side must add them
+## back. Offsets supplied through the 'offset' argument stay in the call and
+## are not returned here.
+geer_formula_offset_terms <- function(object) {
+  offset_index <- attr(object$terms, "offset")
+  if (is.null(offset_index)) {
+    return(character(0))
+  }
+  variables <- attr(object$terms, "variables")
+  vapply(
+    offset_index,
+    function(i) paste(deparse(variables[[i + 1L]], width.cutoff = 500L), collapse = " "),
+    character(1)
+  )
+}
+
+
 refit_geer <- function(object, formula) {
   refit_call <- stats::update(object, formula = formula, evaluate = FALSE)
+  ## A fixed-length 'beta_start' does not fit a refit with added or dropped
+  ## terms, so the refit always computes its own starting values.
+  refit_call$beta_start <- NULL
   env <- environment(object$formula)
   if (is.null(env)) {
     env <- parent.frame()
   }
-  eval(refit_call, envir = env)
+  refit <- eval(refit_call, envir = env)
+  ## geewa() only warns when the solver fails and returns the last accepted
+  ## iterate, which must not enter a test table as if it were the fit.
+  if (isFALSE(refit$converged)) {
+    stop(
+      "the refit with formula '",
+      paste(deparse(formula, width.cutoff = 500L), collapse = " "),
+      "' did not converge; the test cannot be computed",
+      call. = FALSE
+    )
+  }
+  refit
 }
 
 

@@ -311,3 +311,11 @@ test_that("step_model_key identifies a model by its terms and intercept", {
   expect_false(identical(key_full, step_model_key(fit_bin_lower)))
   expect_true(grepl("^1\\|", key_full))
 })
+
+
+test_that("step_p warns when direction = 'forward' has no scope", {
+  expect_warning(
+    step_p(fit_resp_full_indep, direction = "forward"),
+    "no 'scope' was supplied"
+  )
+})

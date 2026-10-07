@@ -229,3 +229,131 @@ testthat::test_that("use_p = TRUE and use_p = FALSE both fit for a small grouped
   testthat::expect_s3_class(fit_true, "geer")
   testthat::expect_s3_class(fit_false, "geer")
 })
+
+
+test_that("a fixed working correlation works with the independence-start one-step methods", {
+  alpha_fixed <- rep(0.2, choose(4, 2))
+  for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
+    fit <- geewa(
+      seizures ~ treatment + lnbaseline + lnage,
+      data = test_data$epilepsy,
+      id = id,
+      family = poisson("log"),
+      corstr = "fixed",
+      alpha_vector = alpha_fixed,
+      method = method
+    )
+    expect_s3_class(fit, "geer")
+    expect_true(all(is.finite(coef(fit))))
+    expect_equal(as.numeric(fit$alpha), alpha_fixed)
+  }
+})
+
+
+test_that("geewa honours 'subset' and 'na.action' and rejects stray arguments", {
+  epi <- test_data$epilepsy
+  epi_sub <- epi[as.numeric(epi$id) <= 30, , drop = FALSE]
+  fit_subset <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi,
+    id = id,
+    family = poisson("log"),
+    subset = as.numeric(id) <= 30
+  )
+  fit_manual <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi_sub,
+    id = id,
+    family = poisson("log")
+  )
+  expect_equal(fit_subset$obs_no, nrow(epi_sub))
+  expect_equal(coef(fit_subset), coef(fit_manual), tolerance = 1e-8)
+  ## 'subset' must not be ignored when 'control' and 'control_glm' are given
+  fit_explicit <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi,
+    id = id,
+    family = poisson("log"),
+    control = geer_control(),
+    control_glm = list(),
+    subset = as.numeric(id) <= 30
+  )
+  expect_equal(fit_explicit$obs_no, nrow(epi_sub))
+  epi_na <- epi
+  epi_na$lnbaseline[1L] <- NA
+  fit_na <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi_na,
+    id = id,
+    family = poisson("log")
+  )
+  expect_equal(fit_na$obs_no, nrow(epi) - 1L)
+  expect_error(
+    geewa(
+      seizures ~ treatment + lnbaseline,
+      data = epi_na,
+      id = id,
+      family = poisson("log"),
+      na.action = stats::na.fail
+    )
+  )
+  expect_error(
+    geewa(
+      seizures ~ treatment + lnbaseline,
+      data = epi,
+      id = id,
+      family = poisson("log"),
+      control = geer_control(),
+      control_glm = list(),
+      not_an_argument = TRUE
+    ),
+    "does not use the argument"
+  )
+})
+
+
+test_that("one-step penalized methods hold phi at the independence penalized fit", {
+  epi <- test_data$epilepsy
+  fit_ind <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi,
+    id = id,
+    family = poisson("log"),
+    corstr = "independence",
+    method = "pgee-jeffreys"
+  )
+  for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
+    fit_one <- geewa(
+      seizures ~ treatment + lnbaseline,
+      data = epi,
+      id = id,
+      family = poisson("log"),
+      corstr = "exchangeable",
+      method = method
+    )
+    expect_true(fit_one$converged)
+    expect_equal(fit_one$phi, fit_ind$phi, tolerance = 1e-8)
+  }
+})
+
+
+test_that("the fit stores the row order and residuals accept type = 'response'", {
+  epi <- test_data$epilepsy
+  set.seed(2026)
+  epi_shuffled <- epi[sample(nrow(epi)), , drop = FALSE]
+  fit <- geewa(
+    seizures ~ treatment + lnbaseline,
+    data = epi_shuffled,
+    id = id,
+    family = poisson("log")
+  )
+  expect_equal(sort(fit$row_order), seq_len(nrow(epi_shuffled)))
+  expect_equal(
+    fit$id[order(fit$row_order)],
+    as.numeric(factor(epi_shuffled$id))
+  )
+  expect_equal(
+    residuals(fit, type = "response"),
+    residuals(fit, type = "working")
+  )
+})

@@ -421,7 +421,9 @@ compute_mahalanobis_residuals <- function(object) {
 #'
 #' @inheritParams coef.geer
 #' @param type character string specifying the type of residuals to return.
-#'   Options are \code{"working"} for raw residuals, \code{"pearson"} for
+#'   Options are \code{"working"} for raw residuals, \code{"response"} as an
+#'   alias of \code{"working"} (the raw residuals \code{y - fitted}),
+#'   \code{"pearson"} for
 #'   residuals standardized by the marginal variance, \code{"deviance"}
 #'   for dispersion-scaled signed square roots of the deviance contributions,
 #'   and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
@@ -499,7 +501,8 @@ compute_mahalanobis_residuals <- function(object) {
 #' @export
 residuals.geer <- function(object,
                            type = c(
-                             "working", "pearson", "deviance", "mahalanobis"
+                             "working", "pearson", "deviance", "mahalanobis",
+                             "response"
                            ),
                            ...) {
   check_unused_dots(list(...), "residuals.geer")
@@ -530,6 +533,7 @@ residuals.geer <- function(object,
   ans <- switch(
     type,
     working = object$residuals,
+    response = object$residuals,
     pearson = {
       pr <- get_pearson_residuals(object$family$family, y, mu, weights)
       as.numeric(pr) / sqrt(object$phi)

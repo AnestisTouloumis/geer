@@ -50,3 +50,23 @@ test_that("check_geer_first_pass stops only on non-convergence", {
   expect_error(check_geer_first_pass(bad, "hpgee-jeffreys", 1e-6),
                "hpgee-jeffreys estimator is undefined")
 })
+
+
+test_that("geer_solver_failure reads the failure message of a solver fit", {
+  expect_identical(geer_solver_failure(list()), "")
+  expect_identical(geer_solver_failure(list(failure = "")), "")
+  expect_identical(geer_solver_failure(list(failure = NA_character_)), "")
+  expect_identical(geer_solver_failure(list(failure = 1)), "")
+  expect_identical(geer_solver_failure(list(failure = "singular matrix")),
+                   "singular matrix")
+})
+
+
+test_that("check_geer_first_pass reports the solver failure reason", {
+  bad <- list(criterion = c(1, Inf), beta_mat = matrix(0, 2, 3),
+              failure = "singular matrix")
+  expect_error(check_geer_first_pass(bad, "bcgee-naive", 1e-6),
+               "did not converge: singular matrix")
+  expect_error(check_geer_first_pass(bad, "opgee-jeffreys", 1e-6),
+               "did not converge: singular matrix")
+})

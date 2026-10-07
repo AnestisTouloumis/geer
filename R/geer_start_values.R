@@ -14,6 +14,9 @@ compute_geer_start_values <- function(model_matrix,
     if (length(beta_start) != p) {
       stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
     }
+    if (anyNA(beta_start) || any(!is.finite(beta_start))) {
+      stop("'beta_start' must contain only finite values", call. = FALSE)
+    }
     return(beta_start)
   }
   control_glm <- do.call("brglm_control", control_glm)
@@ -83,6 +86,9 @@ compute_geer_binary_start_values <- function(model_matrix,
     p <- ncol(model_matrix)
     if (length(beta_start) != p) {
       stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
+    }
+    if (anyNA(beta_start) || any(!is.finite(beta_start))) {
+      stop("'beta_start' must contain only finite values", call. = FALSE)
     }
     return(beta_start)
   }

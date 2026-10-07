@@ -126,12 +126,20 @@ recover_data.geer <- function(object,
   } else {
     data
   }
+  ## The fit stores its rows sorted by cluster and occasion, whereas the
+  ## data are in their original order, so the weights are put back in the
+  ## original order of the model-frame rows.
+  prior_weights <- object$prior.weights
+  if (!is.null(object$row_order) &&
+      length(object$row_order) == length(prior_weights)) {
+    prior_weights <- prior_weights[order(object$row_order)]
+  }
   emmeans::recover_data(
     object$call,
     trms = stats::delete.response(object$terms),
     na.action = object$na.action,
     data = recovered_data,
-    pwts = object$prior.weights,
+    pwts = prior_weights,
     ...
   )
 }

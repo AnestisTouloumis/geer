@@ -163,6 +163,13 @@ step_p <- function(object,
   cov_type <- opts$cov_type
   pmethod <- opts$pmethod
   scope_value <- if (missing(scope)) NULL else scope
+  if (is.null(scope_value) && identical(direction, "forward")) {
+    warning(
+      "no 'scope' was supplied, so with direction = \"forward\" there are no ",
+      "candidate terms to add and the initial model is returned unchanged",
+      call. = FALSE
+    )
+  }
   switch(
     direction,
     backward = run_step_backward(

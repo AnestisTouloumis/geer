@@ -182,7 +182,7 @@ test_that("compute_working_wald_test returns a valid result for nested models", 
 })
 
 
-test_that("compute_working_lrt_test returns a valid result and checks phi consistency", {
+test_that("compute_working_lrt_test returns a valid result and scales each model by its own phi", {
   res <- compute_working_lrt_test(
     fit_bin_trt,
     fit_bin_full,
@@ -194,10 +194,16 @@ test_that("compute_working_lrt_test returns a valid result and checks phi consis
   fit_bad_phi$phi <- fit_bad_phi$phi + 1
   fit_bad_phi0 <- fit_bin_trt
   fit_bad_phi0$phi <- fit_bad_phi0$phi + 1
-  expect_error(
-    compute_working_lrt_test(fit_bad_phi0, fit_bad_phi, cov_type = "robust"),
-    "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models"
+  res_phi <- compute_working_lrt_test(
+    fit_bad_phi0,
+    fit_bad_phi,
+    cov_type = "robust",
+    pmethod = "satterthwaite"
   )
+  expect_test_result(res_phi)
+  ## The rescaled dispersions change the working log-likelihoods, so the
+  ## statistic must differ from the one based on the estimated dispersions.
+  expect_false(isTRUE(all.equal(res_phi$test_stat, res$test_stat)))
 })
 
 
@@ -243,7 +249,7 @@ test_that("compute_anova_geer_list returns an anova table for multiple nested mo
 })
 
 
-test_that("compute_anova_geer_list filters non-independence models for working-lrt and still returns a result", {
+test_that("compute_anova_geer_list rejects non-independence models for working-lrt", {
   expect_error(
     compute_anova_geer_list(
       list(fit_bin_trt, fit_bin_full_exch),
@@ -346,4 +352,27 @@ test_that("check_nested_models rejects fits with different settings", {
     "models differ in the fitting function"
   )
   expect_silent(check_comparable_fit_settings(fit_bin_trt, fit_bin_full))
+})
+
+
+test_that("check_test_statistic reports a negative statistic as NA with a warning", {
+  expect_equal(check_test_statistic(2.5, "Wald test"), 2.5)
+  expect_equal(check_test_statistic(-1e-12, "Wald test"), 0)
+  expect_warning(
+    out <- check_test_statistic(-0.5, "Wald test"),
+    "Wald test: the test statistic is negative"
+  )
+  expect_true(is.na(out))
+  expect_error(
+    check_test_statistic(Inf, "Wald test"),
+    "non-finite test statistic"
+  )
+})
+
+
+test_that("missing_test_result has an NA statistic and p-value", {
+  res <- missing_test_result(2L)
+  expect_true(is.na(res$test_stat))
+  expect_true(is.na(res$test_p))
+  expect_equal(res$test_df, 2L)
 })

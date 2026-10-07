@@ -17,8 +17,8 @@ estimating_equations_gee_or <- function(y_vector, model_matrix, id_vector, repea
     .Call(`_geer_estimating_equations_gee_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 
-fit_geesolver_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed) {
-    .Call(`_geer_fit_geesolver_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed)
+fit_geesolver_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed, hold_nuisance) {
+    .Call(`_geer_fit_geesolver_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, use_params, alpha_vector, alpha_fixed, correlation_structure, mdependence, phi, phi_fixed, hold_nuisance)
 }
 
 fit_geesolver_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector) {

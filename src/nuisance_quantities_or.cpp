@@ -272,32 +272,33 @@ arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
                              const arma::vec& weights_vector) {
   const arma::uword cluster_size = mu_vector.n_elem;
   arma::mat ans(cluster_size * cluster_size, cluster_size, arma::fill::zeros);
-  if (cluster_size > 1) {
-    for (arma::uword r = 0; r < cluster_size; ++r) {
-      for (arma::uword i = 0; i < cluster_size; ++i) {
-        ans(r * cluster_size + i, i) = -mu_vector[r];
-        ans(r * cluster_size + i, r) -= mu_vector[i];
+  // No special case for cluster_size == 1: the -mu terms and the unit diagonal
+  // below are then the only contributions, giving d V / d mu = 1 - 2 mu for
+  // V = mu * (1 - mu), and the pair loop is simply not entered.
+  for (arma::uword r = 0; r < cluster_size; ++r) {
+    for (arma::uword i = 0; i < cluster_size; ++i) {
+      ans(r * cluster_size + i, i) = -mu_vector[r];
+      ans(r * cluster_size + i, r) -= mu_vector[i];
 
-        if (i != r) {
-          const arma::uword a = std::min(i, r);
-          const arma::uword b = std::max(i, r);
-          const arma::uword k =
-            upper_triangular_pair_index(a, b, cluster_size);
+      if (i != r) {
+        const arma::uword a = std::min(i, r);
+        const arma::uword b = std::max(i, r);
+        const arma::uword k =
+          upper_triangular_pair_index(a, b, cluster_size);
 
-          ans(r * cluster_size + i, i) +=
-            get_bivariate_distribution_murow(mu_vector[i],
-                                             mu_vector[r],
-                                                      odds_ratios_vector[k]);
-          ans(r * cluster_size + i, r) +=
-            get_bivariate_distribution_murow(mu_vector[r],
-                                             mu_vector[i],
-                                                      odds_ratios_vector[k]);
-        }
+        ans(r * cluster_size + i, i) +=
+          get_bivariate_distribution_murow(mu_vector[i],
+                                           mu_vector[r],
+                                                    odds_ratios_vector[k]);
+        ans(r * cluster_size + i, r) +=
+          get_bivariate_distribution_murow(mu_vector[r],
+                                           mu_vector[i],
+                                                    odds_ratios_vector[k]);
       }
     }
-    for (arma::uword j = 0; j < cluster_size; ++j) {
-      ans(j * cluster_size + j, j) += 1.0;
-    }
+  }
+  for (arma::uword j = 0; j < cluster_size; ++j) {
+    ans(j * cluster_size + j, j) += 1.0;
   }
   const arma::mat weights_sq_inverse_matrix =
     arma::diagmat(1.0 / arma::sqrt(weights_vector));

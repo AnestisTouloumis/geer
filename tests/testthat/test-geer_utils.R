@@ -118,3 +118,39 @@ test_that("frechet_bounds_cor uses the shared fit-function detection", {
   fit <- fit_geewa_bin_exch
   expect_error(frechet_bounds_cor(fit), "must be fitted by 'geewa'")
 })
+
+
+test_that("refit_geer stops when the refit did not converge", {
+  fit <- geewa(
+    seizures ~ treatment,
+    data = test_data$epilepsy,
+    id = id,
+    family = poisson("log")
+  )
+  fit_ok <- refit_geer(fit, . ~ . + lnbaseline)
+  expect_s3_class(fit_ok, "geer")
+  ## the refit reuses the stored call, so a one-iteration limit makes it fail
+  fit_limited <- suppressWarnings(
+    geewa(
+      seizures ~ treatment,
+      data = test_data$epilepsy,
+      id = id,
+      family = poisson("log"),
+      corstr = "exchangeable",
+      control = geer_control(maxiter = 1L)
+    )
+  )
+})
+
+
+test_that("refit_geer ignores a fixed-length 'beta_start' of the original fit", {
+  fit <- geewa(
+    seizures ~ treatment,
+    data = test_data$epilepsy,
+    id = id,
+    family = poisson("log"),
+    beta_start = c(0, 0)
+  )
+  refit <- refit_geer(fit, . ~ . + lnbaseline)
+  expect_length(coef(refit), 3L)
+})

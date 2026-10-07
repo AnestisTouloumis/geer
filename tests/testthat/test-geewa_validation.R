@@ -155,3 +155,50 @@ test_that("extract_geer_response_weights treats quasibinomial factor responses l
   expect_equal(out_quasibinomial$y, out_binomial$y)
   expect_equal(out_quasibinomial$weights, out_binomial$weights)
 })
+
+
+test_that("geewa rejects non-finite 'beta_start' and names aliased columns", {
+  epi <- test_data$epilepsy
+  expect_error(
+    geewa(seizures ~ treatment + lnbaseline, data = epi, id = id,
+          family = poisson("log"), beta_start = c(NA, 0, 0)),
+    "'beta_start' must contain only finite values"
+  )
+  expect_error(
+    geewa(seizures ~ treatment + lnbaseline, data = epi, id = id,
+          family = poisson("log"), beta_start = c(0, Inf, 0)),
+    "'beta_start' must contain only finite values"
+  )
+  epi$lnbaseline2 <- 2 * epi$lnbaseline
+  expect_error(
+    geewa(seizures ~ lnbaseline + lnbaseline2, data = epi, id = id,
+          family = poisson("log")),
+    "rank-deficient model matrix: the column\\(s\\) 'lnbaseline2'"
+  )
+  expect_error(
+    geewa(seizures ~ 0, data = epi, id = id, family = poisson("log")),
+    "no columns"
+  )
+})
+
+
+test_that("geewa rejects factor, character and multi-column responses for non-binomial families", {
+  epi <- test_data$epilepsy
+  epi$seizures_factor <- factor(epi$seizures)
+  epi$seizures_character <- as.character(epi$seizures)
+  expect_error(
+    geewa(seizures_factor ~ treatment, data = epi, id = id,
+          family = poisson("log")),
+    "only allowed for binomial-type models"
+  )
+  expect_error(
+    geewa(seizures_character ~ treatment, data = epi, id = id,
+          family = gaussian()),
+    "only allowed for binomial-type models"
+  )
+  expect_error(
+    geewa(cbind(seizures, lnbaseline) ~ treatment, data = epi, id = id,
+          family = poisson("log")),
+    "matrix response with several columns"
+  )
+})

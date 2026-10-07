@@ -75,11 +75,32 @@ check_jackknife_convergence <- function(fit, tolerance, cluster_label, stage = N
   criterion <- extract_jackknife_last_criterion(fit)
   if (!is.finite(criterion) || criterion > tolerance) {
     stage_text <- if (is.null(stage)) "" else paste0(" during ", stage)
+    reason <- geer_solver_failure(fit)
+    reason_text <- if (nzchar(reason)) paste0(" (", reason, ")") else ""
     stop(
       sprintf(
-        "jackknife covariance failed for cluster '%s'%s: leave-one-cluster fit did not converge",
+        "jackknife covariance failed for cluster '%s'%s: leave-one-cluster fit did not converge%s",
         cluster_label,
-        stage_text
+        stage_text,
+        reason_text
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(fit)
+}
+
+
+## One-step methods skip the convergence check of the final pass, so a
+## numerical failure reported by the solver is checked separately.
+check_jackknife_solver_failure <- function(fit, cluster_label) {
+  reason <- geer_solver_failure(fit)
+  if (nzchar(reason)) {
+    stop(
+      sprintf(
+        "jackknife covariance failed for cluster '%s': %s",
+        cluster_label,
+        reason
       ),
       call. = FALSE
     )
@@ -113,9 +134,9 @@ refit_jackknife_cc <- function(object, keep, cluster_label) {
 
   fit_pass <- function(beta, pass, previous) {
     iterations <- if (pass$one_step) {
-      c(1L, 1L, 1L)
+      list(1L, 1L, 1)
     } else {
-      c(control$maxiter, control$step_maxiter, control$step_multiplier)
+      list(control$maxiter, control$step_maxiter, control$step_multiplier)
     }
     if (pass$carry_nuisance) {
       phi_pass <- previous$phi
@@ -131,7 +152,8 @@ refit_jackknife_cc <- function(object, keep, cluster_label) {
       control$jeffreys_power, pass$method, use_params,
       if (pass$independence) 0 else alpha, alpha_fixed,
       if (pass$independence) "independence" else object$association_structure,
-      mdependence, phi_pass, phi_fixed_pass
+      mdependence, phi_pass, phi_fixed_pass,
+      as.integer(isTRUE(pass$hold_nuisance))
     )
   }
   final <- run_geer_estimation_passes(
@@ -150,6 +172,7 @@ refit_jackknife_cc <- function(object, keep, cluster_label) {
   if (!(method %in% geer_onestep_methods)) {
     check_jackknife_convergence(final, tolerance, cluster_label)
   }
+  check_jackknife_solver_failure(final, cluster_label)
 
   beta <- as.numeric(final$beta_hat)
   if (length(beta) != ncol(x) || any(!is.finite(beta))) {
@@ -181,9 +204,9 @@ refit_jackknife_or <- function(object, keep, cluster_label) {
 
   fit_pass <- function(beta, pass, previous) {
     iterations <- if (pass$one_step) {
-      c(1L, 1L, 1L)
+      list(1L, 1L, 1)
     } else {
-      c(control$maxiter, control$step_maxiter, control$step_multiplier)
+      list(control$maxiter, control$step_maxiter, control$step_multiplier)
     }
     fit_geesolver_or(
       y, x, id, repeated, weights, object$family$link,
@@ -209,6 +232,7 @@ refit_jackknife_or <- function(object, keep, cluster_label) {
   if (!(method %in% geer_onestep_methods)) {
     check_jackknife_convergence(final, tolerance, cluster_label)
   }
+  check_jackknife_solver_failure(final, cluster_label)
 
   beta <- as.numeric(final$beta_hat)
   if (length(beta) != ncol(x) || any(!is.finite(beta))) {

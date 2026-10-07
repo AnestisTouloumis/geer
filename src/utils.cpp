@@ -92,70 +92,86 @@ arma::mat kronecker_vector_identity(const arma::vec& x) {
 //==============================================================================
 
 
-//============================ X^{-1} y ========================================
-arma::vec solve_chol_or_lu_vec(const arma::mat& X, const arma::vec& y) {
-  arma::mat chol_upper;
-  if (arma::chol(chol_upper, X)) {
-    const arma::vec forward =
-      arma::solve(arma::trimatl(chol_upper.t()), y,
+//============================ factorize once, solve many ======================
+CholOrLuFactor::CholOrLuFactor(const arma::mat& X, const char* context)
+  : context_(context), use_chol_(false) {
+  if (arma::chol(chol_upper_, X)) {
+    use_chol_ = true;
+    return;
+  }
+  if (!arma::lu(lu_lower_, lu_upper_, permutation_, X)) {
+    Rcpp::stop("%s: LU factorization failed -- "
+                 "matrix is singular or numerically unstable.", context_);
+  }
+}
+
+template <typename T>
+T CholOrLuFactor::solve_impl(const T& rhs) const {
+  if (use_chol_) {
+    // Cholesky succeeded: X is positive-definite so triangular solves
+    // cannot fail -- no explicit check needed.
+    const T forward =
+      arma::solve(arma::trimatl(chol_upper_.t()), rhs,
                   arma::solve_opts::no_approx);
-    return arma::solve(arma::trimatu(chol_upper), forward,
+    return arma::solve(arma::trimatu(chol_upper_), forward,
                        arma::solve_opts::no_approx);
   }
-  arma::mat lu_lower, lu_upper, permutation_matrix;
-  if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
-    Rcpp::stop("solve_chol_or_lu_vec: LU factorization failed -- "
-                 "matrix is singular or numerically unstable.");
-  }
-  const arma::vec permuted_rhs = permutation_matrix * y;
-  arma::vec forward;
-  if (!arma::solve(forward, arma::trimatl(lu_lower), permuted_rhs,
+  const T permuted_rhs = permutation_ * rhs;
+  T forward;
+  if (!arma::solve(forward, arma::trimatl(lu_lower_), permuted_rhs,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("solve_chol_or_lu_vec: LU forward solve failed -- "
-                 "matrix is singular or numerically unstable.");
+    Rcpp::stop("%s: LU forward solve failed -- "
+                 "matrix is singular or numerically unstable.", context_);
   }
-  arma::vec ans;
-  if (!arma::solve(ans, arma::trimatu(lu_upper), forward,
+  T ans;
+  if (!arma::solve(ans, arma::trimatu(lu_upper_), forward,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("solve_chol_or_lu_vec: LU back solve failed -- "
-                 "matrix is singular or numerically unstable.");
+    Rcpp::stop("%s: LU back solve failed -- "
+                 "matrix is singular or numerically unstable.", context_);
   }
   return ans;
+}
+
+arma::mat CholOrLuFactor::solve(const arma::mat& Y) const {
+  return solve_impl<arma::mat>(Y);
+}
+
+arma::vec CholOrLuFactor::solve(const arma::vec& y) const {
+  return solve_impl<arma::vec>(y);
+}
+//==============================================================================
+
+
+//============================ X^{-1} y ========================================
+arma::vec solve_chol_or_lu_vec(const arma::mat& X,
+                               const arma::vec& y,
+                               const char* context) {
+  const CholOrLuFactor factor(X, context);
+  return factor.solve(y);
 }
 //==============================================================================
 
 
 //============================ X^{-1} Y ========================================
-arma::mat solve_chol_or_lu_mat(const arma::mat& X, const arma::mat& Y) {
-  arma::mat chol_upper;
-  if (arma::chol(chol_upper, X)) {
-    // Cholesky succeeded: X is positive-definite so triangular solves
-    // cannot fail — no explicit check needed.
-    const arma::mat forward =
-      arma::solve(arma::trimatl(chol_upper.t()), Y,
-                  arma::solve_opts::no_approx);
-    return arma::solve(arma::trimatu(chol_upper), forward,
-                       arma::solve_opts::no_approx);
-  }
-  arma::mat lu_lower, lu_upper, permutation_matrix;
-  if (!arma::lu(lu_lower, lu_upper, permutation_matrix, X)) {
-    Rcpp::stop("solve_chol_or_lu_mat: LU factorization failed -- "
-                 "matrix is singular or numerically unstable.");
-  }
-  const arma::mat permuted_rhs = permutation_matrix * Y;
-  arma::mat forward;
-  if (!arma::solve(forward, arma::trimatl(lu_lower), permuted_rhs,
-                   arma::solve_opts::no_approx)) {
-    Rcpp::stop("solve_chol_or_lu_mat: LU forward solve failed -- "
-                 "matrix is singular or numerically unstable.");
-  }
-  arma::mat ans;
-  if (!arma::solve(ans, arma::trimatu(lu_upper), forward,
-                   arma::solve_opts::no_approx)) {
-    Rcpp::stop("solve_chol_or_lu_mat: LU back solve failed -- "
-                 "matrix is singular or numerically unstable.");
-  }
-  return ans;
+arma::mat solve_chol_or_lu_mat(const arma::mat& X,
+                               const arma::mat& Y,
+                               const char* context) {
+  const CholOrLuFactor factor(X, context);
+  return factor.solve(Y);
+}
+//==============================================================================
+
+
+//============================ cluster error context ===========================
+[[noreturn]] void rethrow_with_cluster_context(const char* where,
+                                               arma::uword cluster_index,
+                                               double id_value,
+                                               const std::exception& e) {
+  Rcpp::stop("%s: cluster %d (id = %g): %s",
+             where,
+             static_cast<int>(cluster_index + 1),
+             id_value,
+             e.what());
 }
 //==============================================================================
 

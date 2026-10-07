@@ -330,11 +330,26 @@ compute_mcar_nested_test <- function(object0,
       object0, object1, cov_type, pmethod
     )
   )
+  if (!is.finite(value$test_stat)) {
+    stop(
+      "the MCAR test statistic is not available because the test statistic ",
+      "was negative; try another 'cov_type' or 'test'",
+      call. = FALSE
+    )
+  }
   list(
     statistic = value$test_stat,
     df = as.numeric(value$test_df),
     p_value = value$test_p
   )
+}
+
+
+build_mcar_null_formula <- function(term_labels) {
+  if (length(term_labels) == 0L) {
+    return(stats::as.formula("mcar_missing ~ 1"))
+  }
+  stats::reformulate(term_labels, response = "mcar_missing")
 }
 
 

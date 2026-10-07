@@ -6,7 +6,7 @@
 \usage{
 \method{residuals}{geer}(
   object,
-  type = c("working", "pearson", "deviance", "mahalanobis"),
+  type = c("working", "pearson", "deviance", "mahalanobis", "response"),
   ...
 )
 }
@@ -14,7 +14,9 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{type}{character string specifying the type of residuals to return.
-Options are \code{"working"} for raw residuals, \code{"pearson"} for
+Options are \code{"working"} for raw residuals, \code{"response"} as an
+alias of \code{"working"} (the raw residuals \code{y - fitted}),
+\code{"pearson"} for
 residuals standardized by the marginal variance, \code{"deviance"}
 for dispersion-scaled signed square roots of the deviance contributions,
 and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.

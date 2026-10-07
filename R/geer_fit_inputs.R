@@ -13,7 +13,35 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
       enclos <- environment(formula_obj)
     }
   }
+  model_call <- recycle_geer_scalar_offset(model_call, env, enclos)
   eval(model_call, envir = env, enclos = enclos)
+}
+
+
+## model.frame() requires every variable to have the same length, so a
+## documented scalar 'offset' is recycled to the number of rows of the data
+## before the frame is built (before 'subset' and 'na.action' are applied).
+recycle_geer_scalar_offset <- function(model_call, env, enclos) {
+  if (is.null(model_call$offset)) {
+    return(model_call)
+  }
+  data_arg <- if (is.null(model_call$data)) {
+    NULL
+  } else {
+    eval(model_call$data, envir = env, enclos = enclos)
+  }
+  offset_value <- tryCatch(
+    eval(model_call$offset, envir = data_arg, enclos = enclos),
+    error = function(e) NULL
+  )
+  if (!is.numeric(offset_value) || length(offset_value) != 1L) {
+    return(model_call)
+  }
+  frame_call <- model_call[c(1L, match(c("formula", "data"), names(model_call), 0L))]
+  frame_call$na.action <- quote(stats::na.pass)
+  n_rows <- NROW(eval(frame_call, envir = env, enclos = enclos))
+  model_call$offset <- rep.int(as.numeric(offset_value), n_rows)
+  model_call
 }
 
 
@@ -44,12 +72,21 @@ build_geer_design_matrix <- function(model_frame) {
   model_terms <- attr(model_frame, "terms")
   model_matrix <- stats::model.matrix(model_terms, model_frame)
   xnames <- colnames(model_matrix)
-  if (length(xnames) == 1L) {
-    model_matrix <- matrix(model_matrix, ncol = 1L)
+  if (ncol(model_matrix) == 0L) {
+    stop("the model matrix has no columns; the model needs at least one term or an intercept",
+         call. = FALSE)
   }
   qr_model_matrix <- qr(model_matrix)
   if (qr_model_matrix$rank < ncol(model_matrix)) {
-    stop("rank-deficient model matrix", call. = FALSE)
+    aliased <- xnames[qr_model_matrix$pivot[
+      seq.int(qr_model_matrix$rank + 1L, ncol(model_matrix))
+    ]]
+    stop(
+      "rank-deficient model matrix: the column(s) ",
+      paste0("'", aliased, "'", collapse = ", "),
+      " are linearly dependent on the others; remove them from the formula",
+      call. = FALSE
+    )
   }
   list(
     terms = model_terms,
@@ -133,6 +170,22 @@ extract_geer_response_weights <- function(model_frame, family) {
     } else if (is.matrix(y) && ncol(y) != 2L) {
       stop(
         "for binomial-type models, a matrix response must have exactly two columns",
+        call. = FALSE
+      )
+    }
+  }
+  if (!is_binomial_like) {
+    if (is.factor(y) || is.character(y)) {
+      stop(
+        "a factor or character response is only allowed for binomial-type models; ",
+        "the response must be numeric",
+        call. = FALSE
+      )
+    }
+    if (is.matrix(y) && ncol(y) > 1L) {
+      stop(
+        "a matrix response with several columns is only allowed for ",
+        "binomial-type models; the response must be a numeric vector",
         call. = FALSE
       )
     }
@@ -280,6 +333,7 @@ prepare_geer_inputs <- function(mcall, family, env, control, method) {
   method <- as.character(method)
   check_choice(method, geer_method_choices, "method")
   list(
+    row_order = ord,
     model_frame = model_frame,
     y = y,
     weights = weights,

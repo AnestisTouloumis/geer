@@ -17,10 +17,11 @@
 #'   \code{0.5}. Ignored by \code{\link{geewa}}.
 #' @param step_maxiter positive integer giving the maximum number of
 #'   step-halving attempts allowed within an iteration. Defaults to \code{10}.
-#' @param step_multiplier positive integer used to scale the proposed step
-#'   before step-halving begins. A value greater than \code{1} enlarges the
-#'   initial step. Defaults to \code{1}, which leaves the scoring step
-#'   unscaled.
+#' @param step_multiplier strictly positive number used to scale the proposed
+#'   step before step-halving begins. A value greater than \code{1} enlarges
+#'   the initial step and a value smaller than \code{1} damps it, which can
+#'   help when the fitting algorithm diverges from poor starting values.
+#'   Defaults to \code{1}, which leaves the scoring step unscaled.
 #' @param jeffreys_power strictly positive constant giving the power of the
 #'   Jeffreys-type penalty. Defaults to \code{0.5}, which corresponds to the
 #'   standard Jeffreys-type penalty.
@@ -56,6 +57,9 @@
 #' ## Weaker Jeffreys-type penalty
 #' geer_control(jeffreys_power = 0.1)
 #'
+#' ## Damped steps, e.g. when the algorithm diverges from poor starting values
+#' geer_control(step_multiplier = 0.5)
+#'
 #' @export
 geer_control <- function(tolerance = 1e-06,
                          maxiter = 500,
@@ -75,8 +79,8 @@ geer_control <- function(tolerance = 1e-06,
   if (!is_positive_integer_scalar(step_maxiter)) {
     stop("'step_maxiter' must be a positive integer", call. = FALSE)
   }
-  if (!is_positive_integer_scalar(step_multiplier)) {
-    stop("'step_multiplier' must be a positive integer", call. = FALSE)
+  if (!is_positive_scalar(step_multiplier)) {
+    stop("'step_multiplier' must be a positive number", call. = FALSE)
   }
   if (!is_positive_scalar(jeffreys_power)) {
     stop("'jeffreys_power' must be a positive number", call. = FALSE)
@@ -86,7 +90,7 @@ geer_control <- function(tolerance = 1e-06,
     maxiter = as.integer(maxiter),
     or_adding = or_adding,
     step_maxiter = as.integer(step_maxiter),
-    step_multiplier = as.integer(step_multiplier),
+    step_multiplier = as.numeric(step_multiplier),
     jeffreys_power = jeffreys_power
   )
 }

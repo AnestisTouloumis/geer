@@ -54,7 +54,7 @@ test_that("geer_control returns the expected defaults", {
   expect_true(is.numeric(ctrl$jeffreys_power) && length(ctrl$jeffreys_power) == 1L)
   expect_true(is.integer(ctrl$maxiter) && length(ctrl$maxiter) == 1L)
   expect_true(is.integer(ctrl$step_maxiter) && length(ctrl$step_maxiter) == 1L)
-  expect_true(is.integer(ctrl$step_multiplier) && length(ctrl$step_multiplier) == 1L)
+  expect_true(is.numeric(ctrl$step_multiplier) && length(ctrl$step_multiplier) == 1L)
 })
 
 
@@ -72,7 +72,7 @@ test_that("geer_control accepts valid inputs and coerces integer fields", {
   expect_equal(ctrl$jeffreys_power, 0.75)
   expect_true(is.integer(ctrl$maxiter))
   expect_true(is.integer(ctrl$step_maxiter))
-  expect_true(is.integer(ctrl$step_multiplier))
+  expect_true(is.double(ctrl$step_multiplier))
   expect_equal(ctrl$maxiter, 123L)
   expect_equal(ctrl$step_maxiter, 7L)
   expect_equal(ctrl$step_multiplier, 2L)
@@ -104,8 +104,17 @@ test_that("geer_control validates positive integer controls", {
     geer_control(step_maxiter = 0),
     "'step_maxiter' must be a positive integer"
   )
-  expect_error(
-    geer_control(step_multiplier = NA_integer_),
-    "'step_multiplier' must be a positive integer"
-  )
+})
+
+
+test_that("geer_control accepts any strictly positive real step_multiplier", {
+  expect_equal(geer_control(step_multiplier = 0.5)$step_multiplier, 0.5)
+  expect_equal(geer_control(step_multiplier = 2.5)$step_multiplier, 2.5)
+  expect_true(is.double(geer_control(step_multiplier = 2L)$step_multiplier))
+  for (bad in list(0, -1, NA_real_, Inf, c(1, 2), "1")) {
+    expect_error(
+      geer_control(step_multiplier = bad),
+      "'step_multiplier' must be a positive number"
+    )
+  }
 })

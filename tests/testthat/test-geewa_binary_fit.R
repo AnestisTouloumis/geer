@@ -109,3 +109,36 @@ test_that("geewa_binary is invariant to row order via internal sorting", {
   )
   expect_equal(names(fit_1$coefficients), names(fit_2$coefficients))
 })
+
+
+test_that("geewa_binary honours 'subset' and rejects stray arguments", {
+  cer <- test_data$cerebrovascular
+  cer_sub <- cer[as.numeric(cer$id) <= 40, , drop = FALSE]
+  fit_subset <- geewa_binary(
+    ecg ~ treatment + factor(period),
+    id = id,
+    repeated = period,
+    data = cer,
+    subset = as.numeric(id) <= 40
+  )
+  fit_manual <- geewa_binary(
+    ecg ~ treatment + factor(period),
+    id = id,
+    repeated = period,
+    data = cer_sub
+  )
+  expect_equal(fit_subset$obs_no, nrow(cer_sub))
+  expect_equal(coef(fit_subset), coef(fit_manual), tolerance = 1e-8)
+  expect_error(
+    geewa_binary(
+      ecg ~ treatment + factor(period),
+      id = id,
+      repeated = period,
+      data = cer,
+      control = geer_control(),
+      control_glm = list(),
+      not_an_argument = TRUE
+    ),
+    "does not use the argument"
+  )
+})

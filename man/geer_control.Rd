@@ -28,10 +28,11 @@ estimate working odds ratios in \code{\link{geewa_binary}}. Defaults to
 \item{step_maxiter}{positive integer giving the maximum number of
 step-halving attempts allowed within an iteration. Defaults to \code{10}.}
 
-\item{step_multiplier}{positive integer used to scale the proposed step
-before step-halving begins. A value greater than \code{1} enlarges the
-initial step. Defaults to \code{1}, which leaves the scoring step
-unscaled.}
+\item{step_multiplier}{strictly positive number used to scale the proposed
+step before step-halving begins. A value greater than \code{1} enlarges
+the initial step and a value smaller than \code{1} damps it, which can
+help when the fitting algorithm diverges from poor starting values.
+Defaults to \code{1}, which leaves the scoring step unscaled.}
 
 \item{jeffreys_power}{strictly positive constant giving the power of the
 Jeffreys-type penalty. Defaults to \code{0.5}, which corresponds to the
@@ -66,6 +67,9 @@ geer_control(or_adding = 1)
 
 ## Weaker Jeffreys-type penalty
 geer_control(jeffreys_power = 0.1)
+
+## Damped steps, e.g. when the algorithm diverges from poor starting values
+geer_control(step_multiplier = 0.5)
 
 }
 \references{

@@ -298,3 +298,21 @@ test_that("criteria and model-comparison interfaces accept jackknife", {
     "anova"
   )
 })
+
+
+test_that("jackknife convergence checks report the solver failure reason", {
+  bad <- list(criterion = c(1, Inf), beta_mat = matrix(0, 2, 3),
+              failure = "singular matrix")
+  expect_error(
+    geer:::check_jackknife_convergence(bad, 1e-6, "7"),
+    "leave-one-cluster fit did not converge (singular matrix)",
+    fixed = TRUE
+  )
+  expect_error(
+    geer:::check_jackknife_solver_failure(bad, "7"),
+    "jackknife covariance failed for cluster '7': singular matrix",
+    fixed = TRUE
+  )
+  ok <- list(criterion = c(1, 0), beta_mat = matrix(0, 2, 3))
+  expect_silent(geer:::check_jackknife_solver_failure(ok, "7"))
+})

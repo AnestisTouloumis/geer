@@ -117,6 +117,161 @@
 
 ## Changes
 
+* `get_vcov()` (marginaleffects) now calls a function supplied as `vcov` on the
+  fitted model, as documented, instead of ignoring it; the result is validated
+  like a matrix.
+* The `Step` column of the `step_p()` table is now an integer (`NA` for the
+  initial model) instead of character, so `print()` no longer shows factor codes
+  or sorts steps lexicographically.
+* `emmeans` support: the prior weights passed to `recover_data()` are now put
+  back in the original row order of the data (fits store their rows sorted by
+  cluster and occasion), which matters for unsorted data with weights or
+  binomial trials. Fits gain an optional `row_order` component for this.
+
+* `glance()` computes only QIC, QICu and CIC, so that a failure in an unrelated
+  criterion no longer turns them into `NA`.
+
+* `step_p(direction = "forward")` without `scope` now warns that there are no
+  candidate terms to add.
+
+* The refits used by `add1()`, `drop1()`, `anova()` and `step_p()` no longer
+  reuse a `beta_start` of the original fit, whose length does not match a
+  model with added or dropped terms.
+
+* `residuals.geer()` gains `type = "response"`, an alias of `"working"` (the raw
+  residuals), and the documentation of the score tests now states that
+  `alpha` and `phi` are those of the larger model, not re-estimated under the
+  null model.
+
+* Removed the build-time fields `Author`, `Maintainer` and `Packaged` from
+  `DESCRIPTION`, removed `skip_if_not_installed("brglm2")` calls that could
+  never skip (`brglm2` is in Imports), and added the minimum version to the
+  `emmeans` skip in the tests.
+
+* `geewa()` now rejects a factor, character or multi-column matrix response
+  for families that are not binomial-type, with a clear message. Before, a
+  factor was silently fitted as its level codes and a matrix produced a
+  misleading "response variable and 'id' are not of same length" error.
+
+* For `method = "opgee-jeffreys"` and `"hpgee-jeffreys"` in `geewa()`, the
+  working correlation parameters and the dispersion are now estimated once, at
+  the converged independence penalized estimate, and held fixed in the one-step
+  update, as for the bias-corrected methods. Before, the one-step regression
+  estimate used these values but the returned `alpha`, `phi` and covariance
+  matrices were re-estimated at the one-step estimate. The numerical results
+  of these two methods therefore change slightly. The same applies to the
+  leave-one-cluster refits of the jackknife covariance. The documentation of
+  `converged` now states that it is `FALSE` after a numerical failure in the
+  correction step, and the documentation describes how `alpha` and `phi` are
+  obtained for each one-step method.
+
+* A scalar `offset` argument in `geewa()` and `geewa_binary()`, which was
+  documented but failed with a `model.frame()` length error, is now recycled to
+  the number of rows of the data.
+
+* `geewa()` and `geewa_binary()` now reject a `beta_start` containing `NA` or
+  non-finite values, name the linearly dependent columns in the
+  rank-deficiency error, and give a clear error for a model matrix without
+  columns (for example `y ~ 0`).
+
+* `geewa()` and `geewa_binary()` with an `"unstructured"` or `"fixed"`
+  association structure no longer fail after fitting when every cluster has a
+  single observation, and a missing convergence criterion is treated as
+  non-convergence rather than producing an obscure `if` error.
+
+* `mcar_logistic_test()` no longer fails on data with two occasions: when the
+  null model has no terms, an intercept-only formula is used instead of
+  `stats::reformulate(character(0))`.
+
+* The refits used by `anova()`, `add1()`, `drop1()` and `step_p()` now stop,
+  naming the refit formula, when the solver did not converge. Previously only
+  `geewa()` warned and the test table was built from the last accepted
+  iterate.
+
+* The Wald, score and working tests used by `anova()`, `add1()`, `drop1()` and
+  `step_p()` no longer abort when the test statistic is negative, which can
+  happen with covariance estimates that are not positive semi-definite (the
+  default bias-corrected one in small samples). A warning is issued and the
+  statistic and p-value of that row are `NA`; `step_p()` already skips `NA`
+  p-values. `mcar_logistic_test()` still stops in this case, because it needs a
+  statistic.
+
+* `geewa()` and `geewa_binary()` gain the `subset` and `na.action` arguments,
+  which were previously listed internally but never reachable: with the default
+  `control` they produced an "unused argument" error, and with explicit
+  `control` and `control_glm` they were silently ignored. Arguments left in
+  `...` are now rejected when both `control` and `control_glm` are supplied.
+
+* The modified working likelihood-ratio test (`test = "working-lrt"`) no longer
+  requires a unit dispersion for Poisson and binomial models. Each model's
+  working log-likelihood is scaled by that model's own dispersion, whether
+  estimated from the data or fixed, for every family and link.
+
+* Fixed the marginalized odds-ratio solver's `dV/dmu` matrix for clusters of
+  size one: the `-mu` terms and the unit diagonal were skipped for singleton
+  clusters, giving a wrong derivative of the variance function.
+
+* `geewa()` with `corstr = "fixed"` and a one-step estimator (`opgee-*`,
+  `hpgee-*`) now uses the supplied association parameters in the second pass
+  instead of resetting them to zero.
+
+* `anova.geer()` now keeps formula `offset()` terms when refitting the null
+  model, which affected score tests (and Wald-free comparisons) for models
+  with an offset in the formula.
+
+* The design matrix of a one-column model keeps its `assign` attribute and
+  column name; the former one-column reshaping was removed.
+
+* The bias-corrected covariance estimator (Morel et al., 2003) is now set to
+  `NA` when the number of clusters does not exceed the number of regression
+  parameters, and `geewa()` and `geewa_binary()` warn once. Previously, with
+  fewer clusters than parameters the shrinkage term was negative and the
+  "variance" could be negative, and with exactly as many clusters as parameters
+  the shrinkage was silently capped at 0.5. The robust, naive, and
+  `"df-adjusted"` covariances are unaffected (`"df-adjusted"` already required
+  more clusters than parameters), so use `cov_type = "robust"` or
+  `"jackknife"` in such cases.
+
+* Numerical failures inside the C++ estimation routines now report where they
+  occurred. An error raised while processing a cluster names the routine and the
+  cluster (its position and id value), and failures of the final information
+  matrix solves name the estimator. Checks of the linear predictor and fitted
+  values no longer copy the vectors at every trial step.
+
+* The `step_multiplier` control of `geer_control()` is now a strictly positive
+  real number instead of a positive integer. Values below 1 damp the proposed
+  step, which can help when the algorithm diverges from poor starting values
+  (it plays the role of `slowit` in `brglm2::brglm_control()`); values above 1
+  enlarge it, as before. The default is unchanged.
+
+* A numerical failure while the iterative algorithm evaluates a trial point
+  (a singular matrix, an association parameter outside its admissible range,
+  or step-halving attempts that all leave the valid region) no longer aborts
+  the fit with an error. The algorithm stops, reverts to the last accepted
+  iterate, and `geewa()` and `geewa_binary()` warn with the reason and report
+  `converged = FALSE`; for the one-step estimators (`"bcgee-*"`,
+  `"hpgee-jeffreys"`, `"opgee-jeffreys"`) the returned estimates are then the
+  preliminary first-stage estimates. Failures at the starting values still
+  signal an error, and jackknife refits and the first stage of the one-step
+  estimators still stop with an error that now includes the reason.
+  Deviation from `brglm2::brglmFit()`, which reverts to the previous inner
+  trial: the last accepted iterate is used, because rejected trials can be
+  worse than the accepted point.
+
+* The C++ odds-ratio solver now rejects a response that is not finite or lies
+  outside `[0, 1]` with an informative error instead of fitting it. The R
+  interface already enforced this domain, so `geewa_binary()` is unaffected;
+  the check guards direct calls to the internal routine.
+
+* The C++ solvers are faster and use less memory. The Newton step computed at
+  the accepted candidate is reused as the starting step of the next iteration
+  instead of being recomputed, the Kronecker-product contractions in the
+  bias-reduced and penalized updates no longer form `m^2 x p^2` matrices, each
+  working covariance matrix is factorized once per cluster, and the iteration
+  history is stored in a growable container rather than a
+  `p x (maxiter + 1)` matrix. Estimates, covariance matrices, and the iteration
+  path are unchanged up to floating-point rounding.
+
 * Revised `mcar_logistic_test()` to use a Ridout-style longitudinal risk-set
   formulation. At occasion `t`, the missingness indicator is modeled only when
   the response at `t - 1` is observed; the immediately previous response is

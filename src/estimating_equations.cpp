@@ -65,27 +65,34 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec ans(params_no, arma::fill::zeros);
   arma::mat d_matrix_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
 
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+        d_matrix_i.set_size(m, params_no);
+      }
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+
+      const arma::mat v_matrix_i =
+        get_v_matrix_cc(family,
+                        mu_vector.subvec(a, b),
+                        repeated_vector.subvec(a, b),
+                        phi,
+                        correlation_matrix,
+                        weights_vector.subvec(a, b));
+
+      ans += d_matrix_i.t() *
+        solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("estimating_equations_gee_cc", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-
-    const arma::mat v_matrix_i =
-      get_v_matrix_cc(family,
-                      mu_vector.subvec(a, b),
-                      repeated_vector.subvec(a, b),
-                      phi,
-                      correlation_matrix,
-                      weights_vector.subvec(a, b));
-
-    ans += d_matrix_i.t() *
-      solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
   }
   return ans;
 }
@@ -118,27 +125,34 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec ans(params_no, arma::fill::zeros);
   arma::mat d_matrix_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
+      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+        d_matrix_i.set_size(m, params_no);
+      }
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+
+      const arma::vec odds_ratios_vector_i =
+        get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
+                                         repeated_max,
+                                         alpha_vector);
+      const arma::mat v_matrix_i =
+        get_v_matrix_or(mu_vector.subvec(a, b),
+                        odds_ratios_vector_i,
+                        weights_vector.subvec(a, b));
+
+      ans += d_matrix_i.t() *
+        solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("estimating_equations_gee_or", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-
-    const arma::vec odds_ratios_vector_i =
-      get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
-                                       repeated_max,
-                                       alpha_vector);
-    const arma::mat v_matrix_i =
-      get_v_matrix_or(mu_vector.subvec(a, b),
-                      odds_ratios_vector_i,
-                      weights_vector.subvec(a, b));
-
-    ans += d_matrix_i.t() *
-      solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(a, b));
   }
   return ans;
 }

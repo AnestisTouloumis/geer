@@ -224,6 +224,68 @@ bool valideta(const char* link,
 //==============================================================================
 
 
+//============================ valid eta - arma (enum) =========================
+bool valideta(LinkCode lc,
+              const arma::vec& eta_vector) {
+  const double* x = eta_vector.memptr();
+  const arma::uword n = eta_vector.n_elem;
+  switch (lc) {
+  case LinkCode::logit:
+  case LinkCode::probit:
+  case LinkCode::cauchit:
+  case LinkCode::cloglog:
+  case LinkCode::identity:
+  case LinkCode::log:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!std::isfinite(x[i])) return false;
+    }
+    return true;
+  case LinkCode::sqrt:
+  case LinkCode::inverse_mu_squared:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!(std::isfinite(x[i]) && x[i] > 0.0)) return false;
+    }
+    return true;
+  case LinkCode::inverse:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!(std::isfinite(x[i]) && x[i] != 0.0)) return false;
+    }
+    return true;
+  }
+  Rcpp::stop("Unsupported link.");
+}
+//==============================================================================
+
+
+//============================ valid mu - arma (enum) ==========================
+bool validmu(FamilyCode fc,
+             const arma::vec& mu_vector) {
+  const double* x = mu_vector.memptr();
+  const arma::uword n = mu_vector.n_elem;
+  switch (fc) {
+  case FamilyCode::gaussian:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!std::isfinite(x[i])) return false;
+    }
+    return true;
+  case FamilyCode::binomial:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!(std::isfinite(x[i]) && x[i] > 0.0 && x[i] < 1.0)) return false;
+    }
+    return true;
+  case FamilyCode::poisson:
+  case FamilyCode::gamma:
+  case FamilyCode::inverse_gaussian:
+    for (arma::uword i = 0; i < n; ++i) {
+      if (!(std::isfinite(x[i]) && x[i] > 0.0)) return false;
+    }
+    return true;
+  }
+  Rcpp::stop("Unsupported family.");
+}
+//==============================================================================
+
+
 //============================ valid mu ========================================
 bool validmu(const char* family,
              const Rcpp::NumericVector& mu_vector) {

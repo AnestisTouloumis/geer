@@ -88,6 +88,10 @@ When \code{cov_type = "jackknife"} is used with a score or modified working
 score test, the score and model-based information remain evaluated under the
 null model, while the covariance component is the full leave-one-cluster
 jackknife covariance from the larger fitted model.
+For every score or modified working score test, the estimating function and
+the model-based information are evaluated at the fitted means of the smaller
+(null) model, but the association parameters and the dispersion are those of
+the larger model: they are not re-estimated under the null model.
 
 The output table also includes the Correlation Information Criterion (CIC)
 for each candidate model as supplementary model information. The CIC is

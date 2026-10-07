@@ -98,9 +98,9 @@ test_that("glance.geer summary fields match the fitted object", {
 test_that("glance.geer QIC-based criteria match geecriteria()", {
   out <- glance(count_fit)
   crit <- geecriteria(count_fit, cov_type = "robust", digits = 15)
-  expect_equal(out$QIC, crit$QIC, tolerance = 1e-2)
-  expect_equal(out$QICu, crit$QICu, tolerance = 1e-2)
-  expect_equal(out$CIC, crit$CIC, tolerance = 1e-2)
+  expect_equal(out$QIC, crit$QIC, tolerance = 1e-8)
+  expect_equal(out$QICu, crit$QICu, tolerance = 1e-8)
+  expect_equal(out$CIC, crit$CIC, tolerance = 1e-8)
 })
 
 

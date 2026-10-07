@@ -37,6 +37,10 @@
 #' score test, the score and model-based information remain evaluated under the
 #' null model, while the covariance component is the full leave-one-cluster
 #' jackknife covariance from the larger fitted model.
+#' For every score or modified working score test, the estimating function and
+#' the model-based information are evaluated at the fitted means of the smaller
+#' (null) model, but the association parameters and the dispersion are those of
+#' the larger model: they are not re-estimated under the null model.
 #'
 #' The output table also includes the Correlation Information Criterion (CIC)
 #' for each candidate model as supplementary model information. The CIC is
@@ -289,6 +293,10 @@ drop1.geer <- function(object,
 #' score test, the score and model-based information remain evaluated under the
 #' null model, while the covariance component is the full leave-one-cluster
 #' jackknife covariance from the larger fitted model.
+#' For every score or modified working score test, the estimating function and
+#' the model-based information are evaluated at the fitted means of the smaller
+#' (null) model, but the association parameters and the dispersion are those of
+#' the larger model: they are not re-estimated under the null model.
 #'
 #' When comparing two or more models, the data must be identical across all
 #' fits and each consecutive pair of models must be nested. Models with a
@@ -383,8 +391,19 @@ anova.geer <-
     varseq <- attr(object$x, "assign")
     nvars <- max(c(0, varseq))
     object_list <- list()
+    ## update.formula() drops formula offsets together with the old right-hand
+    ## side, so they are added back to the first model of the sequence.
+    offset_terms <- geer_formula_offset_terms(object)
+    offset_part <- if (length(offset_terms)) {
+      paste0(" + ", paste(offset_terms, collapse = " + "))
+    } else {
+      ""
+    }
     if (intercept == 1) {
-      object_list[[1]] <- refit_geer(object, . ~ 1)
+      object_list[[1]] <- refit_geer(
+        object,
+        stats::as.formula(paste0(". ~ 1", offset_part))
+      )
       for (i in seq_len(nvars)) {
         object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
@@ -394,7 +413,7 @@ anova.geer <-
     } else {
       object_list[[1]] <- refit_geer(
         object,
-        stats::as.formula(paste(". ~ -1 + ", terms[1]))
+        stats::as.formula(paste0(". ~ -1 + ", terms[1], offset_part))
       )
       for (i in seq_len(nvars - 1)) {
         object_list[[i + 1]] <- refit_geer(

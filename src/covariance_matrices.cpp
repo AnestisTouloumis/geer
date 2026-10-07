@@ -23,6 +23,23 @@ static Rcpp::List compute_sandwich(arma::mat& naive_matrix_inverse,
   arma::mat robust_matrix =
     solve_chol_or_lu_mat(naive_matrix_inverse, naive_matrix_meat_matrix.t());
   symmetrize_if_close(robust_matrix, 1e-10);
+  // The Morel-Bokossa-Neerchal correction needs more clusters than regression
+  // parameters: lambda = p / (K - p) is negative for K < p and unbounded for
+  // K = p, and kappa divides by K - 1 and by N - p. The bias-corrected
+  // covariance is therefore undefined (NA) otherwise, in line with the
+  // df-adjusted covariance, which also requires K > p. The R fitting functions
+  // warn once; no warning is raised here because leave-one-cluster refits call
+  // this routine many times.
+  if (!(sample_size > static_cast<double>(params_no)) ||
+      !(obs_no_total > static_cast<double>(params_no))) {
+    arma::mat bc_undefined(params_no, params_no);
+    bc_undefined.fill(NA_REAL);
+    return Rcpp::List::create(
+      Rcpp::Named("naive_covariance")  = naive_matrix,
+      Rcpp::Named("robust_covariance") = robust_matrix,
+      Rcpp::Named("bc_covariance")     = bc_undefined
+    );
+  }
   const double kappa =
     ((obs_no_total - 1.0) / (obs_no_total - static_cast<double>(params_no))) *
     (sample_size / (sample_size - 1.0));
@@ -76,31 +93,38 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::vec u_vector_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
+      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+        d_matrix_i.set_size(m, params_no);
+      }
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+      v_matrix_i = get_v_matrix_cc(family,
+                                   mu_vector.subvec(a, b),
+                                   repeated_vector.subvec(a, b),
+                                   phi,
+                                   correlation_matrix,
+                                   weights_vector.subvec(a, b));
+      v_matrix_inverse_d_matrix_i =
+        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
+      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
+          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
+        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
+      }
+      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+      u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
+      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+      meat_matrix += u_vector_i * u_vector_i.t();
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("get_covariance_matrices_cc", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-    v_matrix_i = get_v_matrix_cc(family,
-                                 mu_vector.subvec(a, b),
-                                 repeated_vector.subvec(a, b),
-                                 phi,
-                                 correlation_matrix,
-                                 weights_vector.subvec(a, b));
-    v_matrix_inverse_d_matrix_i =
-      solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-    if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-        d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-      d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-    }
-    d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-    u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
-    naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-    meat_matrix += u_vector_i * u_vector_i.t();
   }
   return compute_sandwich(naive_matrix_inverse, meat_matrix,
                           sample_size, obs_no_total, params_no);
@@ -134,32 +158,39 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::vec u_vector_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
+      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
+        d_matrix_i.set_size(m, params_no);
+      }
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+      const arma::vec odds_ratios_vector_i =
+        get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
+                                         repeated_max,
+                                         alpha_vector);
+      v_matrix_i = get_v_matrix_or(mu_vector.subvec(a, b),
+                                   odds_ratios_vector_i,
+                                   weights_vector.subvec(a, b));
+      v_matrix_inverse_d_matrix_i =
+        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
+      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
+          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
+        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
+      }
+      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+      u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
+      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+      meat_matrix += u_vector_i * u_vector_i.t();
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("get_covariance_matrices_or", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector.subvec(a, b);
-    const arma::vec odds_ratios_vector_i =
-      get_subject_specific_odds_ratios(repeated_vector.subvec(a, b),
-                                       repeated_max,
-                                       alpha_vector);
-    v_matrix_i = get_v_matrix_or(mu_vector.subvec(a, b),
-                                 odds_ratios_vector_i,
-                                 weights_vector.subvec(a, b));
-    v_matrix_inverse_d_matrix_i =
-      solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-    if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-        d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-      d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-    }
-    d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-    u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(a, b);
-    naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-    meat_matrix += u_vector_i * u_vector_i.t();
   }
   return compute_sandwich(naive_matrix_inverse, meat_matrix,
                           sample_size, obs_no_total, params_no);

@@ -9,7 +9,11 @@
 #include "covariance_matrices.h"
 #include "cluster_utils.h"
 #include "method_codes.h"
+#include <algorithm>
 #include <cmath>
+#include <new>
+#include <string>
+#include <vector>
 
 
 //============================ update beta - gee ===============================
@@ -42,36 +46,38 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
-  for (const auto& cl : clusters) {
-    const arma::uword a = cl.start;
-    const arma::uword b = cl.end - 1;
-    const arma::uword m = cl.end - cl.start;
-    const auto delta_vector_i = delta_vector.subvec(a, b);
-    const auto s_vector_i = s_vector.subvec(a, b);
-    if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-      d_matrix_i.set_size(m, params_no);
+  for (arma::uword cluster_index = 0;
+       cluster_index < clusters.size();
+       ++cluster_index) {
+    const auto& cl = clusters[cluster_index];
+    try {
+      const arma::uword a = cl.start;
+      const arma::uword b = cl.end - 1;
+      const arma::uword m = cl.end - cl.start;
+      const auto delta_vector_i = delta_vector.subvec(a, b);
+      const auto s_vector_i = s_vector.subvec(a, b);
+      d_matrix_i = model_matrix.rows(a, b);
+      d_matrix_i.each_col() %= delta_vector_i;
+      v_matrix_i = get_v_matrix_cc(fc,
+                                   mu_vector.subvec(a, b),
+                                   repeated_vector.subvec(a, b),
+                                   phi,
+                                   correlation_matrix,
+                                   weights_vector.subvec(a, b));
+      const CholOrLuFactor v_factor(v_matrix_i);
+      v_matrix_inverse_d_matrix_i =
+        v_factor.solve(d_matrix_i);
+      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+      u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+    } catch (const std::exception& e) {
+      rethrow_with_cluster_context("update_beta_gee_cc", cluster_index, id_vector[cl.start], e);
     }
-    d_matrix_i = model_matrix.rows(a, b);
-    d_matrix_i.each_col() %= delta_vector_i;
-    v_matrix_i = get_v_matrix_cc(fc,
-                                 mu_vector.subvec(a, b),
-                                 repeated_vector.subvec(a, b),
-                                 phi,
-                                 correlation_matrix,
-                                 weights_vector.subvec(a, b));
-    v_matrix_inverse_d_matrix_i =
-      solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-    if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-        d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-      d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-    }
-    d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-    naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-    u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
   }
   symmetrize_if_close(naive_matrix_inverse, 1e-10);
   const arma::vec update_step =
-    solve_chol_or_lu_vec(naive_matrix_inverse, u_vector);
+    solve_chol_or_lu_vec(naive_matrix_inverse, u_vector,
+        "update_beta_gee_cc: naive information matrix");
   return beta_vector + update_step;
 }
 //==============================================================================
@@ -117,77 +123,69 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
     arma::mat d_matrix_trans_v_matrix_inverse_i;
     arma::mat v_matrix_inverse_alpha_plus_delta_star_diag_i;
     arma::mat v_matrix_inverse_delta_star_diag_i;
-    arma::mat kron_d_matrix_d_matrix_i;
     arma::mat alpha_star_plus_delta_star_matrix_i;
     arma::mat delta_star_matrix_i;
-    for (const auto& cl : clusters) {
-      const arma::uword a = cl.start;
-      const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      const auto delta_vector_i = delta_vector.subvec(a, b);
-      const auto s_vector_i = s_vector.subvec(a, b);
-      const auto delta_star_vector_i =
-        delta_star_vector.subvec(a, b);
-      const auto alpha_star_plus_delta_star_vector_i =
-        alpha_star_plus_delta_star_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
-      d_matrix_i = model_matrix.rows(a, b);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(fc,
-                                   mu_vector.subvec(a, b),
-                                   repeated_vector.subvec(a, b),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(a, b));
+    for (arma::uword cluster_index = 0;
+         cluster_index < clusters.size();
+         ++cluster_index) {
+      const auto& cl = clusters[cluster_index];
+      try {
+        const arma::uword a = cl.start;
+        const arma::uword b = cl.end - 1;
+        const arma::uword m = cl.end - cl.start;
+        const auto delta_vector_i = delta_vector.subvec(a, b);
+        const auto s_vector_i = s_vector.subvec(a, b);
+        const auto delta_star_vector_i =
+          delta_star_vector.subvec(a, b);
+        const auto alpha_star_plus_delta_star_vector_i =
+          alpha_star_plus_delta_star_vector.subvec(a, b);
+        d_matrix_i = model_matrix.rows(a, b);
+        d_matrix_i.each_col() %= delta_vector_i;
+        v_matrix_i = get_v_matrix_cc(fc,
+                                     mu_vector.subvec(a, b),
+                                     repeated_vector.subvec(a, b),
+                                     phi,
+                                     correlation_matrix,
+                                     weights_vector.subvec(a, b));
+        const CholOrLuFactor v_factor(v_matrix_i);
 
-      v_matrix_inverse_d_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
+        v_matrix_inverse_d_matrix_i =
+          v_factor.solve(d_matrix_i);
+        d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+        naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+        u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+        if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
+            alpha_star_plus_delta_star_matrix_i.n_cols != m) {
+          alpha_star_plus_delta_star_matrix_i.set_size(m, m);
+        }
+        alpha_star_plus_delta_star_matrix_i.zeros();
+        alpha_star_plus_delta_star_matrix_i.diag() =
+          alpha_star_plus_delta_star_vector_i;
+        if (delta_star_matrix_i.n_rows != m || delta_star_matrix_i.n_cols != m) {
+          delta_star_matrix_i.set_size(m, m);
+        }
+        delta_star_matrix_i.zeros();
+        delta_star_matrix_i.diag() = delta_star_vector_i;
+        v_matrix_inverse_alpha_plus_delta_star_diag_i =
+          v_factor.solve(alpha_star_plus_delta_star_matrix_i);
+        v_matrix_inverse_delta_star_diag_i =
+          v_factor.solve(delta_star_matrix_i);
+        add_kron_self_t_s_d(
+          lambda_matrix,
+          d_matrix_i,
+          kappa_right(v_matrix_inverse_alpha_plus_delta_star_diag_i.t()) -
+            kronecker_identity_right_kappa(v_matrix_inverse_alpha_plus_delta_star_diag_i) -
+            kronecker_left_identity_kappa(v_matrix_inverse_delta_star_diag_i));
+      } catch (const std::exception& e) {
+        rethrow_with_cluster_context("update_beta_naive_cc", cluster_index, id_vector[cl.start], e);
       }
-      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-      u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
-      if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
-          alpha_star_plus_delta_star_matrix_i.n_cols != m) {
-        alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      alpha_star_plus_delta_star_matrix_i.zeros();
-      alpha_star_plus_delta_star_matrix_i.diag() =
-        alpha_star_plus_delta_star_vector_i;
-      if (delta_star_matrix_i.n_rows != m || delta_star_matrix_i.n_cols != m) {
-        delta_star_matrix_i.set_size(m, m);
-      }
-      delta_star_matrix_i.zeros();
-      delta_star_matrix_i.diag() = delta_star_vector_i;
-      if (v_matrix_inverse_alpha_plus_delta_star_diag_i.n_rows != m ||
-          v_matrix_inverse_alpha_plus_delta_star_diag_i.n_cols != m) {
-        v_matrix_inverse_alpha_plus_delta_star_diag_i.set_size(m, m);
-      }
-      v_matrix_inverse_alpha_plus_delta_star_diag_i =
-        solve_chol_or_lu_mat(v_matrix_i, alpha_star_plus_delta_star_matrix_i);
-      if (v_matrix_inverse_delta_star_diag_i.n_rows != m ||
-          v_matrix_inverse_delta_star_diag_i.n_cols != m) {
-        v_matrix_inverse_delta_star_diag_i.set_size(m, m);
-      }
-      v_matrix_inverse_delta_star_diag_i =
-        solve_chol_or_lu_mat(v_matrix_i, delta_star_matrix_i);
-      kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
-      lambda_matrix +=
-        kron_d_matrix_d_matrix_i.t() *
-        (kappa_right(v_matrix_inverse_alpha_plus_delta_star_diag_i.t()) -
-        kronecker_identity_right_kappa(v_matrix_inverse_alpha_plus_delta_star_diag_i) -
-        kronecker_left_identity_kappa(v_matrix_inverse_delta_star_diag_i)) *
-        d_matrix_i;
     }
     symmetrize_if_close(naive_matrix_inverse, 1e-10);
     const arma::vec lambda_vector =
       lambda_from_blocks_chol_or_lu(naive_matrix_inverse, lambda_matrix);
     const arma::vec update_step =
-      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector);
+      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector,
+        "update_beta_naive_cc: naive information matrix");
     return beta_vector + update_step;
 }
 //==============================================================================
@@ -242,102 +240,87 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
     arma::mat alpha_star_matrix_i;
     arma::mat v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i;
     arma::mat v_matrix_inverse_alpha_star_matrix_i;
-    arma::mat kron_d_matrix_d_matrix_i;
-    arma::mat kron_d_matrix_trans_d_matrix_trans_i;
-    for (const auto& cl : clusters) {
-      const arma::uword a = cl.start;
-      const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      const auto delta_vector_i = delta_vector.subvec(a, b);
-      const auto s_vector_i = s_vector.subvec(a, b);
-      const auto alpha_star_vector_i =
-        alpha_star_vector.subvec(a, b);
-      const auto delta_star_vector_i =
-        delta_star_vector.subvec(a, b);
-      const auto alpha_star_plus_delta_star_vector_i =
-        alpha_star_plus_delta_star_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
+    for (arma::uword cluster_index = 0;
+         cluster_index < clusters.size();
+         ++cluster_index) {
+      const auto& cl = clusters[cluster_index];
+      try {
+        const arma::uword a = cl.start;
+        const arma::uword b = cl.end - 1;
+        const arma::uword m = cl.end - cl.start;
+        const auto delta_vector_i = delta_vector.subvec(a, b);
+        const auto s_vector_i = s_vector.subvec(a, b);
+        const auto alpha_star_vector_i =
+          alpha_star_vector.subvec(a, b);
+        const auto delta_star_vector_i =
+          delta_star_vector.subvec(a, b);
+        const auto alpha_star_plus_delta_star_vector_i =
+          alpha_star_plus_delta_star_vector.subvec(a, b);
+        d_matrix_i = model_matrix.rows(a, b);
+        d_matrix_i.each_col() %= delta_vector_i;
+        v_matrix_i = get_v_matrix_cc(fc,
+                                     mu_vector.subvec(a, b),
+                                     repeated_vector.subvec(a, b),
+                                     phi,
+                                     correlation_matrix,
+                                     weights_vector.subvec(a, b));
+        const CholOrLuFactor v_factor(v_matrix_i);
+        v_matrix_inverse_d_matrix_i =
+          v_factor.solve(d_matrix_i);
+        d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+        naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+        u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+        u_vector += u_vector_i;
+        meat_matrix += u_vector_i * u_vector_i.t();
+        if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
+            alpha_star_plus_delta_star_matrix_i.n_cols != m) {
+          alpha_star_plus_delta_star_matrix_i.set_size(m, m);
+        }
+        alpha_star_plus_delta_star_matrix_i.zeros();
+        alpha_star_plus_delta_star_matrix_i.diag() =
+          alpha_star_plus_delta_star_vector_i;
+        if (alpha_star_matrix_i.n_rows != m || alpha_star_matrix_i.n_cols != m) {
+          alpha_star_matrix_i.set_size(m, m);
+        }
+        alpha_star_matrix_i.zeros();
+        alpha_star_matrix_i.diag() = alpha_star_vector_i;
+        v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i =
+          v_factor.solve(alpha_star_plus_delta_star_matrix_i);
+        v_matrix_inverse_alpha_star_matrix_i =
+          v_factor.solve(alpha_star_matrix_i);
+        const arma::mat
+        kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i =
+          kappa_right(v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i.t());
+        add_kron_self_t_s_d(
+          second_derivatives_matrix,
+          d_matrix_i,
+          kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
+            kronecker_left_identity_kappa(
+              v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i +
+                v_matrix_inverse_alpha_star_matrix_i
+            ) +
+            kronecker_identity_right_kappa(
+              v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i
+            ),
+          -1.0);
+        partial_derivatives_matrix +=
+          kron_self_t_vec(
+            d_matrix_i,
+            (kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
+              kronecker_left_identity_kappa(v_matrix_inverse_alpha_star_matrix_i)) *
+              s_vector_i) *
+          u_vector_i.t();
+      } catch (const std::exception& e) {
+        rethrow_with_cluster_context("update_beta_robust_cc", cluster_index, id_vector[cl.start], e);
       }
-      d_matrix_i = model_matrix.rows(a, b);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(fc,
-                                   mu_vector.subvec(a, b),
-                                   repeated_vector.subvec(a, b),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(a, b));
-      v_matrix_inverse_d_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
-      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-      u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector_i;
-      u_vector += u_vector_i;
-      meat_matrix += u_vector_i * u_vector_i.t();
-      if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
-          alpha_star_plus_delta_star_matrix_i.n_cols != m) {
-        alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      alpha_star_plus_delta_star_matrix_i.zeros();
-      alpha_star_plus_delta_star_matrix_i.diag() =
-        alpha_star_plus_delta_star_vector_i;
-      if (alpha_star_matrix_i.n_rows != m || alpha_star_matrix_i.n_cols != m) {
-        alpha_star_matrix_i.set_size(m, m);
-      }
-      alpha_star_matrix_i.zeros();
-      alpha_star_matrix_i.diag() = alpha_star_vector_i;
-      if (v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i.n_rows != m ||
-          v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i.n_cols != m) {
-        v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, alpha_star_plus_delta_star_matrix_i);
-      if (v_matrix_inverse_alpha_star_matrix_i.n_rows != m ||
-          v_matrix_inverse_alpha_star_matrix_i.n_cols != m) {
-        v_matrix_inverse_alpha_star_matrix_i.set_size(m, m);
-      }
-      v_matrix_inverse_alpha_star_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, alpha_star_matrix_i);
-      const arma::mat
-      kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i =
-        kappa_right(v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i.t());
-      kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
-      if (kron_d_matrix_trans_d_matrix_trans_i.n_rows !=
-          kron_d_matrix_d_matrix_i.n_cols ||
-          kron_d_matrix_trans_d_matrix_trans_i.n_cols !=
-          kron_d_matrix_d_matrix_i.n_rows) {
-        kron_d_matrix_trans_d_matrix_trans_i.set_size(
-          kron_d_matrix_d_matrix_i.n_cols,
-          kron_d_matrix_d_matrix_i.n_rows
-        );
-      }
-      kron_d_matrix_trans_d_matrix_trans_i = kron_d_matrix_d_matrix_i.t();
-      second_derivatives_matrix -=
-        kron_d_matrix_trans_d_matrix_trans_i *
-        (kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
-        kronecker_left_identity_kappa(
-          v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i +
-            v_matrix_inverse_alpha_star_matrix_i
-        ) +
-          kronecker_identity_right_kappa(
-            v_matrix_inverse_alpha_star_matrix_plus_delta_star_matrix_i
-          )) *
-            d_matrix_i;
-      partial_derivatives_matrix +=
-        kron_d_matrix_trans_d_matrix_trans_i *
-        (kappa_matrix_delta_star_matrix_plus_alpha_star_matrix_v_matrix_inverse_i +
-        kronecker_left_identity_kappa(v_matrix_inverse_alpha_star_matrix_i)) *
-        s_vector_i * u_vector_i.t();
     }
     symmetrize_if_close(naive_matrix_inverse, 1e-10);
     const arma::mat naive_matrix_meat_matrix =
-      solve_chol_or_lu_mat(naive_matrix_inverse, meat_matrix);
+      solve_chol_or_lu_mat(naive_matrix_inverse, meat_matrix,
+        "update_beta_robust_cc: naive information matrix");
     const arma::mat robust_matrix =
-      solve_chol_or_lu_mat(naive_matrix_inverse, naive_matrix_meat_matrix.t());
+      solve_chol_or_lu_mat(naive_matrix_inverse, naive_matrix_meat_matrix.t(),
+        "update_beta_robust_cc: naive information matrix");
     arma::vec lambda_vector(params_no, arma::fill::zeros);
     for (arma::uword r = 0; r < params_no; ++r) {
       const arma::mat first_block =
@@ -345,11 +328,13 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
       const arma::mat second_block =
         second_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
       lambda_vector[r] =
-        -(arma::trace(solve_chol_or_lu_mat(naive_matrix_inverse, first_block)) +
+        -(arma::trace(solve_chol_or_lu_mat(naive_matrix_inverse, first_block,
+        "update_beta_robust_cc: naive information matrix")) +
         0.5 * arma::trace(robust_matrix * second_block));
     }
     return beta_vector +
-      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector);
+      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector,
+        "update_beta_robust_cc: naive information matrix");
 }
 //==============================================================================
 
@@ -411,97 +396,97 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
     arma::mat observed_fisher_info_matrix_i;
     arma::mat alpha_star_plus_delta_star_matrix_i;
     arma::mat temp_diagonal_matrix;
-    arma::mat kron_d_matrix_d_matrix_i;
-    arma::mat kron_d_matrix_trans_d_matrix_trans_i;
     arma::mat hessian_term2;
     arma::mat hessian_term3;
     arma::mat diagonal_correction;
     arma::vec u_vector_i(params_no, arma::fill::zeros);
     arma::vec weighted_residuals_i;
-    for (const auto& cl : clusters) {
-      const arma::uword a = cl.start;
-      const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      const arma::vec s_vector_i = s_vector.subvec(a, b);
-      const arma::vec alpha_star_vector_i = alpha_star_vector.subvec(a, b);
-      const arma::vec alpha_tilde_star_vector_i =
-        alpha_tilde_star_vector.subvec(a, b);
-      const arma::vec alpha_star_plus_delta_star_vector_i =
-        alpha_star_plus_delta_star_vector.subvec(a, b);
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
-      d_matrix_i = model_matrix.rows(a, b);
-      d_matrix_i.each_col() %= delta_vector.subvec(a, b);
+    for (arma::uword cluster_index = 0;
+         cluster_index < clusters.size();
+         ++cluster_index) {
+      const auto& cl = clusters[cluster_index];
+      try {
+        const arma::uword a = cl.start;
+        const arma::uword b = cl.end - 1;
+        const arma::uword m = cl.end - cl.start;
+        const arma::vec s_vector_i = s_vector.subvec(a, b);
+        const arma::vec alpha_star_vector_i = alpha_star_vector.subvec(a, b);
+        const arma::vec alpha_tilde_star_vector_i =
+          alpha_tilde_star_vector.subvec(a, b);
+        const arma::vec alpha_star_plus_delta_star_vector_i =
+          alpha_star_plus_delta_star_vector.subvec(a, b);
+        d_matrix_i = model_matrix.rows(a, b);
+        d_matrix_i.each_col() %= delta_vector.subvec(a, b);
 
-      v_matrix_i = get_v_matrix_cc(fc,
-                                   mu_vector.subvec(a, b),
-                                   repeated_vector.subvec(a, b),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(a, b));
-      v_matrix_inverse_d_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      u_vector_i = v_matrix_inverse_d_matrix_i.t() * s_vector_i;
-      u_vector += u_vector_i;
-      meat_matrix += u_vector_i * u_vector_i.t();
-      v_matrix_inverse_i =
-        solve_chol_or_lu_mat(v_matrix_i, arma::eye(m, m));
-      weighted_residuals_i = v_matrix_inverse_i * s_vector_i;
-      epsilon_matrix_i.set_size(m, m);
-      epsilon_matrix_i.zeros();
-      epsilon_matrix_i.diag() =
-        weighted_residuals_i % alpha_star_plus_delta_star_vector_i;
-      temp_diagonal_matrix.set_size(m, m);
-      temp_diagonal_matrix.zeros();
-      temp_diagonal_matrix.diag() = s_vector_i % alpha_star_vector_i - 1.0;
-      epsilon_matrix_i += v_matrix_inverse_i * temp_diagonal_matrix;
-      observed_fisher_info_matrix_i = d_matrix_i.t() * epsilon_matrix_i * d_matrix_i;
-      observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
-      partial_derivatives_matrix +=
-        arma::vectorise(observed_fisher_info_matrix_i.t()) * u_vector_i.t();
-      alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      alpha_star_plus_delta_star_matrix_i.zeros();
-      alpha_star_plus_delta_star_matrix_i.diag() =
-        alpha_star_plus_delta_star_vector_i;
-      kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
-      kron_d_matrix_trans_d_matrix_trans_i = kron_d_matrix_d_matrix_i.t();
-      const arma::mat hessian_term1 =
-        alpha_star_plus_delta_star_matrix_i * epsilon_matrix_i;
-      const arma::vec hessian_diag2 =
-        alpha_star_plus_delta_star_vector_i %
-        (alpha_star_plus_delta_star_vector_i + alpha_star_vector_i) %
-        weighted_residuals_i;
-      hessian_term2.set_size(m, m);
-      hessian_term2.zeros();
-      hessian_term2.diag() = -hessian_diag2;
-      const arma::vec hessian_diag3 =
-        (alpha_tilde_star_vector_i + delta_tilde_star_vector.subvec(a, b)) %
-        weighted_residuals_i;
-      hessian_term3.set_size(m, m);
-      hessian_term3.zeros();
-      hessian_term3.diag() = hessian_diag3;
-      const arma::mat kappa_correction =
-        kappa_right(hessian_term1 + hessian_term2 + hessian_term3);
-      const arma::mat right_kronecker_correction =
-        kronecker_identity_right_kappa(
-          epsilon_matrix_i.t() * alpha_star_plus_delta_star_matrix_i
-        );
-      diagonal_correction.set_size(m, m);
-      diagonal_correction.zeros();
-      diagonal_correction.diag() =
-        s_vector_i % alpha_tilde_star_vector_i - alpha_star_vector_i;
-      const arma::mat left_kronecker_correction =
-        kronecker_left_identity_kappa(
-          epsilon_matrix_i * alpha_star_plus_delta_star_matrix_i +
-            v_matrix_inverse_i * diagonal_correction
-        );
-      second_derivatives_matrix +=
-        kron_d_matrix_trans_d_matrix_trans_i *
-        (kappa_correction +
-        right_kronecker_correction +
-        left_kronecker_correction) *
-        d_matrix_i;
+        v_matrix_i = get_v_matrix_cc(fc,
+                                     mu_vector.subvec(a, b),
+                                     repeated_vector.subvec(a, b),
+                                     phi,
+                                     correlation_matrix,
+                                     weights_vector.subvec(a, b));
+        const CholOrLuFactor v_factor(v_matrix_i);
+        v_matrix_inverse_d_matrix_i =
+          v_factor.solve(d_matrix_i);
+        u_vector_i = v_matrix_inverse_d_matrix_i.t() * s_vector_i;
+        u_vector += u_vector_i;
+        meat_matrix += u_vector_i * u_vector_i.t();
+        v_matrix_inverse_i =
+          v_factor.solve(arma::mat(arma::eye(m, m)));
+        weighted_residuals_i = v_matrix_inverse_i * s_vector_i;
+        epsilon_matrix_i.set_size(m, m);
+        epsilon_matrix_i.zeros();
+        epsilon_matrix_i.diag() =
+          weighted_residuals_i % alpha_star_plus_delta_star_vector_i;
+        temp_diagonal_matrix.set_size(m, m);
+        temp_diagonal_matrix.zeros();
+        temp_diagonal_matrix.diag() = s_vector_i % alpha_star_vector_i - 1.0;
+        epsilon_matrix_i += v_matrix_inverse_i * temp_diagonal_matrix;
+        observed_fisher_info_matrix_i = d_matrix_i.t() * epsilon_matrix_i * d_matrix_i;
+        observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
+        partial_derivatives_matrix +=
+          arma::vectorise(observed_fisher_info_matrix_i.t()) * u_vector_i.t();
+        alpha_star_plus_delta_star_matrix_i.set_size(m, m);
+        alpha_star_plus_delta_star_matrix_i.zeros();
+        alpha_star_plus_delta_star_matrix_i.diag() =
+          alpha_star_plus_delta_star_vector_i;
+        const arma::mat hessian_term1 =
+          alpha_star_plus_delta_star_matrix_i * epsilon_matrix_i;
+        const arma::vec hessian_diag2 =
+          alpha_star_plus_delta_star_vector_i %
+          (alpha_star_plus_delta_star_vector_i + alpha_star_vector_i) %
+          weighted_residuals_i;
+        hessian_term2.set_size(m, m);
+        hessian_term2.zeros();
+        hessian_term2.diag() = -hessian_diag2;
+        const arma::vec hessian_diag3 =
+          (alpha_tilde_star_vector_i + delta_tilde_star_vector.subvec(a, b)) %
+          weighted_residuals_i;
+        hessian_term3.set_size(m, m);
+        hessian_term3.zeros();
+        hessian_term3.diag() = hessian_diag3;
+        const arma::mat kappa_correction =
+          kappa_right(hessian_term1 + hessian_term2 + hessian_term3);
+        const arma::mat right_kronecker_correction =
+          kronecker_identity_right_kappa(
+            epsilon_matrix_i.t() * alpha_star_plus_delta_star_matrix_i
+          );
+        diagonal_correction.set_size(m, m);
+        diagonal_correction.zeros();
+        diagonal_correction.diag() =
+          s_vector_i % alpha_tilde_star_vector_i - alpha_star_vector_i;
+        const arma::mat left_kronecker_correction =
+          kronecker_left_identity_kappa(
+            epsilon_matrix_i * alpha_star_plus_delta_star_matrix_i +
+              v_matrix_inverse_i * diagonal_correction
+          );
+        add_kron_self_t_s_d(second_derivatives_matrix,
+                            d_matrix_i,
+                            kappa_correction +
+                              right_kronecker_correction +
+                              left_kronecker_correction);
+      } catch (const std::exception& e) {
+        rethrow_with_cluster_context("update_beta_empirical_cc", cluster_index, id_vector[cl.start], e);
+      }
     }
     arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
     arma::vec lambda_vector(params_no, arma::fill::zeros);
@@ -617,80 +602,66 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
     arma::mat d_matrix_trans_v_matrix_inverse_i;
     arma::mat alpha_star_plus_delta_star_matrix_i;
     arma::mat v_matrix_inverse_alpha_star_plus_delta_star_matrix_i;
-    arma::mat kron_d_matrix_d_matrix_i;
-    arma::mat kron_d_matrix_trans_d_matrix_trans_i;
-    for (const auto& cl : clusters) {
-      const arma::uword a = cl.start;
-      const arma::uword b = cl.end - 1;
-      const arma::uword m = cl.end - cl.start;
-      const auto delta_vector_i = delta_vector.subvec(a, b);
-      const auto s_vector_i = s_vector.subvec(a, b);
-      const auto alpha_star_plus_delta_star_vector_i =
-        alpha_star_plus_delta_star_vector.subvec(a, b);
+    for (arma::uword cluster_index = 0;
+         cluster_index < clusters.size();
+         ++cluster_index) {
+      const auto& cl = clusters[cluster_index];
+      try {
+        const arma::uword a = cl.start;
+        const arma::uword b = cl.end - 1;
+        const arma::uword m = cl.end - cl.start;
+        const auto delta_vector_i = delta_vector.subvec(a, b);
+        const auto s_vector_i = s_vector.subvec(a, b);
+        const auto alpha_star_plus_delta_star_vector_i =
+          alpha_star_plus_delta_star_vector.subvec(a, b);
 
-      if (d_matrix_i.n_rows != m || d_matrix_i.n_cols != params_no) {
-        d_matrix_i.set_size(m, params_no);
-      }
-      d_matrix_i = model_matrix.rows(a, b);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(fc,
-                                   mu_vector.subvec(a, b),
-                                   repeated_vector.subvec(a, b),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(a, b));
-      v_matrix_inverse_d_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
-      if (d_matrix_trans_v_matrix_inverse_i.n_rows != params_no ||
-          d_matrix_trans_v_matrix_inverse_i.n_cols != m) {
-        d_matrix_trans_v_matrix_inverse_i.set_size(params_no, m);
-      }
-      d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
-      u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
-      if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
-          alpha_star_plus_delta_star_matrix_i.n_cols != m) {
-        alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      alpha_star_plus_delta_star_matrix_i.zeros();
-      alpha_star_plus_delta_star_matrix_i.diag() =
-        alpha_star_plus_delta_star_vector_i;
-      if (v_matrix_inverse_alpha_star_plus_delta_star_matrix_i.n_rows != m ||
-          v_matrix_inverse_alpha_star_plus_delta_star_matrix_i.n_cols != m) {
-        v_matrix_inverse_alpha_star_plus_delta_star_matrix_i.set_size(m, m);
-      }
-      v_matrix_inverse_alpha_star_plus_delta_star_matrix_i =
-        solve_chol_or_lu_mat(v_matrix_i, alpha_star_plus_delta_star_matrix_i);
-      kron_self_matrix_into(kron_d_matrix_d_matrix_i, d_matrix_i);
-      if (kron_d_matrix_trans_d_matrix_trans_i.n_rows !=
-          kron_d_matrix_d_matrix_i.n_cols ||
-          kron_d_matrix_trans_d_matrix_trans_i.n_cols !=
-          kron_d_matrix_d_matrix_i.n_rows) {
-        kron_d_matrix_trans_d_matrix_trans_i.set_size(
-          kron_d_matrix_d_matrix_i.n_cols,
-          kron_d_matrix_d_matrix_i.n_rows
-        );
-      }
-      kron_d_matrix_trans_d_matrix_trans_i = kron_d_matrix_d_matrix_i.t();
-      lambda_matrix +=
-        kron_d_matrix_trans_d_matrix_trans_i *
-        (kronecker_left_identity_kappa(
+        d_matrix_i = model_matrix.rows(a, b);
+        d_matrix_i.each_col() %= delta_vector_i;
+        v_matrix_i = get_v_matrix_cc(fc,
+                                     mu_vector.subvec(a, b),
+                                     repeated_vector.subvec(a, b),
+                                     phi,
+                                     correlation_matrix,
+                                     weights_vector.subvec(a, b));
+        const CholOrLuFactor v_factor(v_matrix_i);
+        v_matrix_inverse_d_matrix_i =
+          v_factor.solve(d_matrix_i);
+        d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
+        naive_matrix_inverse += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
+        u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
+        if (alpha_star_plus_delta_star_matrix_i.n_rows != m ||
+            alpha_star_plus_delta_star_matrix_i.n_cols != m) {
+          alpha_star_plus_delta_star_matrix_i.set_size(m, m);
+        }
+        alpha_star_plus_delta_star_matrix_i.zeros();
+        alpha_star_plus_delta_star_matrix_i.diag() =
+          alpha_star_plus_delta_star_vector_i;
+        v_matrix_inverse_alpha_star_plus_delta_star_matrix_i =
+          v_factor.solve(alpha_star_plus_delta_star_matrix_i);
+        add_kron_self_t_s_d(
+          lambda_matrix,
+          d_matrix_i,
+          kronecker_left_identity_kappa(
             v_matrix_inverse_alpha_star_plus_delta_star_matrix_i
-        ) +
-          kronecker_identity_right_kappa(
-            v_matrix_inverse_alpha_star_plus_delta_star_matrix_i
-          )) *
-            d_matrix_i;
+          ) +
+            kronecker_identity_right_kappa(
+              v_matrix_inverse_alpha_star_plus_delta_star_matrix_i
+            ));
+      } catch (const std::exception& e) {
+        rethrow_with_cluster_context("update_beta_jeffreys_cc", cluster_index, id_vector[cl.start], e);
+      }
     }
     symmetrize_if_close(naive_matrix_inverse, 1e-10);
     const arma::mat naive_matrix =
       solve_chol_or_lu_mat(naive_matrix_inverse,
-                           arma::eye(params_no, params_no));
+                           arma::eye(params_no, params_no),
+        "update_beta_jeffreys_cc: naive information matrix");
     const arma::vec naive_matrix_vectorized = arma::vectorise(naive_matrix);
     const arma::vec lambda_vector =
       jeffreys_power * (lambda_matrix.t() * naive_matrix_vectorized);
     return beta_vector +
-      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector);
+      solve_chol_or_lu_vec(naive_matrix_inverse, u_vector + lambda_vector,
+        "update_beta_jeffreys_cc: naive information matrix");
 }
 //==============================================================================
 
@@ -803,7 +774,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const int& maxiter,
                             const double& tolerance,
                             const int& step_maxiter,
-                            const int& step_multiplier,
+                            const double& step_multiplier,
                             const double& jeffreys_power,
                             const char* method,
                             int use_params,
@@ -812,29 +783,31 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const char* correlation_structure,
                             const int& mdependence,
                             double phi,
-                            const int& phi_fixed) {
+                            const int& phi_fixed,
+                            const int& hold_nuisance) {
   const LinkCode lc = parse_link(link);
   const FamilyCode fc = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
   use_params = (use_params != 0) ? static_cast<int>(params_no) : 0;
   arma::vec beta_vector_new = beta_vector;
-  arma::mat beta_hat_matrix(params_no, static_cast<arma::uword>(maxiter) + 1,
-                            arma::fill::zeros);
-  beta_hat_matrix.col(0) = beta_vector;
-  arma::uword beta_hat_cols_used = 1;
+  // Iterates are stored in a growable container so that a large maxiter does
+  // not allocate a p x (maxiter + 1) matrix up front.
+  std::vector<arma::vec> beta_history;
+  beta_history.reserve(static_cast<size_t>(std::min(maxiter, 100)) + 1);
+  beta_history.push_back(beta_vector);
   arma::vec stepsize_vector(params_no, arma::fill::zeros);
   arma::vec criterion_vector(maxiter, arma::fill::zeros);
   arma::vec beta_vector_inner(params_no, arma::fill::zeros);
   arma::vec beta_vector_new_inner(params_no, arma::fill::zeros);
   arma::vec stepsize_vector_inner(params_no, arma::fill::zeros);
   arma::vec eta_vector = model_matrix * beta_vector + offset;
-  if (!valideta(link, arma2vec(eta_vector))) {
+  if (!valideta(lc, eta_vector)) {
     Rcpp::stop(
       "invalid initial linear predictor: please try different starting values for beta."
     );
   }
   arma::vec mu_vector = linkinv(lc, eta_vector);
-  if (!validmu(family, arma2vec(mu_vector))) {
+  if (!validmu(fc, mu_vector)) {
     Rcpp::stop(
       "invalid initial fitted values: please try different starting values for beta."
     );
@@ -845,6 +818,10 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                           mu_vector,
                           weights_vector);
 
+  // The association and dispersion parameters are estimated at the starting
+  // beta. With hold_nuisance != 0 (second pass of the one-step penalized
+  // estimators) they are then kept at those values, so that the step, the
+  // returned parameters and the covariance matrices all use the same ones.
   if (phi_fixed == 0) {
     phi = get_phi_hat(pearson_residuals_vector, use_params);
   }
@@ -857,23 +834,58 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                                  use_params,
                                  mdependence);
   }
+  // Rebuilds eta, mu, the Pearson residuals, phi and alpha at a given beta with
+  // exactly the calls used for a trial point. It runs only on the failure path,
+  // to restore the state of the last accepted iterate.
+  auto refresh_state = [&](const arma::vec& beta) {
+    eta_vector = model_matrix * beta + offset;
+    mu_vector = linkinv(lc, eta_vector);
+    pearson_residuals_vector =
+      get_pearson_residuals(fc,
+                            y_vector,
+                            mu_vector,
+                            weights_vector);
+    if (phi_fixed == 0 && hold_nuisance == 0) {
+      phi = get_phi_hat(pearson_residuals_vector, use_params);
+    }
+    if (alpha_fixed == 0 && hold_nuisance == 0) {
+      alpha_vector = get_alpha_hat(correlation_structure,
+                                   pearson_residuals_vector,
+                                   id_vector,
+                                   repeated_vector,
+                                   phi,
+                                   use_params,
+                                   mdependence);
+    }
+  };
+  // Empty unless a numerical failure stopped the iterations early.
+  std::string failure_message;
+  // Trial values live in separate vectors so that eta_vector, mu_vector, phi
+  // and alpha_vector always describe the most recent *valid* trial point.
+  arma::vec eta_trial_vector;
+  arma::vec mu_trial_vector;
   for (int i = 1; i < maxiter + 1; ++i) {
-    stepsize_vector =
-      update_beta_cc(y_vector,
-                     model_matrix,
-                     id_vector,
-                     repeated_vector,
-                     weights_vector,
-                     link,
-                     family,
-                     beta_vector,
-                     mu_vector,
-                     eta_vector,
-                     correlation_structure,
-                     alpha_vector,
-                     phi,
-                     jeffreys_power,
-                     method) - beta_vector;
+    // The Newton step at the current beta_vector is the one already computed
+    // at the end of the previous outer iteration (same beta, eta, mu, phi and
+    // alpha), so it is only computed from scratch at the first iteration.
+    if (i == 1) {
+      stepsize_vector =
+        update_beta_cc(y_vector,
+                       model_matrix,
+                       id_vector,
+                       repeated_vector,
+                       weights_vector,
+                       link,
+                       family,
+                       beta_vector,
+                       mu_vector,
+                       eta_vector,
+                       correlation_structure,
+                       alpha_vector,
+                       phi,
+                       jeffreys_power,
+                       method) - beta_vector;
+    }
     // Damped Newton continuation: if the full-step candidate does not improve
     // the convergence criterion relative to the fixed baseline established at
     // the start of this outer iteration, the step multiplier is halved and a
@@ -891,57 +903,72 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
     // valid region, so an invalid trial point shrinks the multiplier and
     // retries rather than aborting. `last_failure` records why the most recent
     // trial was rejected, so that an exhausted inner loop that never produced
-    // a valid candidate can still report the original diagnostic.
+    // a valid candidate can still report the original diagnostic. A numerical
+    // failure while evaluating a valid trial point (singular matrix, invalid
+    // association parameter, ...) or an inner loop without any valid candidate
+    // ends the iterations: the solver reverts to the last accepted iterate and
+    // reports the reason in `failure`, which the R code turns into a warning.
     bool valid_candidate_found = false;
+    bool numerical_failure = false;
     int last_failure = 0;
     for (int j = 1; j < step_maxiter + 1; ++j) {
       beta_vector_new_inner =
         beta_vector_inner +
         step_multiplier * std::pow(0.5, j - 1) * stepsize_vector_inner;
-      eta_vector = model_matrix * beta_vector_new_inner + offset;
-      if (!valideta(link, arma2vec(eta_vector))) {
+      eta_trial_vector = model_matrix * beta_vector_new_inner + offset;
+      if (!valideta(lc, eta_trial_vector)) {
         last_failure = 1;
         continue;
       }
-      mu_vector = linkinv(lc, eta_vector);
-      if (!validmu(family, arma2vec(mu_vector))) {
+      mu_trial_vector = linkinv(lc, eta_trial_vector);
+      if (!validmu(fc, mu_trial_vector)) {
         last_failure = 2;
         continue;
       }
       valid_candidate_found = true;
-      pearson_residuals_vector =
-        get_pearson_residuals(fc,
-                              y_vector,
-                              mu_vector,
-                              weights_vector);
-      if (phi_fixed == 0) {
-        phi = get_phi_hat(pearson_residuals_vector, use_params);
+      eta_vector.swap(eta_trial_vector);
+      mu_vector.swap(mu_trial_vector);
+      try {
+        pearson_residuals_vector =
+          get_pearson_residuals(fc,
+                                y_vector,
+                                mu_vector,
+                                weights_vector);
+        if (phi_fixed == 0 && hold_nuisance == 0) {
+          phi = get_phi_hat(pearson_residuals_vector, use_params);
+        }
+        if (alpha_fixed == 0 && hold_nuisance == 0) {
+          alpha_vector = get_alpha_hat(correlation_structure,
+                                       pearson_residuals_vector,
+                                       id_vector,
+                                       repeated_vector,
+                                       phi,
+                                       use_params,
+                                       mdependence);
+        }
+        stepsize_vector_inner =
+          update_beta_cc(y_vector,
+                         model_matrix,
+                         id_vector,
+                         repeated_vector,
+                         weights_vector,
+                         link,
+                         family,
+                         beta_vector_new_inner,
+                         mu_vector,
+                         eta_vector,
+                         correlation_structure,
+                         alpha_vector,
+                         phi,
+                         jeffreys_power,
+                         method) - beta_vector_new_inner;
+      } catch (const std::bad_alloc&) {
+        throw;
+      } catch (const std::exception& e) {
+        numerical_failure = true;
+        failure_message = e.what();
+        break;
       }
-      if (alpha_fixed == 0) {
-        alpha_vector = get_alpha_hat(correlation_structure,
-                                     pearson_residuals_vector,
-                                     id_vector,
-                                     repeated_vector,
-                                     phi,
-                                     use_params,
-                                     mdependence);
-      }
-      stepsize_vector_inner =
-        update_beta_cc(y_vector,
-                       model_matrix,
-                       id_vector,
-                       repeated_vector,
-                       weights_vector,
-                       link,
-                       family,
-                       beta_vector_new_inner,
-                       mu_vector,
-                       eta_vector,
-                       correlation_structure,
-                       alpha_vector,
-                       phi,
-                       jeffreys_power,
-                       method) - beta_vector_new_inner;
 
       beta_vector_new = beta_vector_new_inner;
       beta_vector_inner = beta_vector_new_inner;
@@ -951,52 +978,37 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
         break;
       }
     }
-    if (!valid_candidate_found) {
-      if (last_failure == 2) {
-        Rcpp::stop(
-          "invalid fitted values: please try different starting values for beta."
-        );
+    if (numerical_failure || !valid_candidate_found) {
+      if (!numerical_failure) {
+        failure_message = (last_failure == 2) ?
+          "every step-halving attempt produced invalid fitted values" :
+          "every step-halving attempt produced an invalid linear predictor";
       }
-      Rcpp::stop(
-        "invalid linear predictor: please try different starting values for beta."
-      );
+      // Trial points only replace the working state when they are valid, so the
+      // state needs restoring only if one was swapped in before the failure.
+      if (valid_candidate_found) {
+        refresh_state(beta_vector);
+      }
+      // The failed outer iteration is recorded with an infinite criterion so
+      // that every caller that tests convergence on the last criterion value
+      // sees a non-converged fit; beta_vector keeps the last accepted iterate.
+      beta_history.push_back(beta_vector);
+      criterion_vector(i - 1) = arma::datum::inf;
+      break;
     }
     criterion_vector(i - 1) = arma::norm(stepsize_vector_inner, "inf");
     beta_vector = beta_vector_new;
-    eta_vector = model_matrix * beta_vector + offset;
-    if (!valideta(link, arma2vec(eta_vector))) {
-      Rcpp::stop(
-        "invalid linear predictor: please try different starting values for beta."
-      );
-    }
-    mu_vector = linkinv(lc, eta_vector);
-    if (!validmu(family, arma2vec(mu_vector))) {
-      Rcpp::stop(
-        "invalid fitted values: please try different starting values for beta."
-      );
-    }
-    beta_hat_matrix.col(beta_hat_cols_used) = beta_vector;
-    ++beta_hat_cols_used;
-    pearson_residuals_vector =
-    get_pearson_residuals(fc,
-                          y_vector,
-                          mu_vector,
-                          weights_vector);
-    if (phi_fixed == 0) {
-      phi = get_phi_hat(pearson_residuals_vector, use_params);
-    }
-    if (alpha_fixed == 0) {
-      alpha_vector = get_alpha_hat(correlation_structure,
-                                   pearson_residuals_vector,
-                                   id_vector,
-                                   repeated_vector,
-                                   phi,
-                                   use_params,
-                                   mdependence);
-    }
+    beta_history.push_back(beta_vector);
+    // eta_vector, mu_vector, phi and alpha_vector already correspond to the
+    // accepted candidate, and stepsize_vector_inner is the Newton step there.
+    stepsize_vector = stepsize_vector_inner;
     if (criterion_vector(i - 1) <= tolerance) {
       break;
     }
+  }
+  arma::mat beta_hat_matrix(params_no, beta_history.size());
+  for (arma::uword col = 0; col < beta_history.size(); ++col) {
+    beta_hat_matrix.col(col) = beta_history[col];
   }
   Rcpp::List cov_matrices =
     get_covariance_matrices_cc(y_vector,
@@ -1013,7 +1025,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                                phi);
   Rcpp::List ans;
   ans["beta_hat"] = beta_vector;
-  ans["beta_mat"] = beta_hat_matrix.cols(0, beta_hat_cols_used - 1);
+  ans["beta_mat"] = beta_hat_matrix;
   ans["alpha"] = alpha_vector;
   ans["phi"] = phi;
   ans["naive_covariance"] = cov_matrices[0];
@@ -1024,6 +1036,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
   ans["residuals"] = y_vector - mu_vector;
   ans["fitted"] = mu_vector;
   ans["offset"] = offset;
+  ans["failure"] = failure_message;
   return ans;
 }
 //==============================================================================

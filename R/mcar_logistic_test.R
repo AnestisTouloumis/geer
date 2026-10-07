@@ -307,14 +307,11 @@ mcar_logistic_test <- function(object,
   } else {
     character(0)
   }
-  response_null_formula <- stats::reformulate(
-    c(nuisance_terms, safe_names),
-    response = "mcar_missing"
-  )
-  overall_null_formula <- stats::reformulate(
-    nuisance_terms,
-    response = "mcar_missing"
-  )
+  ## reformulate() rejects an empty term vector, which happens with a single
+  ## occasion level (two waves) and no covariates, so fall back to an
+  ## intercept-only formula.
+  response_null_formula <- build_mcar_null_formula(c(nuisance_terms, safe_names))
+  overall_null_formula <- build_mcar_null_formula(nuisance_terms)
   response_null_fit <- fit_mcar_binary_model(
     response_null_formula, analysis_data, orstr, control
   )
@@ -338,9 +335,8 @@ mcar_logistic_test <- function(object,
   )
 
   if (length(safe_names)) {
-    covariate_null_formula <- stats::reformulate(
-      c(nuisance_terms, "mcar_lag_response"),
-      response = "mcar_missing"
+    covariate_null_formula <- build_mcar_null_formula(
+      c(nuisance_terms, "mcar_lag_response")
     )
     covariate_null_fit <- fit_mcar_binary_model(
       covariate_null_formula, analysis_data, orstr, control

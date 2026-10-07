@@ -116,6 +116,13 @@ check_test_index <- function(index, context) {
 }
 
 
+## Result of a test whose statistic was reported as unavailable (NA) by
+## check_test_statistic().
+missing_test_result <- function(test_df) {
+  list(test_stat = NA_real_, test_df = test_df, test_p = NA_real_)
+}
+
+
 check_test_statistic <- function(test_stat, context, tol = 1e-10) {
   if (!is.finite(test_stat)) {
     stop(sprintf("%s failed: non-finite test statistic", context), call. = FALSE)
@@ -124,7 +131,22 @@ check_test_statistic <- function(test_stat, context, tol = 1e-10) {
     if (test_stat > -tol) {
       test_stat <- 0
     } else {
-      stop(sprintf("%s failed: negative test statistic", context), call. = FALSE)
+      ## A negative quadratic form arises when a covariance estimate that is
+      ## not guaranteed to be positive semi-definite (for example the
+      ## bias-corrected one) is used. Report it instead of aborting a whole
+      ## table: the statistic and the p-value are set to NA.
+      warning(
+        sprintf(
+          paste0(
+            "%s: the test statistic is negative (%s), probably because the ",
+            "covariance estimate is not positive semi-definite; the ",
+            "statistic and p-value are set to NA"
+          ),
+          context, format(test_stat, digits = 3)
+        ),
+        call. = FALSE
+      )
+      test_stat <- NA_real_
     }
   }
   test_stat
@@ -326,6 +348,9 @@ compute_working_wald_test <- function(object0, object1,
     }
   )
   test_stat <- check_test_statistic(test_stat, "Working Wald test")
+  if (is.na(test_stat)) {
+    return(missing_test_result(length(index)))
+  }
   robust_mat <- stats::vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
   eigen_test <- compute_mixture_eigenvalues(
@@ -347,19 +372,15 @@ compute_working_lrt_test <- function(object0, object1,
   obj1 <- nested_models$object1
   index <- nested_models$index
   check_test_index(index, "Working LR test")
-  if (obj1$family$family %in% c("poisson", "binomial")) {
-    phi_tol <- 1e-6
-    if (abs(obj0$phi - 1) > phi_tol || abs(obj1$phi - 1) > phi_tol) {
-      stop(
-        "Working LR test failed: dispersion parameter must equal 1 for Poisson/binomial models",
-        call. = FALSE
-      )
-    }
-  }
+  ## Each working log-likelihood is scaled by the dispersion of its own
+  ## model, whether estimated from the data or fixed, for every family.
   ll_obj0 <- compute_quasi_loglikelihood(obj0)
   ll_obj1 <- compute_quasi_loglikelihood(obj1)
   test_stat <- -2 * (ll_obj0 - ll_obj1)
   test_stat <- check_test_statistic(test_stat, "Working LR test")
+  if (is.na(test_stat)) {
+    return(missing_test_result(length(index)))
+  }
   naive_mat <- stats::vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
   robust_mat <- stats::vcov(obj1, cov_type = cov_type)
@@ -451,6 +472,9 @@ compute_working_score_test <- function(object0, object1,
   )
   test_stat <- as.numeric((t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol)
   test_stat <- check_test_statistic(test_stat, "Working score test")
+  if (is.na(test_stat)) {
+    return(missing_test_result(length(index)))
+  }
   eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
     robust_mat = robust_mat[index, index, drop = FALSE],
