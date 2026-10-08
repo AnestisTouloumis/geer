@@ -258,12 +258,12 @@ test_that("step_p stores numbered steps and descriptive row names", {
   )
   expect_s3_class(out$anova, "anova")
   expect_identical(rownames(out$anova)[1L], "Initial model")
-  expect_identical(out$anova$Step[1L], "")
+  expect_true(is.na(out$anova$Step[1L]))
 
   if (nrow(out$anova) > 1L) {
     expect_identical(
       out$anova$Step[-1L],
-      as.character(seq_len(nrow(out$anova) - 1L))
+      seq_len(nrow(out$anova) - 1L)
     )
     expect_true(all(grepl("^Step [0-9]+: [+-] ", rownames(out$anova)[-1L])))
   }
@@ -318,4 +318,28 @@ test_that("step_p warns when direction = 'forward' has no scope", {
     step_p(fit_resp_full_indep, direction = "forward"),
     "no 'scope' was supplied"
   )
+})
+
+
+test_that("the printed step_p table shows the initial model and numbered steps", {
+  out <- step_p(
+    fit_resp_full_indep,
+    direction = "backward",
+    test = "wald",
+    cov_type = "robust",
+    p_remove = 0.20,
+    steps = 3
+  )
+  ## Checks on structure rather than a snapshot, so that the printed digits
+  ## (which depend on the BLAS in use) do not enter the test.
+  printed <- utils::capture.output(print(out$anova))
+  expect_true(any(grepl("Initial model", printed, fixed = TRUE)))
+  n_steps <- nrow(out$anova) - 1L
+  if (n_steps >= 1L) {
+    for (k in seq_len(n_steps)) {
+      expect_true(any(grepl(paste0("Step ", k, ": "), printed, fixed = TRUE)))
+    }
+  }
+  ## The Step column is numeric: no factor codes and no lexicographic order.
+  expect_type(out$anova$Step, "integer")
 })

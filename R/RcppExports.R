@@ -25,27 +25,27 @@ fit_geesolver_or <- function(y_vector, model_matrix, id_vector, repeated_vector,
     .Call(`_geer_fit_geesolver_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, beta_vector, offset, maxiter, tolerance, step_maxiter, step_multiplier, jeffreys_power, method, alpha_vector)
 }
 
-get_naive_matrix_inverse_independence <- function(model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector) {
-    .Call(`_geer_get_naive_matrix_inverse_independence`, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector)
+get_information_matrix_independence <- function(model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector) {
+    .Call(`_geer_get_information_matrix_independence`, model_matrix, id_vector, link, family, mu_vector, eta_vector, phi, weights_vector)
 }
 
-get_gee_criteria_sc_cw <- function(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector) {
-    .Call(`_geer_get_gee_criteria_sc_cw`, y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector)
+get_working_covariance_criteria_cc <- function(y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector) {
+    .Call(`_geer_get_working_covariance_criteria_cc`, y_vector, id_vector, repeated_vector, family, mu_vector, correlation_structure, alpha_vector, phi, weights_vector)
 }
 
-get_gee_criteria_sc_cw_or <- function(y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector) {
-    .Call(`_geer_get_gee_criteria_sc_cw_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector)
+get_working_covariance_criteria_or <- function(y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector) {
+    .Call(`_geer_get_working_covariance_criteria_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector)
 }
 
 get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
     .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
 }
 
-get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
-    .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
-}
-
 get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure) {
     .Call(`_geer_get_marginalized_odds_ratios`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
+}
+
+get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
+    .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
 }
 

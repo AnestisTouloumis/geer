@@ -1,5 +1,5 @@
-#ifndef FAMILY_CODES_H
-#define FAMILY_CODES_H
+#ifndef GEER_FAMILY_CODES_H
+#define GEER_FAMILY_CODES_H
 
 #include <RcppArmadillo.h>
 #include <string_view>

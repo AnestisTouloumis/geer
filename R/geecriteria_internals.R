@@ -256,7 +256,7 @@ compute_independence_naive_inverse <- function(object,
                                                mu = object$fitted.values,
                                                eta = object$linear.predictors,
                                                phi = object$phi) {
-  get_naive_matrix_inverse_independence(
+  get_information_matrix_independence(
     object$x,
     object$id,
     object$family$link,
@@ -573,7 +573,7 @@ compute_gee_criteria <- function(object,
   sc_wc_stats <- if (!needs_sc_wc) {
     c(sc = NA_real_, gp = NA_real_)
   } else if (is_geewa_fit(object)) {
-    get_gee_criteria_sc_cw(
+    get_working_covariance_criteria_cc(
       object$y,
       object$id,
       object$repeated,
@@ -585,7 +585,7 @@ compute_gee_criteria <- function(object,
       object$prior.weights
     )
   } else {
-    get_gee_criteria_sc_cw_or(
+    get_working_covariance_criteria_or(
       object$y,
       object$id,
       object$repeated,

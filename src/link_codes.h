@@ -1,5 +1,5 @@
-#ifndef LINK_CODES_H
-#define LINK_CODES_H
+#ifndef GEER_LINK_CODES_H
+#define GEER_LINK_CODES_H
 
 #include <RcppArmadillo.h>
 #include <string_view>

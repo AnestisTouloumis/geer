@@ -1,10 +1,10 @@
-#ifndef CLUSTER_UTILS_H
-#define CLUSTER_UTILS_H
+#ifndef GEER_CLUSTER_UTILS_H
+#define GEER_CLUSTER_UTILS_H
 
 #include <RcppArmadillo.h>
 #include <vector>
 
-struct Cluster { arma::uword start, end; };  // [start, end)
+struct Cluster { arma::uword start, end; };
 
 inline std::vector<Cluster> clusters_from_sorted_id(const arma::vec& id) {
   const arma::uword n = id.n_elem;

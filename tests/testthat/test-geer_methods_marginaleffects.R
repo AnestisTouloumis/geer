@@ -35,6 +35,17 @@ test_that("marginaleffects low-level methods expose geer components", {
     custom_vcov
   )
 
+  expect_equal(
+    marginaleffects::get_vcov(
+      count_fit,
+      vcov = function(x) vcov(x, cov_type = "robust")
+    ),
+    vcov(count_fit, cov_type = "robust")
+  )
+  expect_error(
+    marginaleffects::get_vcov(count_fit, vcov = function(x) 1)
+  )
+
   shifted <- coef(count_fit)
   shifted[[1L]] <- shifted[[1L]] + 0.1
   modified <- marginaleffects::set_coef(count_fit, shifted)

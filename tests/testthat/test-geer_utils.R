@@ -129,16 +129,27 @@ test_that("refit_geer stops when the refit did not converge", {
   )
   fit_ok <- refit_geer(fit, . ~ . + lnbaseline)
   expect_s3_class(fit_ok, "geer")
-  ## the refit reuses the stored call, so a one-iteration limit makes it fail
+  ## The refit reuses the stored call, which drops 'beta_start' and keeps the
+  ## control settings. 'visit' varies within clusters, so the GEE solution
+  ## differs from the independence starting values (with cluster-level
+  ## covariates only and balanced clusters the two coincide, and a single
+  ## iteration would "converge"). One iteration against a tolerance of 1e-12
+  ## therefore cannot converge, and the refit must fail.
   fit_limited <- suppressWarnings(
     geewa(
-      seizures ~ treatment,
+      seizures ~ treatment + visit,
       data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "exchangeable",
-      control = geer_control(maxiter = 1L)
+      beta_start = rep(0, 3),
+      control = geer_control(maxiter = 1L, tolerance = 1e-12)
     )
+  )
+  expect_false(fit_limited$converged)
+  expect_error(
+    suppressWarnings(refit_geer(fit_limited, . ~ . + lnbaseline)),
+    "did not converge"
   )
 })
 

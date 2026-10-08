@@ -117,6 +117,13 @@
 
 ## Changes
 
+* The dispersion estimate is no longer rejected when it is merely small
+  (previously below `.Machine$double.eps`); only zero or non-finite estimates
+  stop the fit, so responses measured in very small units can be fitted.
+* Unstructured and fixed working correlation structures no longer fail with an
+  obscure internal error when every cluster has a single observation.
+* The solvers treat a non-finite Newton step as a numerical failure (reverting
+  to the last accepted iterate with a warning) instead of accepting it.
 * `get_vcov()` (marginaleffects) now calls a function supplied as `vcov` on the
   fitted model, as documented, instead of ignoring it; the result is validated
   like a matrix.

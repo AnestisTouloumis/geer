@@ -1,5 +1,5 @@
-#ifndef METHOD_CODES_H
-#define METHOD_CODES_H
+#ifndef GEER_METHOD_CODES_H
+#define GEER_METHOD_CODES_H
 
 #include <RcppArmadillo.h>
 #include <cstring>
@@ -30,7 +30,6 @@ inline MethodCode method_code(const char* method) {
     break;
   }
   Rcpp::stop("Unknown method: %s", method);
-  return MethodCode::gee; // never reached
 }
 
 #endif

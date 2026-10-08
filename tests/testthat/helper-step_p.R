@@ -15,5 +15,5 @@ expect_step_p_result <- function(object) {
 expect_no_step_taken <- function(object) {
   expect_step_p_result(object)
   testthat::expect_equal(nrow(object$anova), 1L)
-  testthat::expect_identical(object$anova$Step[[1L]], "")
+  testthat::expect_identical(object$anova$Step[[1L]], NA_integer_)
 }

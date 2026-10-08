@@ -1,9 +1,9 @@
-#define ARMA_WARN_LEVEL 1
 #include "link_functions.h"
-#include "family_codes.h"
-#include "link_codes.h"
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
+
+namespace geer {
 
 
 namespace {
@@ -15,27 +15,27 @@ namespace {
 }
 
 
-//============================ link inverse - arma (enum) =====================
-arma::vec linkinv(LinkCode lc, const arma::vec& eta) {
+//============================ link inverse - arma (enum) ======================
+arma::vec inverse_link(LinkCode link_code, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
-  switch (lc) {
+  switch (link_code) {
   case LinkCode::logit:
     return arma_logistic_mu(eta);
   case LinkCode::probit: {
     const double thr = -R::qnorm(DBL_EPSILON, 0.0, 1.0, true, false);
     const arma::vec eta_clipped = arma::clamp(eta, -thr, thr);
-    arma::vec ans(n);
+    arma::vec result(n);
     for (arma::uword i = 0; i < n; ++i)
-      ans[i] = R::pnorm(eta_clipped[i], 0.0, 1.0, true, false);
-    return ans;
+      result[i] = R::pnorm(eta_clipped[i], 0.0, 1.0, true, false);
+    return result;
   }
   case LinkCode::cauchit: {
     const double thr = -R::qcauchy(DBL_EPSILON, 0.0, 1.0, true, false);
     const arma::vec eta_clipped = arma::clamp(eta, -thr, thr);
-    arma::vec ans(n);
+    arma::vec result(n);
     for (arma::uword i = 0; i < n; ++i)
-      ans[i] = R::pcauchy(eta_clipped[i], 0.0, 1.0, true, false);
-    return ans;
+      result[i] = R::pcauchy(eta_clipped[i], 0.0, 1.0, true, false);
+    return result;
   }
   case LinkCode::cloglog: {
     const arma::vec eta_clipped = arma::clamp(eta, -arma::datum::inf, 700.0);
@@ -61,32 +61,32 @@ arma::vec linkinv(LinkCode lc, const arma::vec& eta) {
 
 
 //============================ mu eta - first derivative - arma (char*) ========
-arma::vec mueta(const char* link,
-                const arma::vec& eta_vector) {
-  return mueta(parse_link(link), eta_vector);
+arma::vec link_derivative_1(const char* link,
+                            const arma::vec& eta_vector) {
+  return link_derivative_1(parse_link(link), eta_vector);
 }
 //==============================================================================
 
 
 //============================ mu eta - first derivative - arma (enum) =========
-arma::vec mueta(LinkCode lc, const arma::vec& eta) {
+arma::vec link_derivative_1(LinkCode link_code, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
-  switch (lc) {
+  switch (link_code) {
   case LinkCode::logit: {
     const arma::vec mu = arma_logistic_mu(eta);
     return arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
   }
   case LinkCode::probit: {
-    arma::vec ans(n);
+    arma::vec result(n);
     for (arma::uword i = 0; i < n; ++i)
-      ans[i] = std::max(R::dnorm(eta[i], 0.0, 1.0, false), DBL_EPSILON);
-    return ans;
+      result[i] = std::max(R::dnorm(eta[i], 0.0, 1.0, false), DBL_EPSILON);
+    return result;
   }
   case LinkCode::cauchit: {
-    arma::vec ans(n);
+    arma::vec result(n);
     for (arma::uword i = 0; i < n; ++i)
-      ans[i] = std::max(R::dcauchy(eta[i], 0.0, 1.0, false), DBL_EPSILON);
-    return ans;
+      result[i] = std::max(R::dcauchy(eta[i], 0.0, 1.0, false), DBL_EPSILON);
+    return result;
   }
   case LinkCode::cloglog: {
     const arma::vec eta_clipped = arma::clamp(eta, -arma::datum::inf, 700.0);
@@ -111,25 +111,25 @@ arma::vec mueta(LinkCode lc, const arma::vec& eta) {
 
 
 //============================ mu eta - second derivative - arma (enum) ========
-arma::vec mueta2(LinkCode lc, const arma::vec& eta) {
+arma::vec link_derivative_2(LinkCode link_code, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
-  switch (lc) {
+  switch (link_code) {
   case LinkCode::logit: {
     const arma::vec mu = arma_logistic_mu(eta);
     const arma::vec me = arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
     return (1.0 - 2.0 * mu) % me;
   }
   case LinkCode::probit: {
-    const arma::vec me = mueta(LinkCode::probit, eta);
+    const arma::vec me = link_derivative_1(LinkCode::probit, eta);
     return -eta % me;
   }
   case LinkCode::cauchit: {
-    const arma::vec me = mueta(LinkCode::cauchit, eta);
+    const arma::vec me = link_derivative_1(LinkCode::cauchit, eta);
     return -2.0 * (eta / (arma::square(eta) + 1.0)) % me;
   }
   case LinkCode::cloglog: {
     const arma::vec eta_clipped = arma::clamp(eta, -arma::datum::inf, 700.0);
-    const arma::vec me = mueta(LinkCode::cloglog, eta);
+    const arma::vec me = link_derivative_1(LinkCode::cloglog, eta);
     return me % (1.0 - arma::exp(eta_clipped));
   }
   case LinkCode::identity:
@@ -150,20 +150,20 @@ arma::vec mueta2(LinkCode lc, const arma::vec& eta) {
 
 
 //============================ mu eta - third derivative - arma (enum) =========
-arma::vec mueta3(LinkCode lc, const arma::vec& eta) {
+arma::vec link_derivative_3(LinkCode link_code, const arma::vec& eta) {
   const arma::uword n = eta.n_elem;
-  switch (lc) {
+  switch (link_code) {
   case LinkCode::logit: {
     const arma::vec mu = arma_logistic_mu(eta);
     const arma::vec me = arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
     return me % (1.0 - 6.0 * mu + 6.0 * arma::square(mu));
   }
   case LinkCode::probit: {
-    const arma::vec me = mueta(LinkCode::probit, eta);
+    const arma::vec me = link_derivative_1(LinkCode::probit, eta);
     return me % (arma::square(eta) - 1.0);
   }
   case LinkCode::cauchit: {
-    const arma::vec me = mueta(LinkCode::cauchit, eta);
+    const arma::vec me = link_derivative_1(LinkCode::cauchit, eta);
     return ((6.0 * arma::square(eta) - 2.0) /
             arma::square(arma::square(eta) + 1.0)) % me;
   }
@@ -171,7 +171,7 @@ arma::vec mueta3(LinkCode lc, const arma::vec& eta) {
     const arma::vec eta_clipped = arma::clamp(eta, -arma::datum::inf, 350.0);
     const arma::vec exp_eta = arma::exp(eta_clipped);
     const arma::vec exp_2eta = arma::exp(2.0 * eta_clipped);
-    const arma::vec me = mueta(LinkCode::cloglog, eta);
+    const arma::vec me = link_derivative_1(LinkCode::cloglog, eta);
     return me % (1.0 - 3.0 * exp_eta + exp_2eta);
   }
   case LinkCode::identity:
@@ -191,11 +191,11 @@ arma::vec mueta3(LinkCode lc, const arma::vec& eta) {
 
 
 //============================ valid eta - arma (enum) =========================
-bool valideta(LinkCode lc,
-              const arma::vec& eta_vector) {
+bool is_valid_eta(LinkCode link_code,
+                  const arma::vec& eta_vector) {
   const double* x = eta_vector.memptr();
   const arma::uword n = eta_vector.n_elem;
-  switch (lc) {
+  switch (link_code) {
   case LinkCode::logit:
   case LinkCode::probit:
   case LinkCode::cauchit:
@@ -203,18 +203,18 @@ bool valideta(LinkCode lc,
   case LinkCode::identity:
   case LinkCode::log:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!std::isfinite(x[i])) return false;
+      if (!R_FINITE(x[i])) return false;
     }
     return true;
   case LinkCode::sqrt:
   case LinkCode::inverse_mu_squared:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(std::isfinite(x[i]) && x[i] > 0.0)) return false;
+      if (!(R_FINITE(x[i]) && x[i] > 0.0)) return false;
     }
     return true;
   case LinkCode::inverse:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(std::isfinite(x[i]) && x[i] != 0.0)) return false;
+      if (!(R_FINITE(x[i]) && x[i] != 0.0)) return false;
     }
     return true;
   }
@@ -224,29 +224,31 @@ bool valideta(LinkCode lc,
 
 
 //============================ valid mu - arma (enum) ==========================
-bool validmu(FamilyCode fc,
-             const arma::vec& mu_vector) {
+bool is_valid_mu(FamilyCode family_code,
+                 const arma::vec& mu_vector) {
   const double* x = mu_vector.memptr();
   const arma::uword n = mu_vector.n_elem;
-  switch (fc) {
+  switch (family_code) {
   case FamilyCode::gaussian:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!std::isfinite(x[i])) return false;
+      if (!R_FINITE(x[i])) return false;
     }
     return true;
   case FamilyCode::binomial:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(std::isfinite(x[i]) && x[i] > 0.0 && x[i] < 1.0)) return false;
+      if (!(R_FINITE(x[i]) && x[i] > 0.0 && x[i] < 1.0)) return false;
     }
     return true;
   case FamilyCode::poisson:
   case FamilyCode::gamma:
   case FamilyCode::inverse_gaussian:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(std::isfinite(x[i]) && x[i] > 0.0)) return false;
+      if (!(R_FINITE(x[i]) && x[i] > 0.0)) return false;
     }
     return true;
   }
   Rcpp::stop("Unsupported family.");
 }
 //==============================================================================
+
+}  // namespace geer

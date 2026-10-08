@@ -122,7 +122,7 @@ build_step_results <- function(models, fit, object) {
     paste0("Step ", step_no, ": ", change)
   )
   aod <- data.frame(
-    Step = ifelse(step_no == 0L, "", as.character(step_no)),
+    Step = ifelse(step_no == 0L, NA_integer_, step_no),
     Df = vapply(models, `[[`, NA_real_, "Df"),
     Chi = vapply(models, `[[`, NA_real_, "Chi"),
     `Pr(>Chi)` = vapply(models, `[[`, NA_real_, "Pr(>Chi)"),

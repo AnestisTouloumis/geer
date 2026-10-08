@@ -138,11 +138,12 @@ test_that("bias-reduced estimates differ from plain GEE estimates", {
     coef(fit_br),
     tolerance = 1e-12
   )))
-  expect_equal(
-    coef(fit_geewa_pois_exch),
-    coef(fit_br),
-    tolerance = 0.5
-  )
+  ## Bias reduction should move each estimate by only a small fraction of its
+  ## standard error with 59 clusters; a relative tolerance on the coefficients
+  ## would say nothing about the size of the shift.
+  shift_in_se <- abs(coef(fit_br) - coef(fit_geewa_pois_exch)) /
+    sqrt(diag(vcov(fit_geewa_pois_exch, cov_type = "robust")))
+  expect_true(all(shift_in_se < 0.5))
 })
 
 
@@ -357,3 +358,69 @@ test_that("the fit stores the row order and residuals accept type = 'response'",
     residuals(fit, type = "working")
   )
 })
+
+
+test_that("geewa fits a response on a very small scale (dispersion below machine epsilon)", {
+  set.seed(101)
+  n_id <- 30L
+  dat <- data.frame(id = rep(seq_len(n_id), each = 3L))
+  dat$x <- rnorm(nrow(dat))
+  dat$y_unit <- 1 + dat$x + rnorm(nrow(dat))
+  dat$y_small <- 1e-9 * dat$y_unit
+  for (corstr in c("independence", "exchangeable")) {
+    fit_unit <- geewa(
+      y_unit ~ x, data = dat, id = id,
+      family = gaussian("identity"), corstr = corstr
+    )
+    expect_no_error(
+      fit_small <- geewa(
+        y_small ~ x, data = dat, id = id,
+        family = gaussian("identity"), corstr = corstr
+      )
+    )
+    expect_equal(unname(coef(fit_small)), unname(1e-9 * coef(fit_unit)),
+                 tolerance = 1e-6)
+    expect_equal(fit_small$phi, 1e-18 * fit_unit$phi, tolerance = 1e-6)
+    expect_equal(fit_small$alpha, fit_unit$alpha, tolerance = 1e-6)
+  }
+})
+
+
+test_that("an unstructured correlation structure works when every cluster has one observation", {
+  set.seed(102)
+  dat <- data.frame(id = seq_len(40L), x = rnorm(40L))
+  dat$y <- 1 + dat$x + rnorm(40L)
+  fit_ind <- geewa(
+    y ~ x, data = dat, id = id,
+    family = gaussian("identity"), corstr = "independence"
+  )
+  expect_no_error(
+    fit_unstr <- geewa(
+      y ~ x, data = dat, id = id,
+      family = gaussian("identity"), corstr = "unstructured"
+    )
+  )
+  expect_length(fit_unstr$alpha, 0L)
+  expect_equal(coef(fit_unstr), coef(fit_ind), tolerance = 1e-6)
+})
+
+
+test_that("the standard-correlation solver stops on a non-finite starting step", {
+  ## A NaN response makes the first Newton step non-finite; the solver must
+  ## signal an error instead of returning NaN estimates.
+  model_matrix <- cbind(1, c(-1, 0, 1, 2))
+  expect_error(
+    fit_geesolver_cc(
+      y_vector = c(1, NaN, 2, 3), model_matrix = model_matrix,
+      id_vector = c(1, 1, 2, 2), repeated_vector = c(1, 2, 1, 2),
+      weights_vector = rep(1, 4), link = "identity", family = "gaussian",
+      beta_vector = c(0, 0), offset = rep(0, 4), maxiter = 5L,
+      tolerance = 1e-6, step_maxiter = 3L, step_multiplier = 1,
+      jeffreys_power = 0.5, method = "gee", use_params = 0L,
+      alpha_vector = 0, alpha_fixed = 1L,
+      correlation_structure = "independence", mdependence = 1L,
+      phi = 1, phi_fixed = 1L, hold_nuisance = 0L
+    )
+  )
+})
+

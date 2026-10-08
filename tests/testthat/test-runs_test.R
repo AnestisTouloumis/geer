@@ -123,9 +123,17 @@ test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
   expect_identical(out$positive, 42L)
   expect_identical(out$negative, 38L)
   expect_equal(out$expected_runs, 40.9, tolerance = 1e-12)
+  ## Closed forms of the runs-test moments, E(T) = 2 n_p n_n / n + 1 and
+  ## V(T) = 2 n_p n_n (2 n_p n_n - n) / (n^2 (n - 1)), so the book's rounded
+  ## values below are only a cross-check.
+  n_p <- 42
+  n_n <- 38
+  n <- n_p + n_n
+  variance_expected <- 2 * n_p * n_n * (2 * n_p * n_n - n) / (n^2 * (n - 1))
+  expect_equal(out$variance_runs, variance_expected, tolerance = 1e-12)
   expect_equal(out$variance_runs, 19.65, tolerance = 1e-3)
 
-  z <- (44 - out$expected_runs) / sqrt(out$variance_runs)
+  z <- (44 - out$expected_runs) / sqrt(variance_expected)
   expect_equal(z, 0.6993, tolerance = 1e-3)
   expect_equal(stats::pnorm(z, lower.tail = FALSE), 0.2422, tolerance = 1e-3)
 })

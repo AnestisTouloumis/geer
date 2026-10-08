@@ -1,5 +1,5 @@
-#ifndef COVARIANCE_MATRICES_H
-#define COVARIANCE_MATRICES_H
+#ifndef GEER_COVARIANCE_MATRICES_H
+#define GEER_COVARIANCE_MATRICES_H
 
 #include <RcppArmadillo.h>
 
@@ -15,7 +15,7 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                       const arma::vec& eta_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
-                                      const double& phi);
+                                      const double phi);
 Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
                                       const arma::mat& model_matrix,
                                       const arma::vec& id_vector,

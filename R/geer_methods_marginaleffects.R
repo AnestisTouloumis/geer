@@ -156,7 +156,7 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
     }
     out <- stats::vcov(model, cov_type = vcov_type)
   } else if (is.function(vcov)) {
-    out <- stats::vcov(model)
+    out <- vcov(model)
   } else {
     out <- vcov
   }

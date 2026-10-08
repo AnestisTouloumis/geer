@@ -2,4 +2,8 @@
 ## R >= 4.0 on all CRAN platforms supports CXX17 via RcppArmadillo.
 CXX_STD = CXX17
 
+## Silence Armadillo's "decomposition failed" notices: CholOrLuFactor tries
+## chol and falls back to LU by design. Must be set before Armadillo is included.
+PKG_CPPFLAGS = -DARMA_WARN_LEVEL=1
+
 PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)

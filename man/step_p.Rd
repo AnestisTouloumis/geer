@@ -70,7 +70,7 @@ A fitted model object of class \code{"geer"} corresponding to the final
 selected model. The returned object also includes an \code{anova}
 component of class \code{c("anova", "data.frame")} summarizing the
 stepwise sequence. This table has one row for the initial model and one row
-for each accepted step, with columns \code{Step} (the step number),
+for each accepted step, with columns \code{Step} (the integer step number, \code{NA} for the initial model),
 \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
 \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
 Criterion). The term added or removed at each accepted step is indicated in

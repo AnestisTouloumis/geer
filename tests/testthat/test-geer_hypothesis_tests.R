@@ -376,3 +376,45 @@ test_that("missing_test_result has an NA statistic and p-value", {
   expect_true(is.na(res$test_p))
   expect_equal(res$test_df, 2L)
 })
+
+
+test_that("Wald and working Wald statistics match independent quadratic forms", {
+  full <- fit_bin_full
+  index <- match(
+    setdiff(names(coef(full)), names(coef(fit_bin_trt))),
+    names(coef(full))
+  )
+  b <- unname(coef(full)[index])
+  k <- length(index)
+
+  robust <- vcov(full, cov_type = "robust")[index, index, drop = FALSE]
+  wald <- as.numeric(crossprod(b, solve(robust, b)))
+  res <- compute_wald_test(fit_bin_trt, full, cov_type = "robust")
+  expect_equal(res$test_stat, wald, tolerance = 1e-8)
+  expect_equal(res$test_df, k)
+  expect_equal(res$test_p, stats::pchisq(wald, k, lower.tail = FALSE),
+               tolerance = 1e-8)
+
+  naive <- vcov(full, cov_type = "naive")[index, index, drop = FALSE]
+  working <- as.numeric(crossprod(b, solve(naive, b)))
+  lambda <- Re(eigen(solve(naive, robust), only.values = TRUE)$values)
+  lambda_bar <- mean(lambda)
+
+  res_rs <- compute_working_wald_test(
+    fit_bin_trt, full, cov_type = "robust", pmethod = "rao-scott"
+  )
+  expect_equal(res_rs$test_stat, working / lambda_bar, tolerance = 1e-8)
+  expect_equal(
+    res_rs$test_p,
+    stats::pchisq(working / lambda_bar, k, lower.tail = FALSE),
+    tolerance = 1e-8
+  )
+
+  cv2 <- sum((lambda - lambda_bar)^2) / (k * lambda_bar^2)
+  res_sa <- compute_working_wald_test(
+    fit_bin_trt, full, cov_type = "robust", pmethod = "satterthwaite"
+  )
+  expect_equal(res_sa$test_df, k / (1 + cv2), tolerance = 1e-8)
+  expect_equal(res_sa$test_stat, working / ((1 + cv2) * lambda_bar),
+               tolerance = 1e-8)
+})

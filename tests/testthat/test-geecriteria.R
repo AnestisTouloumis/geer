@@ -133,6 +133,24 @@ test_that("QICC follows the Hardin-Hilbe finite-cluster correction", {
 })
 
 
+test_that("QICC under independence uses the data's cluster count and design width", {
+  ## Independent of the package's internal helpers: no association parameters
+  ## are estimated, so the correction depends only on p and the cluster count.
+  fit_ind <- geewa(
+    seizures ~ treatment + lnbaseline + lnage,
+    data = test_data$epilepsy,
+    id = id,
+    family = poisson("log"),
+    corstr = "independence"
+  )
+  out <- geecriteria(fit_ind, digits = 15)
+  n_clusters <- length(unique(test_data$epilepsy$id))
+  p <- 4L
+  correction <- 2 * p * (p + 1) / (n_clusters - p - 1)
+  expect_equal(out$QICC, out$QIC - correction, tolerance = 1e-10)
+})
+
+
 test_that("QICC counts only estimated working-association parameters", {
   expect_equal(
     geer:::compute_n_estimated_association_parameters(list(
@@ -577,7 +595,7 @@ test_that("GESSC and GPC are addressed by name, not position", {
   ## The C++ helper returns a named list; swapping the two would silently
   ## corrupt GESSC, AGPC and SGPC if they were taken positionally.
   object <- fit_geewa_pois_exch
-  stats <- geer:::get_gee_criteria_sc_cw(
+  stats <- geer:::get_working_covariance_criteria_cc(
     object$y,
     object$id,
     object$repeated,
