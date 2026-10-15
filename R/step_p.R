@@ -8,120 +8,75 @@
 #' tests.
 #'
 #' @inheritParams anova.geer
-#' @inheritParams stats::step
-#' @param direction character string specifying the direction of the stepwise
-#'   search: backward elimination (\code{"backward"}), forward selection
-#'   (\code{"forward"}) or bidirectional (\code{"both"}). Defaults to
+#' @param scope optional formula, or list with components \code{upper} and
+#'   \code{lower} (both formulas), defining the range of models examined in the
+#'   stepwise search. See Details. If omitted, the search is restricted to the
+#'   terms of the initial model.
+#' @param direction character string specifying the direction of the search:
+#'   \code{"backward"}, \code{"forward"}, or \code{"both"}. Defaults to
 #'   \code{"backward"}.
-#' @param p_enter numeric value strictly between 0 and 1 specifying the p-value
-#'   threshold for adding a term during forward steps. With
-#'   \code{direction = "both"} it must not exceed \code{p_remove}. Defaults to
-#'   \code{0.15}.
-#' @param p_remove numeric value strictly between 0 and 1 specifying the p-value
-#'   threshold for removing a term during backward steps. Defaults to
-#'   \code{0.15}.
-#' @param steps nonnegative integer giving the maximum number of accepted
-#'   steps to perform. If \code{steps = 0}, the initial model is returned with
-#'   an initial-model row in its \code{anova} component. Defaults to
-#'   \code{1000}.
+#' @param p_enter a single number strictly between 0 and 1 giving the p-value
+#'   threshold for adding a term. It must not exceed \code{p_remove} when
+#'   \code{direction = "both"}. Defaults to \code{0.15}.
+#' @param p_remove a single number strictly between 0 and 1 giving the p-value
+#'   threshold for removing a term. Defaults to \code{0.15}.
+#' @param steps nonnegative integer giving the maximum number of steps. Defaults
+#'   to \code{1000}.
 #'
 #' @details
 #' \code{step_p()} repeatedly calls \code{\link{add1.geer}} and
-#' \code{\link{drop1.geer}}.
+#' \code{\link{drop1.geer}}. The terms of \code{scope$lower} are always kept,
+#' and \code{scope$upper} defines the largest model considered. A single
+#' formula is taken as \code{upper}, with an empty \code{lower}. Moves respect
+#' marginality. With \code{direction = "both"}, a deletion is tried first at
+#' each step and an addition only if no deletion qualifies. The search stops
+#' when no move meets its p-value threshold, after \code{steps} steps, or when
+#' a move would return to a model already visited.
 #'
-#' The set of models searched is determined by the \code{scope} argument. The
-#' right-hand side of its \code{lower} component is always retained in the
-#' model, and the right-hand side of its \code{upper} component defines the
-#' largest model that can be considered. If \code{scope} is a single formula,
-#' it specifies the \code{upper} component and the \code{lower} model is empty.
-#'
-#' Candidate additions and deletions respect model hierarchy: a move is allowed
-#' only if it preserves all lower-order component terms implied by any
-#' higher-order interactions in the model.
-#'
-#' If \code{scope} is omitted, the search is restricted to the terms in the
-#' initial model.
-#'
-#' With \code{direction = "both"}, backward elimination is attempted first at
-#' each step. A forward addition is considered only if no eligible backward
-#' deletion is found. The algorithm stops when no candidate move satisfies the
-#' relevant p-value threshold, when the maximum number of steps is reached, or
-#' when a move would return to a model that has already been visited,
-#' including an immediate add-remove cycle involving the same term.
-#'
-#' Details of the hypothesis tests controlled by \code{test} are given in
-#' Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
-#' valid only when the model is fitted with an independence working association
-#' structure. Otherwise, an error is returned.
-#'
-#' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-#' ignored and \code{cov_type} specifies the covariance estimator used to
-#' compute the test statistic. For modified working tests, \code{cov_type}
-#' determines the covariance matrix used to form the coefficients of the sum of
-#' independent chi-squared random variables, and \code{pmethod} specifies the
-#' approximation used to compute the p-value.
-#' For score-based procedures with \code{cov_type = "jackknife"}, the
-#' covariance component is the full leave-one-cluster jackknife covariance from
-#' the larger fitted candidate model. The \code{CIC} column is also computed
-#' from \code{vcov(model, cov_type = cov_type)}, so
-#' \code{cov_type = "jackknife"} performs a full set of leave-one-cluster
-#' refits for every candidate model considered at every step and can be very
-#' slow; see \code{\link{vcov.geer}}.
+#' The tests are described in \code{\link{anova.geer}}. The CIC column is
+#' computed with \code{cov_type}, so \code{cov_type = "jackknife"} refits every
+#' candidate model once per cluster and can be slow.
 #'
 #' @return
-#' A fitted model object of class \code{"geer"} corresponding to the final
-#' selected model. The returned object also includes an \code{anova}
-#' component of class \code{c("anova", "data.frame")} summarizing the
-#' stepwise sequence. This table has one row for the initial model and one row
-#' for each accepted step, with columns \code{Step} (the integer step number, \code{NA} for the initial model),
-#' \code{Df} (degrees of freedom of the test), \code{Chi} (test statistic),
-#' \code{Pr(>Chi)} (p-value), and \code{CIC} (Correlation Information
-#' Criterion). The term added or removed at each accepted step is indicated in
-#' the row names.
+#' The selected model, a fitted model object of class \code{"geer"} with an
+#' additional component \code{anova} of class \code{c("geer_anova", "anova",
+#' "data.frame")} with one row for the initial model and one for each step,
+#' whose row names give the term added or removed, and columns \code{Step}
+#' (\code{NA} for the initial model), \code{Df}, \code{Chi}, \code{Pr(>Chi)},
+#' and \code{CIC}.
 #'
 #' @inherit add1.geer references
 #'
 #' @seealso \code{\link{add1.geer}}, \code{\link{drop1.geer}},
-#'   \code{\link{anova.geer}}, \code{\link{geecriteria}},
-#'   \code{\link{geewa}}, \code{\link{geewa_binary}}.
+#'   \code{\link{anova.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+#'   \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' \donttest{
 #' data("respiratory", package = "geer")
-#' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
-#'
-#' fit_full <- geewa_binary(
+#' respiratory2 <- respiratory[respiratory$center == "C2", ]
+#' fit <- geewa_binary(
 #'   formula = status ~ (baseline + treatment + gender + visit + age)^2,
 #'   link = "probit",
 #'   data = respiratory2,
 #'   id = id,
 #'   repeated = visit,
-#'   orstr = "independence",
 #'   method = "pgee-jeffreys"
 #' )
+#' ## Backward elimination
+#' step_p(fit, p_remove = 0.10)
 #'
-#' ## Backward elimination within the initial model terms
+#' ## Bidirectional selection within a scope
 #' step_p(
-#'   fit_full,
-#'   direction = "backward",
-#'   p_remove = 0.10,
-#'   test = "wald",
-#'   cov_type = "bias-corrected"
-#' )
-#'
-#' ## Bidirectional selection with an explicit scope
-#' step_p(
-#'   fit_full,
+#'   fit,
 #'   scope = list(
 #'     lower = ~ baseline + treatment,
 #'     upper = ~ (baseline + treatment + gender + visit + age)^2
 #'   ),
 #'   direction = "both",
 #'   p_enter = 0.10,
-#'   p_remove = 0.15,
 #'   test = "score",
-#'   cov_type = "robust",
-#'   steps = 50
+#'   cov_type = "robust"
 #' )
 #' }
 #'
@@ -147,8 +102,10 @@ step_p <- function(object,
   p_remove <- step_args$p_remove
   if (identical(direction, "both") && p_enter > p_remove) {
     stop(
-      "'p_enter' must not exceed 'p_remove' when direction = \"both\", ",
-      "otherwise a term can be added and removed repeatedly",
+      paste0(
+        "'p_enter' must not exceed 'p_remove' when direction = \"both\", ",
+        "otherwise terms can cycle in and out"
+      ),
       call. = FALSE
     )
   }
@@ -165,8 +122,10 @@ step_p <- function(object,
   scope_value <- if (missing(scope)) NULL else scope
   if (is.null(scope_value) && identical(direction, "forward")) {
     warning(
-      "no 'scope' was supplied, so with direction = \"forward\" there are no ",
-      "candidate terms to add and the initial model is returned unchanged",
+      paste0(
+        "no 'scope' was supplied for direction = \"forward\", so the initial ",
+        "model is returned unchanged"
+      ),
       call. = FALSE
     )
   }

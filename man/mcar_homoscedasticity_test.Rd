@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcar_homoscedasticity_test.R
 \name{mcar_homoscedasticity_test}
 \alias{mcar_homoscedasticity_test}
-\title{Jamshidian-Jalal Screening Diagnostic for MCAR}
+\title{Jamshidian-Jalal Test of Missing Completely at Random}
 \usage{
 mcar_homoscedasticity_test(
   object,
@@ -21,282 +21,186 @@ mcar_homoscedasticity_test(
 )
 }
 \arguments{
-\item{object}{a fitted \code{geer} object, a numeric matrix, or a numeric data
-frame containing missing values. For a fitted \code{geer} object, the
-original response measurements are reconstructed in cluster-by-occasion
-form, with rows ordered by the sorted cluster identifiers, before rows
-omitted by the model fit are removed.}
+\item{object}{a fitted model object of class \code{"geer"}, or a numeric
+matrix or data frame with missing values. For a fitted model object, the
+response is arranged with one row per cluster and one column per occasion.}
 
-\item{data}{optional original data used to fit \code{object}. This is only
-used when \code{object} is a \code{geer} fit and is useful when the
-original data cannot be recovered from the fitted object. Defaults to
-\code{NULL}.}
+\item{data}{optional data frame containing the data used to fit
+\code{object}. Used only when \code{object} is a fitted model object and
+the data cannot be recovered from it. Defaults to \code{NULL}.}
 
-\item{method}{character string selecting the diagnostic. \code{"hawkins"}
-uses the modified Hawkins normal-theory test, \code{"nonparametric"} uses
-the k-sample Anderson-Darling test, and \code{"auto"} follows the
-diagnostic logic of Jamshidian and Jalal: the Hawkins test is examined
-first and the nonparametric test distinguishes nonnormality from covariance
-heterogeneity when Hawkins rejects. Defaults to \code{"auto"}.}
+\item{method}{character string specifying the diagnostic: the modified
+Hawkins test (\code{"hawkins"}), the k-sample Anderson-Darling test
+(\code{"nonparametric"}), or the two-stage rule of Jamshidian and Jalal
+(2010) (\code{"auto"}). See Details. Defaults to \code{"auto"}.}
 
-\item{imputation}{imputation method used before the diagnostics are
-calculated. \code{"distribution-free"} adds resampled complete-case
-residuals to best linear predictors of the missing values, in the spirit
-of Srivastava and Dolatabadi (2009), with the location vector and
-covariance matrix estimated from the complete cases. Following the
-\pkg{MissMech} implementation, it requires at least 10 complete cases and
-at least \code{2 * p} complete cases among the rows retained after
-applying \code{min_pattern_size}, where \code{p} is the number of
-variables; otherwise the function warns and uses \code{"normal"}
-imputation. The complete-case pattern is therefore unavailable when it has
-fewer than \code{min_pattern_size} cases. \code{"normal"} draws from the conditional multivariate normal
-distribution using maximum likelihood estimates obtained by EM. Because
-normal-theory imputation can inflate the size of the nonparametric test
-when the data are not multivariate normal, a warning is issued when
-\code{"normal"} is requested with \code{method} other than
-\code{"hawkins"}. This warning is not issued when normal-theory
-imputation replaces distribution-free imputation because too few complete
-cases are available, although the same caution applies. Must not be
-supplied together with \code{imputed_data}. Defaults to
-\code{"distribution-free"}.}
+\item{imputation}{character string specifying how the data are completed
+before testing: by adding resampled complete-case residuals to the best
+linear predictors of the missing values (\code{"distribution-free"}), or by
+drawing from the conditional multivariate normal distribution
+(\code{"normal"}). See Details. Must not be combined with
+\code{imputed_data}. Defaults to \code{"distribution-free"}.}
 
-\item{n_imputations}{positive integer giving the number of imputed data
-sets. The primary statistic, p-value, detailed components and
-interpretation are based on the first imputation, as in \pkg{MissMech};
-the results for all imputations are returned in \code{imputations}. The
-estimates used for imputation are held fixed across imputations. Must be
-\code{1} when \code{imputed_data} is supplied. Defaults to \code{1}.}
+\item{n_imputations}{positive integer giving the number of imputed data sets.
+The primary results use the first one, as in \pkg{MissMech}, and the
+results for all of them are returned in \code{imputations}. Must be 1 when
+\code{imputed_data} is supplied. Defaults to \code{1}.}
 
-\item{imputed_data}{optional numeric matrix or numeric data frame containing
-a completed version of the incomplete data, for example obtained by
-another imputation method. It must have the same dimensions and row order
-as the matrix or data frame supplied in \code{object}, including any rows
-with no observed values, contain no missing or non-finite values and
-reproduce the observed values. When supplied, no imputation is performed.
-This argument is intended for matrix or data-frame input: for a fitted
-\code{geer} object the reconstructed cluster-by-occasion matrix is not
-returned, so a conformable completed data set cannot be guaranteed.
-Defaults to \code{NULL}.}
+\item{imputed_data}{optional completed version of the matrix or data frame
+supplied in \code{object}, with the same dimensions and row order, no
+missing values, and the observed values unchanged. No imputation is then
+performed. Defaults to \code{NULL}.}
 
-\item{min_pattern_size}{integer greater than or equal to 2 specifying the
-minimum number of cases required for a missingness pattern to be retained.
-Defaults to \code{7}, corresponding to omitting patterns with six or fewer
-cases, as in the simulations of Jamshidian and Jalal (2010) and the
-\pkg{MissMech} default.}
+\item{min_pattern_size}{integer, at least 2, giving the minimum number of
+cases for a missingness pattern to be retained. Defaults to \code{7}, as in
+Jamshidian and Jalal (2010) and \pkg{MissMech}.}
 
-\item{nrep}{positive integer giving the number of simulated uniform samples
-used to approximate the null distribution of a pattern-specific Neyman
-smooth statistic when the pattern contains fewer than \code{n_min} cases.
-Not used when \code{method = "nonparametric"}. Defaults to \code{10000}.}
+\item{nrep}{positive integer giving the number of simulated samples for the
+null distribution of the Neyman statistic in patterns with fewer than
+\code{n_min} cases. Defaults to \code{10000}.}
 
-\item{n_min}{integer greater than or equal to 2 specifying the pattern size
-from which the chi-squared approximation with four degrees of freedom is
-used for the Neyman smooth statistic instead of its simulated null
-distribution. Not used when \code{method = "nonparametric"}. Defaults to
-\code{30}.}
+\item{n_min}{integer, at least 2, giving the pattern size from which the
+chi-squared reference with four degrees of freedom is used for the Neyman
+statistic. Defaults to \code{30}.}
 
-\item{alpha}{a single number strictly between 0 and 1 specifying the
-significance level used by the automatic diagnostic rule and its
-interpretation. With \code{method = "auto"}, the nonparametric diagnostic
-is selected when the modified Hawkins test has p-value less than or equal
-to \code{alpha}. Defaults to \code{0.05}.}
+\item{alpha}{a single number strictly between 0 and 1 giving the significance
+level of the rule used with \code{method = "auto"}. Defaults to
+\code{0.05}.}
 
-\item{seed}{\code{NULL} or a single whole number not exceeding
-\code{.Machine$integer.max} in absolute value, specifying the
-random-number seed used for imputation and simulated Neyman p-values. The
-previous R random-number state is restored on exit. Use \code{NULL} to use
-the current random-number stream. Defaults to \code{110}.}
+\item{seed}{\code{NULL} or a single integer giving the random number seed
+used for imputation and for the simulated Neyman p-values. The previous
+random number state is restored on exit, and \code{NULL} uses the current
+random number stream. Defaults to \code{110}.}
 
-\item{maxit}{positive integer giving the maximum number of EM iterations for
-normal-theory imputation. Defaults to \code{1000}.}
+\item{maxit}{positive integer giving the maximum number of iterations of the
+EM algorithm used for normal-theory imputation. Defaults to \code{1000}.}
 
-\item{tol}{a single positive finite number specifying the relative
-convergence tolerance for the EM algorithm. Defaults to \code{1e-8}.}
+\item{tol}{a single positive finite number giving the relative convergence
+tolerance of the EM algorithm. Defaults to \code{1e-08}.}
 }
 \value{
-An object inheriting from \code{"htest"} with the primary statistic
-  and p-value for the selected diagnostic, plus the following additional
-  components:
-  \describe{
-    \item{tests}{A data frame containing the Hawkins and/or nonparametric
-      statistics and p-values for the first imputation.}
-    \item{hawkins}{Detailed results from the modified Hawkins test for the
-      first imputation. With \code{method = "nonparametric"}, only the
-      transformed statistics \code{f.values} and \code{uniform.values},
-      which the nonparametric test uses, the pooled covariance matrix and
-      the pattern means are calculated; the statistic, degrees of freedom
-      and p-values are \code{NA}.}
-    \item{nonparametric}{Detailed results from the k-sample
-      Anderson-Darling test for the first imputation, when calculated. Its
-      \code{group.statistics} are the pattern contributions
-      \eqn{T_i / N} to the statistic \eqn{T} of Scholz and Stephens (1987),
-      so that they sum to \eqn{T}; these are the values reported as
-      \eqn{T_i} by \pkg{MissMech}. Its \code{extrapolated} component
-      indicates whether the p-value was extrapolated beyond the reference
-      quantiles.}
-    \item{imputations}{A list with components \code{tests}, a data frame
-      with one row per imputation containing the Hawkins and nonparametric
-      statistics and p-values; \code{hawkins.group.p.values}, a matrix of
-      pattern-specific Neyman p-values with one row per imputation; and
-      \code{nonparametric.group.statistics}, a matrix of pattern
-      contributions to the Anderson-Darling statistic with one row per
-      imputation. Quantities that were not calculated are \code{NA} or
-      \code{NULL}.}
-    \item{n.imputations}{Number of completed data sets analyzed.}
-    \item{patterns}{The retained missingness patterns, with 1 denoting a
-      missing value and 0 an observed value.}
-    \item{pattern.counts}{Numbers of cases in the retained patterns.}
-    \item{omitted.patterns}{Patterns omitted because they did not meet
-      \code{min_pattern_size}.}
-    \item{n}{Number of rows retained for the diagnostic.}
-    \item{p}{Number of variables or repeated measurements tested.}
-    \item{imputation.requested,imputation.used}{Requested and actual
-      imputation methods; both are \code{"user-supplied"} when
-      \code{imputed_data} is supplied.}
-    \item{complete.cases}{Number of complete cases among the rows retained
-      after applying \code{min_pattern_size}.}
-    \item{imputed.data}{The first completed data set used by the tests.}
-    \item{location}{Estimated location vector used for imputation, or
-      \code{NULL} when \code{imputed_data} is supplied.}
-    \item{covariance}{Estimated covariance matrix used for imputation, or
-      \code{NULL} when \code{imputed_data} is supplied.}
-    \item{em.iterations}{Number of EM iterations used for normal-theory
-      imputation; \code{NA} for distribution-free or user-supplied
-      imputation.}
-    \item{em.converged}{Whether the EM algorithm converged for normal-theory
-      imputation; \code{NA} for distribution-free or user-supplied
-      imputation.}
-    \item{method.requested}{Diagnostic requested through \code{method}.}
-    \item{selected.test}{Diagnostic supplying the primary statistic and
-      p-value.}
-    \item{alpha}{Significance level used by the automatic diagnostic rule.}
-    \item{interpretation}{A concise interpretation of the first imputation
-      using \code{alpha}.}
-  }
+An object of class \code{c("geer_htest", "htest")}. The standard
+components hold the statistic and p-value of the selected test. In
+addition, the object contains:
+\item{tests}{a data frame with the statistics and p-values of the tests for
+  the first imputation.}
+\item{hawkins}{the detailed results of the Hawkins test for the first
+  imputation. With \code{method = "nonparametric"}, only the quantities used
+  by the nonparametric test are computed and the others are \code{NA}.}
+\item{nonparametric}{the detailed results of the Anderson-Darling test for
+  the first imputation, if computed, including the pattern contributions
+  \code{group.statistics}, reported as \eqn{T_i} by \pkg{MissMech}, and the
+  indicator \code{extrapolated}.}
+\item{imputations}{a list with the statistics and p-values
+  (\code{tests}), the pattern Neyman p-values
+  (\code{hawkins.group.p.values}), and the pattern Anderson-Darling
+  contributions (\code{nonparametric.group.statistics}) of every
+  imputation.}
+\item{n.imputations}{the number of imputed data sets.}
+\item{patterns, pattern.counts}{the retained missingness patterns, with 1
+  for a missing value, and their numbers of cases.}
+\item{omitted.patterns}{the patterns omitted by \code{min_pattern_size}.}
+\item{n, p}{the numbers of retained rows and of variables.}
+\item{imputation.requested, imputation.used}{the requested and the actual
+  imputation method, \code{"user-supplied"} with \code{imputed_data}.}
+\item{complete.cases}{the number of retained complete cases.}
+\item{imputed.data}{the first completed data set.}
+\item{location, covariance}{the estimates used for imputation, \code{NULL}
+  with \code{imputed_data}.}
+\item{em.iterations, em.converged}{the number of EM iterations and whether
+  the EM algorithm converged, \code{NA} unless normal-theory imputation was
+  used.}
+\item{method.requested, selected.test}{the requested diagnostic and the
+  test giving the primary result.}
+\item{alpha}{the significance level of the rule used with
+  \code{method = "auto"}.}
+\item{interpretation}{a short interpretation of the first imputation.}
 }
 \description{
-Performs the covariance-homogeneity diagnostics proposed by Jamshidian and
-Jalal (2010) for incomplete multivariate data, following the implementation
-described by Jamshidian, Jalal and Jansen (2014). The procedure groups cases
-by their original missingness patterns, imputes the incomplete values, and
-then assesses whether the covariance structure is homogeneous across the
-pattern groups. It is a screening diagnostic for MCAR and does not condition
-on the regression model fitted by \code{geer}.
+Tests the homogeneity of the covariance matrices across missingness
+patterns, a consequence of MCAR, by the procedure of Jamshidian and Jalal
+(2010) as implemented in \pkg{MissMech} (Jamshidian, Jalal and Jansen,
+2014).
 }
 \details{
-The diagnostic requires missing values. After applying
-\code{min_pattern_size}, at least two missingness patterns must remain and at
-least one retained pattern must contain missing values.
+The procedure completes the incomplete data by imputation, groups the cases
+by their original missingness pattern, and tests whether the completed data
+have a common covariance matrix across patterns. Patterns with fewer than
+\code{min_pattern_size} cases are omitted; at least two patterns, one of
+them with missing values, must remain.
+
+Two tests are available. The modified Hawkins test (Hawkins, 1981)
+transforms the within-pattern Mahalanobis distances to variables that are
+Uniform(0, 1) under multivariate normality and homogeneous covariances,
+applies a fourth-order Neyman smooth test within each pattern, and combines
+the pattern p-values by Fisher's method. For patterns with fewer than
+\code{n_min} cases the null distribution of the Neyman statistic is
+simulated and the p-value is \eqn{(1 + b)/(nrep + 1)}, where \eqn{b} is the
+number of simulated statistics at least as large as the observed one. The
+nonparametric test compares the distributions of the transformed distances
+across patterns with the k-sample Anderson-Darling test of Scholz and
+Stephens (1987), which is less sensitive to nonnormality. With
+\code{method = "auto"} both tests are computed: if the Hawkins test does not
+reject, there is no evidence against MCAR; if it rejects but the
+nonparametric test does not, the rejection is attributed to nonnormality;
+rejection by the nonparametric test is evidence against covariance
+homogeneity and hence against MCAR.
+
+Distribution-free imputation, in the spirit of Srivastava and Dolatabadi
+(2009), requires at least 10, and at least \eqn{2p}, complete cases among the
+retained rows, where \eqn{p} is the number of variables; otherwise
+normal-theory imputation is used with a warning. Because normal-theory
+imputation can inflate the size of the nonparametric test for nonnormal data,
+requesting it with \code{method} other than \code{"hawkins"} gives a warning.
+\code{imputed_data} is intended for matrix or data frame input, since the
+matrix reconstructed from a fitted model object is not returned.
 
 The implementation follows \pkg{MissMech} (Jamshidian, Jalal and Jansen,
-2014), which differs from Jamshidian and Jalal (2010) in three respects.
-A single imputation method, distribution-free by default, completes the
-data for both tests, whereas Jamshidian and Jalal (2010) pair normal-theory
-imputation with the Hawkins test and distribution-free imputation with the
-nonparametric test. When there are too few complete cases for the
-distribution-free imputation, normal-theory imputation replaces it, whereas
-Jamshidian and Jalal (2010, Section 3.2) substitute the maximum likelihood
-estimates of the location vector and covariance matrix for their
-complete-case counterparts within the distribution-free procedure, which is
-what their simulations use. The chi-squared
-reference is used for the Neyman statistic in patterns with at least
-\code{n_min} cases, whereas Jamshidian and Jalal (2010) simulate the null
-distribution for all pattern sizes; setting \code{n_min} larger than the
-largest retained pattern reproduces their choice.
+2014), which differs from Jamshidian and Jalal (2010) in that one imputation
+method serves both tests, normal-theory imputation replaces
+distribution-free imputation when there are too few complete cases, and the
+chi-squared reference is used for the Neyman statistic in patterns with at
+least \code{n_min} cases. Setting \code{n_min} larger than the largest
+pattern simulates the reference for all patterns, as in Jamshidian and Jalal
+(2010). This function differs from \pkg{MissMech} in two respects: the
+simulated Neyman p-values use \eqn{(1 + b)/(nrep + 1)}, and the
+Anderson-Darling p-value is interpolated from the simulated quantiles of the
+\pkg{kSamples} package (Scholz and Zhu, 2025) instead of the five critical
+values of Scholz and Stephens (1987). P-values can therefore differ from
+\pkg{MissMech}, particularly below 0.01. The quantiles cover upper-tail
+probabilities from \eqn{10^{-5}} to \eqn{1 - 10^{-5}}; beyond this range the
+p-value is extrapolated and \code{nonparametric$extrapolated} is
+\code{TRUE}.
 
-The modified Hawkins component, based on Hawkins (1981), transforms
-within-pattern Mahalanobis distances to variables that should be Uniform(0, 1) under multivariate
-normality and homogeneous covariance matrices. A fourth-order Neyman smooth
-test is applied within each pattern and the pattern-specific p-values are
-combined by Fisher's method. For patterns with fewer than \code{n_min}
-cases, the null distribution of the Neyman statistic is simulated once per
-pattern and reused across imputations, and the p-value is
-\eqn{(1 + b) / (nrep + 1)}, where \eqn{b} is the number of simulated
-statistics at least as large as the observed statistic. \pkg{MissMech}
-instead uses the proportion of simulated statistics exceeding the observed
-statistic, replacing a zero proportion by \eqn{1 / nrep}.
+With \code{n_imputations > 1} the tests are repeated on each completed data
+set, holding the estimates used for imputation fixed. Jamshidian and Jalal
+(2010, Section 6) suggest examining the variability of the p-values and the
+pattern-specific results to identify patterns whose covariance differs.
+These results are exploratory and are not pooled.
 
-The nonparametric component compares the distributions of the Hawkins
-transformed distances across missingness-pattern groups using the k-sample
-Anderson-Darling statistic of Scholz and Stephens (1987). Its p-value is
-obtained from the standardized statistic with the simulated reference
-quantiles and smoothing-spline interpolation of the \pkg{kSamples} package
-(Scholz and Zhu, 2025), which are tabulated for upper-tail probabilities
-from \eqn{10^{-5}} to \eqn{1 - 10^{-5}}. Outside this range the log-odds
-are extrapolated linearly and the \code{extrapolated} component of
-\code{nonparametric} is \code{TRUE}. When the standardized statistic lies
-above the tabulated quantiles, the p-value is below \eqn{10^{-5}} and
-indicates strong evidence against homogeneity, but its magnitude is
-unreliable; when it lies below them, the p-value exceeds
-\eqn{1 - 10^{-5}}. \pkg{MissMech} interpolates between the
-five critical values tabulated by Scholz and Stephens (1987), so p-values
-can differ from \pkg{MissMech}, particularly below 0.01. This component is
-intended to reduce sensitivity to departures from multivariate normality.
+Both tests treat the cases within a pattern as approximately independent,
+which Jamshidian and Jalal (2010) and Jamshidian, Jalal and Jansen (2014)
+found adequate for patterns with at least four cases. Known groups with
+different covariance matrices can cause rejection even under MCAR;
+conversely, supplying complete data through \code{imputed_data} with each
+group given its own artificial pattern tests covariance homogeneity across
+the groups (Jamshidian, Jalal and Jansen, 2014, Example 5).
 
-With \code{method = "auto"}, both components are calculated. If the Hawkins
-test does not reject, there is no evidence against its joint normality and
-homoscedasticity null. If Hawkins rejects but the nonparametric test does not,
-the result is consistent with nonnormality rather than covariance
-heterogeneity. Rejection by the nonparametric test provides evidence against
-covariance homogeneity and therefore against MCAR in the Jamshidian-Jalal
-framework.
-
-The procedure assumes that, apart from the missingness-pattern grouping, the
-cases come from a common population. Known substantive groups with genuinely
-different covariance matrices can therefore cause rejection even when
-missingness is MCAR. Conversely, supplying complete data through
-\code{imputed_data}, together with an incomplete copy in which each known
-group is assigned its own artificial missingness pattern, gives a test of
-covariance homogeneity across those groups (Jamshidian, Jalal and Jansen,
-2014, Example 5).
-
-Both components treat the case-level Hawkins statistics within a pattern as
-approximately independent. Jamshidian and Jalal (2010, Section 5) found this
-adequate for patterns with at least four cases, and Jamshidian, Jalal and
-Jansen (2014, Section 3.1) report that retaining patterns with four or more
-cases works well. Smaller values of \code{min_pattern_size} retain more
-cases at the cost of less reliable reference distributions.
-
-With \code{n_imputations > 1}, the tests are repeated on each completed data
-set. Jamshidian and Jalal (2010, Section 6) recommend examining the
-variability of the resulting p-values, for example the proportion of
-imputations in which the test rejects, and the pattern-specific Neyman
-p-values and Anderson-Darling contributions, to identify patterns whose
-covariance structure differs from the rest. These results are exploratory
-and are not pooled into a single test, because the p-values obtained from
-different imputations are not independent. Distribution-free imputation
-resamples the complete-case residuals afresh for each imputed data set while
-holding the complete-case location vector and covariance matrix fixed, which
-is the multiple-imputation method Jamshidian and Jalal (2010, Section 6)
-adopt. Normal-theory imputation likewise holds the maximum likelihood
-estimates fixed and redraws only the conditional normal deviates, as in
-\pkg{MissMech}; Jamshidian and Jalal (2010, Section 6) also describe drawing
-those estimates from their asymptotic distribution at each imputation, which
-would additionally reflect estimation uncertainty and is not implemented
-here.
-
-This procedure ignores the marginal regression structure and should be used
-as a screening diagnostic. In longitudinal \code{geer} analyses,
-\code{\link{mcar_logistic_test}} provides the complementary model-aware
-diagnostic of whether observed covariates or previous responses predict
-missingness. Failure to reject either component does not prove MCAR.
+The procedure ignores the marginal regression model and is a screening
+diagnostic: failure to reject does not establish MCAR. For longitudinal
+\code{geer} fits, \code{\link{mcar_logistic_test}} assesses whether
+covariates or previous responses predict missingness.
 }
 \examples{
 set.seed(1)
 x <- matrix(rnorm(240), ncol = 3)
 x[41:60, 3] <- NA
 x[61:80, 2:3] <- NA
+mcar_homoscedasticity_test(x, method = "nonparametric")
 
-mcar_homoscedasticity_test(
-  x,
-  method = "nonparametric"
-)
-
-out <- mcar_homoscedasticity_test(
-  x,
-  method = "nonparametric",
-  n_imputations = 5
-)
+## Several imputations
+out <- mcar_homoscedasticity_test(x, method = "nonparametric",
+                                  n_imputations = 5)
 out$imputations$tests
 
 }
@@ -315,8 +219,8 @@ random (MCAR). \emph{Journal of Statistical Software}, \bold{56}, 1--31.
 Scholz, F.W. and Stephens, M.A. (1987) K-sample Anderson-Darling tests.
 \emph{Journal of the American Statistical Association}, \bold{82}, 918--924.
 
-Scholz, F. and Zhu, A. (2025) kSamples: K-sample rank tests and their
-combinations. R package version 1.2-12.
+Scholz, F. and Zhu, A. (2025) \emph{kSamples: K-Sample Rank Tests and their
+Combinations}. R package version 1.2-12.
 \url{https://CRAN.R-project.org/package=kSamples}
 
 Srivastava, M.S. and Dolatabadi, M. (2009) Multiple imputation and other
@@ -324,5 +228,6 @@ resampling schemes for imputing missing observations. \emph{Journal of
 Multivariate Analysis}, \bold{100}, 1919--1937.
 }
 \seealso{
-\code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}}
+\code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}},
+  \code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

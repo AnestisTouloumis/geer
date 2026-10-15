@@ -16,84 +16,52 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{newdata}{optional data frame in which to look for variables used for
-prediction. If omitted, predictions are made on the data used for fitting.}
+\item{newdata}{optional data frame containing the variables used for
+prediction. Defaults to \code{NULL}, which uses the data used to fit the
+model.}
 
-\item{type}{character string specifying the scale of the predictions.
-Options are \code{"link"} for the linear predictor scale and
-\code{"response"} for the response scale. Defaults to \code{"link"}.}
+\item{type}{character string specifying the scale of the predictions: linear
+predictor (\code{"link"}) or response (\code{"response"}). Defaults to
+\code{"link"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used to compute approximate standard errors when \code{se.fit = TRUE}.
-Options are the bias-corrected estimator (\code{"bias-corrected"}),
-the sandwich or robust estimator (\code{"robust"}), the
-degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), the
-leave-one-cluster jackknife estimator (\code{"jackknife"}), and the
-model-based or naive estimator (\code{"naive"}). Defaults to
-\code{"bias-corrected"}.}
+used for the standard errors when \code{se.fit = TRUE}:
+\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+Defaults to \code{"bias-corrected"}.}
 
-\item{se.fit}{logical indicating whether approximate standard errors are to
-be returned. Defaults to \code{FALSE}.}
+\item{se.fit}{logical indicating whether standard errors are returned.
+Defaults to \code{FALSE}.}
 
-\item{...}{not used. Supplying any argument here is an error, so that a
-misspelled \code{type} or \code{cov_type} is reported rather than
-silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
-If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
-specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
-\item{fit}{numeric vector of predictions.}
-\item{se.fit}{numeric vector of approximate standard errors of the
-  predictions.}
-
-When \code{newdata} is supplied both the predictions and their standard
-errors carry the row names of \code{newdata}. When it is omitted both are
-unnamed, because the row names stored with the fitted model refer to the
-data before they were sorted into the internal observation order and would
-therefore identify the wrong rows.
+For \code{se.fit = FALSE}, a numeric vector of predictions. For
+\code{se.fit = TRUE}, a list with components:
+\item{fit}{the predictions.}
+\item{se.fit}{their standard errors.}
+With \code{newdata}, the results are named by its row names; otherwise they
+are unnamed.
 }
 \description{
 Generates predictions from a fitted \code{geer} object, optionally with
 approximate standard errors.
 }
 \details{
-Predictions are obtained by computing the model matrix for \code{newdata}
-(or using the original fit when \code{newdata} is omitted), multiplying by
-the estimated coefficients, and adding any offset. If
-\code{type = "response"}, the linear predictor is transformed via the
-inverse link function.
-
-When \code{se.fit = TRUE}, approximate standard errors are computed by the
-delta method using the covariance matrix specified by \code{cov_type}. On
-the response scale, standard errors are additionally scaled by the absolute
-derivative of the inverse link function.
-
-When \code{newdata} is supplied and the fitted model has an offset, whether
-through \code{offset()} in the formula or through the \code{offset}
-argument, every variable the offset depends on must be present in
-\code{newdata}. An error is signalled otherwise. Without that requirement
-the offset would be resolved in the environment in which the model was
-fitted, so an offset of the right length taken from the original data would
-be accepted silently for a different set of observations.
+The linear predictor is computed from the model matrix of \code{newdata},
+or of the fitted data, and the offset, and transformed by the inverse link
+for \code{type = "response"}. Standard errors are obtained by the delta
+method. When \code{newdata} is supplied and the model has an offset, the
+variables of the offset must be in \code{newdata}.
 }
 \section{Observation order}{
 
-When \code{newdata} is supplied the predictions follow the row order of
-\code{newdata}. When it is omitted they follow the internal observation
-order of the fitted model instead: the complete cases retained by the
-\code{na.action} in force, sorted by cluster identifier and, within
-cluster, by the repeated index. Unless the data supplied to \code{geewa}
-or \code{geewa_binary} were already sorted that way and free of missing
-values, assigning the result back to those data will attach values to the
-wrong rows without any warning, because the lengths can still agree. Pass
-the original data as \code{newdata} to obtain predictions in the row order
-of the data.
-
-Rows of \code{newdata} are not dropped when a variable used by the model is
-missing. The model frame is built with \code{na.action = na.pass}, so such
-a row yields \code{NA} for the prediction, and for its standard error when
-\code{se.fit = TRUE}, and the returned vector keeps one element per row of
-\code{newdata}.
+With \code{newdata}, the predictions follow its rows, and rows with missing
+values give \code{NA}. Without it, they follow the internal order of the
+fitted model: the complete cases, sorted by cluster and, within cluster, by
+\code{repeated}. To obtain predictions in the order of the data, supply the
+data as \code{newdata}.
 }
 
 \examples{
@@ -103,17 +71,16 @@ fit <- geewa_binary(
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable"
 )
-head(predict(fit, type = "link"))
+head(predict(fit))
 head(predict(fit, type = "response"))
 
-nd <- cerebrovascular[1:5, , drop = FALSE]
-predict(fit, newdata = nd, type = "response")
-
-pred <- predict(fit, type = "response", cov_type = "robust", se.fit = TRUE)
-head(pred$fit)
-head(pred$se.fit)
+## Predictions for new data, with standard errors
+pred <- predict(fit, newdata = cerebrovascular[1:5, ], type = "response",
+                se.fit = TRUE)
+pred
 
 }
 \seealso{

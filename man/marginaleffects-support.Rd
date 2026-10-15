@@ -28,20 +28,18 @@
 
 \item{coefs}{a named numeric vector of regression coefficients.}
 
-\item{vcov}{covariance specification supplied by \pkg{marginaleffects}.
-\code{NULL} or \code{TRUE} uses the bias-corrected covariance matrix,
-while \code{FALSE} returns \code{NULL}. Character values may be
+\item{vcov}{covariance specification: \code{NULL} or \code{TRUE} for the
+bias-corrected covariance matrix, \code{FALSE} for none,
 \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}. A covariance-producing
-function may also be supplied. A square covariance matrix may be supplied;
-after validation, its rows and columns are aligned with the model
-coefficient names.}
+\code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
+See \code{\link{vcov.geer}}.}
 
-\item{newdata}{a data frame containing predictor values at which to compute
-predictions.}
+\item{newdata}{data frame of predictor values at which predictions are
+computed.}
 
-\item{type}{prediction scale. Supported values are \code{"response"} and
-\code{"link"}. \code{NULL} defaults to \code{"response"}.}
+\item{type}{character string specifying the prediction scale,
+\code{"response"} or \code{"link"}. Defaults to \code{NULL}, which is
+treated as \code{"response"}.}
 }
 \value{
 These methods return objects in the formats required internally by
@@ -51,35 +49,24 @@ object, a named covariance matrix (or \code{NULL} when
 \code{rowid} and \code{estimate}.
 }
 \description{
-Methods that allow fitted \code{geer} objects to work with the
-\pkg{marginaleffects} package.
-
-These functions are used internally by \pkg{marginaleffects} and are not
-normally called directly by users. Once both packages are installed,
-functions such as \code{marginaleffects::predictions()},
-\code{marginaleffects::comparisons()}, and
-\code{marginaleffects::slopes()} can be applied to fitted \code{geer}
-objects.
-
-By default, \pkg{marginaleffects} inference for \code{geer} objects uses
-the bias-corrected covariance matrix, matching the default inference in
-\pkg{geer}. A character value may select any covariance estimator
-supported by \code{vcov.geer()}, including \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, and \code{"naive"}. A
-covariance matrix or function can also be supplied.
+Methods that allow \pkg{marginaleffects} functions, such as
+\code{marginaleffects::predictions()}, \code{marginaleffects::comparisons()},
+and \code{marginaleffects::slopes()}, to be applied to fitted \code{geer}
+objects. They are called by \pkg{marginaleffects} and not usually by the
+user. Inference uses the bias-corrected covariance matrix unless
+\code{vcov} requests another estimator.
 }
 \examples{
 if (requireNamespace("marginaleffects", quietly = TRUE)) {
   data("cerebrovascular", package = "geer")
-
   fit <- geewa_binary(
     formula = ecg ~ treatment + factor(period),
     link = "logit",
     data = cerebrovascular,
     id = id,
+    repeated = period,
     orstr = "exchangeable"
   )
-
   marginaleffects::avg_predictions(fit)
   marginaleffects::avg_comparisons(fit, variables = "treatment")
   marginaleffects::avg_predictions(fit, vcov = "robust")

@@ -1,10 +1,11 @@
 #include "working_covariance_cc.h"
 #include "utils.h"
 #include "variance_functions.h"
+#include <cmath>
 #include <cstring>
 
 namespace {
-inline bool is_contiguous_1based(const arma::vec& r) {
+bool is_contiguous_1based(const arma::vec& r) {
   if (r.n_elem <= 1) {
     return true;
   }
@@ -15,20 +16,17 @@ inline bool is_contiguous_1based(const arma::vec& r) {
   }
   return true;
 }
-}
 
-
-namespace {
 
 //============================ independence ====================================
-arma::mat correlation_independence(const arma::uword dimension) {
+arma::mat get_correlation_matrix_independence(const arma::uword dimension) {
   return arma::eye(dimension, dimension);
 }
 //==============================================================================
 
 
 //============================ exchangeable ====================================
-arma::mat correlation_exchangeable(const arma::vec& alpha_vector,
+arma::mat get_correlation_matrix_exchangeable(const arma::vec& alpha_vector,
                                    const arma::uword dimension) {
   arma::mat result(dimension, dimension);
   result.fill(alpha_vector[0]);
@@ -39,7 +37,7 @@ arma::mat correlation_exchangeable(const arma::vec& alpha_vector,
 
 
 //============================ ar1 =============================================
-arma::mat correlation_ar1(const arma::vec& alpha_vector,
+arma::mat get_correlation_matrix_ar1(const arma::vec& alpha_vector,
                           const arma::uword dimension) {
   arma::vec result(dimension, arma::fill::zeros);
   result[0] = 1.0;
@@ -53,12 +51,12 @@ arma::mat correlation_ar1(const arma::vec& alpha_vector,
 
 
 //============================ m-dependent =====================================
-arma::mat correlation_mdependent(const arma::vec& alpha_vector,
+arma::mat get_correlation_matrix_mdependent(const arma::vec& alpha_vector,
                                  const arma::uword dimension) {
   const arma::uword k = alpha_vector.n_elem;
 
   if (k + 1 > dimension) {
-    Rcpp::stop("correlation_mdependent: alpha_vector is too long.");
+    Rcpp::stop("get_correlation_matrix_mdependent: 'alpha_vector' is too long");
   }
 
   arma::vec toeplitz_vector(dimension, arma::fill::zeros);
@@ -72,10 +70,10 @@ arma::mat correlation_mdependent(const arma::vec& alpha_vector,
 
 
 //============================ toeplitz ========================================
-arma::mat correlation_toeplitz(const arma::vec& alpha_vector,
+arma::mat get_correlation_matrix_toeplitz(const arma::vec& alpha_vector,
                                const arma::uword dimension) {
   if (!alpha_vector.is_empty() && alpha_vector.n_elem >= dimension) {
-    Rcpp::stop("correlation_toeplitz: alpha_vector is too long.");
+    Rcpp::stop("get_correlation_matrix_toeplitz: 'alpha_vector' is too long");
   }
   arma::vec toeplitz_vector(dimension, arma::fill::zeros);
   toeplitz_vector[0] = 1.0;
@@ -89,7 +87,7 @@ arma::mat correlation_toeplitz(const arma::vec& alpha_vector,
 
 
 //============================ unstructured ====================================
-arma::mat correlation_unstructured(const arma::vec& alpha_vector,
+arma::mat get_correlation_matrix_unstructured(const arma::vec& alpha_vector,
                                    const arma::uword dimension) {
   arma::mat ans_lt = arma::eye(dimension, dimension);
   if (dimension < 2) {
@@ -103,7 +101,24 @@ arma::mat correlation_unstructured(const arma::vec& alpha_vector,
 //==============================================================================
 
 
-} // namespace
+//============================ scalar alpha check ==============================
+// ar1 and exchangeable read alpha_vector[0]; arma::operator[] is unchecked, so
+// an empty vector would be an out-of-bounds read, and NaN passes every
+// range comparison.
+void check_alpha_scalar(const char* correlation_structure,
+                        const arma::vec& alpha_vector) {
+  if (alpha_vector.n_elem < 1) {
+    Rcpp::stop("the %s correlation parameter must be supplied",
+               correlation_structure);
+  }
+  if (!std::isfinite(alpha_vector[0])) {
+    Rcpp::stop("the %s correlation parameter must be finite, not %.6g",
+               correlation_structure, alpha_vector[0]);
+  }
+}
+//==============================================================================
+
+}  // namespace
 
 //============================ correlation matrix given rho vector =============
 // [[Rcpp::export]]
@@ -111,37 +126,40 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
                                  const arma::vec& alpha_vector,
                                  const arma::uword dimension) {
   if (std::strcmp(correlation_structure, "independence") == 0) {
-    return correlation_independence(dimension);
+    return get_correlation_matrix_independence(dimension);
   }
   if (std::strcmp(correlation_structure, "ar1") == 0) {
+    check_alpha_scalar(correlation_structure, alpha_vector);
     if (alpha_vector[0] <= -1.0 || alpha_vector[0] >= 1.0) {
       Rcpp::stop(
-        "ar1 correlation parameter must be in (-1, 1): "
-        "alpha = %.6g is outside the admissible range.",
+        "the ar1 correlation parameter must lie in (-1, 1), not %.6g",
         alpha_vector[0]
       );
     }
-    return correlation_ar1(alpha_vector, dimension);
+    return get_correlation_matrix_ar1(alpha_vector, dimension);
   }
   if (std::strcmp(correlation_structure, "exchangeable") == 0) {
+    check_alpha_scalar(correlation_structure, alpha_vector);
     const double lower = -1.0 / static_cast<double>(dimension - 1);
     if (alpha_vector[0] <= lower || alpha_vector[0] >= 1.0) {
       Rcpp::stop(
-        "exchangeable correlation parameter must be in (-1/(n-1), 1) = "
-        "(%.6g, 1) for the largest cluster size of %d: "
-        "alpha = %.6g is outside the admissible range.",
+        "the exchangeable correlation parameter must lie in (%.6g, 1) for the largest cluster "
+        "size of %d, not %.6g",
         lower,
         static_cast<int>(dimension),
         alpha_vector[0]
       );
     }
-    return correlation_exchangeable(alpha_vector, dimension);
+    return get_correlation_matrix_exchangeable(alpha_vector, dimension);
   }
   for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
+    if (!std::isfinite(alpha_vector[i])) {
+      Rcpp::stop("the %s correlation parameter alpha[%d] must be finite",
+                 correlation_structure, static_cast<int>(i + 1));
+    }
     if (alpha_vector[i] <= -1.0 || alpha_vector[i] >= 1.0) {
       Rcpp::stop(
-        "%s correlation parameter must be in (-1, 1): "
-        "alpha[%d] = %.6g is outside the admissible range.",
+        "the %s correlation parameter alpha[%d] must lie in (-1, 1), not %.6g",
         correlation_structure,
         static_cast<int>(i + 1),
         alpha_vector[i]
@@ -150,21 +168,21 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
   }
   arma::mat cor_mat;
   if (std::strcmp(correlation_structure, "m-dependent") == 0) {
-    cor_mat = correlation_mdependent(alpha_vector, dimension);
+    cor_mat = get_correlation_matrix_mdependent(alpha_vector, dimension);
   } else if (std::strcmp(correlation_structure, "toeplitz") == 0) {
-    cor_mat = correlation_toeplitz(alpha_vector, dimension);
+    cor_mat = get_correlation_matrix_toeplitz(alpha_vector, dimension);
   } else if (std::strcmp(correlation_structure, "unstructured") == 0 ||
              std::strcmp(correlation_structure, "fixed") == 0) {
-    cor_mat = correlation_unstructured(alpha_vector, dimension);
+    cor_mat = get_correlation_matrix_unstructured(alpha_vector, dimension);
   } else {
-    Rcpp::stop("get_correlation_matrix: unsupported correlation structure \"%s\".",
+    Rcpp::stop("unsupported correlation structure: %s",
                correlation_structure);
   }
   arma::mat chol_result;
   if (!arma::chol(chol_result, cor_mat)) {
     Rcpp::stop(
-      "%s working correlation matrix is not positive definite; "
-      "consider a simpler correlation structure or fixing alpha.",
+      "the %s working correlation matrix is not positive definite; consider a simpler "
+      "correlation structure or fixing alpha",
       correlation_structure
     );
   }
@@ -181,7 +199,7 @@ arma::mat get_v_matrix_cc(FamilyCode family_code,
                           const arma::mat& cor_matrix,
                           const arma::vec& weights_vector) {
   const arma::vec sd_vector =
-    arma::sqrt(geer::variance_function(family_code, mu_vector) / weights_vector);
+    arma::sqrt(variance_function(family_code, mu_vector) / weights_vector);
   const arma::uword cluster_size = sd_vector.n_elem;
   if (cluster_size == 1) {
     arma::mat result(1, 1);

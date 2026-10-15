@@ -9,7 +9,7 @@ format_percent <- function(probs, digits = 2, check = FALSE) {
     stop("'digits' must be a positive integer", call. = FALSE)
   }
   if (!is.logical(check) || length(check) != 1L || is.na(check)) {
-    stop("'check' must be a single logical value", call. = FALSE)
+    stop("'check' must be TRUE or FALSE", call. = FALSE)
   }
   if (check && any(probs < 0 | probs > 1)) {
     warning("some probabilities are outside [0, 1]", call. = FALSE)
@@ -35,18 +35,19 @@ format_test_label <- function(test) {
     `working-lrt` = "Modified Working LRT"
   )
   if (is.null(out)) {
-    stop("invalid 'test' value", call. = FALSE)
+    stop(
+      paste0(
+        "'test' must be one of: wald, score, working-wald, working-score, ",
+        "working-lrt"
+      ),
+      call. = FALSE
+    )
   }
   out
 }
 
 
-## Offsets written inside the model formula, as character strings such as
-## "offset(log(n))". stats::update.formula() drops them whenever the right-hand
-## side is replaced, so refits that rebuild the right-hand side must add them
-## back. Offsets supplied through the 'offset' argument stay in the call and
-## are not returned here.
-geer_formula_offset_terms <- function(object) {
+extract_formula_offset_terms <- function(object) {
   offset_index <- attr(object$terms, "offset")
   if (is.null(offset_index)) {
     return(character(0))
@@ -54,24 +55,35 @@ geer_formula_offset_terms <- function(object) {
   variables <- attr(object$terms, "variables")
   vapply(
     offset_index,
-    function(i) paste(deparse(variables[[i + 1L]], width.cutoff = 500L), collapse = " "),
+    function(i) {
+      paste(
+        deparse(variables[[i + 1L]], width.cutoff = 500L),
+        collapse = " "
+      )
+    },
     character(1)
   )
 }
 
 
 refit_geer <- function(object, formula) {
-  refit_call <- stats::update(object, formula = formula, evaluate = FALSE)
-  ## A fixed-length 'beta_start' does not fit a refit with added or dropped
-  ## terms, so the refit always computes its own starting values.
+  refit_call <- stats::update(object, formula. = formula, evaluate = FALSE)
   refit_call$beta_start <- NULL
   env <- environment(object$formula)
   if (is.null(env)) {
     env <- parent.frame()
   }
-  refit <- eval(refit_call, envir = env)
-  ## geewa() only warns when the solver fails and returns the last accepted
-  ## iterate, which must not enter a test table as if it were the fit.
+  evaluated_call <- refit_call
+  frame_rows <- object$frame_rows
+  if (is.data.frame(object$data) && !is.null(refit_call$data) &&
+      is.numeric(frame_rows) && length(frame_rows) == NROW(object$y)) {
+    keep <- logical(nrow(object$data))
+    keep[frame_rows] <- TRUE
+    evaluated_call$data <- object$data
+    evaluated_call$subset <- keep
+  }
+  refit <- eval(evaluated_call, envir = env)
+  refit$call <- refit_call
   if (isFALSE(refit$converged)) {
     stop(
       "the refit with formula '",
@@ -84,7 +96,9 @@ refit_geer <- function(object, formula) {
 }
 
 
-compute_covariance_standard_errors <- function(vcov_matrix, parm = NULL, context) {
+compute_standard_errors_or_stop <- function(vcov_matrix,
+                                            parm = NULL,
+                                            context) {
   variances <- diag(vcov_matrix)
   if (!is.null(parm)) {
     variances <- variances[parm]
@@ -122,12 +136,9 @@ compute_covariance_standard_errors <- function(vcov_matrix, parm = NULL, context
 }
 
 
-## Standard errors from variances that may be unusable. A negative or
-## non-finite variance (the bias-corrected covariance estimator is not
-## guaranteed to be positive semi-definite in small samples) gives NA and a
-## warning that names the affected entries, instead of a silent NA or NaN.
-## confint() is stricter and stops, see compute_covariance_standard_errors().
-standard_errors_or_na <- function(variances, context, what = "coefficient") {
+compute_standard_errors_or_na <- function(variances,
+                                          context,
+                                          what = "coefficient") {
   bad <- !is.finite(variances) | variances < 0
   if (any(bad)) {
     labels <- names(variances)

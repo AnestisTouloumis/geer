@@ -3,7 +3,7 @@
 \name{add1.geer}
 \alias{add1.geer}
 \alias{drop1.geer}
-\title{Add or Drop Single Terms to or from a geer Model}
+\title{Add or Drop Single Terms to or from a geer Object}
 \usage{
 \method{add1}{geer}(
   object,
@@ -29,109 +29,62 @@
 \item{scope}{a formula giving the terms to be considered for adding or
     dropping.}
 
-\item{test}{character string specifying the hypothesis testing procedure.
-Options are the Wald test (\code{"wald"}), the generalized score test
-(\code{"score"}), the modified working Wald test (\code{"working-wald"}),
-the modified working score test (\code{"working-score"}), and the modified
-working likelihood ratio test (\code{"working-lrt"}). Defaults to
+\item{test}{character string specifying the hypothesis test: Wald
+(\code{"wald"}), generalized score (\code{"score"}), modified working Wald
+(\code{"working-wald"}), modified working score (\code{"working-score"}),
+or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the bias-corrected
-estimator (\code{"bias-corrected"}), the sandwich or robust estimator
-(\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
-(\code{"jackknife"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
+used for inference: \code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+\code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
-\item{pmethod}{character string specifying the approximation used to compute
-the p-value for the modified working tests. Options are the Rao--Scott
-approximation (\code{"rao-scott"}) and the Satterthwaite approximation
-(\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
+\item{pmethod}{character string specifying the approximation to the null
+distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
+or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
+tests. Defaults to \code{"rao-scott"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{additional arguments passed to or from other methods. Currently
+unused.}
 }
 \value{
-An object of class \code{"anova"} summarizing the differences in fit
-between the models. For \code{add1.geer()} and \code{drop1.geer()}, the
-table contains one row for the current model and one row for each admissible
-single-term addition or deletion. Columns include \code{Df} (degrees of
-freedom of the test), \code{CIC} (Correlation Information Criterion),
-\code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value).
+An object of class \code{c("geer_anova", "anova", "data.frame")} with one row
+for the current model and one for each admissible addition or deletion, and
+columns \code{Df}, \code{CIC}, \code{Chi}, and \code{Pr(>Chi)}.
 }
 \description{
-Computes all single terms in the \code{scope} argument that can be added to
-or dropped from a fitted \code{geer} model, fits the corresponding models,
-and returns a table summarizing the resulting changes in fit.
+Fits all models that differ from a fitted \code{geer} object by adding or
+dropping a single term in \code{scope}, and tests each change.
 }
 \details{
-For \code{add1.geer()}, \code{scope} must specify the candidate terms to be
-added. If no eligible terms are supplied, an error is returned. In scope
-formulas, \code{.} denotes the set of terms already included in the model.
-
-Model hierarchy is enforced: candidate additions and deletions must preserve
-marginality, so if a higher-order interaction is present, all of its
-lower-order component terms must also remain in the model.
-
-Details of the hypothesis tests controlled by \code{test} are given in
-Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
-valid only when the model is fitted with an independence working association
-structure; otherwise an error is returned.
-
-When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-ignored and \code{cov_type} specifies the covariance estimator used to
-compute the test statistic. For modified working tests, \code{cov_type}
-determines the covariance matrix used to form the coefficients of the sum of
-independent chi-squared random variables, and \code{pmethod} specifies the
-approximation used to compute the p-value.
-When \code{cov_type = "jackknife"} is used with a score or modified working
-score test, the score and model-based information remain evaluated under the
-null model, while the covariance component is the full leave-one-cluster
-jackknife covariance from the larger fitted model.
-For every score or modified working score test, the estimating function and
-the model-based information are evaluated at the fitted means of the smaller
-(null) model, but the association parameters and the dispersion are those of
-the larger model: they are not re-estimated under the null model.
-
-The output table also includes the Correlation Information Criterion (CIC)
-for each candidate model as supplementary model information. The CIC is
-computed from \code{vcov(model, cov_type = cov_type)}, so with
-\code{cov_type = "jackknife"} a full set of leave-one-cluster refits is
-performed for the current model and for every candidate model; see
-\code{\link{vcov.geer}}.
+For \code{add1()}, \code{scope} must contain at least one term not in the
+model, and \code{.} denotes the terms already in the model. Additions and
+deletions respect marginality: a term is not dropped while a higher-order
+interaction containing it remains, and an interaction is not added without
+its lower-order terms. The tests are described in
+\code{\link{anova.geer}}. The table also reports the correlation
+information criterion (CIC) of each model, computed with \code{cov_type};
+with \code{cov_type = "jackknife"} every candidate model is therefore
+refitted once per cluster.
 }
 \examples{
 data("respiratory", package = "geer")
-respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
-
+respiratory2 <- respiratory[respiratory$center == "C2", ]
 fit <- geewa(
-  formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+  formula = status ~ baseline + treatment + gender + visit + age,
   family = binomial(link = "probit"),
   data = respiratory2,
   id = id,
   repeated = visit,
-  corstr = "ar1",
-  method = "gee"
+  corstr = "ar1"
 )
-add1(
-  fit,
-  scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
-  test = "score"
-)
-
-data("respiratory", package = "geer")
-respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
-
-fit <- geewa(
-  formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
-  family = binomial(link = "probit"),
-  data = respiratory2,
-  id = id,
-  repeated = visit,
-  corstr = "ar1",
-  method = "gee"
-)
+## Single-term deletions
 drop1(fit, test = "score")
+
+## Single-term additions
+add1(fit, scope = ~ . + baseline:age + visit:age + treatment:age,
+     test = "score")
 
 }
 \references{
@@ -141,6 +94,5 @@ correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
 \code{\link{anova.geer}}, \code{\link{step_p}},
-  \code{\link{geecriteria}}, \code{\link{geewa}},
-  \code{\link{geewa_binary}}.
+  \code{\link{geecriteria}}, \code{\link{geewa}}, \code{\link{geewa_binary}}.
 }

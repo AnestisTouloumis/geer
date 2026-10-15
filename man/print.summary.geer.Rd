@@ -7,7 +7,8 @@
 \method{print}{summary.geer}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{"summary.geer"}.}
+\item{x}{an object of class \code{"summary.geer"}, as returned by
+\code{\link{summary.geer}}.}
 
 \item{...}{additional arguments passed to or from other methods. Currently
 unused.}
@@ -16,9 +17,9 @@ unused.}
 The input object \code{x} is returned invisibly.
 }
 \description{
-Prints the contents of a \code{summary.geer} object, including the call,
-estimation method, sample size and cluster sizes, coefficient table,
-dispersion parameter, and working association structure.
+Prints a \code{summary.geer} object: the call, the estimation method, the
+sample and cluster sizes, the coefficient table, the dispersion parameter,
+and the working association structure.
 }
 \examples{
 data("epilepsy", package = "geer")
@@ -27,6 +28,7 @@ fit <- geewa(
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
+  repeated = visit,
   corstr = "exchangeable"
 )
 print(summary(fit))

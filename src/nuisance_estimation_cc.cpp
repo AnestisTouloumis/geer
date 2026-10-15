@@ -10,7 +10,7 @@ arma::vec get_pearson_residuals(FamilyCode family_code,
                                 const arma::vec& y_vector,
                                 const arma::vec& mu_vector,
                                 const arma::vec& weights_vector) {
-  const arma::vec scale = arma::sqrt(weights_vector / geer::variance_function(family_code, mu_vector));
+  const arma::vec scale = arma::sqrt(weights_vector / variance_function(family_code, mu_vector));
   return (y_vector - mu_vector) % scale;
 }
 //==============================================================================
@@ -33,7 +33,8 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
   const double n = static_cast<double>(pearson_residuals_vector.n_elem);
   const double denominator = n - static_cast<double>(params_no);
   if (denominator <= 0.0) {
-    Rcpp::stop("get_phi_hat: non-positive denominator.");
+    Rcpp::stop("the dispersion cannot be estimated: too few observations relative to the number "
+               "of regression parameters");
   }
   const double result =
     arma::accu(arma::square(pearson_residuals_vector)) / denominator;
@@ -46,8 +47,8 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
   // small units.
   if (!R_FINITE(result) || result <= 0.0) {
     Rcpp::stop(
-      "get_phi_hat: the dispersion estimate is not a usable positive value "
-      "(%.6g); the fitted means may reproduce the data exactly.",
+      "the dispersion estimate (%.6g) is not a usable positive value; the fitted means may "
+      "reproduce the data exactly",
       result
     );
   }
@@ -59,7 +60,7 @@ double get_phi_hat(const arma::vec& pearson_residuals_vector,
 namespace {
 
 //============================ exchangeable alpha hat ==========================
-double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
+double get_alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
                               const std::vector<Cluster>& clusters,
                               const double phi,
                               const int params_no) {
@@ -77,13 +78,13 @@ double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
       }
     }
     den += static_cast<double>(cluster_size_i) *
-      static_cast<double>(cluster_size_i - 1) * 0.5;
+           static_cast<double>(cluster_size_i - 1) * 0.5;
   }
   const double denominator = (den - static_cast<double>(params_no)) * phi;
   if (denominator <= 0.0) {
     Rcpp::stop(
-      "alpha_hat_exchangeable: non-positive denominator -- "
-      "too few observation pairs relative to the number of parameters."
+      "the exchangeable correlation cannot be estimated: too few pairs of observations relative "
+      "to the number of regression parameters"
     );
   }
   return num / denominator;
@@ -92,7 +93,7 @@ double alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
 
 
 //============================ ar1 alpha hat ===================================
-double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
+double get_alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
                      const std::vector<Cluster>& clusters,
                      const arma::vec& repeated_vector,
                      const double phi,
@@ -116,8 +117,8 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
   const double denominator_ar1 = (den - static_cast<double>(params_no)) * phi;
   if (denominator_ar1 <= 0.0) {
     Rcpp::stop(
-      "alpha_hat_ar1: non-positive denominator -- "
-      "too few consecutive observation pairs relative to the number of parameters."
+      "the AR(1) correlation cannot be estimated: too few pairs of consecutive observations "
+      "relative to the number of regression parameters"
     );
   }
   return num / denominator_ar1;
@@ -126,7 +127,7 @@ double alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
 
 
 //============================ unstructured alpha hat ==========================
-arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
+arma::vec get_alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
                                  const std::vector<Cluster>& clusters,
                                  const arma::vec& repeated_vector,
                                  const double phi,
@@ -161,8 +162,8 @@ arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_unstr = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_unstr <= 0.0)) {
     Rcpp::stop(
-      "alpha_hat_unstructured: non-positive denominator for one or more time pairs -- "
-      "too few observations relative to the number of parameters."
+      "the unstructured correlation cannot be estimated: some pairs of occasions have too few "
+      "observations relative to the number of regression parameters"
     );
   }
   return num / denominator_unstr;
@@ -171,7 +172,7 @@ arma::vec alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
 
 
 //============================ m-dependent alpha hat ===========================
-arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
+arma::vec get_alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
                                const std::vector<Cluster>& clusters,
                                const arma::vec& repeated_vector,
                                const double phi,
@@ -192,6 +193,9 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
       for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
         const arma::uword index_k =
           static_cast<arma::uword>(repeated_vector_i[k]);
+        if (index_k <= index_j) {
+          Rcpp::stop("'repeated' must be strictly increasing within each cluster");
+        }
         const arma::uword diff_int = index_k - index_j;
 
         if (diff_int < static_cast<arma::uword>(mdependence + 1)) {
@@ -205,8 +209,8 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_mdep = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_mdep <= 0.0)) {
     Rcpp::stop(
-      "alpha_hat_mdependent: non-positive denominator for one or more lags -- "
-      "too few observations relative to the number of parameters."
+      "the m-dependent correlation cannot be estimated: some lags have too few observations "
+      "relative to the number of regression parameters"
     );
   }
   return num / denominator_mdep;
@@ -215,13 +219,18 @@ arma::vec alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
 
 
 //============================ toeplitz alpha hat ==============================
-arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
+arma::vec get_alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
                              const std::vector<Cluster>& clusters,
                              const arma::vec& repeated_vector,
                              const double phi,
                              const int params_no) {
   const arma::uword time_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
+  if (time_max < 2) {
+    Rcpp::stop(
+      "the Toeplitz correlation cannot be estimated: no cluster contains a pair of observations"
+    );
+  }
   arma::vec num(time_max - 1, arma::fill::zeros);
   arma::vec den(time_max - 1, arma::fill::zeros);
   for (const auto& cluster : clusters) {
@@ -238,6 +247,9 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
         const arma::uword index_k =
           static_cast<arma::uword>(repeated_vector_i[k]);
         const arma::uword lag = index_k - index_j;
+        if (index_k <= index_j || lag > num.n_elem) {
+          Rcpp::stop("'repeated' must be strictly increasing within each cluster");
+        }
         num[lag - 1] +=
           pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
         den[lag - 1] += 1.0;
@@ -247,8 +259,8 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_toep = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_toep <= 0.0)) {
     Rcpp::stop(
-      "alpha_hat_toeplitz: non-positive denominator for one or more lags -- "
-      "too few observations relative to the number of parameters."
+      "the Toeplitz correlation cannot be estimated: some lags have too few observations "
+      "relative to the number of regression parameters"
     );
   }
   return num / denominator_toep;
@@ -256,7 +268,7 @@ arma::vec alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
 //==============================================================================
 
 
-} // namespace
+}  // namespace
 
 //============================ alpha hat =======================================
 arma::vec get_alpha_hat(const char* correlation_structure,
@@ -267,48 +279,48 @@ arma::vec get_alpha_hat(const char* correlation_structure,
                         const int params_no,
                         const int mdependence) {
   if (std::strcmp(correlation_structure, "independence") == 0) {
-    return arma::vec(); // no alpha parameters for independence
+    return arma::vec();  // no alpha parameters for independence
   }
   arma::vec result;
   if (std::strcmp(correlation_structure, "exchangeable") == 0) {
     result.set_size(1);
-    result[0] = alpha_hat_exchangeable(pearson_residuals_vector,
-                                    clusters,
-                                    phi,
-                                    params_no);
+    result[0] = get_alpha_hat_exchangeable(pearson_residuals_vector,
+                                       clusters,
+                                       phi,
+                                       params_no);
   } else if (std::strcmp(correlation_structure, "ar1") == 0) {
     result.set_size(1);
-    result[0] = alpha_hat_ar1(pearson_residuals_vector,
-                           clusters,
-                           repeated_vector,
-                           phi,
-                           params_no);
+    result[0] = get_alpha_hat_ar1(pearson_residuals_vector,
+                              clusters,
+                              repeated_vector,
+                              phi,
+                              params_no);
   } else if (std::strcmp(correlation_structure, "m-dependent") == 0) {
-    result = alpha_hat_mdependent(pearson_residuals_vector,
-                               clusters,
-                               repeated_vector,
-                               phi,
-                               params_no,
-                               mdependence);
+    result = get_alpha_hat_mdependent(pearson_residuals_vector,
+                                  clusters,
+                                  repeated_vector,
+                                  phi,
+                                  params_no,
+                                  mdependence);
   } else if (std::strcmp(correlation_structure, "unstructured") == 0) {
-    result = alpha_hat_unstructured(pearson_residuals_vector,
-                                 clusters,
-                                 repeated_vector,
-                                 phi,
-                                 params_no);
+    result = get_alpha_hat_unstructured(pearson_residuals_vector,
+                                    clusters,
+                                    repeated_vector,
+                                    phi,
+                                    params_no);
   } else if (std::strcmp(correlation_structure, "toeplitz") == 0) {
-    result = alpha_hat_toeplitz(pearson_residuals_vector,
-                             clusters,
-                             repeated_vector,
-                             phi,
-                             params_no);
+    result = get_alpha_hat_toeplitz(pearson_residuals_vector,
+                                clusters,
+                                repeated_vector,
+                                phi,
+                                params_no);
   } else if (std::strcmp(correlation_structure, "fixed") == 0) {
     Rcpp::stop(
-      "get_alpha_hat: correlation structure is \"fixed\" but alpha_fixed must "
-      "be 1 when using a fixed correlation -- alpha should not be re-estimated."
+      "get_alpha_hat: 'alpha_fixed' must be 1 for the \"fixed\" correlation structure, so that "
+      "alpha is not re-estimated"
     );
   } else {
-    Rcpp::stop("get_alpha_hat: unsupported correlation structure \"%s\".",
+    Rcpp::stop("unsupported correlation structure: %s",
                correlation_structure);
   }
   return result;

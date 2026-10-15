@@ -13,13 +13,14 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{cov_type}{character string specifying the covariance estimator used to
-compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
-\code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, and
-\code{"naive"}. Defaults to \code{"bias-corrected"}.}
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for the standard errors, z-statistics, and p-values:
+\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+Defaults to \code{"bias-corrected"}.}
 
-\item{...}{additional arguments passed to or from other methods. Currently
-unused.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 An object of class \code{"summary.geer"}, a list with components:
@@ -36,15 +37,15 @@ An object of class \code{"summary.geer"}, a list with components:
 \item{max_cluster_size}{the largest observed cluster size.}
 \item{iter}{the number of iterations used.}
 \item{converged}{logical indicating whether the algorithm converged.}
-\item{phi}{the estimated or fixed scale parameter. For models fitted by
-  \code{geewa_binary()}, this is always \code{1}.}
+\item{phi}{the estimated or fixed dispersion parameter, 1 for
+  \code{\link{geewa_binary}} fits.}
 \item{association_structure}{the name of the working association structure.}
 \item{method}{character string identifying the estimation method used.}
 \item{cov_type}{the covariance estimator used for standard errors.}
 }
 \description{
-Produces a coefficient table and basic model summary information for a
-fitted \code{geer} object.
+Summarizes a fitted \code{geer} object, with a table of the coefficients,
+their standard errors, z-statistics, and p-values.
 }
 \examples{
 data("epilepsy", package = "geer")
@@ -53,20 +54,11 @@ fit <- geewa(
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
+  repeated = visit,
   corstr = "exchangeable"
 )
 summary(fit)
-summary(fit, cov_type = "bias-corrected")
-
-data("cerebrovascular", package = "geer")
-fit_bin <- geewa_binary(
-  formula = ecg ~ treatment + factor(period),
-  link = "logit",
-  data = cerebrovascular,
-  id = id,
-  orstr = "exchangeable"
-)
-summary(fit_bin)
+summary(fit, cov_type = "robust")
 
 }
 \seealso{

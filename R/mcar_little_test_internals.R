@@ -2,28 +2,33 @@ check_mcar_little_matrix <- function(x) {
   if (is.data.frame(x)) {
     numeric_cols <- vapply(x, is.numeric, logical(1))
     if (!all(numeric_cols)) {
-      stop("all variables supplied to Little's MCAR test must be numeric", call. = FALSE)
+      stop(
+        "all variables supplied to Little's MCAR test must be numeric",
+        call. = FALSE
+      )
     }
     x <- as.matrix(x)
   } else if (is.matrix(x)) {
     if (!is.numeric(x)) {
-      stop("the matrix supplied to Little's MCAR test must be numeric", call. = FALSE)
+      stop(
+        "the matrix supplied to Little's MCAR test must be numeric",
+        call. = FALSE
+      )
     }
   } else {
-    stop("'object' must be a fitted 'geer' object, numeric matrix, or numeric data frame", call. = FALSE)
+    stop(
+      "'object' must be a fitted 'geer' object, numeric matrix, or numeric ",
+      "data frame",
+      call. = FALSE
+    )
   }
 
   storage.mode(x) <- "double"
-  ## Little (1988) partitions the cases into missing-data patterns S_j, each
-  ## with p_j >= 1 observed variables. A row with no observed variable belongs
-  ## to no such pattern: it contributes nothing to d^2 or to its degrees of
-  ## freedom, yet it would still enter n and so inflate the degrees-of-freedom
-  ## correction n / (n - 1) and the EM denominators. Such rows are removed.
   empty_rows <- rowSums(!is.na(x)) == 0L
   if (any(empty_rows)) {
     warning(
       sprintf(
-        "dropped %d row(s) with no observed values from Little's MCAR test",
+        "%d row(s) with no observed values were omitted",
         sum(empty_rows)
       ),
       call. = FALSE
@@ -34,19 +39,31 @@ check_mcar_little_matrix <- function(x) {
     stop("Little's MCAR test requires at least two rows", call. = FALSE)
   }
   if (ncol(x) < 2L) {
-    stop("Little's MCAR test requires at least two variables or repeated measurements", call. = FALSE)
+    stop(
+      "Little's MCAR test requires at least two variables or repeated ",
+      "measurements",
+      call. = FALSE
+    )
   }
   if (any(is.infinite(x))) {
-    stop("data supplied to Little's MCAR test cannot contain infinite values", call. = FALSE)
+    stop(
+      "data supplied to Little's MCAR test must not contain infinite values",
+      call. = FALSE
+    )
   }
   observed_no <- colSums(!is.na(x))
   labels <- colnames(x)
-  if (is.null(labels)) labels <- as.character(seq_len(ncol(x)))
+  if (is.null(labels)) {
+    labels <- as.character(seq_len(ncol(x)))
+  }
   if (any(observed_no < 2L)) {
     bad <- which(observed_no < 2L)
     stop(
       sprintf(
-        "Little's MCAR test requires at least two observed values for variable(s) %s",
+        paste0(
+          "Little's MCAR test requires at least two observed values for ",
+          "variable(s) %s"
+        ),
         paste(labels[bad], collapse = ", ")
       ),
       call. = FALSE
@@ -67,8 +84,8 @@ check_mcar_little_matrix <- function(x) {
       stop(
         sprintf(
           paste0(
-            "Little's MCAR test requires at least one jointly observed value ",
-            "for every variable pair; '%s' and '%s' do not meet this requirement"
+            "Little's MCAR test requires every pair of variables to be ",
+            "observed together at least once; '%s' and '%s' never are"
           ),
           labels[bad_pair[1L]],
           labels[bad_pair[2L]]
@@ -83,15 +100,21 @@ check_mcar_little_matrix <- function(x) {
 
 compute_mcar_little_bivariate_exact <- function(x) {
   n <- nrow(x)
-  if (ncol(x) != 2L || n <= 2L) return(NULL)
+  if (ncol(x) != 2L || n <= 2L) {
+    return(NULL)
+  }
 
   observed_no <- colSums(!is.na(x))
   complete_col <- which(observed_no == n)
   incomplete_col <- which(observed_no < n)
-  if (length(complete_col) != 1L || length(incomplete_col) != 1L) return(NULL)
+  if (length(complete_col) != 1L || length(incomplete_col) != 1L) {
+    return(NULL)
+  }
 
   missing_group <- is.na(x[, incomplete_col])
-  if (!any(missing_group) || all(missing_group)) return(NULL)
+  if (!any(missing_group) || all(missing_group)) {
+    return(NULL)
+  }
 
   y <- x[, complete_col]
   group_mean_observed <- mean(y[!missing_group])
@@ -108,7 +131,6 @@ compute_mcar_little_bivariate_exact <- function(x) {
   f_statistic <- if (ss_within == 0) Inf else ss_between / (ss_within / df2)
   p_value <- stats::pf(f_statistic, df1 = 1, df2 = df2, lower.tail = FALSE)
 
-  # Little (1988), Section 3.4: d^2 = (n - 1) F / (n - 2 + F).
   implied_statistic <- if (is.infinite(f_statistic)) {
     n - 1
   } else {
@@ -155,8 +177,6 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
   statistic <- 0
   df_terms <- 0L
 
-  ## Rows with no observed values are removed during validation, so every
-  ## pattern here has at least one observed variable.
   for (rows in pattern_rows) {
     observed <- which(!missing[rows[1L], ])
     df_terms <- df_terms + length(observed)
@@ -164,15 +184,13 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
     pattern_mean <- colMeans(x[rows, observed, drop = FALSE])
     difference <- pattern_mean - em$mu[observed]
     sigma_observed <- sigma_corrected[observed, observed, drop = FALSE]
-    ## The contribution of a pattern is a quadratic form in the positive
-    ## definite submatrix of the degrees-of-freedom-corrected covariance, so a
-    ## Cholesky factor both solves the system and certifies the submatrix. The
-    ## squared norm of the forward-solved difference is then nonnegative by
-    ## construction, and the total needs no clamping.
     chol_factor <- tryCatch(chol(sigma_observed), error = function(e) NULL)
     if (is.null(chol_factor)) {
       stop(
-        "a covariance submatrix required for Little's MCAR statistic is not positive definite",
+        paste0(
+          "a covariance submatrix required for Little's MCAR statistic is not ",
+          "positive definite"
+        ),
         call. = FALSE
       )
     }
@@ -183,7 +201,10 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
   df <- as.integer(df_terms - p)
   if (df <= 0L) {
     stop(
-      "Little's MCAR test has non-positive degrees of freedom for this missing-data pattern",
+      paste0(
+        "Little's MCAR test has non-positive degrees of freedom for this ",
+        "missing-data pattern"
+      ),
       call. = FALSE
     )
   }
@@ -234,4 +255,3 @@ has_mcar_little_binary_variable <- function(x) {
     logical(1)
   ))
 }
-

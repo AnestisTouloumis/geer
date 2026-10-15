@@ -15,95 +15,72 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional fitted model objects of class \code{"geer"}, used for
-sequential model comparisons.}
+\item{...}{additional fitted model objects of class \code{"geer"} to be
+included in the comparison.}
 
-\item{test}{character string specifying the hypothesis testing procedure.
-Options are the Wald test (\code{"wald"}), the generalized score test
-(\code{"score"}), the modified working Wald test (\code{"working-wald"}),
-the modified working score test (\code{"working-score"}), and the modified
-working likelihood ratio test (\code{"working-lrt"}). Defaults to
+\item{test}{character string specifying the hypothesis test: Wald
+(\code{"wald"}), generalized score (\code{"score"}), modified working Wald
+(\code{"working-wald"}), modified working score (\code{"working-score"}),
+or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the bias-corrected
-estimator (\code{"bias-corrected"}), the sandwich or robust estimator
-(\code{"robust"}), the degrees-of-freedom adjusted estimator
-(\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
-(\code{"jackknife"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
+used for inference: \code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+\code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
-\item{pmethod}{character string specifying the approximation used to compute
-the p-value for the modified working tests. Options are the Rao--Scott
-approximation (\code{"rao-scott"}) and the Satterthwaite approximation
-(\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.}
+\item{pmethod}{character string specifying the approximation to the null
+distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
+or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
+tests. Defaults to \code{"rao-scott"}.}
 }
 \value{
-An object of class \code{c("anova", "data.frame")}. With a single model,
-the table reports tests for terms added sequentially (first to last). With
-multiple models, the table reports sequential comparisons between each
-consecutive pair of nested models. Columns include \code{Df} (degrees of
-freedom of the test), \code{Resid. Df} (residual degrees of freedom),
-\code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value). Unlike
-\code{\link{add1.geer}} and \code{\link{drop1.geer}}, no \code{CIC} column
-is included; use \code{\link{geecriteria}} for working association structure
-selection.
+An object of class \code{c("geer_anova", "anova", "data.frame")} with columns
+\code{Df}, \code{Resid. Df}, \code{Chi}, and \code{Pr(>Chi)}. With one model,
+the terms are tested sequentially, from first to last; with several models,
+each model is compared with the previous one. \code{Resid. Df} is the number
+of observations minus the number of regression parameters.
 }
 \description{
-Computes hypothesis test tables for one or more fitted \code{geer} objects,
-analogous to analysis-of-variance (ANOVA) tables for GLM models.
+Computes tables of hypothesis tests for one or more fitted \code{geer}
+objects, analogous to analysis of deviance tables for generalized linear
+models.
 }
 \details{
-Details of the hypothesis tests controlled by \code{test} are given in
-Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
-valid only when the model is fitted with an independence working association
-structure; otherwise an error is returned.
+The tests are those of Rotnitzky and Jewell (1990). The Wald and score
+statistics use the covariance matrix selected by \code{cov_type}. The
+modified working tests compare a working statistic with a weighted sum of
+independent chi-squared variables, whose weights depend on \code{cov_type},
+and \code{pmethod} selects the approximation to its distribution. The
+modified working likelihood ratio test requires a working independence
+structure, and both working log-likelihoods are scaled by the dispersion of
+the larger model. The score tests are evaluated at the fitted means of the
+smaller model with the association and dispersion parameters of the larger
+model; with \code{cov_type = "jackknife"}, the covariance component is the
+jackknife covariance of the larger model.
 
-When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-ignored and \code{cov_type} specifies the covariance estimator used to
-compute the test statistic. For modified working tests, \code{cov_type}
-determines the covariance matrix used to form the coefficients of the sum of
-independent chi-squared random variables, and \code{pmethod} specifies the
-approximation used to compute the p-value.
-When \code{cov_type = "jackknife"} is used with a score or modified working
-score test, the score and model-based information remain evaluated under the
-null model, while the covariance component is the full leave-one-cluster
-jackknife covariance from the larger fitted model.
-For every score or modified working score test, the estimating function and
-the model-based information are evaluated at the fitted means of the smaller
-(null) model, but the association parameters and the dispersion are those of
-the larger model: they are not re-estimated under the null model.
-
-When comparing two or more models, the data must be identical across all
-fits and each consecutive pair of models must be nested. Models with a
-working association structure different from Model 1 are omitted with a
-warning. Any other difference in the fitting settings (fitting function,
-estimation method, dispersion handling, \code{use_p}, the order of an
-m-dependent structure, fixed association parameters or contrasts) is an
-error.
+With several models, the fits must use the same data and each consecutive
+pair must be nested. A model whose working association structure differs
+from that of the first model is omitted with a warning, and any other
+difference in the fitting settings, such as the estimation method or the
+handling of the dispersion, is an error.
 }
 \examples{
 data("cerebrovascular", package = "geer")
-
-## Single-model ANOVA (sequential terms)
-fit_full <- geewa_binary(
+fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable"
 )
-anova(fit_full, test = "wald", cov_type = "robust")
+## Sequential tests of the terms
+anova(fit)
 
-## Two-model comparison (models must be nested)
-fit_null <- geewa_binary(
-  formula = ecg ~ 1,
-  link = "logit",
-  data = cerebrovascular,
-  id = id,
-  orstr = "exchangeable"
-)
-anova(fit_null, fit_full, test = "wald", cov_type = "robust")
+## Comparison of nested models
+fit0 <- update(fit, . ~ . - treatment)
+anova(fit0, fit, test = "score")
 
 }
 \references{
@@ -112,8 +89,7 @@ parameters in semiparametric generalized linear models for cluster
 correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 }
 \seealso{
-\code{\link{add1.geer}} and \code{\link{drop1.geer}} for
-  single-term additions and deletions while respecting model hierarchy;
-  \code{\link{step_p}} for stepwise model selection;
-  \code{\link{geecriteria}} for model comparison criteria.
+\code{\link{add1.geer}}, \code{\link{drop1.geer}},
+  \code{\link{step_p}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}.
 }

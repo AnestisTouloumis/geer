@@ -1,5 +1,4 @@
-testthat::local_edition(3)
-testthat::skip_on_cran()
+cerebrovascular <- test_data$cerebrovascular
 
 fit_gee_probit <- geewa(
   formula = ecg ~ treatment + factor(period),
@@ -7,7 +6,7 @@ fit_gee_probit <- geewa(
   family = binomial(link = "probit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = test_data$cerebrovascular,
+  data = cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -15,7 +14,7 @@ fit_gee_probit <- geewa(
 fit_glm_probit <- glm(
   formula = ecg ~ treatment + factor(period),
   family = binomial(link = "probit"),
-  data = test_data$cerebrovascular
+  data = cerebrovascular
 )
 
 fit_gee_logit <- geewa(
@@ -24,7 +23,7 @@ fit_gee_logit <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = test_data$cerebrovascular,
+  data = cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -32,7 +31,7 @@ fit_gee_logit <- geewa(
 fit_glm_logit <- glm(
   formula = ecg ~ treatment + factor(period),
   family = binomial(link = "logit"),
-  data = test_data$cerebrovascular
+  data = cerebrovascular
 )
 
 fit_brgee_naive_logit <- update(
@@ -56,8 +55,8 @@ fit_pgee_jeffreys_probit <- update(
   method = "pgee-jeffreys"
 )
 
-
 test_that("geewa under independence matches the corresponding GLM", {
+  skip_on_cran()
   expect_equal(coef(fit_gee_probit), coef(fit_glm_probit), tolerance = 1e-5)
   expect_equal(
     vcov(fit_gee_probit, cov_type = "naive"),
@@ -72,8 +71,8 @@ test_that("geewa under independence matches the corresponding GLM", {
   )
 })
 
-
 test_that("brgee-naive matches brglm2 AS_mean for representative links", {
+  skip_on_cran()
   fit_glm_as_mean_probit <- update(
     fit_glm_probit,
     method = brglm2::brglmFit,
@@ -106,8 +105,8 @@ test_that("brgee-naive matches brglm2 AS_mean for representative links", {
   )
 })
 
-
 test_that("pgee-jeffreys matches brgee-naive for logit but not for probit", {
+  skip_on_cran()
   expect_equal(
     coef(fit_brgee_naive_logit),
     coef(fit_pgee_jeffreys_logit),
@@ -119,8 +118,8 @@ test_that("pgee-jeffreys matches brgee-naive for logit but not for probit", {
   )))
 })
 
-
 test_that("pgee-jeffreys matches brglm2 Jeffreys fits for representative links", {
+  skip_on_cran()
   fit_glm_jeffreys_logit <- update(
     fit_glm_logit,
     method = brglm2::brglmFit,

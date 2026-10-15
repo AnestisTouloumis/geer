@@ -1,5 +1,4 @@
-testthat::local_edition(3)
-
+epilepsy <- test_data$epilepsy
 
 test_that("format_percent returns a character vector with percent suffixes", {
   out <- format_percent(c(0.025, 0.975), digits = 3)
@@ -8,7 +7,6 @@ test_that("format_percent returns a character vector with percent suffixes", {
   expect_true(all(grepl("%$", out)))
 })
 
-
 test_that("format_percent warns when probabilities are outside [0, 1] and check = TRUE", {
   expect_warning(
     format_percent(c(-0.1, 0.5, 1.1), check = TRUE),
@@ -16,15 +14,16 @@ test_that("format_percent warns when probabilities are outside [0, 1] and check 
   )
 })
 
-
 test_that("format_percent validates its inputs", {
   expect_error(format_percent("0.5"), "'probs' must be numeric")
   expect_error(format_percent(0.5, digits = 0), "'digits' must be a positive integer")
   expect_error(format_percent(0.5, digits = 1.5), "'digits' must be a positive integer")
-  expect_error(format_percent(0.5, check = NA), "'check' must be a single logical value")
-  expect_error(format_percent(0.5, check = c(TRUE, FALSE)), "'check' must be a single logical value")
+  expect_error(format_percent(0.5, check = NA), "'check' must be TRUE or FALSE")
+  expect_error(
+    format_percent(0.5, check = c(TRUE, FALSE)),
+    "'check' must be TRUE or FALSE"
+  )
 })
-
 
 test_that("format_test_label returns the expected display labels", {
   expect_identical(format_test_label("wald"), "Wald")
@@ -33,7 +32,6 @@ test_that("format_test_label returns the expected display labels", {
   expect_identical(format_test_label("working-score"), "Modified Working Score")
   expect_identical(format_test_label("working-lrt"), "Modified Working LRT")
 })
-
 
 test_that("scalar check helpers accept valid inputs and reject invalid ones", {
   expect_true(is_positive_scalar(1))
@@ -49,10 +47,10 @@ test_that("scalar check helpers accept valid inputs and reject invalid ones", {
   expect_false(is_positive_integer_scalar(1.2))
   expect_false(is_positive_integer_scalar(NA_real_))
   expect_no_error(check_single_numeric(1, "x"))
-  expect_error(check_single_numeric("1", "x"), "'x' must be a single finite numeric value")
-  expect_error(check_single_numeric(c(1, 2), "x"), "'x' must be a single finite numeric value")
-  expect_error(check_single_numeric(NA_real_, "x"), "'x' must be a single finite numeric value")
-  expect_error(check_single_numeric(Inf, "x"), "'x' must be a single finite numeric value")
+  expect_error(check_single_numeric("1", "x"), "'x' must be a finite number")
+  expect_error(check_single_numeric(c(1, 2), "x"), "'x' must be a finite number")
+  expect_error(check_single_numeric(NA_real_, "x"), "'x' must be a finite number")
+  expect_error(check_single_numeric(Inf, "x"), "'x' must be a finite number")
   expect_no_error(check_probability_open(0.5, "p"))
   expect_error(check_probability_open(0, "p"), "'p' must be strictly between 0 and 1")
   expect_error(check_probability_open(1.1, "p"), "'p' must be strictly between 0 and 1")
@@ -63,7 +61,7 @@ test_that("scalar check helpers accept valid inputs and reject invalid ones", {
   )
   expect_error(
     check_choice(NA_character_, c("robust", "naive"), "cov_type"),
-    "'cov_type' must be a single character value"
+    "'cov_type' must be a character string"
   )
 })
 
@@ -92,21 +90,19 @@ test_that("predict warns when a prediction variance is negative", {
   expect_true(anyNA(out$se.fit))
 })
 
-test_that("standard_errors_or_na leaves valid variances unchanged", {
-  expect_silent(se <- standard_errors_or_na(c(a = 4, b = 0, c = 9), "x"))
+test_that("compute_standard_errors_or_na leaves valid variances unchanged", {
+  expect_silent(se <- compute_standard_errors_or_na(c(a = 4, b = 0, c = 9), "x"))
   expect_equal(se, c(a = 2, b = 0, c = 3))
 })
 
 test_that("jackknife covariance is cached on the fit and invalidated by coefficient changes", {
   fit <- fit_geewa_pois_indep
-  expect_true(is.environment(fit$cache))
+  expect_type(fit$cache, "environment")
   expect_null(fit$cache$jackknife)
   v1 <- vcov(fit, cov_type = "jackknife")
   expect_false(is.null(fit$cache$jackknife))
-  ## a second call must come from the cache, not from refitting
   fit$cache$jackknife$covariance[1L, 1L] <- 12345
   expect_equal(unname(vcov(fit, cov_type = "jackknife")[1L, 1L]), 12345)
-  ## a changed coefficient vector bypasses the stale entry
   fit2 <- fit
   fit2$coefficients <- fit2$coefficients + 1e-3
   v2 <- vcov(fit2, cov_type = "jackknife")
@@ -114,31 +110,19 @@ test_that("jackknife covariance is cached on the fit and invalidated by coeffici
   expect_equal(dim(v1), dim(v2))
 })
 
-test_that("frechet_bounds_cor uses the shared fit-function detection", {
-  fit <- fit_geewa_bin_exch
-  expect_error(frechet_bounds_cor(fit), "must be fitted by 'geewa'")
-})
-
-
 test_that("refit_geer stops when the refit did not converge", {
   fit <- geewa(
     seizures ~ treatment,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log")
   )
   fit_ok <- refit_geer(fit, . ~ . + lnbaseline)
   expect_s3_class(fit_ok, "geer")
-  ## The refit reuses the stored call, which drops 'beta_start' and keeps the
-  ## control settings. 'visit' varies within clusters, so the GEE solution
-  ## differs from the independence starting values (with cluster-level
-  ## covariates only and balanced clusters the two coincide, and a single
-  ## iteration would "converge"). One iteration against a tolerance of 1e-12
-  ## therefore cannot converge, and the refit must fail.
   fit_limited <- suppressWarnings(
     geewa(
       seizures ~ treatment + visit,
-      data = test_data$epilepsy,
+      data = epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "exchangeable",
@@ -153,11 +137,10 @@ test_that("refit_geer stops when the refit did not converge", {
   )
 })
 
-
-test_that("refit_geer ignores a fixed-length 'beta_start' of the original fit", {
+test_that("refit_geer ignores a fixed-length beta_start of the original fit", {
   fit <- geewa(
     seizures ~ treatment,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     beta_start = c(0, 0)

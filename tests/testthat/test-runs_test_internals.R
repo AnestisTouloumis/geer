@@ -1,10 +1,5 @@
-testthat::local_edition(3)
+epilepsy <- test_data$epilepsy
 
-count_fit <- fit_geewa_pois_exch
-
-
-## epilepsy is sorted by id and visit, so a column of the data used to fit the
-## model is already in the natural cluster/repeated order.
 runs_order_data <- function() {
   data <- epilepsy
   data$date <- as.Date("2020-01-01") + 7 * data$visit
@@ -26,94 +21,82 @@ fit_runs_order <- function(data) {
   )
 }
 
-
-## ----------------------------------------------------- resolve_runs_order ----
-
 test_that("resolve_runs_order requires a single non-empty character value", {
   for (bad in list(character(0), NA_character_, "", c("natural", "fitted"))) {
     expect_error(
-      geer:::resolve_runs_order(count_fit, bad),
-      "'order_by' must be a single non-empty character value or a numeric vector"
+      resolve_runs_order(fit_geewa_pois_exch, bad),
+      "'order_by' must be a single non-empty character string or a numeric vector"
     )
   }
 })
 
-
 test_that("resolve_runs_order rejects values that are neither text nor numeric", {
   expect_error(
-    geer:::resolve_runs_order(count_fit, TRUE),
-    "'order_by' must be a character value or a numeric vector"
+    resolve_runs_order(fit_geewa_pois_exch, TRUE),
+    "'order_by' must be a single non-empty character string or a numeric vector"
   )
   expect_error(
-    geer:::resolve_runs_order(count_fit, list(1, 2)),
-    "'order_by' must be a character value or a numeric vector"
+    resolve_runs_order(fit_geewa_pois_exch, list(1, 2)),
+    "'order_by' must be a single non-empty character string or a numeric vector"
   )
 })
 
-
 test_that("resolve_runs_order flags the natural order", {
-  natural <- geer:::resolve_runs_order(count_fit, "natural")
+  natural <- resolve_runs_order(fit_geewa_pois_exch, "natural")
   expect_true(natural$natural)
-  expect_identical(natural$index, order(count_fit$id, count_fit$repeated))
+  expect_identical(natural$index, order(fit_geewa_pois_exch$id, fit_geewa_pois_exch$repeated))
 
-  ## A numeric key that is constant leaves the natural order unchanged.
-  tied <- geer:::resolve_runs_order(count_fit, rep(1, count_fit$obs_no))
+  tied <- resolve_runs_order(fit_geewa_pois_exch, rep(1, fit_geewa_pois_exch$obs_no))
   expect_true(tied$natural)
   expect_identical(tied$label, "supplied ordering vector")
 })
 
-
-## ------------------------------------------------ extract_runs_order_variable ----
-
 test_that("extract_runs_order_variable needs the call and formula of the fit", {
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   fit$call <- NULL
 
   expect_error(
-    geer:::extract_runs_order_variable(fit, "visit"),
+    extract_runs_order_variable(fit, "visit"),
     "unknown 'order_by' value 'visit'"
   )
 })
 
-
 test_that("extract_runs_order_variable falls back to the supplied environment", {
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   formula_without_env <- fit$formula
   attr(formula_without_env, ".Environment") <- NULL
   fit$formula <- formula_without_env
 
-  key <- geer:::extract_runs_order_variable(fit, "visit", env = environment())
+  key <- extract_runs_order_variable(fit, "visit", env = environment())
 
   expect_equal(key, as.numeric(epilepsy$visit))
 })
-
 
 test_that("extract_runs_order_variable returns numeric keys for common types", {
   data <- runs_order_data()
   fit <- fit_runs_order(data)
 
   expect_equal(
-    geer:::extract_runs_order_variable(fit, "visit"),
+    extract_runs_order_variable(fit, "visit"),
     as.numeric(data$visit)
   )
   expect_equal(
-    geer:::extract_runs_order_variable(fit, "date"),
+    extract_runs_order_variable(fit, "date"),
     as.numeric(data$date)
   )
   expect_equal(
-    geer:::extract_runs_order_variable(fit, "stage"),
+    extract_runs_order_variable(fit, "stage"),
     as.numeric(data$stage)
   )
   expect_equal(
-    geer:::extract_runs_order_variable(fit, "late"),
+    extract_runs_order_variable(fit, "late"),
     as.numeric(factor(data$late))
   )
   expect_equal(
-    geer:::extract_runs_order_variable(fit, "label"),
+    extract_runs_order_variable(fit, "label"),
     as.numeric(factor(data$label))
   )
 })
-
 
 test_that("runs_test accepts date, factor and character ordering variables", {
   data <- runs_order_data()
@@ -134,20 +117,18 @@ test_that("runs_test accepts date, factor and character ordering variables", {
   )
 })
 
-
 test_that("extract_runs_order_variable rejects keys that are not orderable", {
   fit <- fit_runs_order(runs_order_data())
 
   expect_error(
-    geer:::extract_runs_order_variable(fit, "complex_key"),
+    extract_runs_order_variable(fit, "complex_key"),
     "'order_by' variable 'complex_key' must be numeric, a factor, or date-like"
   )
   expect_error(
-    geer:::extract_runs_order_variable(fit, "no_such_column"),
+    extract_runs_order_variable(fit, "no_such_column"),
     "unknown 'order_by' value 'no_such_column'"
   )
 })
-
 
 test_that("an ordering variable that drops observations cannot be aligned", {
   data <- runs_order_data()
@@ -161,70 +142,63 @@ test_that("an ordering variable that drops observations cannot be aligned", {
   )
 })
 
-
 test_that("an ordering variable must align with the stored observations", {
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   fit$id <- rev(fit$id)
 
   expect_error(
-    geer:::extract_runs_order_variable(fit, "visit"),
+    extract_runs_order_variable(fit, "visit"),
     "cannot be aligned with the observations stored in the fitted model"
   )
 })
 
-
-## ------------------------------------------------- compute_runs_statistics ----
-
 test_that("compute_runs_statistics validates the residuals", {
   expect_error(
-    geer:::compute_runs_statistics(c("a", "b"), "two.sided"),
+    compute_runs_statistics(c("a", "b"), "two.sided"),
     "residuals must be a non-empty numeric vector"
   )
   expect_error(
-    geer:::compute_runs_statistics(numeric(0), "two.sided"),
+    compute_runs_statistics(numeric(0), "two.sided"),
     "residuals must be a non-empty numeric vector"
   )
   expect_error(
-    geer:::compute_runs_statistics(c(1, NA, -1), "two.sided"),
+    compute_runs_statistics(c(1, NA, -1), "two.sided"),
     "residuals must all be finite and non-missing"
   )
   expect_error(
-    geer:::compute_runs_statistics(c(1, Inf, -1), "two.sided"),
+    compute_runs_statistics(c(1, Inf, -1), "two.sided"),
     "residuals must all be finite and non-missing"
   )
 })
-
 
 test_that("compute_runs_statistics validates the alternative", {
   residual_values <- c(1, -1, 1, 1, -1, -1, 1)
 
   expect_error(
-    geer:::compute_runs_statistics(residual_values, 1),
-    "'alternative' must be a single character value"
+    compute_runs_statistics(residual_values, 1),
+    "'alternative' must be a character string"
   )
   expect_error(
-    geer:::compute_runs_statistics(residual_values, NA_character_),
-    "'alternative' must be a single character value"
+    compute_runs_statistics(residual_values, NA_character_),
+    "'alternative' must be a character string"
   )
   expect_error(
-    geer:::compute_runs_statistics(residual_values, c("less", "greater")),
-    "'alternative' must be a single character value"
+    compute_runs_statistics(residual_values, c("less", "greater")),
+    "'alternative' must be a character string"
   )
   expect_error(
-    geer:::compute_runs_statistics(residual_values, "sideways"),
-    "'alternative' must be one of 'two.sided', 'less' or 'greater'"
+    compute_runs_statistics(residual_values, "sideways"),
+    "'alternative' must be one of: two.sided, less, greater"
   )
 })
 
-
 test_that("compute_runs_statistics rejects a degenerate sign sequence", {
-  ## One positive and one negative residual give a zero variance.
   expect_error(
-    geer:::compute_runs_statistics(c(1, -1), "two.sided"),
+    compute_runs_statistics(c(1, -1), "two.sided"),
     "the runs-test variance is not positive"
   )
   expect_error(
-    geer:::compute_runs_statistics(c(1, 2, 3), "two.sided"),
+    compute_runs_statistics(c(1, 2, 3), "two.sided"),
     "at least one positive and one negative residual"
   )
 })

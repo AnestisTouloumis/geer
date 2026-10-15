@@ -8,8 +8,12 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
   model_call[[1L]] <- quote(stats::model.frame)
   enclos <- env
   if (!is.null(model_call$formula)) {
-    formula_obj <- tryCatch(eval(model_call$formula, envir = env), error = function(e) NULL)
-    if (inherits(formula_obj, "formula") && !is.null(environment(formula_obj))) {
+    formula_obj <- tryCatch(
+      eval(model_call$formula, envir = env),
+      error = function(e) NULL
+    )
+    if (inherits(formula_obj, "formula") &&
+        !is.null(environment(formula_obj))) {
       enclos <- environment(formula_obj)
     }
   }
@@ -18,9 +22,6 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
 }
 
 
-## model.frame() requires every variable to have the same length, so a
-## documented scalar 'offset' is recycled to the number of rows of the data
-## before the frame is built (before 'subset' and 'na.action' are applied).
 recycle_geer_scalar_offset <- function(model_call, env, enclos) {
   if (is.null(model_call$offset)) {
     return(model_call)
@@ -37,7 +38,9 @@ recycle_geer_scalar_offset <- function(model_call, env, enclos) {
   if (!is.numeric(offset_value) || length(offset_value) != 1L) {
     return(model_call)
   }
-  frame_call <- model_call[c(1L, match(c("formula", "data"), names(model_call), 0L))]
+  frame_call <- model_call[
+    c(1L, match(c("formula", "data"), names(model_call), 0L))
+  ]
   frame_call$na.action <- quote(stats::na.pass)
   n_rows <- NROW(eval(frame_call, envir = env, enclos = enclos))
   model_call$offset <- rep.int(as.numeric(offset_value), n_rows)
@@ -57,7 +60,10 @@ extract_geer_offset <- function(model_frame, y_length) {
       offset <- rep.int(as.numeric(offset), y_length)
     }
     if (length(offset) != y_length) {
-      stop("response variable and 'offset' are not of same length", call. = FALSE)
+      stop(
+        "'offset' must have one value per observation",
+        call. = FALSE
+      )
     }
     if (anyNA(offset) || any(!is.finite(offset))) {
       stop("'offset' must be finite", call. = FALSE)
@@ -73,8 +79,13 @@ build_geer_design_matrix <- function(model_frame) {
   model_matrix <- stats::model.matrix(model_terms, model_frame)
   xnames <- colnames(model_matrix)
   if (ncol(model_matrix) == 0L) {
-    stop("the model matrix has no columns; the model needs at least one term or an intercept",
-         call. = FALSE)
+    stop(
+      paste0(
+        "the model matrix has no columns; include at least one term or an ",
+        "intercept"
+      ),
+      call. = FALSE
+    )
   }
   qr_model_matrix <- qr(model_matrix)
   if (qr_model_matrix$rank < ncol(model_matrix)) {
@@ -122,7 +133,10 @@ normalize_family <- function(family) {
     )
     if (is.null(family_fun)) {
       stop(
-        "'family' must be a family object, a family function, or the name of one",
+        paste0(
+          "'family' must be a family object, a family function, or the name ",
+          "of one"
+        ),
         call. = FALSE
       )
     }
@@ -140,20 +154,62 @@ normalize_family <- function(family) {
 }
 
 
+check_geer_response_support <- function(y, family) {
+  family_name <- family$family
+  if (identical(family_name, "quasi") && !is.null(family$varfun)) {
+    if (family$varfun %in% c("mu", "mu^2", "mu^3") && any(y < 0)) {
+      stop(
+        sprintf(
+          "negative values not allowed for quasi(variance = \"%s\")",
+          family$varfun
+        ),
+        call. = FALSE
+      )
+    }
+    return(invisible(NULL))
+  }
+  message <- switch(
+    family_name,
+    poisson = if (any(y < 0)) {
+      "negative values not allowed for the 'Poisson' family"
+    },
+    quasipoisson = if (any(y < 0)) {
+      "negative values not allowed for the 'quasiPoisson' family"
+    },
+    Gamma = if (any(y <= 0)) {
+      "non-positive values not allowed for the 'Gamma' family"
+    },
+    inverse.gaussian = if (any(y <= 0)) {
+      "positive values only are allowed for the 'inverse.gaussian' family"
+    },
+    NULL
+  )
+  if (!is.null(message)) {
+    stop(message, call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+
 extract_geer_response_weights <- function(model_frame, family) {
   is_binomial_like <-
     identical(family$family, "binomial") ||
     identical(family$family, "quasibinomial") ||
     (identical(family$family, "quasi") &&
-       !is.null(family$varfun) &&
-       identical(family$varfun, "mu(1-mu)"))
+     !is.null(family$varfun) &&
+     identical(family$varfun, "mu(1-mu)"))
   y <- stats::model.response(model_frame, "any")
-  if (is.null(y)) stop("response variable not found", call. = FALSE)
+  if (is.null(y)) {
+    stop("the formula must have a response", call. = FALSE)
+  }
   if (is_binomial_like) {
     if (is.factor(y)) {
       if (nlevels(y) != 2L) {
         stop(
-          "for binomial-type models, a factor response must have exactly two levels",
+          paste0(
+            "for binomial-type models, a factor response must have exactly ",
+            "two levels"
+          ),
           call. = FALSE
         )
       }
@@ -162,14 +218,20 @@ extract_geer_response_weights <- function(model_frame, family) {
       yfac <- factor(y)
       if (nlevels(yfac) != 2L) {
         stop(
-          "for binomial-type models, a character response must have exactly two distinct values",
+          paste0(
+            "for binomial-type models, a character response must have exactly ",
+            "two distinct values"
+          ),
           call. = FALSE
         )
       }
       y <- as.numeric(yfac == levels(yfac)[2L])
     } else if (is.matrix(y) && ncol(y) != 2L) {
       stop(
-        "for binomial-type models, a matrix response must have exactly two columns",
+        paste0(
+          "for binomial-type models, a matrix response must have exactly two ",
+          "columns"
+        ),
         call. = FALSE
       )
     }
@@ -177,15 +239,16 @@ extract_geer_response_weights <- function(model_frame, family) {
   if (!is_binomial_like) {
     if (is.factor(y) || is.character(y)) {
       stop(
-        "a factor or character response is only allowed for binomial-type models; ",
-        "the response must be numeric",
+        "the response must be numeric unless the family is binomial-type",
         call. = FALSE
       )
     }
     if (is.matrix(y) && ncol(y) > 1L) {
       stop(
-        "a matrix response with several columns is only allowed for ",
-        "binomial-type models; the response must be a numeric vector",
+        paste0(
+          "a matrix response must have one column unless the family is ",
+          "binomial-type"
+        ),
         call. = FALSE
       )
     }
@@ -205,7 +268,10 @@ extract_geer_response_weights <- function(model_frame, family) {
       stop("'weights' must be strictly positive", call. = FALSE)
     }
     if (length(weights) != n_obs) {
-      stop("'weights' and the response must have the same length", call. = FALSE)
+      stop(
+        "'weights' must have one value per observation",
+        call. = FALSE
+      )
     }
   }
   weights <- as.numeric(weights)
@@ -218,7 +284,7 @@ extract_geer_response_weights <- function(model_frame, family) {
     }
     if (any(y < 0)) {
       stop(
-        "for binomial matrix responses, all counts must be nonnegative",
+        "for binomial matrix responses, all counts must be non-negative",
         call. = FALSE
       )
     }
@@ -234,40 +300,69 @@ extract_geer_response_weights <- function(model_frame, family) {
   }
   y <- as.numeric(y)
   if (any(!is.finite(y))) {
-    stop("response variable contains non-finite values", call. = FALSE)
+    stop("the response must contain only finite values", call. = FALSE)
   }
   if (is_binomial_like) {
     if (any(y < 0 | y > 1)) {
       stop(
-        "for binomial-type models, the response must be coded as 0/1, proportions in [0, 1], or a two-column matrix",
+        paste0(
+          "for binomial-type models, the response must be coded as 0/1, ",
+          "proportions in [0, 1], or a two-column matrix"
+        ),
         call. = FALSE
       )
     }
+  } else {
+    check_geer_response_support(y, family)
   }
   list(y = y, weights = weights)
 }
 
 
-extract_geer_id_repeated <- function(model_frame, y_length) {
+extract_geer_id_repeated <- function(model_frame,
+                                     y_length,
+                                     warn_character = TRUE) {
   id_raw <- stats::model.extract(model_frame, "id")
-  if (is.null(id_raw)) stop("'id' not found", call. = FALSE)
-  if (anyNA(id_raw)) stop("'id' cannot contain missing values", call. = FALSE)
+  if (is.null(id_raw)) {
+    stop("'id' must be supplied", call. = FALSE)
+  }
+  if (anyNA(id_raw)) {
+    stop("'id' must not contain missing values", call. = FALSE)
+  }
   id <- as.numeric(factor(id_raw))
   if (length(id) != y_length) {
-    stop("response variable and 'id' are not of same length", call. = FALSE)
+    stop("'id' must have one value per observation", call. = FALSE)
   }
   repeated <- stats::model.extract(model_frame, "repeated")
   if (is.null(repeated)) {
     repeated <- stats::ave(id, id, FUN = seq_along)
   } else {
-    if (anyNA(repeated)) stop("'repeated' cannot contain missing values", call. = FALSE)
+    if (anyNA(repeated)) {
+      stop("'repeated' must not contain missing values", call. = FALSE)
+    }
+    if (warn_character && is.character(repeated)) {
+      warning(
+        paste0(
+          "'repeated' is a character vector and is sorted alphabetically ",
+          "(\"10\" before \"2\"); use a numeric or factor variable to set the ",
+          "order"
+        ),
+        call. = FALSE
+      )
+    }
     repeated <- as.numeric(factor(repeated))
   }
   if (length(repeated) != y_length) {
-    stop("response variable and 'repeated' are not of same length", call. = FALSE)
+    stop(
+      "'repeated' must have one value per observation",
+      call. = FALSE
+    )
   }
   if (any(unlist(lapply(split(repeated, id), duplicated)))) {
-    stop("'repeated' does not have unique values per 'id'", call. = FALSE)
+    stop(
+      "'repeated' must have distinct values within each cluster",
+      call. = FALSE
+    )
   }
   list(id = id, repeated = repeated)
 }
@@ -275,13 +370,16 @@ extract_geer_id_repeated <- function(model_frame, y_length) {
 
 normalize_phi <- function(phi_fixed, phi_value) {
   if (!is.logical(phi_fixed) || length(phi_fixed) != 1L || is.na(phi_fixed)) {
-    stop("'phi_fixed' must be a single non-missing logical value", call. = FALSE)
+    stop(
+      "'phi_fixed' must be TRUE or FALSE",
+      call. = FALSE
+    )
   }
   if (phi_fixed) {
     phi_value <- as.numeric(phi_value)
     if (length(phi_value) != 1L || !is.finite(phi_value) || phi_value <= 0) {
       stop(
-        "'phi_value' must be a single positive number when 'phi_fixed = TRUE'",
+        "'phi_value' must be a positive finite number when 'phi_fixed = TRUE'",
         call. = FALSE
       )
     }
@@ -294,18 +392,12 @@ normalize_phi <- function(phi_fixed, phi_value) {
 
 normalize_use_p <- function(use_p) {
   if (!is.logical(use_p) || length(use_p) != 1L || is.na(use_p)) {
-    stop("'use_p' must be a single non-missing logical value", call. = FALSE)
+    stop("'use_p' must be TRUE or FALSE", call. = FALSE)
   }
   use_p
 }
 
 
-## Input preparation shared by geewa() and geewa_binary(): builds the model
-## frame, extracts the response, weights, cluster identifiers, offset and design
-## matrix, sorts everything by cluster and then by repeated index, and
-## normalizes the control list and the estimation method. 'family' must already
-## be normalized and 'env' is the environment in which the model frame is
-## evaluated (the caller's parent frame).
 prepare_geer_inputs <- function(mcall, family, env, control, method) {
   model_frame <- build_geer_model_frame(mcall, env = env)
   response_weights <- extract_geer_response_weights(model_frame, family)
@@ -317,7 +409,6 @@ prepare_geer_inputs <- function(mcall, family, env, control, method) {
   offset <- extract_geer_offset(model_frame, y_length = length(y))
   design <- build_geer_design_matrix(model_frame)
   model_matrix <- design$x
-  ## sort by id then repeated
   ord <- order(id, repeated)
   y <- y[ord]
   model_matrix <- model_matrix[ord, , drop = FALSE]
@@ -327,9 +418,7 @@ prepare_geer_inputs <- function(mcall, family, env, control, method) {
   repeated <- repeated[ord]
   attr(model_matrix, "assign") <- design$assign
   attr(model_matrix, "contrasts") <- design$contrasts
-  ## control (supports either a control object or a list of args)
   control <- normalize_geer_control(control)
-  ## method
   method <- as.character(method)
   check_choice(method, geer_method_choices, "method")
   list(

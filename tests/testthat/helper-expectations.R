@@ -17,8 +17,6 @@ expect_test_result <- function(x) {
 }
 
 jackknife_delete_estimates_by_refit <- function(fit, data, refit) {
-  # Brute-force leave-one-cluster-out estimates; refit() receives the data with
-  # one cluster removed and must return a fitted model.
   ids <- unique(data$id)
   out <- t(vapply(
     ids,
@@ -35,8 +33,21 @@ expect_jackknife_vcov <- function(fit, delete_estimates) {
     crossprod(centered)
   dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
   observed <- vcov(fit, cov_type = "jackknife")
-  expect_equal(compute_jackknife_delete_estimates(fit), delete_estimates,
-               tolerance = 1e-7)
+  expect_equal(geer:::compute_jackknife_delete_estimates(fit), delete_estimates,
+    tolerance = 1e-7
+  )
   expect_equal(observed, expected, tolerance = 1e-7)
   expect_equal(observed, t(observed), tolerance = 1e-12)
+}
+
+collect_warnings <- function(expr) {
+  w <- character()
+  value <- withCallingHandlers(
+    expr,
+    warning = function(cond) {
+      w <<- c(w, conditionMessage(cond))
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(value = value, warnings = w)
 }

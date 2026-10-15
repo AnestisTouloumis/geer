@@ -10,24 +10,38 @@ check_step_scope <- function(scope) {
     return(scope)
   }
   if (!is.list(scope)) {
-    stop("'scope' must be NULL, a formula, a character vector, or a list",
-         call. = FALSE)
+    stop(
+      "'scope' must be NULL, a formula, a character vector, or a list",
+      call. = FALSE
+    )
   }
   scope_names <- names(scope)
   if (is.null(scope_names) || !any(scope_names %in% c("lower", "upper"))) {
-    stop("list 'scope' must contain a 'lower' component, an 'upper' component, or both",
-         call. = FALSE)
+    stop(
+      paste0(
+        "list 'scope' must contain a 'lower' component, an 'upper' ",
+        "component, or both"
+      ),
+      call. = FALSE
+    )
   }
   bad_names <- setdiff(scope_names, c("lower", "upper", ""))
   if (length(bad_names)) {
-    stop("list 'scope' can only contain 'lower' and 'upper' components",
-         call. = FALSE)
+    stop(
+      "list 'scope' can only contain 'lower' and 'upper' components",
+      call. = FALSE
+    )
   }
   for (nm in c("lower", "upper")) {
     x <- scope[[nm]]
     if (!is.null(x) && !inherits(x, "formula") && !is.character(x)) {
-      stop(sprintf("'scope$%s' must be NULL, a formula, or a character vector", nm),
-           call. = FALSE)
+      stop(
+        sprintf(
+          "'scope$%s' must be NULL, a formula, or a character vector",
+          nm
+        ),
+        call. = FALSE
+      )
     }
   }
   scope
@@ -73,7 +87,7 @@ initialize_step_models <- function(object, cov_type, steps) {
     Df = NA_real_,
     Chi = NA_real_,
     `Pr(>Chi)` = NA_real_,
-    CIC = compute_gee_cic(object, cov_type)
+    CIC = compute_cic(object, cov_type)
   )
   list(
     steps = steps,
@@ -84,10 +98,19 @@ initialize_step_models <- function(object, cov_type, steps) {
 
 
 update_step_fit <- function(fitted_model, change, obs_no) {
-  updated_model <- refit_geer(fitted_model, stats::as.formula(paste(". ~ .", change)))
+  updated_model <- refit_geer(
+    fitted_model,
+    stats::as.formula(paste(". ~ .", change))
+  )
   obs_no_new <- updated_model$obs_no
   if (all(is.finite(c(obs_no, obs_no_new))) && obs_no_new != obs_no) {
-    stop("number of rows in use has changed: remove missing values?", call. = FALSE)
+    stop(
+      paste0(
+        "the number of observations changed during the search; remove missing ",
+        "values from the data"
+      ),
+      call. = FALSE
+    )
   }
   updated_model
 }
@@ -112,10 +135,14 @@ append_step_model <- function(models, models_no, change, df, chi, pval, cic) {
 
 build_step_results <- function(models, fit, object) {
   step_no <- vapply(models, `[[`, integer(1), "Step")
-  change <- vapply(models, function(x) {
-    out <- x[["Change"]]
-    if (is.null(out) || is.na(out)) "" else out
-  }, character(1))
+  change <- vapply(
+    models,
+    function(x) {
+      out <- x[["Change"]]
+      if (is.null(out) || is.na(out)) "" else out
+    },
+    character(1)
+  )
   row_labels <- ifelse(
     step_no == 0L,
     "Initial model",
@@ -208,7 +235,7 @@ extract_step_term <- function(step_label) {
 }
 
 
-step_model_key <- function(model) {
+build_step_model_key <- function(model) {
   labels <- attr(stats::terms(model), "term.labels")
   intercept <- attr(stats::terms(model), "intercept")
   paste0(intercept, "|", paste(sort(labels), collapse = "+"))
@@ -227,11 +254,11 @@ is_step_cycle <- function(current_label, previous_label) {
 
 
 evaluate_step_backward_candidate <- function(fitted_model,
-                                       fscope,
-                                       test,
-                                       cov_type,
-                                       pmethod,
-                                       pvalue) {
+                                             fscope,
+                                             test,
+                                             cov_type,
+                                             pmethod,
+                                             pvalue) {
   if (!length(fscope$drop)) {
     return(NULL)
   }
@@ -258,11 +285,11 @@ evaluate_step_backward_candidate <- function(fitted_model,
 
 
 evaluate_step_forward_candidate <- function(fitted_model,
-                                      fscope,
-                                      test,
-                                      cov_type,
-                                      pmethod,
-                                      pvalue) {
+                                            fscope,
+                                            test,
+                                            cov_type,
+                                            pmethod,
+                                            pvalue) {
   if (!length(fscope$add)) {
     return(NULL)
   }
@@ -288,12 +315,12 @@ evaluate_step_forward_candidate <- function(fitted_model,
 
 
 run_step_backward <- function(object,
-                                 scope,
-                                 test,
-                                 cov_type,
-                                 pmethod,
-                                 pvalue,
-                                 steps) {
+                              scope,
+                              test,
+                              cov_type,
+                              pmethod,
+                              pvalue,
+                              steps) {
   model_terms <- stats::terms(object)
   scope_factors <- extract_step_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
@@ -307,7 +334,10 @@ run_step_backward <- function(object,
   while (steps > 0L) {
     steps <- steps - 1L
     ffac <- attr(model_terms, "factors")
-    fscope <- stats::factor.scope(ffac, list(add = factors_add, drop = factors_drop))
+    fscope <- stats::factor.scope(
+      ffac,
+      list(add = factors_add, drop = factors_drop)
+    )
     candidate <- evaluate_step_backward_candidate(
       fitted_model = fitted_model,
       fscope = fscope,
@@ -328,22 +358,26 @@ run_step_backward <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = compute_gee_cic(fitted_model, cov_type)
+      cic = compute_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no
   }
-  build_step_results(models = models[seq_len(models_no)], fit = fitted_model, object = object)
+  build_step_results(
+    models = models[seq_len(models_no)],
+    fit = fitted_model,
+    object = object
+  )
 }
 
 
 run_step_forward <- function(object,
-                                scope,
-                                test,
-                                cov_type,
-                                pmethod,
-                                pvalue,
-                                steps) {
+                             scope,
+                             test,
+                             cov_type,
+                             pmethod,
+                             pvalue,
+                             steps) {
   model_terms <- stats::terms(object)
   scope_factors <- extract_step_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
@@ -357,7 +391,10 @@ run_step_forward <- function(object,
   while (steps > 0L) {
     steps <- steps - 1L
     ffac <- attr(model_terms, "factors")
-    fscope <- stats::factor.scope(ffac, list(add = factors_add, drop = factors_drop))
+    fscope <- stats::factor.scope(
+      ffac,
+      list(add = factors_add, drop = factors_drop)
+    )
     candidate <- evaluate_step_forward_candidate(
       fitted_model = fitted_model,
       fscope = fscope,
@@ -378,23 +415,27 @@ run_step_forward <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = compute_gee_cic(fitted_model, cov_type)
+      cic = compute_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no
   }
-  build_step_results(models = models[seq_len(models_no)], fit = fitted_model, object = object)
+  build_step_results(
+    models = models[seq_len(models_no)],
+    fit = fitted_model,
+    object = object
+  )
 }
 
 
 run_step_both <- function(object,
-                             scope,
-                             test,
-                             cov_type,
-                             pmethod,
-                             p_enter,
-                             p_remove,
-                             steps) {
+                          scope,
+                          test,
+                          cov_type,
+                          pmethod,
+                          p_enter,
+                          p_remove,
+                          steps) {
   model_terms <- stats::terms(object)
   scope_factors <- extract_step_scope_factors(object, scope, model_terms)
   factors_drop <- scope_factors$drop
@@ -406,11 +447,14 @@ run_step_both <- function(object,
   obs_no <- object$obs_no
   fitted_model <- object
   previous_change <- NA_character_
-  visited <- step_model_key(fitted_model)
+  visited <- build_step_model_key(fitted_model)
   while (steps > 0L) {
     steps <- steps - 1L
     ffac <- attr(model_terms, "factors")
-    fscope <- stats::factor.scope(ffac, list(add = factors_add, drop = factors_drop))
+    fscope <- stats::factor.scope(
+      ffac,
+      list(add = factors_add, drop = factors_drop)
+    )
     candidate <- evaluate_step_backward_candidate(
       fitted_model = fitted_model,
       fscope = fscope,
@@ -436,9 +480,7 @@ run_step_both <- function(object,
       break
     }
     updated_model <- update_step_fit(fitted_model, candidate$change, obs_no)
-    ## Stop rather than revisit a model already reached, which would otherwise
-    ## cycle until 'steps' runs out (p-values change as terms enter and leave).
-    updated_key <- step_model_key(updated_model)
+    updated_key <- build_step_model_key(updated_model)
     if (updated_key %in% visited) {
       break
     }
@@ -452,11 +494,15 @@ run_step_both <- function(object,
       df = candidate$aod[candidate$row, "Df"],
       chi = candidate$aod[candidate$row, "Chi"],
       pval = candidate$aod[candidate$row, "Pr(>Chi)"],
-      cic = compute_gee_cic(fitted_model, cov_type)
+      cic = compute_cic(fitted_model, cov_type)
     )
     models <- out$models
     models_no <- out$models_no
     previous_change <- candidate$change
   }
-  build_step_results(models = models[seq_len(models_no)], fit = fitted_model, object = object)
+  build_step_results(
+    models = models[seq_len(models_no)],
+    fit = fitted_model,
+    object = object
+  )
 }

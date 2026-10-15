@@ -1,5 +1,3 @@
-testthat::local_edition(3)
-
 test_that("normalize_geer_control fills defaults for partial control lists", {
   ctrl <- normalize_geer_control(list(maxiter = 25L, tolerance = 1e-5))
   expect_type(ctrl, "list")
@@ -18,7 +16,6 @@ test_that("normalize_geer_control fills defaults for partial control lists", {
   expect_equal(ctrl$jeffreys_power, 0.5)
 })
 
-
 test_that("normalize_geer_control validates malformed partial control lists", {
   expect_error(
     normalize_geer_control(list(maxiter = "bad", tolerance = -1)),
@@ -30,11 +27,9 @@ test_that("normalize_geer_control validates malformed partial control lists", {
   )
 })
 
-
 test_that("normalize_geer_control maps NULL to the default control", {
   expect_identical(normalize_geer_control(NULL), geer_control())
 })
-
 
 test_that("geer_control returns the expected defaults", {
   ctrl <- geer_control()
@@ -49,14 +44,19 @@ test_that("geer_control returns the expected defaults", {
   expect_equal(ctrl$step_maxiter, 10L)
   expect_equal(ctrl$step_multiplier, 1L)
   expect_equal(ctrl$jeffreys_power, 0.5)
-  expect_true(is.numeric(ctrl$tolerance) && length(ctrl$tolerance) == 1L)
-  expect_true(is.numeric(ctrl$or_adding) && length(ctrl$or_adding) == 1L)
-  expect_true(is.numeric(ctrl$jeffreys_power) && length(ctrl$jeffreys_power) == 1L)
-  expect_true(is.integer(ctrl$maxiter) && length(ctrl$maxiter) == 1L)
-  expect_true(is.integer(ctrl$step_maxiter) && length(ctrl$step_maxiter) == 1L)
-  expect_true(is.numeric(ctrl$step_multiplier) && length(ctrl$step_multiplier) == 1L)
+  expect_true(is.numeric(ctrl$tolerance))
+  expect_length(ctrl$tolerance, 1L)
+  expect_true(is.numeric(ctrl$or_adding))
+  expect_length(ctrl$or_adding, 1L)
+  expect_true(is.numeric(ctrl$jeffreys_power))
+  expect_length(ctrl$jeffreys_power, 1L)
+  expect_type(ctrl$maxiter, "integer")
+  expect_length(ctrl$maxiter, 1L)
+  expect_type(ctrl$step_maxiter, "integer")
+  expect_length(ctrl$step_maxiter, 1L)
+  expect_true(is.numeric(ctrl$step_multiplier))
+  expect_length(ctrl$step_multiplier, 1L)
 })
-
 
 test_that("geer_control accepts valid inputs and coerces integer fields", {
   ctrl <- geer_control(
@@ -70,30 +70,28 @@ test_that("geer_control accepts valid inputs and coerces integer fields", {
   expect_equal(ctrl$tolerance, 1e-4)
   expect_equal(ctrl$or_adding, 0.25)
   expect_equal(ctrl$jeffreys_power, 0.75)
-  expect_true(is.integer(ctrl$maxiter))
-  expect_true(is.integer(ctrl$step_maxiter))
-  expect_true(is.double(ctrl$step_multiplier))
+  expect_type(ctrl$maxiter, "integer")
+  expect_type(ctrl$step_maxiter, "integer")
+  expect_type(ctrl$step_multiplier, "double")
   expect_equal(ctrl$maxiter, 123L)
   expect_equal(ctrl$step_maxiter, 7L)
   expect_equal(ctrl$step_multiplier, 2L)
 })
 
-
 test_that("geer_control validates positive numeric controls", {
   expect_error(
     geer_control(tolerance = 0),
-    "'tolerance' must be a positive number"
+    "'tolerance' must be a positive finite number"
   )
   expect_error(
     geer_control(or_adding = -0.5),
-    "'or_adding' must be a positive number"
+    "'or_adding' must be a positive finite number"
   )
   expect_error(
     geer_control(jeffreys_power = NA_real_),
-    "'jeffreys_power' must be a positive number"
+    "'jeffreys_power' must be a positive finite number"
   )
 })
-
 
 test_that("geer_control validates positive integer controls", {
   expect_error(
@@ -106,15 +104,14 @@ test_that("geer_control validates positive integer controls", {
   )
 })
 
-
 test_that("geer_control accepts any strictly positive real step_multiplier", {
   expect_equal(geer_control(step_multiplier = 0.5)$step_multiplier, 0.5)
   expect_equal(geer_control(step_multiplier = 2.5)$step_multiplier, 2.5)
-  expect_true(is.double(geer_control(step_multiplier = 2L)$step_multiplier))
+  expect_type(geer_control(step_multiplier = 2L)$step_multiplier, "double")
   for (bad in list(0, -1, NA_real_, Inf, c(1, 2), "1")) {
     expect_error(
       geer_control(step_multiplier = bad),
-      "'step_multiplier' must be a positive number"
+      "'step_multiplier' must be a positive finite number"
     )
   }
 })

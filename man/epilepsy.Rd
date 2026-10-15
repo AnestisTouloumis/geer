@@ -8,7 +8,7 @@
 A data frame with 236 rows and 6 columns:
 \describe{
   \item{id}{integer subject identifier.}
-  \item{visit}{integer visit identifier corresponding to a two-week interval.}
+  \item{visit}{integer identifier of the two-week interval.}
   \item{seizures}{integer count of epileptic seizures.}
   \item{treatment}{factor with levels \code{placebo} and \code{progabide}.}
   \item{lnbaseline}{numeric logarithm of one-quarter of the number of
@@ -29,10 +29,11 @@ treating partial seizures.
 }
 \details{
 Fifty-nine subjects with partial seizures were enrolled in a randomized
-clinical trial, yielding 236 observations (four visits per subject).
-Subjects were assigned to receive either progabide or placebo. Seizure
-counts were recorded during the 8 weeks before treatment (baseline). After
-treatment, seizure counts were assessed at four 2-week clinic visits.
+clinical trial, yielding 236 observations (four visits per subject). Subjects
+were assigned to receive either progabide or placebo. Seizure counts were
+recorded during the 8 weeks before treatment (baseline). After treatment,
+seizure counts were assessed at four 2-week clinic visits. Carey and Wang
+(2011) use these data to compare working covariance structures.
 }
 \examples{
 data("epilepsy", package = "geer")

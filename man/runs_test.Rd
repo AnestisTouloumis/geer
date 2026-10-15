@@ -13,35 +13,23 @@ runs_test(
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{order_by}{specifies the ordering of the residual sequence.
-\code{"natural"} orders observations by cluster identifier and then by the
-within-cluster \code{repeated} index. \code{"fitted"} orders by fitted
-values. A single model-matrix column name can be supplied to order by that
-covariate, or a numeric vector with one value per fitted observation can be
-supplied directly. Numeric vectors must already be aligned with the
-observation order stored in \code{object}. A name that is not a
-model-matrix column is looked up among the variables of the data used to
-fit the model, so a covariate omitted from the model can be used; see
-Details. Ordering values must be finite and non-missing. Ties are resolved
-using the natural cluster/repeated order; see Details for the consequences
-when the ordering has few distinct values. Defaults to \code{"natural"}.}
+\item{order_by}{character string or numeric vector specifying the order of
+the residuals: by cluster and \code{repeated} index (\code{"natural"}), by
+fitted value (\code{"fitted"}), by a covariate named in the model matrix or
+in the data used to fit the model, or by a numeric vector with one finite
+value per observation, in the order stored in \code{object}. Ties are
+broken by the natural order. See Details. Defaults to \code{"natural"}.}
 
-\item{alternative}{character string specifying the alternative hypothesis,
-expressed in terms of the observed number of runs \eqn{T} relative to its
-null expectation. Options are \code{"two.sided"}, \code{"less"} (fewer
-runs than expected) and \code{"greater"} (more runs than expected).
-Defaults to \code{"two.sided"}.}
+\item{alternative}{character string specifying the alternative hypothesis:
+\code{"two.sided"}, \code{"less"} (fewer runs than expected), or
+\code{"greater"} (more runs than expected). Defaults to \code{"two.sided"}.}
 }
 \value{
-An object of class \code{c("geer_runs_test", "geer_htest", "htest")}, so that
-it prints like \code{\link[stats]{print.htest}} (with p-values below 0.0001
-shown as \code{<0.0001}) and can be drawn with
-\code{\link{plot.geer_runs_test}}. The standard components are used as
-follows: \code{statistic} holds \eqn{Z}, \code{parameter} holds
-\eqn{n_p} and \eqn{n_n}, \code{estimate} holds the observed number of
-runs and \code{null.value} its null expectation, so that all of the
-quantities entering the test are shown by the default print method. In
-addition, the object contains:
+An object of class \code{c("geer_runs_test", "geer_htest", "htest")}, which
+can be plotted with \code{\link{plot.geer_runs_test}}. The standard
+components hold \eqn{Z} (\code{statistic}), \eqn{n_p} and \eqn{n_n}
+(\code{parameter}), \eqn{T} (\code{estimate}), and \eqn{E(T)}
+(\code{null.value}). In addition, the object contains:
 \item{runs}{the observed number of runs, \eqn{T}.}
 \item{expected_runs}{the null expectation \eqn{E(T)}.}
 \item{variance_runs}{the null variance \eqn{V(T)}.}
@@ -62,187 +50,72 @@ Performs the nonparametric Wald-Wolfowitz runs test proposed by Chang
 generalized estimating equation model.
 }
 \details{
-Let \eqn{n_p} and \eqn{n_n} denote the numbers of positive and negative
-residuals, respectively, and let \eqn{T} be the observed number of runs in
-their sign sequence. Under the null hypothesis that residual signs occur in
-random order,
-\deqn{E(T) = \frac{2n_p n_n}{n_p+n_n} + 1}
-and
-\deqn{V(T) =
-\frac{2n_p n_n(2n_p n_n-n_p-n_n)}
-{(n_p+n_n)^2(n_p+n_n-1)}.}
-The standardized statistic
-\deqn{Z = \frac{T-E(T)}{\sqrt{V(T)}}}
-is compared with the standard normal distribution. No continuity correction
-is applied, following Chang (2000) and Hardin and Hilbe (2013). The normal
-approximation is the only reference distribution used by either source and
-the only one offered here.
+Let \eqn{n_p} and \eqn{n_n} be the numbers of positive and negative
+residuals and \eqn{T} the number of runs in their sign sequence. Under the
+null hypothesis that the signs occur in random order,
+\deqn{E(T) = \frac{2n_p n_n}{n_p + n_n} + 1, \qquad
+V(T) = \frac{2n_p n_n(2n_p n_n - n_p - n_n)}{(n_p + n_n)^2(n_p + n_n - 1)},}{E(T) = 2 n_p n_n/(n_p + n_n) + 1,   V(T) = 2 n_p n_n (2 n_p n_n - n_p - n_n)/((n_p + n_n)^2 (n_p + n_n - 1)),}
+and \eqn{Z = (T - E(T))/\sqrt{V(T)}}{Z = (T - E(T))/sqrt(V(T))} is compared with the standard normal
+distribution without continuity correction, as in Chang (2000) and Hardin
+and Hilbe (2013). Chang (2000) recommends the approximation only when
+\eqn{n_p > 15} and \eqn{n_n > 15}; otherwise a warning is issued.
 
-The \code{alternative} argument selects the tail of that distribution.
-\code{"less"} tests against too few runs, the departure implied by sign
-clustering, an unmodeled trend, or omitted structure. \code{"greater"}
-tests against too many runs, that is, systematic alternation of residual
-signs. Chang (2000) rejects on extreme values of \eqn{Z} in either
-direction, his two applications reporting \eqn{Z = -9.00} and
-\eqn{Z = 24.57}, and reports no p-values at all, so the two-sided default
-corresponds to his decision rule. Hardin and Hilbe (2013) instead report a
-one-sided p-value in the direction of the observed \eqn{Z}, which is half
-the two-sided value, so reproducing their figures requires
-\code{"greater"} when \eqn{Z} is positive and \code{"less"} when it is
-negative.
+\code{alternative = "less"} tests against too few runs, as produced by
+clustered signs, an unmodeled trend, or omitted structure, and
+\code{"greater"} against too many runs, that is, alternating signs. Chang
+(2000) rejects for extreme \eqn{Z} in either direction, which corresponds
+to the two-sided default. Hardin and Hilbe (2013) report one-sided p-values
+in the direction of the observed \eqn{Z}.
 
-The test uses the residuals only through their signs, and therefore does
-not depend on which residual type is extracted from the fitted model. The
-working (raw), Pearson and deviance residuals returned by
-\code{\link{residuals.geer}} are, respectively, \eqn{y_{ij}-\hat\mu_{ij}},
-that difference divided by a strictly positive scale factor, and its signed
-square root. All three therefore produce the same sign sequence, the same
-\eqn{n_p}, \eqn{n_n} and \eqn{T}, and hence the same value of \eqn{Z} and
-the same p-value, so no residual-type argument is offered. This invariance
-is also why Chang (2000), who works with deviance residuals, and Hardin and
-Hilbe (2013), who plot raw and Pearson residuals, describe the same test.
+Only the signs of the residuals are used. The working, Pearson, and
+deviance residuals have the same signs, so the test does not depend on the
+residual type. Zero residuals are omitted and counted in the \code{zero}
+component. Prior weights are ignored: each observation contributes one sign.
 
-Residuals equal to zero are omitted from the sign sequence because the test
-is defined in terms of positive and negative residuals. Their number is
-returned in the \code{zero} component.
-
-Prior weights play no part in the test. Every retained observation
-contributes exactly one sign, so a row of a two-column binomial response
-representing many trials counts once, as does an observation with a large
-analytic weight.
-
-Chang (2000) recommends the normal approximation only when \eqn{n_p > 15}
-and \eqn{n_n > 15}. A warning is issued when \eqn{n_p \le 15} or
-\eqn{n_n \le 15}, and the normal approximation is still used, since neither
-source provides an alternative reference distribution.
-
-A character \code{order_by} that names neither \code{"natural"},
-\code{"fitted"}, nor a column of the model matrix is resolved against the
-data used to fit the model, which allows the residuals to be ordered on a
-covariate that was left out of the model. Such a variable cannot simply be
-taken from the stored data frame, because rows are dropped by
-\code{na.action} and by \code{subset} and the retained rows are then
-sorted by cluster and time before being stored. The model frame is instead
-rebuilt from the recorded call with the variable added to the formula, and
-the reconstruction is checked against the stored cluster and time indices.
-An error is signalled, rather than a possibly misaligned ordering returned,
-if the variable introduces additional missing values or if the check fails;
-an aligned numeric vector can always be supplied directly instead. Factor,
-character and logical variables are ordered by their factor codes, and
-\code{Date}, \code{POSIXct}, \code{POSIXlt} and \code{difftime} variables
-by their underlying numeric values.
-
-Chang (2000) further notes that for models with Poisson responses the
-residual sequence should follow the order of measurement rather than the
-follow-up time, which the default natural ordering provides.
+A character \code{order_by} that is not \code{"natural"}, \code{"fitted"},
+or a model matrix column is looked up in the data used to fit the model,
+so a covariate omitted from the model can be used. The model frame is
+rebuilt from the call and checked against the stored clusters and
+occasions; an error is signaled if the variable adds missing values or the
+check fails, in which case an aligned numeric vector can be supplied
+instead. Factor, character, and logical variables are ordered by their
+codes, and date-time variables by their numeric values.
 }
 \section{Choice of ordering}{
 
-The null hypothesis is the same whatever \code{order_by} is used. The sign
-sequence is a permutation of \eqn{n_p} positive and \eqn{n_n} negative
-signs, and the null states that all such arrangements are equally likely,
-so \eqn{E(T)} and \eqn{V(T)} depend on \eqn{n_p} and \eqn{n_n} alone and
-never on the ordering. What the ordering selects is the alternative: it
-fixes the direction in which a departure becomes visible. Ordering by a
-variable \eqn{v} gives power against the alternative that the sign of the
-residual depends on \eqn{v}, too few runs indicating that the sign changes
-less often along \eqn{v} than chance would allow, and too many that it
-alternates faster.
-
+The null distribution does not depend on the ordering; the ordering
+determines the alternative. Ordering by a variable gives power against
+signs that depend on that variable:
 \describe{
-  \item{\code{"natural"}}{residual signs block together within a cluster or
-    drift with time.}
-  \item{\code{"fitted"}}{the sign depends on \eqn{\hat\mu}, indicating an
-    inadequate scale or link.}
-  \item{a covariate in the model}{that covariate enters with the wrong
-    functional form.}
-  \item{a covariate not in the model}{that covariate has been wrongly
-    omitted.}
-  \item{a supplied numeric vector}{whatever that vector indexes, such as
-    batch, center or date of measurement.}
+  \item{\code{"natural"}}{signs that cluster within subjects or drift over
+    time;}
+  \item{\code{"fitted"}}{signs that depend on the fitted mean, suggesting
+    an inadequate link or variance function;}
+  \item{a model covariate}{a misspecified functional form of that
+    covariate;}
+  \item{another covariate}{a wrongly omitted covariate;}
+  \item{a numeric vector}{whatever the vector indexes, such as batch or
+    center.}
 }
+Chang (2000) and Hardin and Hilbe (2013, Section 4.2.1) use the natural
+ordering, and Hardin and Hilbe also order by a covariate; ordering by
+fitted values or by a supplied vector is an extension.
 
-Chang (2000) notes that the order is chosen by the investigator and uses
-the natural ordering throughout, in which each cluster's measurements
-appear consecutively and in ascending time order. Hardin and Hilbe (2013,
-Section 4.2.1) also compute the test in the natural ordering, and
-additionally sort the residuals by a continuous covariate of interest.
-Ordering by fitted values, and ordering by a supplied numeric vector, are
-extensions offered here and are used by neither source.
+Under the natural ordering, too few runs can arise from positive
+within-cluster association as well as from a misspecified mean, so a
+rejection does not identify the cause. Orderings that vary within clusters
+interleave the clusters and make a rejection more readily attributable to
+the mean structure. A cluster-level covariate, such as treatment arm, keeps
+the clusters together and behaves like the natural ordering.
 
-The natural ordering is the one case in which the null can fail even when
-the mean structure is correct, because clustered observations are not
-exchangeable. A small lower-tail p-value is therefore ambiguous: too few
-runs arise both from a misspecified mean structure and from genuine
-positive within-cluster association. Chang (2000) treats such a rejection
-as grounds for abandoning the marginal model in favor of a random-effects
-model, which changes the estimand from marginal to conditional. The test
-cannot separate the two explanations, and a rejection under the natural
-ordering should be read as evidence that something is wrong rather than
-that the mean structure in particular is wrong.
+Ties in the ordering are broken by the natural order, so a heavily tied
+ordering, such as fitted values from few covariate patterns or a factor
+with few levels, approaches the natural ordering.
 
-Ordering by a covariate is the sharpest of the three, because a departure
-can be invisible in one ordering and overwhelming in another. In Hardin and
-Hilbe (2013, Section 4.2.1) the same fitted model gives \eqn{Z = -0.200}
-in the natural ordering and \eqn{Z = -9.510}, with only three runs in one
-hundred observations, once the residuals are sorted by the covariate whose
-functional form is misspecified.
-
-A non-natural ordering interleaves observations from different clusters,
-which dilutes the within-cluster association described above and makes a
-rejection more readily attributable to the mean structure. This holds only
-for orderings that vary within a cluster. A baseline or between-cluster
-covariate, such as a treatment arm, sex or a randomization stratum, takes
-one value per cluster and therefore keeps each cluster's observations
-adjacent, so ordering on it reproduces the ambiguity of the natural
-ordering while appearing to test something else.
-
-Orderings other than the natural one are also only well defined up to ties,
-and ties are common rather than exceptional. A factor column takes as many
-distinct values as it has levels, and fitted values take one distinct value
-per covariate pattern, so a design with few covariate patterns yields few
-distinct ordering values; the residual plot of Hardin and Hilbe (2013,
-Section 4.2.1) has three distinct fitted values across eighty observations.
-Within a group of tied ordering values the sequence, and therefore
-\eqn{T}, is arbitrary. Ties are broken here by the natural cluster/repeated
-order, which makes the result reproducible but means that a heavily tied
-ordering reduces to the natural ordering within each tie group, blending
-the two hypotheses and approaching the natural ordering as the number of
-distinct values falls. Factor and character variables are ordered by their
-factor codes, so the sequence between levels is usually alphabetical and
-carries no meaning of its own.
-}
-
-\section{Reproducing the literature}{
-
-Chang (2000) reports values of \eqn{Z} and no p-values, so his results are
-matched by the \code{statistic} component and do not depend on
-\code{alternative}. Hardin and Hilbe (2013) report a one-sided p-value in
-the direction of the observed \eqn{Z}, which is half the two-sided value.
-
-\preformatted{
-runs_test(fit)
-runs_test(fit, alternative = "greater")
-runs_test(fit, order_by = "x1", alternative = "less")
-}
-
-The first call corresponds to the decision rule of Chang (2000). The second
-and third reproduce, respectively, the first and the covariate-ordered
-worked examples of Hardin and Hilbe (2013, Section 4.2.1). With
-\eqn{n_p = 42}, \eqn{n_n = 38} and \eqn{T = 44} the function returns
-\eqn{E(T) = 40.9}, \eqn{V(T) = 19.65} and \eqn{Z = 0.6993}, and
-\code{alternative = "greater"} gives \eqn{p = 0.2422}. With
-\eqn{n_p = 22} and \eqn{n_n = 78} it returns \eqn{E(T) = 35.32} and
-\eqn{V(T) = 11.55}, so the natural ordering, in which \eqn{T = 37}, gives
-\eqn{Z = 0.494}, and the covariate ordering, in which \eqn{T = 3}, gives
-\eqn{Z = -9.510}.
-
-The value \eqn{E(T) = 36.32} printed by that source for the second example
-under the natural ordering is an arithmetic error, since
-\eqn{2(22)(78)/100 + 1 = 35.32}, which is the value the same source uses
-for the identical counts under the covariate ordering. The \eqn{Z = 0.200}
-and \eqn{p = 0.4207} that follow from it are therefore not reproduced here;
-the corresponding values are \eqn{Z = 0.494} and \eqn{p = 0.311}.
+Hardin and Hilbe (2013, Section 4.2.1) print \eqn{E(T) = 36.32} for their
+second example under the natural ordering; the correct value is
+\eqn{2(22)(78)/100 + 1 = 35.32}, which gives \eqn{Z = 0.494} instead of
+\eqn{Z = 0.200}.
 }
 
 \examples{
@@ -255,7 +128,6 @@ fit <- geewa(
   repeated = visit,
   corstr = "exchangeable"
 )
-
 runs_test(fit)
 runs_test(fit, order_by = "fitted")
 runs_test(fit, order_by = "lnage")
@@ -270,7 +142,6 @@ Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
 Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 }
 \seealso{
-\code{\link{plot.geer_runs_test}},
-  \code{\link{residuals.geer}}, \code{\link{fitted.geer}},
-  \code{\link{predict.geer}}.
+\code{\link{plot.geer_runs_test}}, \code{\link{residuals.geer}},
+  \code{\link{fitted.geer}}, \code{\link{predict.geer}}.
 }

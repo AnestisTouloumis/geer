@@ -13,65 +13,45 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{type}{character string specifying the type of residuals to return.
-Options are \code{"working"} for raw residuals, \code{"response"} as an
-alias of \code{"working"} (the raw residuals \code{y - fitted}),
-\code{"pearson"} for
-residuals standardized by the marginal variance, \code{"deviance"}
-for dispersion-scaled signed square roots of the deviance contributions,
-and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
-Defaults to \code{"working"}.}
+\item{type}{character string specifying the type of residuals: raw
+(\code{"working"}, or its alias \code{"response"}), Pearson
+(\code{"pearson"}), deviance (\code{"deviance"}), or cluster-level
+Mahalanobis (\code{"mahalanobis"}) residuals. See Details. Defaults to
+\code{"working"}.}
 
-\item{...}{not used. Supplying any argument here is an error, so that a
-misspelled \code{type} is reported rather than silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
-A numeric vector. For \code{type = "working"}, \code{"pearson"}, or
-\code{"deviance"}, the vector has one value per fitted observation, in the
-internal observation order described below rather than in the row order of
-the supplied data. For \code{type = "mahalanobis"}, it has one value per
-cluster and is named by the cluster identifier.
+A numeric vector with one value per observation, in the order given under
+Observation order, or, for \code{type = "mahalanobis"}, one value per
+cluster, named by the cluster identifier.
 }
 \description{
 Extracts residuals of different types from a fitted \code{geer} object.
 }
 \details{
-Pearson residuals are computed as
+With prior weights \eqn{w_{ij}}, the Pearson and deviance residuals are
 \deqn{r^P_{ij} = \frac{y_{ij} - \hat\mu_{ij}}{\sqrt{\hat\phi
-V(\hat\mu_{ij}) / w_{ij}}}.}
-Deviance residuals are computed as
-\deqn{r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
-\sqrt{d(y_{ij}, \hat\mu_{ij}, w_{ij}) / \hat\phi},}
-where \eqn{d(y_{ij}, \hat\mu_{ij}, w_{ij})} is the non-scaled deviance
-contribution returned by the fitted family. As in
-\code{\link[stats]{glm}}, that contribution already includes the prior
-weight \eqn{w_{ij}}, which is why the weight appears inside \eqn{d} here
-but explicitly in the denominator of the Pearson residual.
-
-Mahalanobis residuals are computed once per cluster as
-\deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^T
-\widehat{\operatorname{Var}}(Y_i)^{-1}(y_i - \hat\mu_i),}
-using the fitted working covariance matrix for that cluster, which already
-includes the estimated dispersion. They are therefore nonnegative
-cluster-level diagnostics, rather than observation-level signed residuals.
-The quadratic form is evaluated through a Cholesky factorization of the
-working covariance matrix, and an error is signalled for any cluster whose
-working covariance matrix is not positive definite.
+V(\hat\mu_{ij})/w_{ij}}}, \qquad
+r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
+\sqrt{d_{ij}/\hat\phi},}{r^P_ij = (y_ij - mu_ij)/sqrt(phi V(mu_ij)/w_ij),   r^D_ij = sign(y_ij - mu_ij) sqrt(d_ij/phi),}
+where \eqn{d_{ij}} is the weighted deviance contribution of the family, as
+in \pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023). The Mahalanobis
+residual of cluster \eqn{i} is
+\deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^\top \hat V_i^{-1}
+(y_i - \hat\mu_i),}{r^M_i = (1/n_i)(y_i - mu_i)' V_i^(-1) (y_i - mu_i),}
+where \eqn{\hat V_i}{V_i} is the fitted working covariance matrix, including the
+dispersion. It is a nonnegative cluster-level diagnostic.
 }
 \section{Observation order}{
 
-The returned vector follows the internal observation order of the fitted
-model, not the row order of the data supplied to \code{geewa} or
-\code{geewa_binary}. Rows are restricted to the complete cases retained by
-the \code{na.action} in force and are then sorted by cluster identifier
-and, within cluster, by the repeated index. Unless the supplied data were
-already sorted that way and free of missing values, assigning the result
-back with an expression such as \code{data$r <- residuals(fit)} will
-attach values to the wrong rows without any warning, because the lengths
-can still agree. Order the data by cluster and repeated index before
-fitting, or align the result yourself using \code{fit$id} and
-\code{fit$repeated}, which are stored in the same order as the returned
-vector.
+The values follow the internal order of the fitted model: the complete
+cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
+data were already in this order and had no missing values, assigning the
+values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
+the same order and can be used to align them.
 }
 
 \examples{
@@ -81,9 +61,10 @@ fit <- geewa_binary(
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable"
 )
-head(residuals(fit, type = "working"))
+head(residuals(fit))
 head(residuals(fit, type = "pearson"))
 head(residuals(fit, type = "deviance"))
 head(residuals(fit, type = "mahalanobis"))
@@ -96,6 +77,6 @@ Equations using the new R package glmtoolbox. \emph{The R Journal},
 }
 \seealso{
 \code{\link{fitted.geer}}, \code{\link{predict.geer}},
-  \code{\link{runs_test}}, \code{\link{geewa}},
-  \code{\link{geewa_binary}}, \code{\link[stats]{residuals}}.
+  \code{\link{runs_test}}, \code{\link{geewa}}, \code{\link{geewa_binary}},
+  \code{\link[stats]{residuals}}.
 }

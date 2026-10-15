@@ -1,24 +1,25 @@
 #include "covariance_matrices.h"
-#include "link_functions.h"
-#include "working_covariance_cc.h"
 #include "cluster_utils.h"
-#include "working_covariance_or.h"
+#include "link_functions.h"
 #include "utils.h"
+#include "working_covariance_cc.h"
+#include "working_covariance_or.h"
 
 
-// ========================== shared sandwich + BC correction ==================
-static Rcpp::List compute_sandwich(arma::mat& information_matrix,
-                                   const arma::mat& meat_matrix,
-                                   const double sample_size,
-                                   const double obs_no_total,
-                                   const arma::uword params_no) {
+namespace {
+//============================ shared sandwich + BC correction =================
+Rcpp::List get_sandwich_covariances(arma::mat& information_matrix,
+                                    const arma::mat& meat_matrix,
+                                    const double sample_size,
+                                    const double obs_no_total,
+                                    const arma::uword params_no) {
   symmetrize_if_close(information_matrix, 1e-10);
   const arma::mat rhs =
     arma::join_rows(arma::eye(params_no, params_no), meat_matrix);
   const arma::mat solved = solve_chol_or_lu_mat(information_matrix, rhs);
   const arma::mat naive_covariance = solved.cols(0, params_no - 1);
   const arma::mat naive_covariance_meat_matrix = solved.cols(params_no,
-                                                         2 * params_no - 1);
+                                                             2 * params_no - 1);
   arma::mat robust_matrix =
     solve_chol_or_lu_mat(information_matrix, naive_covariance_meat_matrix.t());
   symmetrize_if_close(robust_matrix, 1e-10);
@@ -37,7 +38,7 @@ static Rcpp::List compute_sandwich(arma::mat& information_matrix,
     (sample_size / (sample_size - 1.0));
   double mbn_lambda =
     static_cast<double>(params_no) /
-      (sample_size - static_cast<double>(params_no));
+    (sample_size - static_cast<double>(params_no));
   if (mbn_lambda > 0.5) mbn_lambda = 0.5;
   double mbn_xi =
     arma::trace(naive_covariance_meat_matrix) / static_cast<double>(params_no);
@@ -52,6 +53,7 @@ static Rcpp::List compute_sandwich(arma::mat& information_matrix,
   );
 }
 //==============================================================================
+}  // namespace
 
 
 //============================ covariance matrices -- cc =======================
@@ -69,14 +71,14 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                       const arma::vec& alpha_vector,
                                       const double phi) {
   const auto clusters = clusters_from_sorted_id(id_vector);
-  const double sample_size  = static_cast<double>(clusters.size());
+  const double sample_size = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
   const double obs_no_total = static_cast<double>(model_matrix.n_rows);
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
@@ -107,10 +109,11 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       meat_matrix += u_vector_i * u_vector_i.t();
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_covariance_matrices_cc", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_covariance_matrices_cc", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
-  return compute_sandwich(information_matrix, meat_matrix,
+  return get_sandwich_covariances(information_matrix, meat_matrix,
                           sample_size, obs_no_total, params_no);
 }
 //==============================================================================
@@ -128,14 +131,14 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
   const auto clusters = clusters_from_sorted_id(id_vector);
-  const double sample_size  = static_cast<double>(clusters.size());
+  const double sample_size = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
   const double obs_no_total = static_cast<double>(model_matrix.n_rows);
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
@@ -165,10 +168,11 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       meat_matrix += u_vector_i * u_vector_i.t();
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_covariance_matrices_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_covariance_matrices_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
-  return compute_sandwich(information_matrix, meat_matrix,
+  return get_sandwich_covariances(information_matrix, meat_matrix,
                           sample_size, obs_no_total, params_no);
 }
 //==============================================================================

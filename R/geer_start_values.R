@@ -1,3 +1,21 @@
+drop_family_aic <- function(family) {
+  family$aic <- function(y, n, mu, wt, dev) NA_real_
+  family
+}
+
+
+muffle_noninteger_warnings <- function(expr) {
+  withCallingHandlers(
+    expr,
+    warning = function(w) {
+      if (grepl("^non-integer (x|#successes)", conditionMessage(w))) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
+}
+
+
 compute_geer_start_values <- function(model_matrix,
                                       y,
                                       family,
@@ -20,7 +38,8 @@ compute_geer_start_values <- function(model_matrix,
     return(beta_start)
   }
   control_glm <- do.call("brglm_control", control_glm)
-  if (link != "identity" && !(family$family %in% c("quasi", "quasibinomial", "quasipoisson"))) {
+  if (link != "identity" &&
+      !(family$family %in% c("quasi", "quasibinomial", "quasipoisson"))) {
     if (method %in% c("gee", geer_bcgee_methods)) {
       type <- "ML"
     } else if (identical(method, "brgee-naive")) {
@@ -29,10 +48,10 @@ compute_geer_start_values <- function(model_matrix,
       type <- "MPL_Jeffreys"
     }
     glmfit <- try(
-      brglmFit(
+      muffle_noninteger_warnings(brglmFit(
         x = model_matrix,
         y = y,
-        family = family,
+        family = drop_family_aic(family),
         weights = weights,
         offset = offset,
         control = list(
@@ -44,7 +63,7 @@ compute_geer_start_values <- function(model_matrix,
           max_step_factor = control_glm$max_step_factor,
           a = control$jeffreys_power
         )
-      ),
+      )),
       silent = TRUE
     )
   } else {
@@ -67,7 +86,10 @@ compute_geer_start_values <- function(model_matrix,
   if (!inherits(glmfit, "try-error") && all(is.finite(glmfit$coefficients))) {
     return(glmfit$coefficients)
   }
-  stop("cannot compute starting values; please supply 'beta_start'", call. = FALSE)
+  stop(
+    "starting values could not be computed; supply 'beta_start'",
+    call. = FALSE
+  )
 }
 
 
@@ -101,10 +123,10 @@ compute_geer_binary_start_values <- function(model_matrix,
   }
   control_glm <- do.call("brglm_control", control_glm)
   glmfit <- try(
-    brglmFit(
+    muffle_noninteger_warnings(brglmFit(
       x = model_matrix,
       y = y,
-      family = family,
+      family = drop_family_aic(family),
       weights = weights,
       offset = offset,
       control = list(
@@ -116,11 +138,14 @@ compute_geer_binary_start_values <- function(model_matrix,
         max_step_factor = control_glm$max_step_factor,
         a = jeffreys_power
       )
-    ),
+    )),
     silent = TRUE
   )
   if (!inherits(glmfit, "try-error") && all(is.finite(glmfit$coefficients))) {
     return(glmfit$coefficients)
   }
-  stop("cannot compute starting values; please supply 'beta_start'", call. = FALSE)
+  stop(
+    "starting values could not be computed; supply 'beta_start'",
+    call. = FALSE
+  )
 }

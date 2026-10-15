@@ -14,16 +14,12 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the
-bias-corrected estimator (\code{"bias-corrected"}), the sandwich or
-robust estimator (\code{"robust"}), the degrees-of-freedom adjusted
-estimator (\code{"df-adjusted"}), the leave-one-cluster jackknife
-estimator
-(\code{"jackknife"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
+used for inference: \code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See Details.
+Defaults to \code{"bias-corrected"}.}
 
-\item{...}{not used. Supplying any argument here is an error, so that a
-misspelled \code{cov_type} is reported rather than silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 A square numeric matrix of estimated covariances between regression
@@ -35,59 +31,34 @@ Extracts the variance-covariance matrix of the estimated regression
 parameters from a fitted \code{geer} object.
 }
 \details{
-The form of the covariance estimator is controlled by \code{cov_type}:
+The covariance estimator is selected by \code{cov_type}:
 \describe{
-  \item{\code{"bias-corrected"}}{the bias-corrected covariance estimator
-  (Morel et al., 2003).}
-  \item{\code{"robust"}}{the sandwich (robust) covariance estimator
-  (Liang and Zeger, 1986).}
-  \item{\code{"df-adjusted"}}{the degrees-of-freedom adjusted covariance
-  estimator (MacKinnon and White, 1985).}
-  \item{\code{"jackknife"}}{the cluster-level leave-one-out jackknife
-  covariance estimator. Each cluster is deleted in turn and the regression
-  parameters are refitted using the original estimation method while the
-  working association parameters are held fixed at their full-data
-  estimates. See the paragraphs below for the exact treatment of the
-  nuisance parameters, which is not identical across estimation methods.}
-  \item{\code{"naive"}}{the model-based covariance estimator
-  (Liang and Zeger, 1986).}
+  \item{\code{"bias-corrected"}}{the bias-corrected sandwich estimator of
+    Morel, Bokossa and Neerchal (2003).}
+  \item{\code{"robust"}}{the sandwich estimator of Liang and Zeger (1986).}
+  \item{\code{"df-adjusted"}}{the sandwich estimator with the
+    degrees-of-freedom adjustment of MacKinnon and White (1985).}
+  \item{\code{"jackknife"}}{the leave-one-cluster-out jackknife estimator.}
+  \item{\code{"naive"}}{the model-based estimator of Liang and Zeger
+    (1986).}
 }
+Both the bias-corrected and the degrees-of-freedom adjusted estimators
+require more clusters than regression parameters: otherwise the former is
+\code{NA} and the latter gives an error.
 
-For \code{cov_type = "jackknife"}, let \eqn{N} denote the number of
-clusters, let \eqn{\hat\beta_{(i)}} denote the regression-parameter
-estimate obtained after deleting cluster \eqn{i}, and let
-\eqn{\bar\beta_{(-)} = N^{-1}\sum_i \hat\beta_{(i)}}. The estimator is
-\deqn{\widehat{\mathrm{Var}}_J(\hat\beta) = \frac{N-1}{N}
-\sum_{i=1}^N (\hat\beta_{(i)}-\bar\beta_{(-)})
-(\hat\beta_{(i)}-\bar\beta_{(-)})^T,}
-where \eqn{(N-1)/N} is the usual finite-sample correction of the
-Quenouille-Tukey jackknife.
-Each \eqn{\hat\beta_{(i)}} is obtained by refitting the model in full on
-the remaining clusters. This is deliberate: no one-step approximation to
-the deletion estimates is used, so every \eqn{\hat\beta_{(i)}} solves the
-same estimating equations as the full-data fit.
-
-The estimation method of the original fit is used in every deletion refit,
-with nuisance quantities handled as follows. The working association
-structure is the one selected for the full-data model, and the applicable
-components of its association-parameter vector are held fixed at the
-full-data estimates. For \code{"bcgee-naive"}, \code{"bcgee-robust"},
-\code{"bcgee-empirical"}, \code{"opgee-jeffreys"} and
-\code{"hpgee-jeffreys"}, the full-data fit re-estimates these association
-parameters in its second pass, so a deletion refit is not identical to a
-complete re-run of the original method on the reduced data. The preliminary
-independence pass required by \code{"opgee-jeffreys"} and
-\code{"hpgee-jeffreys"} is reproduced in each deletion refit. The
-dispersion parameter is re-estimated when it was estimated in the original
-model and remains fixed when the original fit used a fixed dispersion; it
-is always \code{1} for models fitted by \code{geewa_binary()}.
-
-Unlike the other covariance estimators, this one can fail rather than
-return a matrix. At least two clusters are required, and an error is
-signalled if any deletion refit fails to converge or returns a non-finite
-estimate. Because a complete model is refitted once for each cluster, this
-option can also be substantially more computationally expensive than the
-other covariance estimators.
+With \eqn{K} clusters and \eqn{\hat\beta_{(i)}}{beta_(i)} the estimate obtained after
+deleting cluster \eqn{i}, the jackknife estimator is
+\deqn{\frac{K - 1}{K} \sum_{i=1}^K (\hat\beta_{(i)} - \bar\beta)
+(\hat\beta_{(i)} - \bar\beta)^\top, \qquad
+\bar\beta = \frac{1}{K}\sum_{i=1}^K \hat\beta_{(i)}.}{(K - 1)/K sum_i (beta_(i) - betabar)(beta_(i) - betabar)',   betabar = (1/K) sum_i beta_(i).}
+Each \eqn{\hat\beta_{(i)}}{beta_(i)} is a full refit by the original estimation
+method, not a one-step approximation, with the working association
+parameters held at their full-data estimates. The dispersion is
+re-estimated if it was estimated in the original fit. For the two-stage
+methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
+\code{"hpgee-jeffreys"}) the first stage is repeated in each refit. At
+least two clusters are required, and an error is signaled if a refit does
+not converge. The jackknife estimate is cached in the fitted object.
 }
 \examples{
 data("cerebrovascular", package = "geer")
@@ -96,6 +67,7 @@ fit <- geewa_binary(
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable"
 )
 vcov(fit)

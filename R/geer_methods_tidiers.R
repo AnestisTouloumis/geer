@@ -10,62 +10,44 @@ generics::glance
 #' Tidy a geer Object
 #'
 #' @description
-#' Summarizes a fitted \code{geer} object at the coefficient level, returning
-#' one row per regression term in a tidy data frame.
+#' Summarizes the regression coefficients of a fitted \code{geer} object in a
+#' data frame with one row per coefficient, following the conventions of
+#' \pkg{broom} (Robinson, Hayes and Couch, 2024).
 #'
-#' @param x an object of class \code{"geer"}.
-#' @param conf.int logical indicating whether to append confidence interval
-#'   columns \code{conf.low} and \code{conf.high}. Defaults to
-#'   \code{FALSE}.
+#' @param x a fitted model object of class \code{"geer"}.
+#' @param conf.int logical indicating whether Wald confidence limits are
+#'   included. Defaults to \code{FALSE}.
 #' @param conf.level a single number strictly between 0 and 1 specifying the
-#'   confidence level when \code{conf.int = TRUE}. Defaults to \code{0.95}.
-#' @param exponentiate logical indicating whether to exponentiate coefficient
-#'   estimates and confidence limits. This is often useful for models with a
-#'   log, logit, or complementary log-log link. Standard errors and Wald
-#'   z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.
-#' @param cov_type character string specifying the covariance estimator used to
-#'   compute standard errors and Wald z-statistics. Options are
+#'   confidence level. Defaults to \code{0.95}.
+#' @param exponentiate logical indicating whether the estimates and confidence
+#'   limits are exponentiated, for example to obtain odds ratios. Defaults to
+#'   \code{FALSE}.
+#' @param cov_type character string specifying the covariance matrix estimator
+#'   used for the standard errors, z-statistics, and confidence intervals:
 #'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, and \code{"naive"} (model-based). See
-#'   \code{\link{vcov.geer}} for details. Defaults to \code{"bias-corrected"}.
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
-#'
-#' @details
-#' The returned data frame contains the following columns:
-#' \describe{
-#'   \item{\code{term}}{name of the regression coefficient.}
-#'   \item{\code{estimate}}{point estimate, or the exponentiated point estimate
-#'   when \code{exponentiate = TRUE}.}
-#'   \item{\code{std.error}}{standard error derived from
-#'   \code{vcov(x, cov_type = cov_type)}.}
-#'   \item{\code{statistic}}{Wald z-statistic, computed as the coefficient
-#'   estimate divided by its standard error. \code{NA} is reported when the
-#'   standard error is not positive.}
-#'   \item{\code{p.value}}{two-sided p-value from the standard normal
-#'   distribution.}
-#'   \item{\code{conf.low}, \code{conf.high}}{lower and upper Wald confidence
-#'   limits. These columns are included only when \code{conf.int = TRUE}.}
-#' }
-#'
-#' When \code{exponentiate = TRUE}, only \code{estimate}, \code{conf.low}, and
-#' \code{conf.high} are exponentiated. The columns \code{std.error} and
-#' \code{statistic} remain on the original scale.
+#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+#'   Defaults to \code{"bias-corrected"}.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @return
-#' A data frame with one row per regression coefficient and columns as
-#' described in the Details section. When \pkg{tibble} is available, the result
-#' has class \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
-#' \code{data.frame} is returned.
+#' A data frame, a tibble if \pkg{tibble} is installed, with columns:
+#' \item{term}{the name of the coefficient.}
+#' \item{estimate}{the estimate, exponentiated if \code{exponentiate = TRUE}.}
+#' \item{std.error}{the standard error, on the original scale.}
+#' \item{statistic}{the Wald z-statistic, on the original scale.}
+#' \item{p.value}{the two-sided p-value.}
+#' \item{conf.low, conf.high}{the confidence limits, if
+#'   \code{conf.int = TRUE}.}
 #'
 #' @references
 #' Robinson, D., Hayes, A. and Couch, S. (2024) \emph{broom: Convert
-#' Statistical Objects into Tidy Tibbles}. \url{https://broom.tidymodels.org/}
+#' Statistical Objects into Tidy Tibbles}. R package.
+#' \url{https://broom.tidymodels.org/}
 #'
-#' @seealso
-#' \code{\link{glance.geer}}, \code{\link{vcov.geer}},
-#' \code{\link{confint.geer}}, \code{\link{geewa}},
-#' \code{\link{geewa_binary}}.
+#' @seealso \code{\link{glance.geer}}, \code{\link{vcov.geer}},
+#'   \code{\link{confint.geer}}, \code{\link{geewa}},
+#'   \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
@@ -74,23 +56,12 @@ generics::glance
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
-#'   corstr = "exchangeable",
-#'   method = "gee"
+#'   repeated = visit,
+#'   corstr = "exchangeable"
 #' )
 #' tidy(fit)
-#' tidy(fit, conf.int = TRUE)
 #' tidy(fit, conf.int = TRUE, exponentiate = TRUE)
 #' tidy(fit, cov_type = "robust")
-#'
-#' data("cerebrovascular", package = "geer")
-#' fit_bin <- geewa_binary(
-#'   formula = ecg ~ treatment + factor(period),
-#'   link = "logit",
-#'   data = cerebrovascular,
-#'   id = id,
-#'   orstr = "exchangeable"
-#' )
-#' tidy(fit_bin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 #'
 #' @export
 tidy.geer <- function(x,
@@ -102,26 +73,33 @@ tidy.geer <- function(x,
                       ...) {
   object <- check_geer_object(x)
   cov_type <- match.arg(cov_type)
+  check_unused_dots(list(...), "tidy.geer")
   if (!is.logical(conf.int) || length(conf.int) != 1L || is.na(conf.int)) {
-    stop("'conf.int' must be a single logical value", call. = FALSE)
+    stop("'conf.int' must be TRUE or FALSE", call. = FALSE)
   }
   if (!is.numeric(conf.level) || length(conf.level) != 1L ||
       !is.finite(conf.level) || conf.level <= 0 || conf.level >= 1) {
-    stop("'conf.level' must be a single number in (0, 1)", call. = FALSE)
+    stop(
+      "'conf.level' must be a number strictly between 0 and 1",
+      call. = FALSE
+    )
   }
   if (!is.logical(exponentiate) || length(exponentiate) != 1L ||
       is.na(exponentiate)) {
-    stop("'exponentiate' must be a single logical value", call. = FALSE)
+    stop("'exponentiate' must be TRUE or FALSE", call. = FALSE)
   }
   if (exponentiate && !object$family$link %in% c("log", "logit", "cloglog")) {
     warning(
-      "'exponentiate = TRUE' is typically most meaningful for log, logit, or cloglog links",
+      paste0(
+        "'exponentiate = TRUE' is usually meaningful only for log, logit, and ",
+        "cloglog links"
+      ),
       call. = FALSE
     )
   }
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- standard_errors_or_na(diag(vcov_matrix), "tidy.geer")
+  se <- compute_standard_errors_or_na(diag(vcov_matrix), "tidy.geer")
   z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]
@@ -136,10 +114,6 @@ tidy.geer <- function(x,
     stringsAsFactors = FALSE
   )
   if (conf.int) {
-    ## The limits are built from the standard errors already computed above
-    ## rather than by calling confint(), which would recompute the covariance
-    ## matrix. The result is identical, but it avoids a second full set of
-    ## leave-one-cluster refits when cov_type = "jackknife".
     conf_probs <- (1 - conf.level) / 2
     conf_probs <- c(conf_probs, 1 - conf_probs)
     limits <- beta + se %o% stats::qnorm(conf_probs)
@@ -165,57 +139,35 @@ tidy.geer <- function(x,
 #' Glance at a geer Object
 #'
 #' @description
-#' Produces a one-row summary for a fitted \code{geer} object, following
-#' \pkg{broom} conventions.
+#' Summarizes a fitted \code{geer} object in a one-row data frame, following
+#' the conventions of \pkg{broom} (Robinson, Hayes and Couch, 2024).
 #'
-#' @param x an object of class \code{"geer"}.
+#' @param x a fitted model object of class \code{"geer"}.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
 #' @details
-#' The returned one-row data frame contains the following columns:
-#' \describe{
-#'   \item{\code{family}}{name of the marginal response family.}
-#'   \item{\code{link}}{name of the link function.}
-#'   \item{\code{method}}{estimation method, for example \code{"gee"},
-#'   \code{"brgee-robust"}, \code{"pgee-jeffreys"},
-#'   \code{"opgee-jeffreys"}, or \code{"hpgee-jeffreys"}.}
-#'   \item{\code{wastr}}{stored working association structure. For
-#'   \code{geewa()} fits this corresponds to \code{corstr}; for
-#'   \code{geewa_binary()} fits it corresponds to \code{orstr}.}
-#'   \item{\code{nobs}}{number of observations used in fitting.}
-#'   \item{\code{nclusters}}{number of independent clusters \eqn{N}.}
-#'   \item{\code{min.cluster.size}}{minimum cluster size.}
-#'   \item{\code{max.cluster.size}}{maximum cluster size.}
-#'   \item{\code{npar}}{number of marginal mean-model parameters \eqn{p}.}
-#'   \item{\code{df.residual}}{residual degrees of freedom
-#'   \eqn{n^{\star} - p}.}
-#'   \item{\code{phi}}{estimated or fixed dispersion parameter. This equals
-#'   \code{1} for the odds-ratio parameterization used by
-#'   \code{geewa_binary()}.}
-#'   \item{\code{QIC}}{Quasi Information Criterion (Pan, 2001), computed from
-#'   the robust sandwich covariance estimator. Smaller values are preferred.}
-#'   \item{\code{QICu}}{Covariate-selection variant of QIC (Pan, 2001).
-#'   Smaller values are preferred.}
-#'   \item{\code{CIC}}{Correlation Information Criterion (Hin and Wang, 2009),
-#'   used here to compare working association structures. Smaller values are
-#'   preferred.}
-#'   \item{\code{converged}}{logical; \code{TRUE} if the fitting algorithm
-#'   converged.}
-#'   \item{\code{niter}}{number of iterations used.}
-#' }
-#'
-#' QIC and CIC are computed using the same formulas as
-#' \code{geecriteria(object, cov_type = "robust")}. QICu does not depend on
-#' the covariance estimator. If computation fails, the corresponding values
-#' are returned as \code{NA_real_}. For the full set of model selection
-#' criteria, see \code{\link{geecriteria}}.
+#' \code{QIC} and \code{CIC} use the robust covariance matrix, as in
+#' \code{geecriteria(x, cov_type = "robust")}, and are \code{NA} if they
+#' cannot be computed. See \code{\link{geecriteria}} for further criteria.
 #'
 #' @return
-#' A one-row data frame with columns as described in the Details section.
-#' When \pkg{tibble} is available, the result has class
-#' \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
-#' \code{data.frame} is returned.
+#' A one-row data frame, a tibble if \pkg{tibble} is installed, with columns:
+#' \item{family, link}{the family and link function.}
+#' \item{method}{the estimation method.}
+#' \item{wastr}{the working association structure, \code{corstr} or
+#'   \code{orstr}.}
+#' \item{nobs, nclusters}{the numbers of observations and clusters.}
+#' \item{min.cluster.size, max.cluster.size}{the smallest and largest cluster
+#'   sizes.}
+#' \item{npar}{the number of regression parameters.}
+#' \item{df.residual}{the number of observations minus \code{npar}.}
+#' \item{phi}{the dispersion parameter, 1 for \code{\link{geewa_binary}}
+#'   fits.}
+#' \item{QIC, QICu}{the quasi-likelihood information criteria of Pan (2001).}
+#' \item{CIC}{the correlation information criterion of Hin and Wang (2009).}
+#' \item{converged}{logical indicating whether the algorithm converged.}
+#' \item{niter}{the number of iterations.}
 #'
 #' @references
 #' Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure
@@ -226,11 +178,11 @@ tidy.geer <- function(x,
 #' equations. \emph{Biometrics}, \bold{57}, 120--125.
 #'
 #' Robinson, D., Hayes, A. and Couch, S. (2024) \emph{broom: Convert
-#' Statistical Objects into Tidy Tibbles}. \url{https://broom.tidymodels.org/}
+#' Statistical Objects into Tidy Tibbles}. R package.
+#' \url{https://broom.tidymodels.org/}
 #'
-#' @seealso
-#' \code{\link{tidy.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},
-#' \code{\link{geewa_binary}}.
+#' @seealso \code{\link{tidy.geer}}, \code{\link{geecriteria}},
+#'   \code{\link{geewa}}, \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' data("epilepsy", package = "geer")
@@ -239,37 +191,20 @@ tidy.geer <- function(x,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
-#'   corstr = "exchangeable",
-#'   method = "gee"
+#'   repeated = visit,
+#'   corstr = "exchangeable"
 #' )
 #' glance(fit)
 #'
-#' data("cerebrovascular", package = "geer")
-#' fit_bin <- geewa_binary(
-#'   formula = ecg ~ treatment + factor(period),
-#'   link = "logit",
-#'   data = cerebrovascular,
-#'   id = id,
-#'   orstr = "exchangeable"
-#' )
-#' glance(fit_bin)
-#'
-#' \donttest{
-#' fit_ind  <- update(fit, corstr = "independence")
-#' fit_ar1  <- update(fit, corstr = "ar1")
-#' fit_unst <- update(fit, corstr = "unstructured")
-#' do.call(rbind, lapply(
-#'   list(independence = fit_ind, exchangeable = fit, ar1 = fit_ar1,
-#'        unstructured = fit_unst),
-#'   glance
-#' ))[, c("wastr", "QIC", "CIC", "niter")]
-#' }
+#' ## Compare working correlation structures
+#' fit_ar1 <- update(fit, corstr = "ar1")
+#' rbind(glance(fit), glance(fit_ar1))
 #'
 #' @export
 glance.geer <- function(x, ...) {
   object <- check_geer_object(x)
   crit <- tryCatch(
-    compute_gee_criteria(
+    compute_criteria(
       object, cov_type = "robust", digits = 15L, include_extended = FALSE,
       criteria = c("QIC", "QICu", "CIC")
     ),

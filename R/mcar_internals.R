@@ -16,7 +16,10 @@ compute_mcar_normal_initial_parameters <- function(x) {
 
   if (anyNA(mu) || !all(is.finite(sigma))) {
     stop(
-      "initial covariance matrix for normal-theory EM estimation is singular; check for collinear or nearly constant variables",
+      paste0(
+        "initial covariance matrix for normal-theory EM estimation is ",
+        "singular; check for collinear or nearly constant variables"
+      ),
       call. = FALSE
     )
   }
@@ -31,7 +34,10 @@ compute_mcar_normal_initial_parameters <- function(x) {
     attempts <- attempts + 1L
     if (attempts > 12L) {
       stop(
-        "initial covariance matrix for normal-theory EM estimation is singular; check for collinear or nearly constant variables",
+        paste0(
+          "initial covariance matrix for normal-theory EM estimation is ",
+          "singular; check for collinear or nearly constant variables"
+        ),
         call. = FALSE
       )
     }
@@ -82,7 +88,10 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
         solve(sigma_oo),
         error = function(e) {
           stop(
-            "the observed-data covariance matrix became singular during normal-theory EM estimation",
+            paste0(
+              "the observed-data covariance matrix became singular during ",
+              "normal-theory EM estimation"
+            ),
             call. = FALSE
           )
         }
@@ -126,7 +135,13 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
     sigma <- sigma_new
 
     if (!all(is.finite(mu)) || !all(is.finite(sigma))) {
-      stop("normal-theory maximum-likelihood estimation produced non-finite values", call. = FALSE)
+      stop(
+        paste0(
+          "normal-theory maximum-likelihood estimation produced non-finite ",
+          "values"
+        ),
+        call. = FALSE
+      )
     }
 
     if (difference <= tol * parameter_scale) {
@@ -137,7 +152,13 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
 
   if (!converged) {
     warning(
-      sprintf("the EM algorithm for normal-theory maximum-likelihood estimation did not converge within %d iterations", maxit),
+      sprintf(
+        paste0(
+          "the EM algorithm for normal-theory maximum-likelihood estimation ",
+          "did not converge within %d iterations"
+        ),
+        maxit
+      ),
       call. = FALSE
     )
   }
@@ -146,7 +167,10 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
   scale <- max(1, max(abs(eigenvalues)))
   if (any(eigenvalues <= sqrt(.Machine$double.eps) * scale)) {
     stop(
-      "the normal-theory maximum-likelihood covariance matrix is singular or nearly singular",
+      paste0(
+        "the normal-theory maximum-likelihood covariance matrix is singular ",
+        "or nearly singular"
+      ),
       call. = FALSE
     )
   }
@@ -155,13 +179,16 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
 }
 
 
-extract_geer_mcar_matrix <- function(object, data = NULL) {
+extract_mcar_matrix <- function(object, data = NULL) {
   if (is.null(data)) {
     data <- object$data
   }
   if (is.null(data)) {
     stop(
-      "the original data are not available in the fitted object; supply them through 'data'",
+      paste0(
+        "the original data are not available in the fitted object; supply ",
+        "them through 'data'"
+      ),
       call. = FALSE
     )
   }
@@ -176,14 +203,19 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
   mcall$drop.unused.levels <- TRUE
 
   formula_env <- environment(stats::formula(object$terms))
-  if (is.null(formula_env)) formula_env <- parent.frame()
+  if (is.null(formula_env)) {
+    formula_env <- parent.frame()
+  }
   eval_env <- new.env(parent = formula_env)
   assign(".geer_mcar_data", data, envir = eval_env)
   model_frame <- tryCatch(
     eval(mcall, envir = eval_env, enclos = formula_env),
     error = function(e) {
       stop(
-        sprintf("could not reconstruct the original data for the MCAR diagnostic: %s", conditionMessage(e)),
+        sprintf(
+          "could not reconstruct the data used by the fit: %s",
+          conditionMessage(e)
+        ),
         call. = FALSE
       )
     }
@@ -192,17 +224,27 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
   response <- stats::model.response(model_frame)
   if (is.matrix(response) || is.data.frame(response)) {
     stop(
-      "MCAR diagnostics for a 'geer' object currently require a univariate response at each repeated measurement",
+      "the MCAR tests require a univariate response",
       call. = FALSE
     )
   }
   if (!is.numeric(response)) {
-    stop("the response used for the MCAR diagnostic must be numeric", call. = FALSE)
+    stop(
+      "the MCAR tests require a numeric response",
+      call. = FALSE
+    )
   }
 
   id_raw <- stats::model.extract(model_frame, "id")
-  if (is.null(id_raw)) stop("'id' could not be recovered from the fitted model", call. = FALSE)
-  if (anyNA(id_raw)) stop("'id' cannot contain missing values for the MCAR diagnostic", call. = FALSE)
+  if (is.null(id_raw)) {
+    stop("'id' could not be recovered from the fitted model", call. = FALSE)
+  }
+  if (anyNA(id_raw)) {
+    stop(
+      "'id' must not contain missing values",
+      call. = FALSE
+    )
+  }
   id <- as.numeric(factor(id_raw))
 
   repeated_raw <- stats::model.extract(model_frame, "repeated")
@@ -211,7 +253,10 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
     repeated_labels <- as.character(seq_len(max(repeated)))
   } else {
     if (anyNA(repeated_raw)) {
-      stop("'repeated' cannot contain missing values for the MCAR diagnostic", call. = FALSE)
+      stop(
+        "'repeated' must not contain missing values",
+        call. = FALSE
+      )
     }
     repeated_factor <- factor(repeated_raw)
     repeated <- as.numeric(repeated_factor)
@@ -219,10 +264,16 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
   }
 
   if (length(response) != length(id) || length(response) != length(repeated)) {
-    stop("response, 'id', and 'repeated' must have the same length", call. = FALSE)
+    stop(
+      "response, 'id', and 'repeated' must have the same length",
+      call. = FALSE
+    )
   }
   if (any(duplicated(data.frame(id = id, repeated = repeated)))) {
-    stop("'repeated' must identify unique measurements within each 'id'", call. = FALSE)
+    stop(
+      "'repeated' must identify unique measurements within each 'id'",
+      call. = FALSE
+    )
   }
 
   response_matrix <- matrix(
@@ -234,4 +285,3 @@ extract_geer_mcar_matrix <- function(object, data = NULL) {
   response_matrix[cbind(id, repeated)] <- as.numeric(response)
   response_matrix
 }
-

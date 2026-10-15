@@ -4,78 +4,46 @@
 #' @method plot geer_runs_test
 #'
 #' @description
-#' Draws the graphical companion of the Wald-Wolfowitz runs test described by
-#' Hardin and Hilbe (2013, Section 4.2.1): the sequence of residual signs that
-#' was tested, with the boundaries between runs and, where meaningful, the
-#' boundaries between clusters.
+#' Plots the sequence of residual signs tested by \code{\link{runs_test}}, as
+#' in Hardin and Hilbe (2013, Section 4.2.1), with successive runs in
+#' different colors and, under the natural ordering, the cluster boundaries.
 #'
 #' @param x an object of class \code{"geer_runs_test"}, as returned by
 #'   \code{\link{runs_test}}.
-#' @param cluster_breaks logical value indicating whether vertical grid lines
-#'   should mark the boundaries between clusters. If \code{NULL}, they are drawn
-#'   when the test used the natural cluster/repeated ordering and omitted
-#'   otherwise. Defaults to \code{NULL}.
-#' @param col color of the plotting symbols. If \code{NULL}, the symbols are
-#'   colored by run using \code{run_colors}. A single color suppresses that and
-#'   draws every symbol alike; a vector is recycled across the tested residuals
-#'   by \code{\link[graphics]{points}}. Defaults to \code{NULL}.
-#' @param run_colors vector of at least three colors recycled across successive
-#'   runs when \code{col} is \code{NULL}. Fewer than three is an error; see
-#'   Details. Defaults to \code{grDevices::palette.colors(4L, "Okabe-Ito")}.
+#' @param cluster_breaks logical indicating whether dotted lines mark the
+#'   boundaries between clusters. Defaults to \code{NULL}, which draws them
+#'   only under the natural ordering.
+#' @param col color of the symbols. Defaults to \code{NULL}, which colors the
+#'   symbols by run using \code{run_colors}.
+#' @param run_colors vector of at least three colors, recycled across
+#'   successive runs. Defaults to
+#'   \code{grDevices::palette.colors(4L, "Okabe-Ito")}.
 #' @param pch plotting symbol, passed to \code{\link[graphics]{points}}.
 #'   Defaults to \code{1L}.
-#' @param cex symbol expansion, passed to \code{\link[graphics]{points}}. If
-#'   \code{NULL}, the symbols shrink as the sequence lengthens so that long
-#'   sequences remain readable. Defaults to \code{NULL}.
-#' @param main,sub,xlab,ylab character strings giving the title, subtitle and
-#'   axis labels. Defaults are supplied when these are \code{NULL}; use
+#' @param cex symbol size, passed to \code{\link[graphics]{points}}. Defaults to
+#'   \code{NULL}, which shrinks the symbols for long sequences.
+#' @param main,sub,xlab,ylab character strings giving the title, subtitle, and
+#'   axis labels. Defaults to \code{NULL}, which gives informative labels; use
 #'   \code{""} to suppress one.
-#' @param ... further graphical parameters passed to
-#'   \code{\link[graphics]{plot.default}}. These take precedence over the
-#'   defaults set here, so \code{ylim} and \code{yaxt} may be overridden;
-#'   \code{type} may not, because the symbols are drawn separately. All must
-#'   be named.
+#' @param ... further named graphical parameters passed to
+#'   \code{\link[graphics]{plot.default}}, such as \code{ylim}. \code{type}
+#'   cannot be changed.
 #'
 #' @details
-#' Each retained residual contributes one point at \eqn{+1} or \eqn{-1},
-#' plotted against its position in the sequence that was tested. Residuals
-#' equal to zero are excluded from that sequence, so positions index the
-#' tested signs rather than the observations of the fitted model. The number
-#' of excluded residuals is reported in the default subtitle when it is not
-#' zero.
-#'
-#' The default title records the ordering that was used, because the ordering
-#' determines which alternative the test has power against, and two sequences
-#' drawn from the same fit under different orderings are otherwise
-#' indistinguishable. The default subtitle reports the observed number of
-#' runs, its null expectation and the p-value, so that the figure can be read
-#' without the printed test beside it.
-#'
-#' Successive runs are drawn in different colors, recycled from
-#' \code{run_colors}, so that a long run appears as a monochrome block and
-#' the number of color changes is the observed number of runs less one.
-#' Coloring is used in preference to vertical rules at every sign change,
-#' which saturate the display once the sequence runs to a few hundred
-#' observations. At least three colors are required: with two, the color
-#' alternates exactly with the sign, so it reproduces the vertical axis and
-#' carries no information of its own.
-#'
-#' Dotted grid lines mark the boundaries between clusters, which makes it
-#' possible to see how many clusters have residuals of a common sign; this is
-#' the pattern that drives the statistic downward under the natural ordering.
-#' Cluster boundaries are only interpretable when the sequence is ordered
-#' naturally, since any other ordering interleaves the clusters, and a warning
-#' is issued if they are requested for such an ordering.
+#' Each tested residual is plotted at \eqn{+1} or \eqn{-1} against its
+#' position in the tested sequence; zero residuals are excluded and their
+#' number is given in the default subtitle. The default title gives the
+#' ordering, and the default subtitle the number of runs, its null
+#' expectation, and the p-value. At least three colors are needed, because
+#' with two the color would simply repeat the sign. Cluster boundaries are
+#' meaningful only under the natural ordering, and requesting them otherwise
+#' gives a warning.
 #'
 #' @return
 #' Invisibly, a data frame with one row per tested residual and columns
-#' \code{position}, \code{sign}, \code{run} and \code{cluster}, where
-#' \code{run} numbers the runs consecutively from one.
+#' \code{position}, \code{sign}, \code{run}, and \code{cluster}.
 #'
 #' @references
-#' Chang, Y.-C. (2000) Residuals analysis of the generalized linear models for
-#' longitudinal data. \emph{Statistics in Medicine}, \bold{19}, 1277--1293.
-#'
 #' Hardin, J.W. and Hilbe, J.M. (2013) \emph{Generalized Estimating
 #' Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 #'
@@ -91,7 +59,6 @@
 #'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
-#'
 #' plot(runs_test(fit))
 #' plot(runs_test(fit, order_by = "fitted"), ylim = c(-2, 2))
 #'
@@ -135,7 +102,7 @@ plot.geer_runs_test <- function(x,
     if (length(cluster_breaks) != 1L || !is.logical(cluster_breaks) ||
         is.na(cluster_breaks)) {
       stop(
-        "'cluster_breaks' must be NULL or a single non-missing logical value",
+        "'cluster_breaks' must be NULL, TRUE or FALSE",
         call. = FALSE
       )
     }
@@ -155,9 +122,8 @@ plot.geer_runs_test <- function(x,
   if (is.null(col) && length(run_colors) < 3L) {
     stop(
       paste0(
-        "'run_colors' must contain at least three colors: with two the ",
-        "color alternates with the residual sign and duplicates the ",
-        "vertical axis"
+        "'run_colors' must contain at least three colors; with two, the ",
+        "colors only repeat the signs"
       ),
       call. = FALSE
     )
@@ -185,8 +151,6 @@ plot.geer_runs_test <- function(x,
     ylab <- "Residual sign"
   }
   if (is.null(cex)) {
-    ## Open symbols merge into a solid band once the sequence is long, which
-    ## is the regime the run coloring is meant to survive.
     cex <- max(0.25, min(1, 200 / sequence_length))
   }
 
@@ -198,15 +162,12 @@ plot.geer_runs_test <- function(x,
   if ("type" %in% dot_names) {
     stop(
       paste0(
-        "'type' must not be supplied: the symbols are drawn separately so ",
-        "that they can be colored by run"
+        "'type' cannot be changed: the symbols are drawn separately to color ",
+        "them by run"
       ),
       call. = FALSE
     )
   }
-  ## The defaults are assembled first and then overwritten by '...', so a
-  ## user-supplied 'ylim' or 'yaxt' replaces the default instead of reaching
-  ## plot.default twice.
   plot_arguments <- list(
     x = position,
     y = signs,
@@ -232,9 +193,6 @@ plot.geer_runs_test <- function(x,
     }
   }
   graphics::abline(h = 0, col = "grey40")
-  ## Runs are indexed by the cumulative number of sign changes, so every
-  ## element of a run receives the same color and the color changes exactly
-  ## at the run boundaries.
   run_index <- cumsum(c(1L, as.integer(signs[-1L] != signs[-sequence_length])))
   point_colors <- if (is.null(col)) {
     run_colors[(run_index - 1L) %% length(run_colors) + 1L]

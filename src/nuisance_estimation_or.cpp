@@ -2,6 +2,9 @@
 #include "cluster_utils.h"
 #include "utils.h"
 #include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <vector>
 
 
 //============================ estimate marginalized odds ratio structure ======
@@ -11,7 +14,7 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
                                                  const arma::vec& repeated_vector,
                                                  const arma::vec& weights_vector,
                                                  const double adding_constant,
-                                                 const Rcpp::String& or_structure) {
+                                                 const char* or_structure) {
   const auto clusters = clusters_from_sorted_id(id_vector);
   const arma::uword sample_size = clusters.size();
   const arma::uword cluster_size_max =
@@ -53,15 +56,34 @@ Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vecto
       }
     }
   }
+  // A pair of visits never observed together has all four cells equal to the
+  // adding constant, hence odds ratio 1. That is "no information", not evidence
+  // of independence, so such pairs are left out of the exchangeable pooling.
+  std::vector<bool> informative(pairs_no, false);
+  for (arma::uword i = 0; i < pairs_no; ++i) {
+    informative[i] = (counts[i] + counts[i + pairs_no] +
+                      counts[i + 2 * pairs_no] + counts[i + 3 * pairs_no]) > 0.0;
+  }
   counts += adding_constant;
   Rcpp::NumericVector result(pairs_no);
   for (arma::uword i = 0; i < pairs_no; ++i) {
     result[i] =
       (counts[i] * counts[i + 3 * pairs_no]) /
-        (counts[i + pairs_no] * counts[i + 2 * pairs_no]);
+      (counts[i + pairs_no] * counts[i + 2 * pairs_no]);
   }
-  if (or_structure == "exchangeable") {
-    result = Rcpp::exp(Rcpp::rep(Rcpp::mean(Rcpp::log(result)), pairs_no));
+  if (std::strcmp(or_structure, "exchangeable") == 0) {
+    double log_sum = 0.0;
+    arma::uword informative_no = 0;
+    for (arma::uword i = 0; i < pairs_no; ++i) {
+      if (informative[i]) {
+        log_sum += std::log(result[i]);
+        ++informative_no;
+      }
+    }
+    if (informative_no > 0) {
+      result = Rcpp::rep(std::exp(log_sum / static_cast<double>(informative_no)),
+                         pairs_no);
+    }
   }
   return result;
 }

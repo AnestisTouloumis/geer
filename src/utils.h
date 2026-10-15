@@ -38,7 +38,7 @@ arma::mat kronecker_vector_identity(const arma::vec& x);
 // partial pivoting otherwise) so that several right-hand sides can be solved
 // without repeating the factorization.
 class CholOrLuFactor {
-public:
+ public:
   // `context` (a string literal) prefixes error messages so that a failed
   // factorization or solve names the calling routine.
   explicit CholOrLuFactor(const arma::mat& X,
@@ -66,13 +66,13 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X,
                                                arma::uword cluster_index,
                                                double id_value,
                                                const std::exception& e);
-arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
+arma::vec get_lambda_from_blocks(const arma::mat& A,
                                         const arma::mat& lambda_matrix);
 void symmetrize_if_close(arma::mat& A, double rel_tol = 1e-10);
 // out += scale * kron(D, D)' * S * D, where S is (m^2 x m), with m = nrow(D), and out is
 // (p^2 x p), without forming kron(D, D). Row j * p + k of out matches the
 // (j, k) pair of the Kronecker product.
-inline void add_kron_self_t_s_d(arma::mat& out,
+inline void add_kronecker_self_t_s_d(arma::mat& out,
                                 const arma::mat& d_matrix,
                                 const arma::mat& s_matrix,
                                 const double scale = 1.0) {
@@ -95,7 +95,7 @@ inline void add_kron_self_t_s_d(arma::mat& out,
 
 // Returns kron(D, D)' * w for a vector w of length m^2, without forming
 // kron(D, D). Entry j * p + k matches the (j, k) pair of the Kronecker product.
-inline arma::vec kron_self_t_vec(const arma::mat& d_matrix,
+inline arma::vec kronecker_self_t_vec(const arma::mat& d_matrix,
                                  const arma::vec& w_vector) {
   const arma::uword cluster_size = d_matrix.n_rows;
   const arma::uword p = d_matrix.n_cols;

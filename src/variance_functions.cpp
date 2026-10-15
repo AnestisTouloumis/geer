@@ -1,7 +1,5 @@
 #include "variance_functions.h"
 
-namespace geer {
-
 
 //============================ variance (enum) =================================
 arma::vec variance_function(FamilyCode family_code, const arma::vec& mu_vector) {
@@ -82,4 +80,3 @@ arma::vec variance_derivative_2(FamilyCode family_code, const arma::vec& mu_vect
 }
 //==============================================================================
 
-}  // namespace geer

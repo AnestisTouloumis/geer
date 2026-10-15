@@ -4,7 +4,7 @@ resolve_runs_order <- function(object, order_by, env = parent.frame()) {
     if (length(order_by) != 1L || is.na(order_by) || !nzchar(order_by)) {
       stop(
         paste0(
-          "'order_by' must be a single non-empty character value or a ",
+          "'order_by' must be a single non-empty character string or a ",
           "numeric vector"
         ),
         call. = FALSE
@@ -40,13 +40,16 @@ resolve_runs_order <- function(object, order_by, env = parent.frame()) {
     label <- "supplied ordering vector"
   } else {
     stop(
-      "'order_by' must be a character value or a numeric vector",
+      paste0(
+        "'order_by' must be a single non-empty character string or a numeric ",
+        "vector"
+      ),
       call. = FALSE
     )
   }
 
   if (any(!is.finite(key))) {
-    stop("ordering values must all be finite and non-missing", call. = FALSE)
+    stop("'order_by' values must be finite and non-missing", call. = FALSE)
   }
   index <- natural_order[
     order(key[natural_order], seq_along(natural_order))
@@ -106,7 +109,11 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
       call. = FALSE
     )
   }
-  id_repeated <- extract_geer_id_repeated(model_frame, nrow(model_frame))
+  id_repeated <- extract_geer_id_repeated(
+    model_frame,
+    nrow(model_frame),
+    warn_character = FALSE
+  )
   ord <- order(id_repeated$id, id_repeated$repeated)
   aligned <- !is.null(object$id) && !is.null(object$repeated) &&
     isTRUE(all.equal(
@@ -163,7 +170,7 @@ compute_runs_statistics <- function(residual_values, alternative) {
   }
   if (!is.character(alternative) || length(alternative) != 1L ||
       is.na(alternative)) {
-    stop("'alternative' must be a single character value", call. = FALSE)
+    stop("'alternative' must be a character string", call. = FALSE)
   }
 
   signs <- sign(residual_values)
@@ -206,7 +213,7 @@ compute_runs_statistics <- function(residual_values, alternative) {
     less = stats::pnorm(statistic),
     greater = stats::pnorm(statistic, lower.tail = FALSE),
     stop(
-      "'alternative' must be one of 'two.sided', 'less' or 'greater'",
+      "'alternative' must be one of: two.sided, less, greater",
       call. = FALSE
     )
   )

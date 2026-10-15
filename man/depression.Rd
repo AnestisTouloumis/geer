@@ -27,10 +27,11 @@ in treating postnatal depression.
 }
 \details{
 Sixty-one women with major depression were randomly assigned to either a
-placebo control group or an oestrogen patch group, yielding 366
-observations (six monthly assessments per subject). Before treatment,
-depressive symptoms were assessed using the Edinburgh Postnatal Depression
-Scale (EPDS). EPDS scores were then collected monthly for six months.
+placebo control group or an oestrogen patch group (Gregoire et al., 1996),
+yielding 366 observations (six monthly assessments per subject). Before
+treatment, depressive symptoms were assessed using the Edinburgh Postnatal
+Depression Scale (EPDS). EPDS scores were then collected monthly for six
+months.
 }
 \examples{
 data("depression", package = "geer")

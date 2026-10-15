@@ -1,56 +1,50 @@
-testthat::local_edition(3)
+cerebrovascular <- test_data$cerebrovascular
+respiratory2 <- test_data$respiratory2
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
-
-# cerebrovascular: T = 2, so choose(2, 2) = 1 time pair
 fit_bin_exch_T2 <- geewa(
   formula = ecg ~ treatment + factor(period),
-  family  = binomial(link = "logit"),
-  data    = test_data$cerebrovascular,
-  id      = id,
-  corstr  = "exchangeable",
-  method  = "gee"
+  family = binomial(link = "logit"),
+  data = cerebrovascular,
+  id = id,
+  corstr = "exchangeable",
+  method = "gee"
 )
 
-# respiratory (center C2): T = 4, so choose(4, 2) = 6 time pairs
 fit_bin_exch_T4 <- geewa(
   formula = status ~ baseline + treatment,
-  family  = binomial(link = "logit"),
-  data    = test_data$respiratory2,
-  id      = id,
+  family = binomial(link = "logit"),
+  data = respiratory2,
+  id = id,
   repeated = visit,
-  corstr  = "exchangeable",
-  method  = "gee"
+  corstr = "exchangeable",
+  method = "gee"
 )
 
 fit_bin_unstr_T4 <- geewa(
   formula = status ~ baseline + treatment,
-  family  = binomial(link = "logit"),
-  data    = test_data$respiratory2,
-  id      = id,
+  family = binomial(link = "logit"),
+  data = respiratory2,
+  id = id,
   repeated = visit,
-  corstr  = "unstructured",
-  method  = "gee"
+  corstr = "unstructured",
+  method = "gee"
 )
 
 fit_bin_ar1_T4 <- geewa(
   formula = status ~ baseline + treatment,
-  family  = binomial(link = "logit"),
-  data    = test_data$respiratory2,
-  id      = id,
+  family = binomial(link = "logit"),
+  data = respiratory2,
+  id = id,
   repeated = visit,
-  corstr  = "ar1",
-  method  = "gee"
+  corstr = "ar1",
+  method = "gee"
 )
-
-
-# ── Output structure ──────────────────────────────────────────────────────────
 
 test_that("frechet_bounds_cor returns a data frame with the correct columns", {
   out <- frechet_bounds_cor(fit_bin_exch_T2)
   expect_s3_class(out, "data.frame")
-  expect_identical(
-    names(out),
+  expect_named(
+    out,
     c(
       "alpha_name", "alpha_value", "lower_max", "upper_min",
       "n_clusters", "n_violated"
@@ -68,12 +62,12 @@ test_that("frechet_bounds_cor returns one row per unique time pair", {
 
 test_that("frechet_bounds_cor column types are correct", {
   out <- frechet_bounds_cor(fit_bin_exch_T4)
-  expect_type(out$alpha_name,  "character")
+  expect_type(out$alpha_name, "character")
   expect_type(out$alpha_value, "double")
-  expect_type(out$lower_max,   "double")
-  expect_type(out$upper_min,   "double")
-  expect_type(out$n_clusters,  "integer")
-  expect_type(out$n_violated,  "integer")
+  expect_type(out$lower_max, "double")
+  expect_type(out$upper_min, "double")
+  expect_type(out$n_clusters, "integer")
+  expect_type(out$n_violated, "integer")
 })
 
 test_that("frechet_bounds_cor alpha_name labels follow alpha_j.k convention", {
@@ -86,16 +80,12 @@ test_that("frechet_bounds_cor alpha_name labels follow alpha_j.k convention", {
 
 test_that("frechet_bounds_cor bounds are numerically valid", {
   out <- frechet_bounds_cor(fit_bin_exch_T4)
-  # All values must be finite
   expect_true(all(is.finite(out$alpha_value)))
   expect_true(all(is.finite(out$lower_max)))
   expect_true(all(is.finite(out$upper_min)))
-  # lower_max < upper_min (Frechet bounds must form a proper interval)
   expect_true(all(out$lower_max < out$upper_min))
-  # Bounds lie within [-1, 1]
   expect_true(all(out$lower_max >= -1))
-  expect_true(all(out$upper_min <=  1))
-  # n_violated is non-negative and cannot exceed the contributing clusters
+  expect_true(all(out$upper_min <= 1))
   expect_true(all(out$n_violated >= 0L))
   expect_true(all(out$n_violated <= out$n_clusters))
   expect_true(all(out$n_clusters > 0L))
@@ -103,7 +93,6 @@ test_that("frechet_bounds_cor bounds are numerically valid", {
 
 test_that("frechet_bounds_cor alpha_value matches the fitted working correlation", {
   out <- frechet_bounds_cor(fit_bin_exch_T2)
-  # For exchangeable with T = 2 there is one alpha; it should equal the stored alpha
   expect_equal(out$alpha_value, fit_bin_exch_T2$alpha, tolerance = 1e-10)
 })
 
@@ -125,10 +114,6 @@ test_that("frechet_bounds_cor works for unstructured association structure", {
 })
 
 test_that("under unstructured the labels and values match the fitted alpha", {
-  # alpha_name coincides with names(object$alpha) only for the unstructured and
-  # fixed structures; under exchangeable, ar1, toeplitz and m-dependent the
-  # labels are synthetic and alpha_value is a function of the alpha parameters
-  # rather than one of them.
   out <- frechet_bounds_cor(fit_bin_unstr_T4)
   expect_identical(out$alpha_name, names(fit_bin_unstr_T4$alpha))
   expect_equal(
@@ -138,28 +123,17 @@ test_that("under unstructured the labels and values match the fitted alpha", {
   )
 })
 
-
-# ── Error paths ───────────────────────────────────────────────────────────────
-
 test_that("frechet_bounds_cor errors on a geewa_binary fit", {
-  expect_error(
-    frechet_bounds_cor(fit_geewa_bin_exch),
-    "must be fitted by 'geewa'",
-    fixed = TRUE
-  )
-})
-
-test_that("the geewa_binary guard is not shadowed by the other error paths", {
-  # Regression guard. A geewa_binary() fit satisfies both remaining gates: its
-  # family is always binomial and its association structure can be
-  # non-independence. Without the fit_function check the odds-ratio alpha vector
-  # would be passed to get_correlation_matrix() and silently treated as a
-  # working correlation.
   expect_identical(fit_geewa_bin_exch$family$family, "binomial")
   expect_false(
     identical(fit_geewa_bin_exch$association_structure, "independence")
   )
   expect_identical(fit_geewa_bin_exch$fit_function, "geewa_binary")
+  expect_error(
+    frechet_bounds_cor(fit_geewa_bin_exch),
+    "must be a geewa() fit",
+    fixed = TRUE
+  )
 })
 
 test_that("frechet_bounds_cor recovers the fit function from the call when the tag is absent", {
@@ -177,7 +151,7 @@ test_that("frechet_bounds_cor errors when the fit function cannot be determined"
   fit_unknown$call[[1L]] <- quote(some_wrapper)
   expect_error(
     frechet_bounds_cor(fit_unknown),
-    "must be fitted by 'geewa'",
+    "must be a geewa() fit",
     fixed = TRUE
   )
 })
@@ -192,12 +166,12 @@ test_that("frechet_bounds_cor errors on non-binomial family", {
 
 test_that("frechet_bounds_cor errors on independence association structure", {
   fit_indep <- geewa(
-    formula  = ecg ~ treatment + factor(period),
-    family   = binomial(link = "logit"),
-    data     = test_data$cerebrovascular,
-    id       = id,
-    corstr   = "independence",
-    method   = "gee"
+    formula = ecg ~ treatment + factor(period),
+    family = binomial(link = "logit"),
+    data = cerebrovascular,
+    id = id,
+    corstr = "independence",
+    method = "gee"
   )
   expect_error(
     frechet_bounds_cor(fit_indep),
@@ -205,7 +179,6 @@ test_that("frechet_bounds_cor errors on independence association structure", {
     fixed = TRUE
   )
 })
-
 
 test_that("frechet_bounds_cor errors on degenerate fitted probabilities", {
   fit_degenerate <- fit_bin_exch_T4
@@ -226,8 +199,6 @@ test_that("frechet_bounds_cor errors on degenerate fitted probabilities", {
 })
 
 test_that("frechet_bounds_cor errors on a non-binary response", {
-  # a grouped binomial fit stores proportions in $y, so the Bernoulli Frechet
-  # bounds do not apply
   fit_grouped <- fit_bin_exch_T4
   fit_grouped$y[2L] <- 0.5
   expect_error(
@@ -240,11 +211,11 @@ test_that("frechet_bounds_cor errors on a non-binary response", {
 test_that("frechet_bounds_cor accepts a quasibinomial fit", {
   fit_quasi <- geewa(
     formula = ecg ~ treatment + factor(period),
-    family  = quasibinomial(link = "logit"),
-    data    = test_data$cerebrovascular,
-    id      = id,
-    corstr  = "exchangeable",
-    method  = "gee"
+    family = quasibinomial(link = "logit"),
+    data = cerebrovascular,
+    id = id,
+    corstr = "exchangeable",
+    method = "gee"
   )
   out <- frechet_bounds_cor(fit_quasi)
   expect_s3_class(out, "data.frame")

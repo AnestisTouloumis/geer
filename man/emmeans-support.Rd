@@ -23,8 +23,8 @@ emm_basis.geer(
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{data}{optional data frame used by \pkg{emmeans} to recover the
-model predictors.}
+\item{data}{optional data frame from which \pkg{emmeans} recovers the
+predictors.}
 
 \item{...}{additional arguments passed through from \pkg{emmeans}.}
 
@@ -34,59 +34,43 @@ model predictors.}
 
 \item{grid}{the reference grid supplied by \pkg{emmeans}.}
 
-\item{vcov.method}{covariance specification to use for \pkg{emmeans}
-calculations. This may be a character string specifying one of the
-supported covariance estimators \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, \code{"naive"}, or a covariance matrix
-or function accepted by \pkg{emmeans} through its \code{vcov.}
-mechanism. Defaults to \code{"bias-corrected"}.}
+\item{vcov.method}{character string specifying the covariance matrix
+estimator, \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+\code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function
+accepted by \pkg{emmeans}. See \code{\link{vcov.geer}}. Defaults to
+\code{"bias-corrected"}.}
 
-\item{cov_type}{optional alias for \code{vcov.method}. When supplied, it
-takes precedence over \code{vcov.method}.}
+\item{cov_type}{optional alias of \code{vcov.method}, which it overrides.}
 
 \item{vcov.}{optional covariance matrix or function supplied through the
-standard \pkg{emmeans} \code{vcov.} argument. When provided, it
-takes precedence over both \code{cov_type} and
+\pkg{emmeans} argument \code{vcov.}, which overrides \code{cov_type} and
 \code{vcov.method}.}
 
 \item{misc}{optional list passed through by \pkg{emmeans}.}
 }
 \value{
-\code{recover_data.geer()} returns a recovered predictor data frame for use
-by \pkg{emmeans}. \code{emm_basis.geer()} returns the basis components
-required by \pkg{emmeans} to construct an \code{emmGrid} object.
+\code{recover_data.geer()} returns the predictor data, and
+\code{emm_basis.geer()} the components from which \pkg{emmeans} builds a
+reference grid.
 }
 \description{
-Methods that allow fitted \code{geer} objects to work with the
-\pkg{emmeans} package.
-
-These functions are used internally by \pkg{emmeans} and are not usually
-called directly by end users. Once both packages are installed, functions
-such as \code{emmeans::emmeans()} and \code{emmeans::ref_grid()} can be
-applied to fitted \code{geer} objects.
-
-By default, \pkg{emmeans} calculations for \code{geer} objects use the
-bias-corrected covariance matrix. Alternative covariance estimators may be
-requested via \code{vcov.method}, with supported character values
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, and \code{"naive"}.
-
-In line with the large-sample inference used elsewhere in \pkg{geer},
-these methods use asymptotic inference with degrees of freedom equal to
-\code{Inf}.
+Methods that allow \pkg{emmeans} functions, such as
+\code{emmeans::emmeans()}, to be applied to fitted \code{geer} objects.
+They are called by \pkg{emmeans} and not usually by the user. Inference is
+asymptotic, with infinite degrees of freedom, and uses the bias-corrected
+covariance matrix unless \code{vcov.method} requests another estimator.
 }
 \examples{
 if (requireNamespace("emmeans", quietly = TRUE)) {
   data("cerebrovascular", package = "geer")
-
   fit <- geewa_binary(
     formula = ecg ~ treatment + factor(period),
     link = "logit",
     data = cerebrovascular,
     id = id,
+    repeated = period,
     orstr = "exchangeable"
   )
-
   emmeans::emmeans(fit, ~ treatment)
   emmeans::emmeans(fit, ~ treatment, type = "response")
   emmeans::emmeans(fit, ~ treatment, vcov.method = "naive")

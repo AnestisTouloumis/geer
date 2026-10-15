@@ -6,46 +6,42 @@
 \alias{geer-package}
 \title{Bias-Reduced and Penalized Generalized Estimating Equations}
 \description{
-Fits marginal models for repeated or clustered responses using
-generalized estimating equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
-Jeffreys-type penalized GEE. Continuous, binary and count responses are handled by
-\code{\link{geewa}}, while binary responses can also be handled by
-\code{\link{geewa_binary}} through an odds-ratio parameterization.
+Fits marginal models for clustered or repeated responses by generalized
+estimating equations (GEE; Liang and Zeger, 1986), using ordinary,
+bias-reduced, or bias-corrected GEE (Touloumis, 2026a) or Jeffreys-type
+penalized GEE (Touloumis, 2026b). \code{\link{geewa}} handles continuous,
+binary, and count responses with a working correlation structure, and
+\code{\link{geewa_binary}} handles binary responses with a working
+odds-ratio structure.
 }
 \references{
 Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 
 Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
-with odds-ratio extensions. \emph{Preprint}.
-\url{https://arxiv.org/abs/2606.16043}
+with odds-ratio extensions. \emph{arXiv preprint}.
+\doi{10.48550/arXiv.2606.16043}
 
 Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-with an odds-ratio parameterization. \emph{Preprint}.
-\url{https://arxiv.org/abs/2606.16058}
+with an odds-ratio parameterization. \emph{arXiv preprint}.
+\doi{10.48550/arXiv.2606.16058}
 }
 \seealso{
-Main functions:
 \itemize{
-  \item \code{\link{geewa}} for continuous, binary and count responses.
-  \item \code{\link{geewa_binary}} for binary responses via an odds-ratio
-  parameterization (preferred).
-  \item \code{\link{geer_control}} for convergence and fitting options.
-  \item \code{\link{geecriteria}} for model selection criteria.
-  \item \code{\link{summary.geer}}, \code{\link{tidy.geer}}, and
-  \code{\link{glance.geer}} for model summaries.
-  \item \code{\link{anova.geer}}, \code{\link{add1.geer}},
-  \code{\link{drop1.geer}}, and \code{\link{step_p}} for model building.
-  \item \code{\link{vcov.geer}}, \code{\link{confint.geer}},
-  \code{\link{predict.geer}}, \code{\link{fitted.geer}},
-  \code{\link{residuals.geer}}, \code{\link{runs_test}},
-  \code{\link{mcar_little_test}}, \code{\link{mcar_homoscedasticity_test}},
-  \code{\link{mcar_logistic_test}}, and
-  \code{\link{frechet_bounds_cor}}
-  for inference and model diagnostics.
-  \item \code{\link{marginaleffects-support}} for post-estimation support
-  through the \pkg{marginaleffects} package.
+  \item Model fitting: \code{\link{geewa}}, \code{\link{geewa_binary}},
+    \code{\link{geer_control}}.
+  \item Summaries and inference: \code{\link{summary.geer}},
+    \code{\link{vcov.geer}}, \code{\link{confint.geer}},
+    \code{\link{predict.geer}}, \code{\link{tidy.geer}},
+    \code{\link{glance.geer}}.
+  \item Model building: \code{\link{anova.geer}}, \code{\link{add1.geer}},
+    \code{\link{step_p}}, \code{\link{geecriteria}}.
+  \item Diagnostics: \code{\link{residuals.geer}}, \code{\link{runs_test}},
+    \code{\link{frechet_bounds_cor}}, \code{\link{mcar_little_test}},
+    \code{\link{mcar_logistic_test}},
+    \code{\link{mcar_homoscedasticity_test}}.
+  \item Other packages: \code{\link{emmeans-support}},
+    \code{\link{marginaleffects-support}}.
 }
 }
 \author{

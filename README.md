@@ -1,275 +1,257 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file. -->
+
+# geer: Bias-Reduced and Penalized Generalized Estimating Equations
+
 <!-- badges: start -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/geer)](https://CRAN.R-project.org/package=geer)
 [![R-CMD-check](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AnestisTouloumis/geer/actions/workflows/R-CMD-check.yaml)
-[![R release](https://img.shields.io/badge/R%20release-4.6.1-276DC3?logo=R&logoColor=white)](https://www.r-project.org/)
-[![Codecov test coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
+[![Codecov test
+coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
 <!-- badges: end -->
 
-## Overview
+`geer` fits marginal models for clustered or repeated responses by
+generalized estimating equations (GEE; Liang and Zeger, 1986). Besides
+ordinary GEE, it provides
 
-`geer` fits marginal models for independent, repeated, or clustered
-responses using generalized estimating equations (GEE). Supported
-estimation methods include the traditional GEE, bias-reduced GEE,
-bias-corrected GEE, and Jeffreys-type penalized GEE. Continuous,
-binary, and count responses are handled by `geewa`, while binary
-responses can also be handled by `geewa_binary` through an odds-ratio
-parameterization.
+- bias-reduced and bias-corrected GEE, which reduce the finite-sample
+  bias of the regression estimates when the number of clusters is small
+  (Touloumis, 2026a), and
+- Jeffreys-type penalized GEE, which, for binary responses fitted by
+  `geewa_binary()`, also guard against infinite estimates under
+  separation (Touloumis, 2026b).
+
+`geewa()` fits continuous, binary, and count responses with a working
+correlation structure, and `geewa_binary()` fits binary responses with a
+working odds-ratio structure. By default, standard errors use the
+bias-corrected covariance matrix of Morel, Bokossa and Neerchal (2003).
 
 ## Installation
 
-You can install the released version of `geer` from CRAN:
+Install the released version from CRAN:
 
 ``` r
 install.packages("geer")
 ```
 
-You can install the development version of `geer` from GitHub:
+or the development version from GitHub:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("AnestisTouloumis/geer")
+# install.packages("remotes")
+remotes::install_github("AnestisTouloumis/geer")
 ```
 
-## Usage
+## Example
 
-Load the package:
+Ordinary and bias-reduced GEE for the epilepsy seizure counts:
 
 ``` r
 library("geer")
-```
 
-### Quick example
-
-Fit a bias-reduced GEE with an exchangeable working correlation to the
-epilepsy seizure count data:
-
-``` r
 data("epilepsy", package = "geer")
-
 fit <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
+  repeated = visit,
   corstr = "exchangeable",
-  method = "brgee-robust"
+  method = "gee"
 )
-summary(fit, cov_type = "bias-corrected")
+fit_br <- update(fit, method = "brgee-robust")
+summary(fit_br)
+#> 
+#> Call:
+#> geewa(formula = seizures ~ treatment + lnbaseline + lnage, family = poisson(link = "log"), 
+#>     data = epilepsy, id = id, repeated = visit, corstr = "exchangeable", 
+#>     method = "brgee-robust")
+#> 
+#> Estimating Method   : brgee-robust 
+#> Number of iterations: 4 
+#> Algorithm converged : TRUE 
+#> 
+#> Number of observations: 236 
+#> Number of clusters    : 59 
+#> Cluster sizes         : 4 to 4 
+#> 
+#> Marginal Model
+#> Family       : poisson 
+#> Link Function: log 
+#> 
+#> Coefficients:
+#>                     Estimate Std. Error z value Pr(>|z|)    
+#> (Intercept)        -2.370155   1.133494 -2.0910  0.03653 *  
+#> treatmentprogabide -0.013753   0.195643 -0.0703  0.94396    
+#> lnbaseline          1.229923   0.153520  8.0115  <0.0001 ***
+#> lnage               0.577250   0.312313  1.8483  0.06456 .  
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> Std. Errors are taken from the bias-corrected covariance matrix. 
+#> 
+#> Dispersion Parameter: 4.7466 
+#> 
+#> Association Structure: exchangeable 
+#> Association Parameter: 0.3903
 ```
 
-For binary responses, use `geewa_binary()` with an odds-ratio
-parameterization:
+Penalized GEE for a binary response with an exchangeable odds-ratio
+structure:
 
 ``` r
 data("cerebrovascular", package = "geer")
-
 fit_bin <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable",
-  method = "brgee-robust"
+  method = "pgee-jeffreys"
 )
-summary(fit_bin, cov_type = "bias-corrected")
+summary(fit_bin)
+#> 
+#> Call:
+#> geewa_binary(formula = ecg ~ treatment + factor(period), link = "logit", 
+#>     data = cerebrovascular, id = id, repeated = period, orstr = "exchangeable", 
+#>     method = "pgee-jeffreys")
+#> 
+#> Estimating Method   : pgee-jeffreys 
+#> Number of iterations: 4 
+#> Algorithm converged : TRUE 
+#> 
+#> Number of observations: 134 
+#> Number of clusters    : 67 
+#> Cluster sizes         : 2 to 2 
+#> 
+#> Marginal Model
+#> Family       : binomial 
+#> Link Function: logit 
+#> 
+#> Coefficients:
+#>                 Estimate Std. Error z value  Pr(>|z|)    
+#> (Intercept)      1.18391    0.30443  3.8890 0.0001007 ***
+#> treatmentactive -0.54334    0.23944 -2.2692 0.0232566 *  
+#> factor(period)2 -0.28103    0.23828 -1.1794 0.2382282    
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> Std. Errors are taken from the bias-corrected covariance matrix. 
+#> 
+#> Dispersion Parameter: 1 
+#> 
+#> Association Structure: exchangeable 
+#> Association Parameter: 16.4118
 ```
 
-### Fitting models
+## Main features
 
-There are two core fitting functions:
-
-- `geewa()` for continuous, binary, and count responses (Gaussian, Poisson,
-  binomial, Gamma, inverse Gaussian, quasi, quasibinomial, and
-  quasipoisson families).
-- `geewa_binary()` for binary responses via a marginalized odds-ratio
-  parameterization.
-
-Both functions support the following estimation methods via the
-`method` argument:
+**Estimation methods** (argument `method` of `geewa()` and
+`geewa_binary()`):
 
 | Method | Description |
-|---|---|
-| `"gee"` | Traditional GEE |
-| `"brgee-robust"`, `"brgee-naive"`, `"brgee-empirical"` | Bias-reduced GEE (differing in the bias adjustment used: robust, model-based, or empirical) |
-| `"bcgee-robust"`, `"bcgee-naive"`, `"bcgee-empirical"` | Bias-corrected GEE (one-step correction; same three variants) |
-| `"pgee-jeffreys"` | Fully iterated Jeffreys-type penalized GEE |
-| `"opgee-jeffreys"` | One-step penalized GEE |
-| `"hpgee-jeffreys"` | Hybrid one-step GEE |
+|----|----|
+| `"gee"` | Ordinary GEE |
+| `"brgee-naive"`, `"brgee-robust"`, `"brgee-empirical"` | Bias-reduced GEE |
+| `"bcgee-naive"`, `"bcgee-robust"`, `"bcgee-empirical"` | Bias-corrected GEE |
+| `"pgee-jeffreys"` | Jeffreys-type penalized GEE |
+| `"opgee-jeffreys"`, `"hpgee-jeffreys"` | One-step and hybrid one-step penalized GEE |
 
-The working correlation structure for `geewa()` is controlled by
-`corstr`: `"independence"`, `"exchangeable"`, `"ar1"`,
-`"m-dependent"`, `"unstructured"`, `"toeplitz"`, and `"fixed"`. The working
-odds-ratio structure for `geewa_binary()` is controlled by `orstr`:
-`"independence"`, `"exchangeable"`, `"unstructured"`, and `"fixed"`.
+**Working association structures:** `corstr` in `geewa()`
+(`"independence"`, `"exchangeable"`, `"ar1"`, `"m-dependent"`,
+`"unstructured"`, `"toeplitz"`, or `"fixed"`) and `orstr` in
+`geewa_binary()` (`"independence"`, `"exchangeable"`, `"unstructured"`,
+or `"fixed"`).
 
-Convergence and fitting options are set via `geer_control()`.
+**Inference:** `summary()`, `vcov()`, `confint()`, `predict()`,
+`tidy()`, and `glance()`, with the covariance matrix estimator selected
+by `cov_type`: `"bias-corrected"` (the default), `"robust"`,
+`"df-adjusted"`, `"jackknife"`, or `"naive"`.
 
-### Inference
+**Model building:** `anova()`, `add1()`, `drop1()`, and `step_p()`, with
+Wald, generalized score, and modified working Wald, score, and
+likelihood ratio tests (Rotnitzky and Jewell, 1990), and
+`geecriteria()`, with 16 model selection criteria, including QIC (Pan,
+2001) and CIC (Hin and Wang, 2009).
 
-Standard S3 methods are available for fitted `geer` objects:
+**Diagnostics:**
 
-- `summary()`, `print()` — coefficient table and model summary.
-- `coef()`, `vcov()`, `confint()` — estimates, covariance matrices,
-  and confidence intervals.
-- `fitted()`, `residuals()`, `predict()` — fitted values, observation-level
-  residuals, cluster-level Mahalanobis residuals, and predictions.
-- `runs_test()` — Wald-Wolfowitz test for non-random residual sign
-  sequences, with natural, fitted-value, and covariate-based ordering.
-- `mcar_little_test()` — Little's test for assessing whether repeated-response
-  missingness is compatible with MCAR.
-- `mcar_homoscedasticity_test()` — Jamshidian-Jalal screening diagnostic for
-  MCAR based on covariance homogeneity across missingness-pattern groups, with
-  modified Hawkins and nonparametric Anderson-Darling options.
-- `mcar_logistic_test()` — Ridout-style longitudinal MCAR diagnostic that
-  models response missingness from the previous observed response and covariates
-  using `geewa_binary()`.
-- `frechet_bounds_cor()` — Fréchet bounds on the working correlations of a
-  binomial `geewa()` fit, with a count of clusters violating them.
-- `model.matrix()` — design matrix.
-- `tidy()`, `glance()` — tidy summaries following
-  [broom](https://broom.tidymodels.org/) conventions.
+- `residuals()`, including cluster-level Mahalanobis residuals.
+- `runs_test()`, the Wald-Wolfowitz runs test of residual signs (Chang,
+  2000, and Hardin and Hilbe, 2013).
+- `frechet_bounds_cor()`, which checks the working correlations of
+  binary `geewa()` fits.
+- `mcar_little_test()` (Little, 1988), `mcar_logistic_test()` (in the
+  spirit of Ridout, 1991), and `mcar_homoscedasticity_test()`
+  (Jamshidian and Jalal, 2010, and Jamshidian, Jalal and Jansen, 2014),
+  three tests of missing completely at random (MCAR).
 
-The `cov_type` argument controls the covariance estimator used for
-inference: `"bias-corrected"` (default), `"robust"` (sandwich),
-`"df-adjusted"`, `"jackknife"` (full leave-one-cluster jackknife), or
-`"naive"` (model-based). The jackknife option computes each
-leave-one-cluster estimate by refitting the model in full rather than by a
-one-step approximation. The working association structure is unchanged and
-the applicable association parameters are held fixed at their full-data
-estimates in every deletion fit; it requires at least two clusters and
-signals an error if any deletion refit fails to converge. The same
-`"jackknife"` choice is accepted by every public function that exposes
-`cov_type`, including model-comparison, selection-criterion, stepwise-selection,
-and MCAR-regression diagnostics.
+**Integration with other packages:** fitted models work with
+[emmeans](https://CRAN.R-project.org/package=emmeans) and
+[marginaleffects](https://CRAN.R-project.org/package=marginaleffects).
+
+**Data:** `cerebrovascular`, `cholecystectomy`, `depression`,
+`epilepsy`, `leprosy`, `respiratory`, and `rinse`.
+
+## Citation
+
+To cite `geer` and the methods it implements, use
 
 ``` r
-vcov(fit, cov_type = "jackknife")
-summary(fit, cov_type = "jackknife")
+citation("geer")
 ```
 
-The Wald-Wolfowitz residual runs test can be used as a quantitative
-check for non-random residual sign patterns:
+## Getting help
 
-``` r
-runs_test(fit)
-runs_test(fit, order_by = "fitted")
-```
-
-Cluster-level Mahalanobis residuals can be used to identify clusters whose
-response profiles fit the working mean/covariance model poorly:
-
-``` r
-residuals(fit, type = "mahalanobis")
-```
-
-For longitudinal data with missing responses, three diagnostics are available
-for assessing whether the missingness is compatible with MCAR. They need a
-fitted model, or wide-format data, that actually contains missing responses,
-so none is run here:
-
-- `mcar_little_test()` implements Little's (1988) test and accepts a fitted
-  `geer` object or a numeric wide-format matrix or data frame. It uses the
-  exact normal-theory F reference in the bivariate monotone case and the
-  chi-squared reference otherwise; `reference = "asymptotic"` forces the
-  latter.
-- `mcar_homoscedasticity_test()` is the Jamshidian-Jalal (2010) screening
-  diagnostic, following the MissMech implementation of Jamshidian, Jalal and
-  Jansen (2014). It accepts the same inputs as `mcar_little_test()`. The
-  `method` argument selects the modified Hawkins test, the nonparametric
-  Anderson-Darling test, or the default `"auto"` logic; `imputation` selects
-  residual-resampling or normal-theory imputation; `n_imputations` repeats the
-  tests over several imputations; and `imputed_data` accepts a completed data
-  set from another imputation method.
-- `mcar_logistic_test()` is a Ridout-style (1991) regression diagnostic that
-  models missingness at occasion `t` from the response at `t - 1` and,
-  optionally, covariates, using `geewa_binary()`. Its `test` argument accepts
-  the same five procedures as `anova.geer()` and `pmethod` selects the
-  Rao-Scott or Satterthwaite approximation for the working tests.
-
-None of these tests can establish MCAR; see the help pages for details.
-
-### Model building and selection
-
-- `anova()` — sequential or multi-model hypothesis test tables.
-- `add1()`, `drop1()` — single-term additions and deletions with
-  hypothesis tests and CIC.
-- `step_p()` — stepwise model selection by hypothesis testing.
-- `geecriteria()` — QIC, QICHH, QICC, CIC, RJC, QICu, EQIC, GESSC, GPC,
-  AGPC, SGPC, GHYC, PAC, PT, WR, and RMR model selection criteria.
-  For `geecriteria()`, `cov_type = "robust"` is the default so the classical
-  covariance-based definitions are returned unless another covariance estimator
-  is requested explicitly.
-
-### Post-estimation support
-
-Fitted `geer` objects are compatible with the
-[emmeans](https://cran.r-project.org/package=emmeans) package for
-estimated marginal means.
-
-They are also compatible with the
-[marginaleffects](https://marginaleffects.com/) package for predictions,
-average predictions, comparisons, and slopes (marginal effects):
-
-``` r
-# install.packages("marginaleffects")
-marginaleffects::avg_predictions(fit_bin)
-marginaleffects::avg_comparisons(fit_bin, variables = "treatment")
-marginaleffects::avg_slopes(fit, variables = "lnage")
-```
-
-By default, `marginaleffects` uses the bias-corrected covariance matrix
-for `geer` models. Character values such as `vcov = "robust"`,
-`vcov = "df-adjusted"`, `vcov = "jackknife"`, and `vcov = "naive"`
-select the corresponding `geer` covariance estimator.
-
-## Datasets
-
-The package includes seven example datasets: `cerebrovascular`,
-`cholecystectomy`, `depression`, `epilepsy`, `leprosy`, `respiratory`,
-and `rinse`.
+Please report bugs and request features at
+<https://github.com/AnestisTouloumis/geer/issues>.
 
 ## References
 
-Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
-generalized linear models. *Biometrika*, **73**, 13--22.
-
-Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-Equations using the new R package glmtoolbox. *The R Journal*, **15**, 105--133.
-
-Rubin, D.B. (1976) Inference and missing data. *Biometrika*, **63**,
-581--592.
-
-Little, R.J.A. (1988) A test of missing completely at random for multivariate
-data with missing values. *Journal of the American Statistical Association*,
-**83**, 1198--1202.
-
-Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity, normality, and
-missing completely at random for incomplete multivariate data. *Psychometrika*,
-**75**, 649--674.
-
-Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package for
-testing homoscedasticity, multivariate normality, and missing completely at
-random (MCAR). *Journal of Statistical Software*, **56**, 1--31.
-
-Ridout, M.S. (1991) Testing for random dropouts in repeated measurement data.
-*Biometrics*, **47**, 1617--1619.
-
-Fitzmaurice, G.M., Heath, A.F. and Clifford, P. (1996) Logistic regression
-models for binary panel data with attrition. *Journal of the Royal Statistical
-Society: Series A*, **159**, 249--263.
-
-Carpenter, J.R. and Smuk, M. (2021) Missing data: A statistical framework for
-practice. *Biometrical Journal*, **63**, 915--947.
-
-Lu, P. and Shelley, M. (2023) Testing the missingness mechanism in longitudinal
-surveys: a case study using the Health and Retirement Study. *International
-Journal of Social Research Methodology*, **26**, 439--452.
-
 Chang, Y.-C. (2000) Residuals analysis of the generalized linear models
-for longitudinal data. *Statistics in Medicine*, **19**, 1277--1293.
+for longitudinal data. *Statistics in Medicine*, **19**, 1277–1293.
 
 Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 
-Touloumis, A. (2026a) [Bias-reduced GEE via adjusted estimating equations, with odds-ratio extensions.](https://arxiv.org/abs/2606.16043) *Preprint*.
+Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure
+identification in generalized estimating equations. *Statistics in
+Medicine*, **28**, 642–658.
 
-Touloumis, A. (2026b) [Jeffreys-type penalized GEE for correlated binary data with an odds-ratio parameterization.](https://arxiv.org/abs/2606.16058) *Preprint*.
+Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity,
+normality, and missing completely at random for incomplete multivariate
+data. *Psychometrika*, **75**, 649–674.
+
+Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package
+for testing homoscedasticity, multivariate normality, and missing
+completely at random (MCAR). *Journal of Statistical Software*, **56**,
+1–31.
+
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+generalized linear models. *Biometrika*, **73**, 13–22.
+
+Little, R.J.A. (1988) A test of missing completely at random for
+multivariate data with missing values. *Journal of the American
+Statistical Association*, **83**, 1198–1202.
+
+Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
+correction for the variance of GEE estimators. *Biometrical Journal*,
+**45**, 395–409.
+
+Pan, W. (2001) Akaike’s information criterion in generalized estimating
+equations. *Biometrics*, **57**, 120–125.
+
+Ridout, M.S. (1991) Testing for random dropouts in repeated measurement
+data. *Biometrics*, **47**, 1617–1619.
+
+Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
+parameters in semiparametric generalized linear models for cluster
+correlated data. *Biometrika*, **77**, 485–497.
+
+Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating
+equations, with odds-ratio extensions. *arXiv preprint*.
+[doi:10.48550/arXiv.2606.16043](https://doi.org/10.48550/arXiv.2606.16043)
+
+Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary
+data with an odds-ratio parameterization. *arXiv preprint*.
+[doi:10.48550/arXiv.2606.16058](https://doi.org/10.48550/arXiv.2606.16058)

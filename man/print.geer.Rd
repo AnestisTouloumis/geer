@@ -9,14 +9,15 @@
 \arguments{
 \item{x}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{additional arguments passed to or from other methods. Currently
+unused.}
 }
 \value{
 The input object \code{x} is returned invisibly.
 }
 \description{
-Prints the call, estimated regression coefficients, and basic fitting
-information for a fitted \code{geer} object.
+Prints the call, the estimated regression coefficients, and the
+convergence information of a fitted \code{geer} object.
 }
 \examples{
 data("epilepsy", package = "geer")
@@ -25,6 +26,7 @@ fit <- geewa(
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
+  repeated = visit,
   corstr = "exchangeable"
 )
 print(fit)

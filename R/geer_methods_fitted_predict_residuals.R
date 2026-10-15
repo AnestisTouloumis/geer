@@ -1,8 +1,4 @@
 check_prediction_offset_variables <- function(expression, newdata, source) {
-  ## Offset variables are resolved in 'newdata' only. Without this check R
-  ## falls back to the environment in which the model was fitted, where the
-  ## original offset still lives, and an offset of the right length is then
-  ## silently accepted for the wrong observations.
   needed <- all.vars(expression)
   absent <- setdiff(needed, names(newdata))
   if (length(absent)) {
@@ -105,38 +101,32 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
 #' \code{geer} object. \code{fitted.values} is an alias for \code{fitted}.
 #'
 #' @inheritParams coef.geer
-#' @param ... not used. Supplying any argument here is an error rather than
-#'   being silently ignored.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @return
-#' A numeric vector of fitted mean values on the response scale, of the same
-#' length as the number of observations used in fitting, in the internal
-#' observation order described below rather than in the row order of the
-#' supplied data.
+#' A numeric vector of fitted means, one per observation used in the fit, in
+#' the order given under Observation order.
 #'
 #' @section Observation order:
-#' The returned vector follows the internal observation order of the fitted
-#' model, not the row order of the data supplied to \code{geewa} or
-#' \code{geewa_binary}. Rows are restricted to the complete cases retained by
-#' the \code{na.action} in force and are then sorted by cluster identifier
-#' and, within cluster, by the repeated index. Unless the supplied data were
-#' already sorted that way and free of missing values, assigning the result
-#' back with an expression such as \code{data$r <- residuals(fit)} will
-#' attach values to the wrong rows without any warning, because the lengths
-#' can still agree. Order the data by cluster and repeated index before
-#' fitting, or align the result yourself using \code{fit$id} and
-#' \code{fit$repeated}, which are stored in the same order as the returned
-#' vector.
+#' The values follow the internal order of the fitted model: the complete
+#' cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
+#' data were already in this order and had no missing values, assigning the
+#' values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+#' rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
+#' the same order and can be used to align them.
 #'
 #' @seealso \code{\link{residuals.geer}}, \code{\link{predict.geer}}.
 #'
 #' @examples
-#' data("leprosy", package = "geer")
-#' fit <- geewa(
-#'   formula = bacilli ~ factor(period) + factor(period):treatment,
-#'   family = poisson(link = "log"),
-#'   data = leprosy,
-#'   id = id
+#' data("cerebrovascular", package = "geer")
+#' fit <- geewa_binary(
+#'   formula = ecg ~ treatment + factor(period),
+#'   link = "logit",
+#'   data = cerebrovascular,
+#'   id = id,
+#'   repeated = period,
+#'   orstr = "exchangeable"
 #' )
 #' head(fitted(fit))
 #'
@@ -158,75 +148,43 @@ fitted.geer <- function(object, ...) {
 #' approximate standard errors.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
-#' @param newdata optional data frame in which to look for variables used for
-#'   prediction. If omitted, predictions are made on the data used for fitting.
-#' @param type character string specifying the scale of the predictions.
-#'   Options are \code{"link"} for the linear predictor scale and
-#'   \code{"response"} for the response scale. Defaults to \code{"link"}.
+#' @param newdata optional data frame containing the variables used for
+#'   prediction. Defaults to \code{NULL}, which uses the data used to fit the
+#'   model.
+#' @param type character string specifying the scale of the predictions: linear
+#'   predictor (\code{"link"}) or response (\code{"response"}). Defaults to
+#'   \code{"link"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used to compute approximate standard errors when \code{se.fit = TRUE}.
-#'   Options are the bias-corrected estimator (\code{"bias-corrected"}),
-#'   the sandwich or robust estimator (\code{"robust"}), the
-#'   degrees-of-freedom adjusted estimator (\code{"df-adjusted"}), the
-#'   leave-one-cluster jackknife estimator (\code{"jackknife"}), and the
-#'   model-based or naive estimator (\code{"naive"}). Defaults to
-#'   \code{"bias-corrected"}.
-#' @param se.fit logical indicating whether approximate standard errors are to
-#'   be returned. Defaults to \code{FALSE}.
-#' @param ... not used. Supplying any argument here is an error, so that a
-#'   misspelled \code{type} or \code{cov_type} is reported rather than
-#'   silently ignored.
+#'   used for the standard errors when \code{se.fit = TRUE}:
+#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+#'   Defaults to \code{"bias-corrected"}.
+#' @param se.fit logical indicating whether standard errors are returned.
+#'   Defaults to \code{FALSE}.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @details
-#' Predictions are obtained by computing the model matrix for \code{newdata}
-#' (or using the original fit when \code{newdata} is omitted), multiplying by
-#' the estimated coefficients, and adding any offset. If
-#' \code{type = "response"}, the linear predictor is transformed via the
-#' inverse link function.
-#'
-#' When \code{se.fit = TRUE}, approximate standard errors are computed by the
-#' delta method using the covariance matrix specified by \code{cov_type}. On
-#' the response scale, standard errors are additionally scaled by the absolute
-#' derivative of the inverse link function.
-#'
-#' When \code{newdata} is supplied and the fitted model has an offset, whether
-#' through \code{offset()} in the formula or through the \code{offset}
-#' argument, every variable the offset depends on must be present in
-#' \code{newdata}. An error is signalled otherwise. Without that requirement
-#' the offset would be resolved in the environment in which the model was
-#' fitted, so an offset of the right length taken from the original data would
-#' be accepted silently for a different set of observations.
+#' The linear predictor is computed from the model matrix of \code{newdata},
+#' or of the fitted data, and the offset, and transformed by the inverse link
+#' for \code{type = "response"}. Standard errors are obtained by the delta
+#' method. When \code{newdata} is supplied and the model has an offset, the
+#' variables of the offset must be in \code{newdata}.
 #'
 #' @return
-#' If \code{se.fit = FALSE}, a numeric vector of predictions on the scale
-#' specified by \code{type}. If \code{se.fit = TRUE}, a list with components:
-#' \item{fit}{numeric vector of predictions.}
-#' \item{se.fit}{numeric vector of approximate standard errors of the
-#'   predictions.}
-#'
-#' When \code{newdata} is supplied both the predictions and their standard
-#' errors carry the row names of \code{newdata}. When it is omitted both are
-#' unnamed, because the row names stored with the fitted model refer to the
-#' data before they were sorted into the internal observation order and would
-#' therefore identify the wrong rows.
+#' For \code{se.fit = FALSE}, a numeric vector of predictions. For
+#' \code{se.fit = TRUE}, a list with components:
+#' \item{fit}{the predictions.}
+#' \item{se.fit}{their standard errors.}
+#' With \code{newdata}, the results are named by its row names; otherwise they
+#' are unnamed.
 #'
 #' @section Observation order:
-#' When \code{newdata} is supplied the predictions follow the row order of
-#' \code{newdata}. When it is omitted they follow the internal observation
-#' order of the fitted model instead: the complete cases retained by the
-#' \code{na.action} in force, sorted by cluster identifier and, within
-#' cluster, by the repeated index. Unless the data supplied to \code{geewa}
-#' or \code{geewa_binary} were already sorted that way and free of missing
-#' values, assigning the result back to those data will attach values to the
-#' wrong rows without any warning, because the lengths can still agree. Pass
-#' the original data as \code{newdata} to obtain predictions in the row order
-#' of the data.
-#'
-#' Rows of \code{newdata} are not dropped when a variable used by the model is
-#' missing. The model frame is built with \code{na.action = na.pass}, so such
-#' a row yields \code{NA} for the prediction, and for its standard error when
-#' \code{se.fit = TRUE}, and the returned vector keeps one element per row of
-#' \code{newdata}.
+#' With \code{newdata}, the predictions follow its rows, and rows with missing
+#' values give \code{NA}. Without it, they follow the internal order of the
+#' fitted model: the complete cases, sorted by cluster and, within cluster, by
+#' \code{repeated}. To obtain predictions in the order of the data, supply the
+#' data as \code{newdata}.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{residuals.geer}},
 #'   \code{\link{geewa}}, \code{\link{geewa_binary}},
@@ -239,17 +197,16 @@ fitted.geer <- function(object, ...) {
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
+#'   repeated = period,
 #'   orstr = "exchangeable"
 #' )
-#' head(predict(fit, type = "link"))
+#' head(predict(fit))
 #' head(predict(fit, type = "response"))
 #'
-#' nd <- cerebrovascular[1:5, , drop = FALSE]
-#' predict(fit, newdata = nd, type = "response")
-#'
-#' pred <- predict(fit, type = "response", cov_type = "robust", se.fit = TRUE)
-#' head(pred$fit)
-#' head(pred$se.fit)
+#' ## Predictions for new data, with standard errors
+#' pred <- predict(fit, newdata = cerebrovascular[1:5, ], type = "response",
+#'                 se.fit = TRUE)
+#' pred
 #'
 #' @export
 predict.geer <- function(object,
@@ -264,7 +221,7 @@ predict.geer <- function(object,
   type <- match.arg(type)
   cov_type <- match.arg(cov_type)
   if (!is.logical(se.fit) || length(se.fit) != 1L || is.na(se.fit)) {
-    stop("'se.fit' must be a single logical value", call. = FALSE)
+    stop("'se.fit' must be TRUE or FALSE", call. = FALSE)
   }
   se.fit <- isTRUE(se.fit)
   coef_names <- names(object$coefficients)
@@ -285,16 +242,14 @@ predict.geer <- function(object,
       stop("'object$x' must have column names", call. = FALSE)
     }
     design_matrix <- design_matrix[, coef_names, drop = FALSE]
-    se <- standard_errors_or_na(
-    rowSums((design_matrix %*% vcov_matrix) * design_matrix),
-    "predict.geer", what = "prediction"
-  )
+    se <- compute_standard_errors_or_na(
+      rowSums((design_matrix %*% vcov_matrix) * design_matrix),
+      "predict.geer",
+      what = "prediction"
+    )
     if (type == "response") {
       se <- se * abs(object$family$mu.eta(eta_vector))
     }
-    ## 'object$x' keeps the model-matrix row names of the data before sorting,
-    ## which no longer identify the rows of the stored fit, so they are
-    ## dropped to match the unnamed 'fit' component.
     ans <- list(fit = out, se.fit = as.numeric(se))
     return(ans)
   }
@@ -342,7 +297,7 @@ predict.geer <- function(object,
   }
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-  se <- standard_errors_or_na(
+  se <- compute_standard_errors_or_na(
     rowSums((design_matrix %*% vcov_matrix) * design_matrix),
     "predict.geer", what = "prediction"
   )
@@ -370,10 +325,6 @@ compute_mahalanobis_residuals <- function(object) {
         object,
         indices
       )
-      ## A Cholesky factor both solves the system and certifies that the
-      ## working covariance is positive definite. The quadratic form is then
-      ## the squared norm of the forward-solved residual, so it is nonnegative
-      ## by construction and needs no clamping.
       chol_factor <- tryCatch(
         chol(working_covariance),
         error = function(e) NULL
@@ -420,60 +371,40 @@ compute_mahalanobis_residuals <- function(object) {
 #' Extracts residuals of different types from a fitted \code{geer} object.
 #'
 #' @inheritParams coef.geer
-#' @param type character string specifying the type of residuals to return.
-#'   Options are \code{"working"} for raw residuals, \code{"response"} as an
-#'   alias of \code{"working"} (the raw residuals \code{y - fitted}),
-#'   \code{"pearson"} for
-#'   residuals standardized by the marginal variance, \code{"deviance"}
-#'   for dispersion-scaled signed square roots of the deviance contributions,
-#'   and \code{"mahalanobis"} for cluster-level Mahalanobis residuals.
-#'   Defaults to \code{"working"}.
-#' @param ... not used. Supplying any argument here is an error, so that a
-#'   misspelled \code{type} is reported rather than silently ignored.
+#' @param type character string specifying the type of residuals: raw
+#'   (\code{"working"}, or its alias \code{"response"}), Pearson
+#'   (\code{"pearson"}), deviance (\code{"deviance"}), or cluster-level
+#'   Mahalanobis (\code{"mahalanobis"}) residuals. See Details. Defaults to
+#'   \code{"working"}.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @details
-#' Pearson residuals are computed as
+#' With prior weights \eqn{w_{ij}}, the Pearson and deviance residuals are
 #' \deqn{r^P_{ij} = \frac{y_{ij} - \hat\mu_{ij}}{\sqrt{\hat\phi
-#' V(\hat\mu_{ij}) / w_{ij}}}.}
-#' Deviance residuals are computed as
-#' \deqn{r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
-#' \sqrt{d(y_{ij}, \hat\mu_{ij}, w_{ij}) / \hat\phi},}
-#' where \eqn{d(y_{ij}, \hat\mu_{ij}, w_{ij})} is the non-scaled deviance
-#' contribution returned by the fitted family. As in
-#' \code{\link[stats]{glm}}, that contribution already includes the prior
-#' weight \eqn{w_{ij}}, which is why the weight appears inside \eqn{d} here
-#' but explicitly in the denominator of the Pearson residual.
-#'
-#' Mahalanobis residuals are computed once per cluster as
-#' \deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^T
-#' \widehat{\operatorname{Var}}(Y_i)^{-1}(y_i - \hat\mu_i),}
-#' using the fitted working covariance matrix for that cluster, which already
-#' includes the estimated dispersion. They are therefore nonnegative
-#' cluster-level diagnostics, rather than observation-level signed residuals.
-#' The quadratic form is evaluated through a Cholesky factorization of the
-#' working covariance matrix, and an error is signalled for any cluster whose
-#' working covariance matrix is not positive definite.
+#' V(\hat\mu_{ij})/w_{ij}}}, \qquad
+#' r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
+#' \sqrt{d_{ij}/\hat\phi},}{r^P_ij = (y_ij - mu_ij)/sqrt(phi V(mu_ij)/w_ij),   r^D_ij = sign(y_ij - mu_ij) sqrt(d_ij/phi),}
+#' where \eqn{d_{ij}} is the weighted deviance contribution of the family, as
+#' in \pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023). The Mahalanobis
+#' residual of cluster \eqn{i} is
+#' \deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^\top \hat V_i^{-1}
+#' (y_i - \hat\mu_i),}{r^M_i = (1/n_i)(y_i - mu_i)' V_i^(-1) (y_i - mu_i),}
+#' where \eqn{\hat V_i}{V_i} is the fitted working covariance matrix, including the
+#' dispersion. It is a nonnegative cluster-level diagnostic.
 #'
 #' @section Observation order:
-#' The returned vector follows the internal observation order of the fitted
-#' model, not the row order of the data supplied to \code{geewa} or
-#' \code{geewa_binary}. Rows are restricted to the complete cases retained by
-#' the \code{na.action} in force and are then sorted by cluster identifier
-#' and, within cluster, by the repeated index. Unless the supplied data were
-#' already sorted that way and free of missing values, assigning the result
-#' back with an expression such as \code{data$r <- residuals(fit)} will
-#' attach values to the wrong rows without any warning, because the lengths
-#' can still agree. Order the data by cluster and repeated index before
-#' fitting, or align the result yourself using \code{fit$id} and
-#' \code{fit$repeated}, which are stored in the same order as the returned
-#' vector.
+#' The values follow the internal order of the fitted model: the complete
+#' cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
+#' data were already in this order and had no missing values, assigning the
+#' values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+#' rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
+#' the same order and can be used to align them.
 #'
 #' @return
-#' A numeric vector. For \code{type = "working"}, \code{"pearson"}, or
-#' \code{"deviance"}, the vector has one value per fitted observation, in the
-#' internal observation order described below rather than in the row order of
-#' the supplied data. For \code{type = "mahalanobis"}, it has one value per
-#' cluster and is named by the cluster identifier.
+#' A numeric vector with one value per observation, in the order given under
+#' Observation order, or, for \code{type = "mahalanobis"}, one value per
+#' cluster, named by the cluster identifier.
 #'
 #' @references
 #' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
@@ -481,8 +412,8 @@ compute_mahalanobis_residuals <- function(object) {
 #' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},
-#'   \code{\link{runs_test}}, \code{\link{geewa}},
-#'   \code{\link{geewa_binary}}, \code{\link[stats]{residuals}}.
+#'   \code{\link{runs_test}}, \code{\link{geewa}}, \code{\link{geewa_binary}},
+#'   \code{\link[stats]{residuals}}.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")
@@ -491,9 +422,10 @@ compute_mahalanobis_residuals <- function(object) {
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
+#'   repeated = period,
 #'   orstr = "exchangeable"
 #' )
-#' head(residuals(fit, type = "working"))
+#' head(residuals(fit))
 #' head(residuals(fit, type = "pearson"))
 #' head(residuals(fit, type = "deviance"))
 #' head(residuals(fit, type = "mahalanobis"))
@@ -509,16 +441,11 @@ residuals.geer <- function(object,
   object <- check_geer_object(object)
   type <- match.arg(type)
   if (type %in% c("pearson", "deviance")) {
-    ## object$y carries the model-frame row names while $fitted.values and
-    ## $residuals do not, so the names are dropped to keep every
-    ## observation-level residual type unnamed.
     y <- as.numeric(object$y)
     mu <- object$fitted.values
     weights <- object$prior.weights
   }
   if (!identical(type, "working")) {
-    ## Every scaled residual divides by the estimated dispersion, so an
-    ## unusable estimate is reported rather than propagated.
     if (!is.numeric(object$phi) || length(object$phi) != 1L ||
         !is.finite(object$phi) || object$phi <= 0) {
       stop(
@@ -539,14 +466,11 @@ residuals.geer <- function(object,
       as.numeric(pr) / sqrt(object$phi)
     },
     deviance = {
-      ## A negative deviance contribution is not a rounding artifact: it means
-      ## the family has returned something the deviance cannot produce, so it
-      ## is reported rather than clamped to zero.
       dev_contribution <- object$family$dev.resids(y, mu, weights)
       if (any(!is.finite(dev_contribution)) || any(dev_contribution < 0)) {
         stop(
           paste0(
-            "'deviance' residuals require finite nonnegative deviance ",
+            "'deviance' residuals require finite non-negative deviance ",
             "contributions from the fitted family"
           ),
           call. = FALSE
@@ -558,5 +482,3 @@ residuals.geer <- function(object,
   )
   ans
 }
-
-

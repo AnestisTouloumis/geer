@@ -1,12 +1,11 @@
-testthat::local_edition(3)
-
+cerebrovascular <- test_data$cerebrovascular
 
 test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
   expect_error(
     geewa_binary(
       ecg ~ treatment,
       id = id,
-      data = test_data$cerebrovascular,
+      data = cerebrovascular,
       link = "log-log"
     ),
     "'log-log' link not recognised"
@@ -15,7 +14,7 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
     geewa_binary(
       ecg ~ treatment,
       id = id,
-      data = test_data$cerebrovascular,
+      data = cerebrovascular,
       link = "logit",
       orstr = "ar1"
     ),
@@ -23,25 +22,24 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
   )
 })
 
-
 test_that("geewa_binary validates weights", {
   expect_error(
     geewa_binary(
       ecg ~ treatment + factor(period),
       id = id,
-      data = test_data$cerebrovascular,
+      data = cerebrovascular,
       link = "logit",
-      weights = rep.int(1, nrow(test_data$cerebrovascular) - 1)
+      weights = rep.int(1, nrow(cerebrovascular) - 1)
     ),
     "weights"
   )
-  bad_weights <- rep.int(1, nrow(test_data$cerebrovascular))
+  bad_weights <- rep.int(1, nrow(cerebrovascular))
   bad_weights[1] <- 0
   expect_error(
     geewa_binary(
       ecg ~ treatment + factor(period),
       id = id,
-      data = test_data$cerebrovascular,
+      data = cerebrovascular,
       link = "logit",
       weights = bad_weights
     ),
@@ -50,9 +48,8 @@ test_that("geewa_binary validates weights", {
   )
 })
 
-
 test_that("geewa_binary rejects duplicated repeated values within cluster", {
-  cerebrovascular_bad <- test_data$cerebrovascular
+  cerebrovascular_bad <- cerebrovascular
   cerebrovascular_bad$rep2 <- cerebrovascular_bad$period
 
   idx <- which(cerebrovascular_bad$id == cerebrovascular_bad$id[1])[1:2]
@@ -67,11 +64,10 @@ test_that("geewa_binary rejects duplicated repeated values within cluster", {
       link = "logit",
       orstr = "independence"
     ),
-    "unique",
+    "distinct",
     ignore.case = TRUE
   )
 })
-
 
 test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
   expect_error(
@@ -79,7 +75,7 @@ test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
       ecg ~ treatment + factor(period),
       id = id,
       repeated = period,
-      data = test_data$cerebrovascular,
+      data = cerebrovascular,
       link = "logit",
       orstr = "fixed"
     ),
@@ -88,31 +84,30 @@ test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
   )
 })
 
-
-test_that("geewa rejects unsupported quasi variance functions early", {
-  dat <- data.frame(
-    y = c(1, 2, 3, 4),
-    x = c(0, 1, 0, 1),
-    id = 1:4
-  )
+test_that("geewa_binary rejects a non-finite beta_start", {
+  cer <- cerebrovascular
   expect_error(
-    geewa(
-      y ~ x,
-      data = dat,
-      id = id,
-      family = quasi(link = "identity", variance = "mu^4"),
-      corstr = "independence"
+    geewa_binary(ecg ~ treatment,
+      data = cer, id = id, repeated = period,
+      beta_start = c(NA, 0)
     ),
-    "'variance'"
+    "'beta_start' must contain only finite values"
   )
 })
 
-
-test_that("geewa_binary rejects a non-finite 'beta_start'", {
-  cer <- test_data$cerebrovascular
-  expect_error(
-    geewa_binary(ecg ~ treatment, data = cer, id = id, repeated = period,
-                 beta_start = c(NA, 0)),
-    "'beta_start' must contain only finite values"
+test_that("geewa_binary warns about character repeated values", {
+  dat <- cerebrovascular
+  dat$period_character <- as.character(dat$period)
+  expect_warning(
+    geewa_binary(
+      ecg ~ period * treatment,
+      data = dat,
+      id = id,
+      repeated = period_character,
+      link = "logit",
+      orstr = "independence"
+    ),
+    "'repeated' is a character vector",
+    fixed = TRUE
   )
 })

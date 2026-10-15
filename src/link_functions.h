@@ -5,7 +5,6 @@
 #include "link_codes.h"
 #include "family_codes.h"
 
-namespace geer {
 
 arma::vec inverse_link(LinkCode link_code,
                        const arma::vec& eta_vector);
@@ -24,6 +23,5 @@ bool is_valid_eta(LinkCode link_code,
 bool is_valid_mu(FamilyCode family_code,
                  const arma::vec& mu_vector);
 
-}  // namespace geer
 
 #endif

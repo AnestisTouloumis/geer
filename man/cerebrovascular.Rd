@@ -10,7 +10,7 @@ A data frame with 134 rows and 4 columns:
   \item{id}{integer subject identifier.}
   \item{period}{integer period identifier.}
   \item{ecg}{binary indicator of ECG status, 0 = abnormal and 1 = normal.}
-  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+  \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 }
 }
 \source{

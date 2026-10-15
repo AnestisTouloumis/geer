@@ -9,8 +9,8 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{not used. Supplying any argument here is an error rather than
-being silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 A named numeric vector of estimated regression coefficients. The names
@@ -21,23 +21,16 @@ Extracts the estimated regression coefficients from a fitted \code{geer}
 object. \code{coefficients} is an alias for \code{coef}.
 }
 \examples{
-data("leprosy", package = "geer")
-fit <- geewa(
-  formula = bacilli ~ factor(period) + factor(period):treatment,
-  family = poisson(link = "log"),
-  data = leprosy,
-  id = id
-)
-coef(fit)
-
 data("cerebrovascular", package = "geer")
-fit_bin <- geewa_binary(
+fit <- geewa_binary(
   formula = ecg ~ treatment + factor(period),
   link = "logit",
   data = cerebrovascular,
-  id = id
+  id = id,
+  repeated = period,
+  orstr = "exchangeable"
 )
-coef(fit_bin)
+coef(fit)
 
 }
 \seealso{

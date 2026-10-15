@@ -1,61 +1,33 @@
 #' @title
-#' Add or Drop Single Terms to or from a geer Model
+#' Add or Drop Single Terms to or from a geer Object
 #'
 #' @rdname add1.geer
 #' @method add1 geer
 #'
 #' @description
-#' Computes all single terms in the \code{scope} argument that can be added to
-#' or dropped from a fitted \code{geer} model, fits the corresponding models,
-#' and returns a table summarizing the resulting changes in fit.
+#' Fits all models that differ from a fitted \code{geer} object by adding or
+#' dropping a single term in \code{scope}, and tests each change.
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::add1
-#' @param ... additional arguments passed to or from other methods.
+#' @param ... additional arguments passed to or from other methods. Currently
+#'   unused.
 #'
 #' @details
-#' For \code{add1.geer()}, \code{scope} must specify the candidate terms to be
-#' added. If no eligible terms are supplied, an error is returned. In scope
-#' formulas, \code{.} denotes the set of terms already included in the model.
-#'
-#' Model hierarchy is enforced: candidate additions and deletions must preserve
-#' marginality, so if a higher-order interaction is present, all of its
-#' lower-order component terms must also remain in the model.
-#'
-#' Details of the hypothesis tests controlled by \code{test} are given in
-#' Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
-#' valid only when the model is fitted with an independence working association
-#' structure; otherwise an error is returned.
-#'
-#' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-#' ignored and \code{cov_type} specifies the covariance estimator used to
-#' compute the test statistic. For modified working tests, \code{cov_type}
-#' determines the covariance matrix used to form the coefficients of the sum of
-#' independent chi-squared random variables, and \code{pmethod} specifies the
-#' approximation used to compute the p-value.
-#' When \code{cov_type = "jackknife"} is used with a score or modified working
-#' score test, the score and model-based information remain evaluated under the
-#' null model, while the covariance component is the full leave-one-cluster
-#' jackknife covariance from the larger fitted model.
-#' For every score or modified working score test, the estimating function and
-#' the model-based information are evaluated at the fitted means of the smaller
-#' (null) model, but the association parameters and the dispersion are those of
-#' the larger model: they are not re-estimated under the null model.
-#'
-#' The output table also includes the Correlation Information Criterion (CIC)
-#' for each candidate model as supplementary model information. The CIC is
-#' computed from \code{vcov(model, cov_type = cov_type)}, so with
-#' \code{cov_type = "jackknife"} a full set of leave-one-cluster refits is
-#' performed for the current model and for every candidate model; see
-#' \code{\link{vcov.geer}}.
+#' For \code{add1()}, \code{scope} must contain at least one term not in the
+#' model, and \code{.} denotes the terms already in the model. Additions and
+#' deletions respect marginality: a term is not dropped while a higher-order
+#' interaction containing it remains, and an interaction is not added without
+#' its lower-order terms. The tests are described in
+#' \code{\link{anova.geer}}. The table also reports the correlation
+#' information criterion (CIC) of each model, computed with \code{cov_type};
+#' with \code{cov_type = "jackknife"} every candidate model is therefore
+#' refitted once per cluster.
 #'
 #' @return
-#' An object of class \code{"anova"} summarizing the differences in fit
-#' between the models. For \code{add1.geer()} and \code{drop1.geer()}, the
-#' table contains one row for the current model and one row for each admissible
-#' single-term addition or deletion. Columns include \code{Df} (degrees of
-#' freedom of the test), \code{CIC} (Correlation Information Criterion),
-#' \code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value).
+#' An object of class \code{c("geer_anova", "anova", "data.frame")} with one row
+#' for the current model and one for each admissible addition or deletion, and
+#' columns \code{Df}, \code{CIC}, \code{Chi}, and \code{Pr(>Chi)}.
 #'
 #' @references
 #' Rotnitzky, A. and Jewell, N.P. (1990) Hypothesis testing of regression
@@ -63,27 +35,25 @@
 #' correlated data. \emph{Biometrika}, \bold{77}, 485--497.
 #'
 #' @seealso \code{\link{anova.geer}}, \code{\link{step_p}},
-#'   \code{\link{geecriteria}}, \code{\link{geewa}},
-#'   \code{\link{geewa_binary}}.
+#'   \code{\link{geecriteria}}, \code{\link{geewa}}, \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' data("respiratory", package = "geer")
-#' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
-#'
+#' respiratory2 <- respiratory[respiratory$center == "C2", ]
 #' fit <- geewa(
-#'   formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
+#'   formula = status ~ baseline + treatment + gender + visit + age,
 #'   family = binomial(link = "probit"),
 #'   data = respiratory2,
 #'   id = id,
 #'   repeated = visit,
-#'   corstr = "ar1",
-#'   method = "gee"
+#'   corstr = "ar1"
 #' )
-#' add1(
-#'   fit,
-#'   scope = . ~ . + baseline:age + age:visit + I(treatment == "active"):age + age:gender,
-#'   test = "score"
-#' )
+#' ## Single-term deletions
+#' drop1(fit, test = "score")
+#'
+#' ## Single-term additions
+#' add1(fit, scope = ~ . + baseline:age + visit:age + treatment:age,
+#'      test = "score")
 #'
 #' @export
 add1.geer <-
@@ -106,20 +76,26 @@ add1.geer <-
     cov_type <- opts$cov_type
     pmethod <- opts$pmethod
     if (missing(scope) || is.null(scope)) {
-      stop("no terms in scope for adding to object", call. = FALSE)
+      stop("'scope' contains no terms to add", call. = FALSE)
     }
     if (!is.character(scope)) {
       scope <- stats::add.scope(object, stats::update.formula(object, scope))
     }
     if (!length(scope)) {
-      stop("no terms in scope for adding to object", call. = FALSE)
+      stop("'scope' contains no terms to add", call. = FALSE)
     }
     ns <- length(scope)
-    ans <- matrix(NA_real_, nrow = ns + 1L, ncol = 4L,
-                  dimnames = list(c("<none>", scope),
-                                  c("Df", "CIC", "Chi", "Pr(>Chi)")))
+    ans <- matrix(
+      NA_real_,
+      nrow = ns + 1L,
+      ncol = 4L,
+      dimnames = list(
+        c("<none>", scope),
+        c("Df", "CIC", "Chi", "Pr(>Chi)")
+      )
+    )
 
-    ans[1L, 2L] <- compute_gee_cic(object, cov_type)
+    ans[1L, 2L] <- compute_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
       add1_model <- refit_geer(object, stats::as.formula(paste(". ~ . +", tt)))
@@ -127,14 +103,31 @@ add1.geer <-
         test,
         wald = compute_wald_test(object, add1_model, cov_type),
         score = compute_score_test(object, add1_model, cov_type),
-        `working-wald`  = compute_working_wald_test(object, add1_model, cov_type, pmethod),
-        `working-score` = compute_working_score_test(object, add1_model, cov_type, pmethod),
-        `working-lrt`   = compute_working_lrt_test(object, add1_model, cov_type, pmethod)
+        `working-wald` = compute_working_wald_test(
+          object,
+          add1_model,
+          cov_type,
+          pmethod
+        ),
+        `working-score` = compute_working_score_test(
+          object,
+          add1_model,
+          cov_type,
+          pmethod
+        ),
+        `working-lrt` = compute_working_lrt_test(
+          object,
+          add1_model,
+          cov_type,
+          pmethod
+        )
       )
-      ans[i + 1L, ] <- c(value$test_df,
-                         compute_gee_cic(add1_model, cov_type),
-                         value$test_stat,
-                         value$test_p)
+      ans[i + 1L, ] <- c(
+        value$test_df,
+        compute_cic(add1_model, cov_type),
+        value$test_stat,
+        value$test_p
+      )
     }
     aod <- as.data.frame(ans)
     test_type <- format_test_label(test)
@@ -143,27 +136,16 @@ add1.geer <-
       paste("Single term additions using", test_type, "test:"),
       "\nModel:", formula_txt
     )
-    structure(aod, heading = head, class = c("geer_anova", "anova", "data.frame"))
+    structure(
+      aod,
+      heading = head,
+      class = c("geer_anova", "anova", "data.frame")
+    )
   }
 
 
 #' @rdname add1.geer
 #' @method drop1 geer
-#'
-#' @examples
-#' data("respiratory", package = "geer")
-#' respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
-#'
-#' fit <- geewa(
-#'   formula = status ~ baseline + I(treatment == "active") + gender + visit + age,
-#'   family = binomial(link = "probit"),
-#'   data = respiratory2,
-#'   id = id,
-#'   repeated = visit,
-#'   corstr = "ar1",
-#'   method = "gee"
-#' )
-#' drop1(fit, test = "score")
 #'
 #' @export
 drop1.geer <- function(object,
@@ -190,16 +172,19 @@ drop1.geer <- function(object,
     scope <- admissible_scope
   } else {
     if (!is.character(scope)) {
-      scope <- attr(stats::terms(stats::update.formula(object, scope)), "term.labels")
+      scope <- attr(
+        stats::terms(stats::update.formula(object, scope)),
+        "term.labels"
+      )
     }
     if (!all(match(scope, model_terms, 0L) > 0L)) {
-      stop("scope is not a subset of term labels", call. = FALSE)
+      stop("'scope' must contain only terms of the model", call. = FALSE)
     }
     scope <- intersect(scope, admissible_scope)
   }
   ns <- length(scope)
   if (ns == 0L) {
-    stop("no admissible terms in scope for dropping from object", call. = FALSE)
+    stop("'scope' contains no terms that can be dropped", call. = FALSE)
   }
   ans <- matrix(
     NA_real_,
@@ -210,7 +195,7 @@ drop1.geer <- function(object,
       c("Df", "CIC", "Chi", "Pr(>Chi)")
     )
   )
-  ans[1L, 2L] <- compute_gee_cic(object, cov_type)
+  ans[1L, 2L] <- compute_cic(object, cov_type)
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
 
@@ -220,18 +205,27 @@ drop1.geer <- function(object,
       wald = compute_wald_test(drop1_model, object, cov_type),
       score = compute_score_test(drop1_model, object, cov_type),
       `working-wald` = compute_working_wald_test(
-        drop1_model, object, cov_type, pmethod
+        drop1_model,
+        object,
+        cov_type,
+        pmethod
       ),
       `working-score` = compute_working_score_test(
-        drop1_model, object, cov_type, pmethod
+        drop1_model,
+        object,
+        cov_type,
+        pmethod
       ),
       `working-lrt` = compute_working_lrt_test(
-        drop1_model, object, cov_type, pmethod
+        drop1_model,
+        object,
+        cov_type,
+        pmethod
       )
     )
     ans[i + 1L, ] <- c(
       value$test_df,
-      compute_gee_cic(drop1_model, cov_type),
+      compute_cic(drop1_model, cov_type),
       value$test_stat,
       value$test_p
     )
@@ -253,99 +247,75 @@ drop1.geer <- function(object,
 #' @method anova geer
 #'
 #' @description
-#' Computes hypothesis test tables for one or more fitted \code{geer} objects,
-#' analogous to analysis-of-variance (ANOVA) tables for GLM models.
+#' Computes tables of hypothesis tests for one or more fitted \code{geer}
+#' objects, analogous to analysis of deviance tables for generalized linear
+#' models.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
-#' @param ... additional fitted model objects of class \code{"geer"}, used for
-#'   sequential model comparisons.
-#' @param test character string specifying the hypothesis testing procedure.
-#'   Options are the Wald test (\code{"wald"}), the generalized score test
-#'   (\code{"score"}), the modified working Wald test (\code{"working-wald"}),
-#'   the modified working score test (\code{"working-score"}), and the modified
-#'   working likelihood ratio test (\code{"working-lrt"}). Defaults to
+#' @param ... additional fitted model objects of class \code{"geer"} to be
+#'   included in the comparison.
+#' @param test character string specifying the hypothesis test: Wald
+#'   (\code{"wald"}), generalized score (\code{"score"}), modified working Wald
+#'   (\code{"working-wald"}), modified working score (\code{"working-score"}),
+#'   or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 #'   \code{"wald"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for inference on the regression parameters. Options are the bias-corrected
-#'   estimator (\code{"bias-corrected"}), the sandwich or robust estimator
-#'   (\code{"robust"}), the degrees-of-freedom adjusted estimator
-#'   (\code{"df-adjusted"}), the leave-one-cluster jackknife estimator
-#'   (\code{"jackknife"}), and the model-based or naive estimator
-#'   (\code{"naive"}). Defaults to \code{"bias-corrected"}.
-#' @param pmethod character string specifying the approximation used to compute
-#'   the p-value for the modified working tests. Options are the Rao--Scott
-#'   approximation (\code{"rao-scott"}) and the Satterthwaite approximation
-#'   (\code{"satterthwaite"}). Defaults to \code{"rao-scott"}.
+#'   used for inference: \code{"bias-corrected"}, \code{"robust"},
+#'   \code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+#'   \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.
+#' @param pmethod character string specifying the approximation to the null
+#'   distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
+#'   or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
+#'   tests. Defaults to \code{"rao-scott"}.
 #'
 #' @details
-#' Details of the hypothesis tests controlled by \code{test} are given in
-#' Rotnitzky and Jewell (1990). The option \code{test = "working-lrt"} is
-#' valid only when the model is fitted with an independence working association
-#' structure; otherwise an error is returned.
+#' The tests are those of Rotnitzky and Jewell (1990). The Wald and score
+#' statistics use the covariance matrix selected by \code{cov_type}. The
+#' modified working tests compare a working statistic with a weighted sum of
+#' independent chi-squared variables, whose weights depend on \code{cov_type},
+#' and \code{pmethod} selects the approximation to its distribution. The
+#' modified working likelihood ratio test requires a working independence
+#' structure, and both working log-likelihoods are scaled by the dispersion of
+#' the larger model. The score tests are evaluated at the fitted means of the
+#' smaller model with the association and dispersion parameters of the larger
+#' model; with \code{cov_type = "jackknife"}, the covariance component is the
+#' jackknife covariance of the larger model.
 #'
-#' When \code{test \%in\% c("wald", "score")}, the \code{pmethod} argument is
-#' ignored and \code{cov_type} specifies the covariance estimator used to
-#' compute the test statistic. For modified working tests, \code{cov_type}
-#' determines the covariance matrix used to form the coefficients of the sum of
-#' independent chi-squared random variables, and \code{pmethod} specifies the
-#' approximation used to compute the p-value.
-#' When \code{cov_type = "jackknife"} is used with a score or modified working
-#' score test, the score and model-based information remain evaluated under the
-#' null model, while the covariance component is the full leave-one-cluster
-#' jackknife covariance from the larger fitted model.
-#' For every score or modified working score test, the estimating function and
-#' the model-based information are evaluated at the fitted means of the smaller
-#' (null) model, but the association parameters and the dispersion are those of
-#' the larger model: they are not re-estimated under the null model.
-#'
-#' When comparing two or more models, the data must be identical across all
-#' fits and each consecutive pair of models must be nested. Models with a
-#' working association structure different from Model 1 are omitted with a
-#' warning. Any other difference in the fitting settings (fitting function,
-#' estimation method, dispersion handling, \code{use_p}, the order of an
-#' m-dependent structure, fixed association parameters or contrasts) is an
-#' error.
+#' With several models, the fits must use the same data and each consecutive
+#' pair must be nested. A model whose working association structure differs
+#' from that of the first model is omitted with a warning, and any other
+#' difference in the fitting settings, such as the estimation method or the
+#' handling of the dispersion, is an error.
 #'
 #' @return
-#' An object of class \code{c("anova", "data.frame")}. With a single model,
-#' the table reports tests for terms added sequentially (first to last). With
-#' multiple models, the table reports sequential comparisons between each
-#' consecutive pair of nested models. Columns include \code{Df} (degrees of
-#' freedom of the test), \code{Resid. Df} (residual degrees of freedom),
-#' \code{Chi} (test statistic), and \code{Pr(>Chi)} (p-value). Unlike
-#' \code{\link{add1.geer}} and \code{\link{drop1.geer}}, no \code{CIC} column
-#' is included; use \code{\link{geecriteria}} for working association structure
-#' selection.
+#' An object of class \code{c("geer_anova", "anova", "data.frame")} with columns
+#' \code{Df}, \code{Resid. Df}, \code{Chi}, and \code{Pr(>Chi)}. With one model,
+#' the terms are tested sequentially, from first to last; with several models,
+#' each model is compared with the previous one. \code{Resid. Df} is the number
+#' of observations minus the number of regression parameters.
 #'
 #' @inherit add1.geer references
 #'
-#' @seealso \code{\link{add1.geer}} and \code{\link{drop1.geer}} for
-#'   single-term additions and deletions while respecting model hierarchy;
-#'   \code{\link{step_p}} for stepwise model selection;
-#'   \code{\link{geecriteria}} for model comparison criteria.
+#' @seealso \code{\link{add1.geer}}, \code{\link{drop1.geer}},
+#'   \code{\link{step_p}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+#'   \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' data("cerebrovascular", package = "geer")
-#'
-#' ## Single-model ANOVA (sequential terms)
-#' fit_full <- geewa_binary(
+#' fit <- geewa_binary(
 #'   formula = ecg ~ treatment + factor(period),
 #'   link = "logit",
 #'   data = cerebrovascular,
 #'   id = id,
+#'   repeated = period,
 #'   orstr = "exchangeable"
 #' )
-#' anova(fit_full, test = "wald", cov_type = "robust")
+#' ## Sequential tests of the terms
+#' anova(fit)
 #'
-#' ## Two-model comparison (models must be nested)
-#' fit_null <- geewa_binary(
-#'   formula = ecg ~ 1,
-#'   link = "logit",
-#'   data = cerebrovascular,
-#'   id = id,
-#'   orstr = "exchangeable"
-#' )
-#' anova(fit_null, fit_full, test = "wald", cov_type = "robust")
+#' ## Comparison of nested models
+#' fit0 <- update(fit, . ~ . - treatment)
+#' anova(fit0, fit, test = "score")
 #'
 #' @export
 anova.geer <-
@@ -380,10 +350,12 @@ anova.geer <-
     dotargs <- dotargs[is_geer]
     if (length(dotargs)) {
       dotargs <- lapply(dotargs, check_geer_object)
-      return(compute_anova_geer_list(c(list(object), dotargs),
-                                     test = test,
-                                     cov_type = cov_type,
-                                     pmethod = pmethod))
+      return(compute_anova_geer_list(
+        c(list(object), dotargs),
+        test = test,
+        cov_type = cov_type,
+        pmethod = pmethod
+      ))
     }
     terms <- attr(object$terms, "term.labels")
     intercept <- attr(object$terms, "intercept")
@@ -391,9 +363,7 @@ anova.geer <-
     varseq <- attr(object$x, "assign")
     nvars <- max(c(0, varseq))
     object_list <- list()
-    ## update.formula() drops formula offsets together with the old right-hand
-    ## side, so they are added back to the first model of the sequence.
-    offset_terms <- geer_formula_offset_terms(object)
+    offset_terms <- extract_formula_offset_terms(object)
     offset_part <- if (length(offset_terms)) {
       paste0(" + ", paste(offset_terms, collapse = " + "))
     } else {
@@ -422,7 +392,11 @@ anova.geer <-
         )
       }
     }
-    resdf <- vapply(object_list, function(x) as.numeric(x$df.residual), numeric(1))
+    resdf <- vapply(
+      object_list,
+      function(x) as.numeric(x$df.residual),
+      numeric(1)
+    )
     table <- data.frame(
       Df = c(NA_real_, rep(NA_real_, length(resdf) - 1L)),
       `Resid. Df` = resdf,
@@ -431,23 +405,47 @@ anova.geer <-
       check.names = FALSE
     )
     if (intercept == 1) {
-      dimnames(table) <- list(c("NULL", terms),
-                              c("Df", "Resid. Df", "Chi", "Pr(>Chi)"))
+      dimnames(table) <- list(
+        c("NULL", terms),
+        c("Df", "Resid. Df", "Chi", "Pr(>Chi)")
+      )
     } else {
-      dimnames(table) <- list(c(terms),
-                              c("Df", "Resid. Df", "Chi", "Pr(>Chi)"))
+      dimnames(table) <- list(
+        c(terms),
+        c("Df", "Resid. Df", "Chi", "Pr(>Chi)")
+      )
     }
     for (i in seq_len(length(object_list) - 1)) {
       value <- switch(
         test,
-        wald = compute_wald_test(object_list[[i]], object_list[[i + 1]], cov_type),
-        score = compute_score_test(object_list[[i]], object_list[[i + 1]], cov_type),
-        `working-wald` =
-          compute_working_wald_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
-        `working-score` =
-          compute_working_score_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod),
-        `working-lrt` =
-          compute_working_lrt_test(object_list[[i]], object_list[[i + 1]], cov_type, pmethod)
+        wald = compute_wald_test(
+          object_list[[i]],
+          object_list[[i + 1]],
+          cov_type
+        ),
+        score = compute_score_test(
+          object_list[[i]],
+          object_list[[i + 1]],
+          cov_type
+        ),
+        `working-wald` = compute_working_wald_test(
+          object_list[[i]],
+          object_list[[i + 1]],
+          cov_type,
+          pmethod
+        ),
+        `working-score` = compute_working_score_test(
+          object_list[[i]],
+          object_list[[i + 1]],
+          cov_type,
+          pmethod
+        ),
+        `working-lrt` = compute_working_lrt_test(
+          object_list[[i]],
+          object_list[[i + 1]],
+          cov_type,
+          pmethod
+        )
       )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }
@@ -460,5 +458,9 @@ anova.geer <-
       "\n\nTerms added sequentially (first to last)\n\n",
       sep = ""
     )
-    structure(table, heading = title, class = c("geer_anova", "anova", "data.frame"))
+    structure(
+      table,
+      heading = title,
+      class = c("geer_anova", "anova", "data.frame")
+    )
   }

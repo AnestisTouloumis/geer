@@ -28,99 +28,92 @@ geewa(
 )
 }
 \arguments{
-\item{formula}{\code{formula} expression of the form
-\code{response ~ predictors}: a symbolic description of the marginal
-model to be fitted.}
+\item{formula}{formula of the form \code{response ~ predictors} describing
+the marginal mean model. Terms \code{offset()} are allowed.}
 
-\item{family}{a \code{\link[stats]{family}} object, family function, or
-character string naming a family function, specifying the marginal
-variance and link functions. Supported families are \code{gaussian},
-\code{binomial}, \code{poisson}, \code{Gamma},
-\code{inverse.gaussian}, \code{quasi}, \code{quasibinomial} and
-\code{quasipoisson}. Defaults to
-\code{gaussian(link = "identity")}.}
+\item{family}{family object, family function, or character string naming a
+family, specifying the marginal variance and link functions. Supported
+families are \code{gaussian}, \code{binomial}, \code{poisson},
+\code{Gamma}, \code{inverse.gaussian}, \code{quasi}, \code{quasibinomial},
+and \code{quasipoisson}. Defaults to \code{gaussian(link = "identity")}.}
 
-\item{data}{optional data frame containing variables referenced in
-\code{formula}, \code{id}, \code{repeated}, \code{weights}, and
-\code{offset}. Defaults to \code{parent.frame()}.}
+\item{data}{optional data frame in long format, with one row per
+observation, containing the variables in \code{formula}, \code{id},
+\code{repeated}, \code{weights}, and \code{offset}. Defaults to
+\code{parent.frame()}.}
 
 \item{id}{variable identifying the clusters.}
 
-\item{repeated}{optional variable identifying the order of observations
-within each cluster.}
+\item{repeated}{optional variable identifying the order of the observations
+within each cluster. Its values must be unique within each cluster. They
+are replaced by their rank among the sorted distinct values, or by the
+level number for a factor, so only their order matters and not their
+spacing. A character variable is sorted alphabetically, so \code{"10"}
+precedes \code{"2"}, and gives a warning. If omitted, the row order within
+each cluster is used.}
 
-\item{control}{a \code{\link{geer_control}} list specifying convergence
-tolerance, maximum iterations, step-halving parameters, and the
-power of the Jeffreys-type penalty. Defaults to \code{geer_control()}.}
+\item{control}{list of control parameters as returned by
+\code{\link{geer_control}}. Defaults to \code{geer_control(...)}.}
 
-\item{corstr}{character string specifying the working correlation structure. Options
-are \code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
-\code{"m-dependent"}, \code{"unstructured"}, \code{"toeplitz"} and
+\item{corstr}{character string specifying the working correlation structure:
+\code{"independence"}, \code{"exchangeable"}, \code{"ar1"},
+\code{"m-dependent"}, \code{"unstructured"}, \code{"toeplitz"}, or
 \code{"fixed"}. Defaults to \code{"independence"}.}
 
-\item{Mv}{positive integer giving the number of lags for the m-dependent
-working correlation structure. Defaults to \code{1} (lag-1
-dependence). Must be set explicitly when lags other than 1 are
-intended. Ignored when \code{corstr != "m-dependent"}.}
+\item{Mv}{positive integer giving the order of the \code{"m-dependent"}
+structure. Ignored for other structures. Defaults to \code{1}.}
 
-\item{method}{character string specifying the estimation method. Options are
-the traditional GEE (\code{"gee"}), bias-reduced methods
-(\code{"brgee-robust"}, \code{"brgee-empirical"}, \code{"brgee-naive"}),
-bias-corrected methods (\code{"bcgee-robust"}, \code{"bcgee-empirical"},
-\code{"bcgee-naive"}), the fully iterated Jeffreys-type penalized GEE
-(\code{"pgee-jeffreys"}), the one-step penalized GEE
-(\code{"opgee-jeffreys"}), and the hybrid one-step GEE
-(\code{"hpgee-jeffreys"}). Defaults to \code{"gee"}.}
+\item{method}{character string specifying the estimation method: ordinary GEE
+(\code{"gee"}), bias-reduced GEE (\code{"brgee-naive"},
+\code{"brgee-robust"}, or \code{"brgee-empirical"}), bias-corrected GEE
+(\code{"bcgee-naive"}, \code{"bcgee-robust"}, or \code{"bcgee-empirical"}),
+Jeffreys-type penalized GEE (\code{"pgee-jeffreys"}), or its one-step
+(\code{"opgee-jeffreys"}) and hybrid one-step (\code{"hpgee-jeffreys"})
+versions. See Details. Defaults to \code{"gee"}.}
 
-\item{weights}{optional numeric vector of observation weights. Must be finite
-and strictly positive. If not supplied, all weights are 1.}
+\item{weights}{optional numeric vector of strictly positive, finite
+observation weights. Defaults to weights of 1.}
 
 \item{beta_start}{optional numeric vector of starting values for the
-regression parameters. Defaults to \code{NULL}, in which case
-starting values are obtained from an auxiliary generalized linear
-model fit, using
-\code{\link[brglm2]{brglmFit}} where appropriate.}
+regression parameters. Defaults to \code{NULL}, in which case they are
+obtained from a generalized linear model fitted by
+\code{\link[brglm2]{brglmFit}}.}
 
-\item{offset}{this can be used to specify an a priori known component to be
-included in the linear predictor during fitting. This should be
-\code{NULL}, a single numeric value, or a numeric vector of length
-equal to the number of observations. One or more offset terms can be
-included in the formula instead or as well, and if more than one is
-specified their sum is used.}
+\item{offset}{optional a priori known component of the linear predictor:
+a single number or a numeric vector with one value per observation. It is
+added to any \code{offset()} terms in \code{formula}.}
 
-\item{control_glm}{optional list of control parameters interpreted by
-\code{\link[brglm2]{brglm_control}} when computing GLM-based
-starting values. Ignored when \code{beta_start} is supplied. Defaults
-to \code{list(...)}, that is, the arguments supplied through
-\code{...}.}
+\item{control_glm}{optional list of control parameters passed to
+\code{\link[brglm2]{brglm_control}} for the starting values. Ignored when
+\code{beta_start} is supplied. Defaults to \code{list(...)}.}
 
-\item{use_p}{logical indicating whether to apply a degrees-of-freedom
-correction by subtracting the number of regression parameters from
-the relevant denominator when estimating the scale and working
-correlation parameters. Defaults to \code{TRUE}.}
+\item{use_p}{logical indicating whether the number of regression parameters
+is subtracted from the denominators of the estimators of the dispersion
+and working correlation parameters. Defaults to \code{TRUE}.}
 
-\item{alpha_vector}{numeric vector of fixed working correlation parameters
-used only when \code{corstr = "fixed"}. Must have length \code{choose(T, 2)}
-where \code{T = max(repeated)} after recoding, and the resulting
-working correlation matrix must be positive definite. Ignored
-otherwise. Defaults to \code{NULL}.}
+\item{alpha_vector}{numeric vector of working correlation parameters for
+\code{corstr = "fixed"}, of length \code{choose(T, 2)}, where \eqn{T} is
+the number of distinct \code{repeated} values, giving a positive definite
+correlation matrix. Ignored for other structures. Defaults to
+\code{NULL}.}
 
-\item{phi_fixed}{logical indicating whether the scale parameter is fixed at
-the value of \code{phi_value}. Defaults to \code{FALSE}.}
+\item{phi_fixed}{logical indicating whether the dispersion parameter is
+fixed at \code{phi_value}. Defaults to \code{FALSE}.}
 
-\item{phi_value}{positive number giving the fixed value of the scale
-parameter. Used only when \code{phi_fixed = TRUE}. Defaults to
-\code{1}.}
+\item{phi_value}{strictly positive number giving the fixed value of the
+dispersion parameter when \code{phi_fixed = TRUE}. Defaults to \code{1}.}
 
-\item{subset}{an optional vector specifying a subset of observations to be
-used in the fitting process. It is evaluated in \code{data}, as in
+\item{subset}{optional vector specifying a subset of observations to be used
+in the fit, evaluated in \code{data} as in
 \code{\link[stats]{model.frame}}.}
 
-\item{na.action}{a function indicating what should happen when the data
-contain \code{NA}s, as in \code{\link[stats]{model.frame}}. Defaults
-to \code{getOption("na.action")}.}
+\item{na.action}{function specifying the handling of missing values, as in
+\code{\link[stats]{model.frame}}. Defaults to
+\code{getOption("na.action")}.}
 
-\item{...}{additional arguments passed to or from other methods.}
+\item{...}{arguments used to build \code{control} and \code{control_glm} when
+these are not supplied. Supplying \code{...} together with both
+\code{control} and \code{control_glm} is an error.}
 }
 \value{
 An object of class \code{"geer"}, a list with components:
@@ -151,165 +144,131 @@ An object of class \code{"geer"}, a list with components:
 \item{method}{character string identifying the estimation method used.}
 \item{fit_function}{character string identifying the fitting function used,
       either \code{"geewa"} or \code{"geewa_binary"}.}
-\item{use_p}{for \code{geewa()} fits, logical indicating whether the
-      degrees-of-freedom correction was used. This component is not stored
-      for \code{geewa_binary()} fits.}
-\item{phi_fixed}{for \code{geewa()} fits, logical indicating whether the
-      scale parameter was fixed. This component is not stored for
-      \code{geewa_binary()} fits.}
+\item{use_p}{logical indicating whether the degrees-of-freedom correction
+      was used; \code{\link{geewa}} fits only.}
+\item{phi_fixed}{logical indicating whether the dispersion parameter was
+      fixed; \code{\link{geewa}} fits only.}
 \item{contrasts}{the contrasts used.}
 \item{xlevels}{a record of the levels of the factors used in fitting.}
-\item{na.action}{information on how missing values were handled, as returned
-      by the \code{na.action} attribute of the model frame. \code{NULL} if
-      no observations were removed.}
+\item{na.action}{the \code{na.action} attribute of the model frame, present
+      only when observations were removed.}
 \item{naive_covariance}{the model-based (naive) covariance matrix.}
 \item{robust_covariance}{the sandwich (robust) covariance matrix.}
 \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
 \item{association_structure}{the name of the working association structure.}
-\item{alpha}{a vector of the estimated working association parameters.}
-\item{phi}{the scale parameter. For \code{geewa()} fits, this is
-      estimated or fixed according to the fitting options; for
-      \code{geewa_binary()} fits, it is always \code{1}.}
+\item{alpha}{the estimated or fixed working association parameters, 0 under
+      independence.}
+\item{phi}{the estimated or fixed dispersion parameter, 1 for
+      \code{\link{geewa_binary}} fits.}
 \item{obs_no}{the number of observations used in fitting.}
 \item{clusters_no}{the number of clusters.}
 \item{min_cluster_size}{the minimum cluster size.}
 \item{max_cluster_size}{the maximum cluster size.}
+Other components are for internal use.
 }
 \description{
-Fits a marginal model for repeated or clustered responses using
-generalized estimating equations (GEE). Supported estimation methods include
-the traditional GEE, bias-reduced GEE, bias-corrected GEE, and
+Fits a marginal model for clustered or repeated responses by generalized
+estimating equations (GEE), using ordinary, bias-reduced, bias-corrected, or
 Jeffreys-type penalized GEE.
 }
 \details{
-\code{method} specifies the estimation approach. If \code{method = "gee"},
-the standard GEE are solved with no adjustment. If \code{method} is one of
-\code{"brgee-naive"}, \code{"brgee-robust"} or \code{"brgee-empirical"},
-an adjustment vector is added to produce naive, robust or empirical
-bias-reduced estimators, respectively. If \code{method} is one of
-\code{"bcgee-naive"}, \code{"bcgee-robust"} or \code{"bcgee-empirical"},
-the corresponding bias-corrected estimators are produced via a one-step
-correction applied to the converged GEE solution. If
-\code{method = "pgee-jeffreys"}, the GEE are penalized using a
-Jeffreys-type penalty run to full convergence. If
-\code{method = "opgee-jeffreys"}, a single penalized scoring step is
-performed from the converged independence penalized solution (one-step
-approximation). If \code{method = "hpgee-jeffreys"}, a single standard GEE
-scoring step is performed from the converged independence penalized solution
-(hybrid one-step approximation).
-
-For the construction of the \code{formula} argument, see the documentation
-of \code{\link[stats]{glm}} and \code{\link[stats]{formula}}.
-
-The \code{data} must be in long format (one row per observation). See
-\code{\link[stats]{reshape}} for details on reshaping between long and wide formats.
-
-The \code{quasi}, \code{quasibinomial} and \code{quasipoisson} families are
-internally remapped to their standard parametric equivalents before fitting.
-The \code{quasibinomial} and \code{quasipoisson} families are mapped to
-\code{binomial} and \code{poisson}, respectively. A \code{quasi} family is
-supported when its variance function is \code{constant}, \code{mu(1-mu)},
-\code{mu}, \code{mu^2}, or \code{mu^3}; these are mapped to
-\code{gaussian}, \code{binomial}, \code{poisson}, \code{Gamma}, and
-\code{inverse.gaussian}, respectively. The scale parameter \code{phi} is
-then estimated freely from the data unless \code{phi_fixed = TRUE}.
-
-The default set for the \code{id} labels is \eqn{\{1,\ldots,N\}}, where
-\eqn{N} is the number of clusters. Otherwise, the function recodes the given
-labels of \code{id} onto this set.
-
-The argument \code{repeated} can be safely omitted only if observations are
-already ordered within each cluster as intended. If \code{repeated} is not
-provided, it is created as \code{1, 2, ..., n_i} within each cluster
-\eqn{i}, using the current row order (before internal sorting). If
-\code{repeated} is provided, its labels are recoded to \code{1, ..., T} and
-must be unique within each cluster.
-
-The variables \code{id} and \code{repeated} do not need to be pre-sorted.
-Instead the function sorts observations in ascending order of \code{id}
-and \code{repeated}.
-
-A term of the form \code{offset(expression)} is allowed in the right-hand
-side of \code{formula}.
-
-The length of \code{id} and, when provided, of \code{repeated} and
-\code{weights} must equal the number of observations.
+The estimation methods are:
+\describe{
+  \item{\code{"gee"}}{the estimating equations of Liang and Zeger (1986).}
+  \item{\code{"brgee-*"}}{bias-reduced GEE, which add an adjustment term to
+    the estimating equations based on the naive, robust, or empirical
+    covariance matrix (Touloumis, 2026a).}
+  \item{\code{"bcgee-*"}}{bias-corrected GEE, which apply a one-step
+    correction to the converged GEE estimate (Touloumis, 2026a).}
+  \item{\code{"pgee-jeffreys"}}{GEE penalized by a Jeffreys-type penalty
+    (Touloumis, 2026b).}
+  \item{\code{"opgee-jeffreys"}, \code{"hpgee-jeffreys"}}{one penalized, or
+    one ordinary, scoring step from the penalized estimate under working
+    independence.}
 }
-\section{Note on returned components}{
 
-For \code{geewa}, the \code{alpha} contains the estimated (or fixed) working
-correlation parameters. The \code{association_structure}
-component stores the value of \code{corstr}. Under
-\code{corstr = "independence"}, \code{alpha} is set to \code{0}.
+Observations are sorted by \code{id} and \code{repeated}, and both are
+recoded to consecutive integers. The quasi families are mapped to the
+corresponding standard families: \code{quasibinomial} to \code{binomial},
+\code{quasipoisson} to \code{poisson}, and \code{quasi} with variance
+\code{"constant"}, \code{"mu(1-mu)"}, \code{"mu"}, \code{"mu^2"}, or
+\code{"mu^3"} to \code{gaussian}, \code{binomial}, \code{poisson},
+\code{Gamma}, or \code{inverse.gaussian}. The dispersion parameter is
+estimated for every family unless \code{phi_fixed = TRUE}.
 
-For \code{method} in \code{"bcgee-naive"}, \code{"bcgee-robust"},
-\code{"bcgee-empirical"}, \code{"opgee-jeffreys"}, and
-\code{"hpgee-jeffreys"}, \code{converged} is \code{TRUE} in the
-returned object, because these methods produce their estimate via a single
-correction step applied to an already-converged fit. The exception is a
-numerical failure in that correction step: a warning is then issued, the
-preliminary estimates of the first stage are returned and \code{converged}
-is \code{FALSE}.
+For \code{corstr = "ar1"}, the correlation parameter is estimated from the
+products of Pearson residuals at consecutive \code{repeated} values, pooled
+over clusters, so it can differ from the estimates of other packages.
+}
+\section{Convergence and separation}{
 
-For the bias-corrected methods, \code{alpha} and \code{phi} are those of the
-converged GEE solution and are held fixed in the correction step. For
-\code{"opgee-jeffreys"} and \code{"hpgee-jeffreys"} they are estimated
-once, under the requested working correlation structure, at the converged
-independence penalized estimate of the regression parameters, and are held
-fixed in the one-step update; the returned \code{alpha}, \code{phi} and
-covariance matrices use these values.
+For the two-stage methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
+\code{"hpgee-jeffreys"}), \code{alpha} and \code{phi} are estimated once at
+the first-stage estimate and held fixed in the correction step, and
+\code{converged} is \code{TRUE} unless the correction step fails, in which
+case the first-stage estimates are returned with a warning.
+
+If \code{converged} is \code{FALSE}, the results are those of the last
+accepted iteration and should not be interpreted; \code{print()} and
+\code{summary()} then show a warning. \code{converged = TRUE} only means
+that the stopping criterion was met: with separated binary data or all-zero
+counts the estimates can be very large, which is signaled by a warning that
+fitted probabilities are within 1e-12 of 0 or 1 or that fitted rates are 0.
+
+In the bias-reduced and penalized methods the adjustment term is multiplied
+by the dispersion parameter, whose estimate tends to 0 under complete
+separation, so with the default estimated dispersion no method protects
+against infinite estimates. For binary responses with separation or rare
+events, use \code{phi_fixed = TRUE} or \code{\link{geewa_binary}}. Then
+\code{"brgee-naive"} and the Jeffreys-penalized methods
+(\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
+\code{"hpgee-jeffreys"}) keep the estimates finite under separation.
+\code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
+bias-corrected methods fail because they start from the ordinary GEE fit.
 }
 
 \examples{
 data("epilepsy", package = "geer")
-fit_gee <- geewa(
+fit <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
+  repeated = visit,
   corstr = "exchangeable",
   method = "gee"
 )
-summary(fit_gee, cov_type = "bias-corrected")
+summary(fit)
 
-fit_brgee_robust <- update(fit_gee, method = "brgee-robust")
-summary(fit_brgee_robust, cov_type = "bias-corrected")
-
-fit_brgee_naive <- update(fit_gee, method = "brgee-naive")
-summary(fit_brgee_naive, cov_type = "bias-corrected")
-
-fit_brgee_empirical <- update(fit_gee, method = "brgee-empirical")
-summary(fit_brgee_empirical, cov_type = "bias-corrected")
-
-fit_bcgee_robust <- update(fit_gee, method = "bcgee-robust")
-summary(fit_bcgee_robust, cov_type = "robust")
+## Bias-reduced and bias-corrected GEE
+fit_br <- update(fit, method = "brgee-robust")
+summary(fit_br)
+fit_bc <- update(fit, method = "bcgee-robust")
+summary(fit_bc, cov_type = "robust")
 
 \donttest{
-## Penalized GEE with custom control
-fit_pgee <- geewa(
-  formula = seizures ~ treatment + lnbaseline + lnage,
-  family = poisson(link = "log"),
-  data = epilepsy,
-  id = id,
-  control = geer_control(jeffreys_power = 0.1),
-  corstr = "exchangeable",
-  method = "pgee-jeffreys"
-)
-summary(fit_pgee, cov_type = "robust")
+## Jeffreys-type penalized GEE with a weaker penalty
+fit_pgee <- update(fit, method = "pgee-jeffreys",
+                   control = geer_control(jeffreys_power = 0.1))
+summary(fit_pgee)
 }
 
 }
 \references{
+Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
+generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
+
 Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
-with odds-ratio extensions. \emph{Preprint}.
-\url{https://arxiv.org/abs/2606.16043}
+with odds-ratio extensions. \emph{arXiv preprint}.
+\doi{10.48550/arXiv.2606.16043}
 
 Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-with an odds-ratio parameterization. \emph{Preprint}.
-\url{https://arxiv.org/abs/2606.16058}
+with an odds-ratio parameterization. \emph{arXiv preprint}.
+\doi{10.48550/arXiv.2606.16058}
 }
 \seealso{
-\code{\link{geewa_binary}}, \code{\link{geer_control}}, \code{\link{summary.geer}},
-\code{\link{vcov.geer}}, \code{\link{anova.geer}}, \code{\link{step_p}},
-\code{\link{geecriteria}}, \code{\link{runs_test}}.
+\code{\link{geewa_binary}}, \code{\link{geer_control}},
+  \code{\link{summary.geer}}, \code{\link{vcov.geer}},
+  \code{\link{anova.geer}}, \code{\link{step_p}}, \code{\link{geecriteria}},
+  \code{\link{runs_test}}.
 }

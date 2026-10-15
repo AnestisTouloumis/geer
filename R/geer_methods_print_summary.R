@@ -1,12 +1,24 @@
+print_nonconvergence_notice <- function(converged) {
+  if (!isTRUE(converged)) {
+    cat(
+      "*** WARNING: the algorithm did not converge; the estimates, standard",
+      "errors and p-values are unreliable. ***\n"
+    )
+  }
+  invisible(NULL)
+}
+
+
 #' @title
 #' Print a geer Object
 #'
 #' @description
-#' Prints the call, estimated regression coefficients, and basic fitting
-#' information for a fitted \code{geer} object.
+#' Prints the call, the estimated regression coefficients, and the
+#' convergence information of a fitted \code{geer} object.
 #'
 #' @param x a fitted model object of class \code{"geer"}.
-#' @param ... additional arguments passed to or from other methods.
+#' @param ... additional arguments passed to or from other methods. Currently
+#'   unused.
 #'
 #' @return
 #' The input object \code{x} is returned invisibly.
@@ -20,6 +32,7 @@
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
+#'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
 #' print(fit)
@@ -37,6 +50,7 @@ print.geer <- function(x, ...) {
   }
   cat("\nNumber of iterations:", x$iter, "\n")
   cat("Algorithm converged :", x$converged, "\n")
+  print_nonconvergence_notice(x$converged)
   invisible(x)
 }
 
@@ -45,16 +59,17 @@ print.geer <- function(x, ...) {
 #' Summarize a geer Object
 #'
 #' @description
-#' Produces a coefficient table and basic model summary information for a
-#' fitted \code{geer} object.
+#' Summarizes a fitted \code{geer} object, with a table of the coefficients,
+#' their standard errors, z-statistics, and p-values.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
-#' @param cov_type character string specifying the covariance estimator used to
-#'   compute standard errors, z-statistics, and p-values. Options are \code{"bias-corrected"},
-#'   \code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, and
-#'   \code{"naive"}. Defaults to \code{"bias-corrected"}.
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
+#' @param cov_type character string specifying the covariance matrix estimator
+#'   used for the standard errors, z-statistics, and p-values:
+#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
+#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+#'   Defaults to \code{"bias-corrected"}.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @return
 #' An object of class \code{"summary.geer"}, a list with components:
@@ -71,8 +86,8 @@ print.geer <- function(x, ...) {
 #' \item{max_cluster_size}{the largest observed cluster size.}
 #' \item{iter}{the number of iterations used.}
 #' \item{converged}{logical indicating whether the algorithm converged.}
-#' \item{phi}{the estimated or fixed scale parameter. For models fitted by
-#'   \code{geewa_binary()}, this is always \code{1}.}
+#' \item{phi}{the estimated or fixed dispersion parameter, 1 for
+#'   \code{\link{geewa_binary}} fits.}
 #' \item{association_structure}{the name of the working association structure.}
 #' \item{method}{character string identifying the estimation method used.}
 #' \item{cov_type}{the covariance estimator used for standard errors.}
@@ -87,20 +102,11 @@ print.geer <- function(x, ...) {
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
+#'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
 #' summary(fit)
-#' summary(fit, cov_type = "bias-corrected")
-#'
-#' data("cerebrovascular", package = "geer")
-#' fit_bin <- geewa_binary(
-#'   formula = ecg ~ treatment + factor(period),
-#'   link = "logit",
-#'   data = cerebrovascular,
-#'   id = id,
-#'   orstr = "exchangeable"
-#' )
-#' summary(fit_bin)
+#' summary(fit, cov_type = "robust")
 #'
 #' @export
 summary.geer <- function(object,
@@ -109,9 +115,10 @@ summary.geer <- function(object,
                          ...) {
   object <- check_geer_object(object)
   cov_type <- match.arg(cov_type)
+  check_unused_dots(list(...), "summary.geer")
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- standard_errors_or_na(diag(vcov_matrix), "summary.geer")
+  se <- compute_standard_errors_or_na(diag(vcov_matrix), "summary.geer")
   z_stat <- rep.int(NA_real_, length(beta))
   pval <- rep.int(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
@@ -149,11 +156,12 @@ summary.geer <- function(object,
 #' Print a summary.geer Object
 #'
 #' @description
-#' Prints the contents of a \code{summary.geer} object, including the call,
-#' estimation method, sample size and cluster sizes, coefficient table,
-#' dispersion parameter, and working association structure.
+#' Prints a \code{summary.geer} object: the call, the estimation method, the
+#' sample and cluster sizes, the coefficient table, the dispersion parameter,
+#' and the working association structure.
 #'
-#' @param x an object of class \code{"summary.geer"}.
+#' @param x an object of class \code{"summary.geer"}, as returned by
+#'   \code{\link{summary.geer}}.
 #' @param ... additional arguments passed to or from other methods. Currently
 #'   unused.
 #'
@@ -169,6 +177,7 @@ summary.geer <- function(object,
 #'   family = poisson(link = "log"),
 #'   data = epilepsy,
 #'   id = id,
+#'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
 #' print(summary(fit))
@@ -181,10 +190,16 @@ print.summary.geer <- function(x, ...) {
   cat("\nEstimating Method   :", x$method, "\n")
   cat("Number of iterations:", x$iter, "\n")
   cat("Algorithm converged :", x$converged, "\n")
+  print_nonconvergence_notice(x$converged)
   cat("\nNumber of observations:", x$obs_no, "\n")
   cat("Number of clusters    :", x$clusters_no, "\n")
-  cat("Cluster sizes         :", x$min_cluster_size, "to",
-      x$max_cluster_size, "\n")
+  cat(
+    "Cluster sizes         :",
+    x$min_cluster_size,
+    "to",
+    x$max_cluster_size,
+    "\n"
+  )
   cat("\nMarginal Model\n")
   cat("Family       :", x$family$family, "\n")
   cat("Link Function:", x$family$link, "\n")

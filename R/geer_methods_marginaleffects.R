@@ -1,38 +1,26 @@
 #' @title marginaleffects Support for geer Objects
 #'
 #' @description
-#' Methods that allow fitted \code{geer} objects to work with the
-#' \pkg{marginaleffects} package.
-#'
-#' These functions are used internally by \pkg{marginaleffects} and are not
-#' normally called directly by users. Once both packages are installed,
-#' functions such as \code{marginaleffects::predictions()},
-#' \code{marginaleffects::comparisons()}, and
-#' \code{marginaleffects::slopes()} can be applied to fitted \code{geer}
-#' objects.
-#'
-#' By default, \pkg{marginaleffects} inference for \code{geer} objects uses
-#' the bias-corrected covariance matrix, matching the default inference in
-#' \pkg{geer}. A character value may select any covariance estimator
-#' supported by \code{vcov.geer()}, including \code{"robust"},
-#' \code{"df-adjusted"}, \code{"jackknife"}, and \code{"naive"}. A
-#' covariance matrix or function can also be supplied.
+#' Methods that allow \pkg{marginaleffects} functions, such as
+#' \code{marginaleffects::predictions()}, \code{marginaleffects::comparisons()},
+#' and \code{marginaleffects::slopes()}, to be applied to fitted \code{geer}
+#' objects. They are called by \pkg{marginaleffects} and not usually by the
+#' user. Inference uses the bias-corrected covariance matrix unless
+#' \code{vcov} requests another estimator.
 #'
 #' @param model a fitted model object of class \code{"geer"}.
 #' @param x a fitted model object of class \code{"geer"}.
 #' @param coefs a named numeric vector of regression coefficients.
-#' @param vcov covariance specification supplied by \pkg{marginaleffects}.
-#'   \code{NULL} or \code{TRUE} uses the bias-corrected covariance matrix,
-#'   while \code{FALSE} returns \code{NULL}. Character values may be
+#' @param vcov covariance specification: \code{NULL} or \code{TRUE} for the
+#'   bias-corrected covariance matrix, \code{FALSE} for none,
 #'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}. A covariance-producing
-#'   function may also be supplied. A square covariance matrix may be supplied;
-#'   after validation, its rows and columns are aligned with the model
-#'   coefficient names.
-#' @param newdata a data frame containing predictor values at which to compute
-#'   predictions.
-#' @param type prediction scale. Supported values are \code{"response"} and
-#'   \code{"link"}. \code{NULL} defaults to \code{"response"}.
+#'   \code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
+#'   See \code{\link{vcov.geer}}.
+#' @param newdata data frame of predictor values at which predictions are
+#'   computed.
+#' @param type character string specifying the prediction scale,
+#'   \code{"response"} or \code{"link"}. Defaults to \code{NULL}, which is
+#'   treated as \code{"response"}.
 #' @param ... additional arguments passed through by \pkg{marginaleffects}.
 #'
 #' @return
@@ -48,15 +36,14 @@
 #' @examples
 #' if (requireNamespace("marginaleffects", quietly = TRUE)) {
 #'   data("cerebrovascular", package = "geer")
-#'
 #'   fit <- geewa_binary(
 #'     formula = ecg ~ treatment + factor(period),
 #'     link = "logit",
 #'     data = cerebrovascular,
 #'     id = id,
+#'     repeated = period,
 #'     orstr = "exchangeable"
 #'   )
-#'
 #'   marginaleffects::avg_predictions(fit)
 #'   marginaleffects::avg_comparisons(fit, variables = "treatment")
 #'   marginaleffects::avg_predictions(fit, vcov = "robust")
@@ -85,7 +72,10 @@ check_marginaleffects_vcov <- function(vcov_matrix, coef_names) {
   missing_rows <- setdiff(coef_names, rownames(vcov_matrix))
   missing_cols <- setdiff(coef_names, colnames(vcov_matrix))
   if (length(missing_rows) || length(missing_cols)) {
-    stop("names of 'vcov' must match the model coefficient names", call. = FALSE)
+    stop(
+      "names of 'vcov' must match the model coefficient names",
+      call. = FALSE
+    )
   }
   vcov_matrix[coef_names, coef_names, drop = FALSE]
 }
@@ -123,7 +113,10 @@ set_coef.geer <- function(model, coefs, ...) {
   coef_names <- names(model$coefficients)
   if (length(coefs) != length(coef_names) ||
       !setequal(names(coefs), coef_names)) {
-    stop("names of 'coefs' must match the model coefficient names", call. = FALSE)
+    stop(
+      "names of 'coefs' must match the model coefficient names",
+      call. = FALSE
+    )
   }
   model$coefficients <- as.numeric(coefs[coef_names])
   names(model$coefficients) <- coef_names
@@ -147,9 +140,8 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
     if (!(vcov_type %in% choices)) {
       stop(
         paste0(
-          "unsupported 'vcov' specification for a 'geer' model; use one of ",
-          "'bias-corrected', 'robust', 'df-adjusted', 'jackknife', or 'naive', ",
-          "or supply a covariance matrix/function"
+          "'vcov' must be one of: bias-corrected, robust, df-adjusted, ",
+          "jackknife, naive, or a covariance matrix or function"
         ),
         call. = FALSE
       )
@@ -194,8 +186,6 @@ get_predict.geer <- function(model,
     newdata <- as.data.frame(newdata)
   }
 
-  ## marginaleffects populates '...' with its own internal arguments, which
-  ## predict.geer does not accept, so they are not forwarded.
   estimate <- stats::predict(
     model,
     newdata = newdata,
@@ -205,7 +195,7 @@ get_predict.geer <- function(model,
     estimate <- estimate$fit
   }
   if (!is.numeric(estimate) || length(estimate) != nrow(newdata)) {
-    stop("'predict.geer' returned an invalid prediction vector", call. = FALSE)
+    stop("predict.geer() returned an invalid prediction vector", call. = FALSE)
   }
 
   rowid <- if ("rowid" %in% names(newdata)) {

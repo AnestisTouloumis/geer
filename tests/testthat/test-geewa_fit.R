@@ -1,14 +1,15 @@
-testthat::local_edition(3)
+cerebrovascular <- test_data$cerebrovascular
+epilepsy <- test_data$epilepsy
+rinse <- test_data$rinse
 
 fit_geewa_gauss_indep <- geewa(
   formula = score ~ treatment + baseline + time,
-  data = test_data$rinse,
+  data = rinse,
   id = id,
   family = gaussian(link = "identity"),
   corstr = "independence",
   method = "gee"
 )
-
 
 test_that("geewa fits a coherent Gaussian independence model", {
   fit <- fit_geewa_gauss_indep
@@ -16,9 +17,9 @@ test_that("geewa fits a coherent Gaussian independence model", {
   expect_true(fit$converged)
   expect_equal(fit$family$family, "gaussian")
   expect_equal(fit$family$link, "identity")
-  expect_equal(names(coef(fit)), colnames(fit$x))
+  expect_named(coef(fit), colnames(fit$x))
   expect_true(all(is.finite(fitted(fit))))
-  expect_equal(length(fitted(fit)), fit$obs_no)
+  expect_length(fitted(fit), fit$obs_no)
   expect_equal(
     residuals(fit, type = "working"),
     fit$y - fitted(fit),
@@ -26,7 +27,6 @@ test_that("geewa fits a coherent Gaussian independence model", {
   )
   expect_gt(fit$phi, 0)
 })
-
 
 test_that("geewa fits coherent Poisson independence and exchangeable models", {
   expect_true(fit_geewa_pois_indep$converged)
@@ -38,33 +38,32 @@ test_that("geewa fits coherent Poisson independence and exchangeable models", {
   expect_lt(fit_geewa_pois_exch$alpha, 1)
   expect_equal(
     fit_geewa_pois_indep$clusters_no,
-    length(unique(test_data$epilepsy$id))
+    length(unique(epilepsy$id))
   )
   expect_equal(
     fit_geewa_pois_indep$obs_no,
-    nrow(test_data$epilepsy)
+    nrow(epilepsy)
   )
 })
-
 
 test_that("geewa fits representative non-independence correlation structures", {
   fit_ar1 <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "ar1"
   )
   fit_unstr <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "unstructured"
   )
   fit_mdep <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "m-dependent",
@@ -72,7 +71,7 @@ test_that("geewa fits representative non-independence correlation structures", {
   )
   fit_fixed <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "fixed",
@@ -90,11 +89,10 @@ test_that("geewa fits representative non-independence correlation structures", {
   expect_true(fit_fixed$converged)
 })
 
-
 test_that("geewa respects phi_fixed and phi_value", {
   fit <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "independence",
@@ -105,13 +103,12 @@ test_that("geewa respects phi_fixed and phi_value", {
   expect_equal(fit$phi, 2, tolerance = 1e-10)
 })
 
-
 test_that("geewa converges for representative alternative methods", {
   methods <- c("brgee-robust", "bcgee-robust", "pgee-jeffreys")
   for (method_name in methods) {
     fit <- geewa(
       seizures ~ treatment + lnbaseline + lnage,
-      data = test_data$epilepsy,
+      data = epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "exchangeable",
@@ -123,11 +120,10 @@ test_that("geewa converges for representative alternative methods", {
   }
 })
 
-
 test_that("bias-reduced estimates differ from plain GEE estimates", {
   fit_br <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "exchangeable",
@@ -138,28 +134,23 @@ test_that("bias-reduced estimates differ from plain GEE estimates", {
     coef(fit_br),
     tolerance = 1e-12
   )))
-  ## Bias reduction should move each estimate by only a small fraction of its
-  ## standard error with 59 clusters; a relative tolerance on the coefficients
-  ## would say nothing about the size of the shift.
   shift_in_se <- abs(coef(fit_br) - coef(fit_geewa_pois_exch)) /
     sqrt(diag(vcov(fit_geewa_pois_exch, cov_type = "robust")))
   expect_true(all(shift_in_se < 0.5))
 })
 
-
 test_that("geewa is invariant to row order via internal sorting", {
-  set.seed(1)
+  withr::local_seed(1)
   fit_1 <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
+    data = epilepsy,
     id = id,
     family = poisson(link = "log"),
     corstr = "exchangeable",
     method = "gee"
   )
-  epilepsy_shuffled <- test_data$epilepsy[
-    sample.int(nrow(test_data$epilepsy)),
-    ,
+  epilepsy_shuffled <- epilepsy[
+    sample.int(nrow(epilepsy)), ,
     drop = FALSE
   ]
   fit_2 <- geewa(
@@ -175,69 +166,46 @@ test_that("geewa is invariant to row order via internal sorting", {
     unname(fit_2$coefficients),
     tolerance = 1e-8
   )
-  expect_equal(names(fit_1$coefficients), names(fit_2$coefficients))
+  expect_named(fit_1$coefficients, names(fit_2$coefficients))
 })
 
-
-testthat::test_that("grouped binomial fit does not fail from an n - p^2 phi denominator", {
+test_that("use_p = TRUE and use_p = FALSE both fit for a small grouped binomial model", {
   dat <- data.frame(
     success = c(1, 3, 2, 4),
     failure = c(4, 2, 3, 1),
     x = c(0, 1, 0, 1),
     id = 1:4
   )
-  testthat::expect_no_error(
-    fit <- geewa(
-      cbind(success, failure) ~ x,
-      data = dat,
-      id = id,
-      family = stats::binomial(link = "logit"),
-      corstr = "independence",
-      use_p = TRUE
-    )
-  )
-  testthat::expect_s3_class(fit, "geer")
-})
-
-
-testthat::test_that("use_p = TRUE and use_p = FALSE both fit for a small grouped binomial model", {
-  dat <- data.frame(
-    success = c(1, 3, 2, 4),
-    failure = c(4, 2, 3, 1),
-    x = c(0, 1, 0, 1),
-    id = 1:4
-  )
-  testthat::expect_no_error(
+  expect_no_error(
     fit_true <- geewa(
       cbind(success, failure) ~ x,
       data = dat,
       id = id,
-      family = stats::binomial(link = "logit"),
+      family = binomial(link = "logit"),
       corstr = "independence",
       use_p = TRUE
     )
   )
-  testthat::expect_no_error(
+  expect_no_error(
     fit_false <- geewa(
       cbind(success, failure) ~ x,
       data = dat,
       id = id,
-      family = stats::binomial(link = "logit"),
+      family = binomial(link = "logit"),
       corstr = "independence",
       use_p = FALSE
     )
   )
-  testthat::expect_s3_class(fit_true, "geer")
-  testthat::expect_s3_class(fit_false, "geer")
+  expect_s3_class(fit_true, "geer")
+  expect_s3_class(fit_false, "geer")
 })
-
 
 test_that("a fixed working correlation works with the independence-start one-step methods", {
   alpha_fixed <- rep(0.2, choose(4, 2))
   for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
     fit <- geewa(
       seizures ~ treatment + lnbaseline + lnage,
-      data = test_data$epilepsy,
+      data = epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "fixed",
@@ -250,9 +218,8 @@ test_that("a fixed working correlation works with the independence-start one-ste
   }
 })
 
-
-test_that("geewa honours 'subset' and 'na.action' and rejects stray arguments", {
-  epi <- test_data$epilepsy
+test_that("geewa honors subset and na.action and rejects stray arguments", {
+  epi <- epilepsy
   epi_sub <- epi[as.numeric(epi$id) <= 30, , drop = FALSE]
   fit_subset <- geewa(
     seizures ~ treatment + lnbaseline,
@@ -269,7 +236,6 @@ test_that("geewa honours 'subset' and 'na.action' and rejects stray arguments", 
   )
   expect_equal(fit_subset$obs_no, nrow(epi_sub))
   expect_equal(coef(fit_subset), coef(fit_manual), tolerance = 1e-8)
-  ## 'subset' must not be ignored when 'control' and 'control_glm' are given
   fit_explicit <- geewa(
     seizures ~ treatment + lnbaseline,
     data = epi,
@@ -295,7 +261,7 @@ test_that("geewa honours 'subset' and 'na.action' and rejects stray arguments", 
       data = epi_na,
       id = id,
       family = poisson("log"),
-      na.action = stats::na.fail
+      na.action = na.fail
     )
   )
   expect_error(
@@ -312,9 +278,8 @@ test_that("geewa honours 'subset' and 'na.action' and rejects stray arguments", 
   )
 })
 
-
 test_that("one-step penalized methods hold phi at the independence penalized fit", {
-  epi <- test_data$epilepsy
+  epi <- epilepsy
   fit_ind <- geewa(
     seizures ~ treatment + lnbaseline,
     data = epi,
@@ -337,10 +302,31 @@ test_that("one-step penalized methods hold phi at the independence penalized fit
   }
 })
 
+test_that("one-step penalized methods estimate alpha at the independence penalized fit", {
+  fit_ind <- geewa(seizures ~ treatment + lnbaseline,
+    data = epilepsy, id = id,
+    family = poisson("log"), corstr = "independence", method = "pgee-jeffreys"
+  )
+  r <- (fit_ind$y - fitted(fit_ind)) / sqrt(fitted(fit_ind))
+  p <- length(coef(fit_ind))
+  phi <- sum(r^2) / (length(r) - p)
+  pairs <- unlist(lapply(split(r, fit_ind$id), function(z) {
+    k <- combn(length(z), 2)
+    z[k[1, ]] * z[k[2, ]]
+  }))
+  alpha <- sum(pairs) / ((length(pairs) - p) * phi)
+  for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
+    fit_one <- geewa(seizures ~ treatment + lnbaseline,
+      data = epilepsy, id = id,
+      family = poisson("log"), corstr = "exchangeable", method = method
+    )
+    expect_equal(as.numeric(fit_one$alpha), alpha, tolerance = 1e-10, label = method)
+  }
+})
 
 test_that("the fit stores the row order and residuals accept type = 'response'", {
-  epi <- test_data$epilepsy
-  set.seed(2026)
+  epi <- epilepsy
+  withr::local_seed(2026)
   epi_shuffled <- epi[sample(nrow(epi)), , drop = FALSE]
   fit <- geewa(
     seizures ~ treatment + lnbaseline,
@@ -359,9 +345,8 @@ test_that("the fit stores the row order and residuals accept type = 'response'",
   )
 })
 
-
 test_that("geewa fits a response on a very small scale (dispersion below machine epsilon)", {
-  set.seed(101)
+  withr::local_seed(101)
   n_id <- 30L
   dat <- data.frame(id = rep(seq_len(n_id), each = 3L))
   dat$x <- rnorm(nrow(dat))
@@ -369,34 +354,38 @@ test_that("geewa fits a response on a very small scale (dispersion below machine
   dat$y_small <- 1e-9 * dat$y_unit
   for (corstr in c("independence", "exchangeable")) {
     fit_unit <- geewa(
-      y_unit ~ x, data = dat, id = id,
+      y_unit ~ x,
+      data = dat, id = id,
       family = gaussian("identity"), corstr = corstr
     )
     expect_no_error(
       fit_small <- geewa(
-        y_small ~ x, data = dat, id = id,
+        y_small ~ x,
+        data = dat, id = id,
         family = gaussian("identity"), corstr = corstr
       )
     )
-    expect_equal(unname(coef(fit_small)), unname(1e-9 * coef(fit_unit)),
-                 tolerance = 1e-6)
-    expect_equal(fit_small$phi, 1e-18 * fit_unit$phi, tolerance = 1e-6)
+    expect_equal(unname(coef(fit_small)) / 1e-9, unname(coef(fit_unit)),
+      tolerance = 1e-10
+    )
+    expect_equal(fit_small$phi / 1e-18, fit_unit$phi, tolerance = 1e-10)
     expect_equal(fit_small$alpha, fit_unit$alpha, tolerance = 1e-6)
   }
 })
 
-
 test_that("an unstructured correlation structure works when every cluster has one observation", {
-  set.seed(102)
+  withr::local_seed(102)
   dat <- data.frame(id = seq_len(40L), x = rnorm(40L))
   dat$y <- 1 + dat$x + rnorm(40L)
   fit_ind <- geewa(
-    y ~ x, data = dat, id = id,
+    y ~ x,
+    data = dat, id = id,
     family = gaussian("identity"), corstr = "independence"
   )
   expect_no_error(
     fit_unstr <- geewa(
-      y ~ x, data = dat, id = id,
+      y ~ x,
+      data = dat, id = id,
       family = gaussian("identity"), corstr = "unstructured"
     )
   )
@@ -404,10 +393,7 @@ test_that("an unstructured correlation structure works when every cluster has on
   expect_equal(coef(fit_unstr), coef(fit_ind), tolerance = 1e-6)
 })
 
-
 test_that("the standard-correlation solver stops on a non-finite starting step", {
-  ## A NaN response makes the first Newton step non-finite; the solver must
-  ## signal an error instead of returning NaN estimates.
   model_matrix <- cbind(1, c(-1, 0, 1, 2))
   expect_error(
     fit_geesolver_cc(
@@ -424,3 +410,83 @@ test_that("the standard-correlation solver stops on a non-finite starting step",
   )
 })
 
+test_that("update can change the fitting method", {
+  fit2 <- update(fit_geewa_pois_exch, method = "brgee-robust")
+  expect_s3_class(fit2, "geer")
+  expect_identical(fit2$method, "brgee-robust")
+  expect_identical(fit2$association_structure, fit_geewa_pois_exch$association_structure)
+  expect_identical(fit2$family$family, fit_geewa_pois_exch$family$family)
+  expect_identical(fit2$family$link, fit_geewa_pois_exch$family$link)
+})
+
+test_that("update can change association structure for geewa fits", {
+  fit2 <- update(fit_geewa_pois_exch, corstr = "ar1")
+  expect_s3_class(fit2, "geer")
+  expect_identical(fit2$association_structure, "ar1")
+})
+
+test_that("update can change association structure for geewa_binary fits", {
+  fit2 <- update(fit_geewa_bin_exch, orstr = "independence")
+  expect_s3_class(fit2, "geer")
+  expect_identical(fit2$association_structure, "independence")
+})
+
+test_that("update can add a term to the model formula", {
+  fit2 <- update(fit_geewa_pois_exch, . ~ . + treatment:lnbaseline)
+  expect_s3_class(fit2, "geer")
+  expect_true("treatmentprogabide:lnbaseline" %in% names(coef(fit2)))
+  expect_gt(length(coef(fit2)), length(coef(fit_geewa_pois_exch)))
+})
+
+test_that("update can remove a term from the model formula", {
+  fit2 <- update(fit_geewa_pois_exch, . ~ . - lnage)
+  expect_s3_class(fit2, "geer")
+  expect_false("lnage" %in% names(coef(fit2)))
+  expect_lt(length(coef(fit2)), length(coef(fit_geewa_pois_exch)))
+})
+
+test_that("formula is stored as a formula object when passed as a symbol", {
+  user_formula <- seizures ~ treatment + lnbaseline
+  fit <- geewa(
+    formula = user_formula,
+    data = epilepsy,
+    id = id,
+    family = poisson(link = "log"),
+    corstr = "exchangeable",
+    method = "gee"
+  )
+  expect_s3_class(fit$formula, "formula")
+  expect_identical(fit$call$formula, quote(user_formula))
+  expect_equal(fit$formula, user_formula, ignore_attr = TRUE)
+})
+
+test_that("update preserves the stored formula as a formula object", {
+  fit2 <- update(fit_geewa_pois_exch, . ~ . - lnage)
+  expect_s3_class(fit2$formula, "formula")
+  expect_false("lnage" %in% all.vars(fit2$formula))
+})
+
+test_that("fits called as geer::geewa or with phi_fixed in a variable behave the same", {
+  qualified <- geer::geewa(
+    formula = seizures ~ treatment + lnbaseline + lnage,
+    data = epilepsy, id = id, family = poisson(link = "log"),
+    corstr = "exchangeable", method = "gee"
+  )
+  expect_equal(glance(qualified), glance(fit_geewa_pois_exch))
+  expect_equal(geecriteria(qualified), geecriteria(fit_geewa_pois_exch))
+  expect_equal(
+    residuals(qualified, type = "mahalanobis"),
+    residuals(fit_geewa_pois_exch, type = "mahalanobis")
+  )
+  fixed_flag <- TRUE
+  direct <- geewa(ecg ~ treatment,
+    data = cerebrovascular, id = id, family = binomial(),
+    phi_fixed = TRUE
+  )
+  through_variable <- geewa(ecg ~ treatment,
+    data = cerebrovascular, id = id, family = binomial(),
+    phi_fixed = fixed_flag
+  )
+  expect_equal(glance(through_variable), glance(direct))
+  expect_equal(geecriteria(through_variable), geecriteria(direct))
+})

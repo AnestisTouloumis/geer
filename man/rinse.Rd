@@ -10,12 +10,12 @@ A data frame with 218 rows and 8 columns:
   \item{id}{integer subject identifier.}
   \item{time}{integer follow-up month identifier.}
   \item{score}{numeric plaque score.}
-  \item{treatment}{factor indicating rinse group with levels \code{A},
-    \code{B}, and \code{placebo}.}
+  \item{treatment}{factor indicating the rinse group, with levels
+    \code{placebo}, \code{A}, and \code{B}.}
   \item{baseline}{numeric plaque score at baseline.}
   \item{gender}{factor with levels \code{female} and \code{male}.}
   \item{age}{numeric age in years recorded at baseline.}
-  \item{smoke}{factor with levels \code{yes} and \code{no}.}
+  \item{smoke}{factor with levels \code{no} and \code{yes}.}
 }
 }
 \source{

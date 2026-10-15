@@ -2,45 +2,35 @@
 #' Control Parameters for geer Model Fitting
 #'
 #' @description
-#' Creates a list of control parameters for iterative fitting in
-#' \code{\link{geewa}} and \code{\link{geewa_binary}}. This function is used
-#' internally, but may also be supplied directly through the \code{control}
-#' argument of those functions.
+#' Sets the control parameters of the fitting algorithm of \code{\link{geewa}}
+#' and \code{\link{geewa_binary}}.
 #'
-#' @param tolerance strictly positive convergence tolerance. Defaults to
-#'   \code{1e-6}.
-#' @param maxiter positive integer giving the maximum number of fitting
-#'   iterations. Defaults to \code{500}.
-#' @param or_adding strictly positive continuity-correction constant added to
-#'   each cell of the marginalized \eqn{2 \times 2} contingency tables used to
-#'   estimate working odds ratios in \code{\link{geewa_binary}}. Defaults to
-#'   \code{0.5}. Ignored by \code{\link{geewa}}.
+#' @param tolerance strictly positive number giving the convergence tolerance.
+#'   Defaults to \code{1e-06}.
+#' @param maxiter positive integer giving the maximum number of iterations.
+#'   Defaults to \code{500}.
+#' @param or_adding strictly positive number added to each cell of the
+#'   marginalized \eqn{2 \times 2}{2 x 2} tables from which \code{\link{geewa_binary}}
+#'   estimates the working odds ratios. Defaults to \code{0.5}.
 #' @param step_maxiter positive integer giving the maximum number of
-#'   step-halving attempts allowed within an iteration. Defaults to \code{10}.
-#' @param step_multiplier strictly positive number used to scale the proposed
-#'   step before step-halving begins. A value greater than \code{1} enlarges
-#'   the initial step and a value smaller than \code{1} damps it, which can
-#'   help when the fitting algorithm diverges from poor starting values.
-#'   Defaults to \code{1}, which leaves the scoring step unscaled.
-#' @param jeffreys_power strictly positive constant giving the power of the
-#'   Jeffreys-type penalty. Defaults to \code{0.5}, which corresponds to the
-#'   standard Jeffreys-type penalty.
-#'
-#' @details
-#' The \code{jeffreys_power} argument is used only when
-#' \code{method \%in\% c("pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys")}
-#' in \code{\link{geewa}} or \code{\link{geewa_binary}}.
+#'   step-halvings in an iteration. Defaults to \code{10}.
+#' @param step_multiplier strictly positive number scaling the proposed step
+#'   before step-halving. Values below 1 damp the step, which can help when the
+#'   algorithm diverges from poor starting values. Defaults to \code{1}.
+#' @param jeffreys_power strictly positive number giving the power of the
+#'   Jeffreys-type penalty of the methods \code{"pgee-jeffreys"},
+#'   \code{"opgee-jeffreys"}, and \code{"hpgee-jeffreys"} (Touloumis, 2026b).
+#'   Defaults to \code{0.5}, the standard Jeffreys-type penalty.
 #'
 #' @return
-#' A named list with elements \code{tolerance}, \code{maxiter},
+#' A list with components \code{tolerance}, \code{maxiter},
 #' \code{or_adding}, \code{step_maxiter}, \code{step_multiplier}, and
-#' \code{jeffreys_power}, suitable for use as the \code{control} argument to
-#' \code{\link{geewa}} or \code{\link{geewa_binary}}.
+#' \code{jeffreys_power}.
 #'
 #' @references
 #' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-#' with an odds-ratio parameterization. \emph{Preprint}.
-#' \url{https://arxiv.org/abs/2606.16058}
+#' with an odds-ratio parameterization. \emph{arXiv preprint}.
+#' \doi{10.48550/arXiv.2606.16058}
 #'
 #' @seealso \code{\link{geewa}}, \code{\link{geewa_binary}}.
 #'
@@ -48,16 +38,16 @@
 #' ## Default control parameters
 #' geer_control()
 #'
-#' ## Tighter convergence tolerance and fewer maximum iterations
-#' geer_control(tolerance = 1e-8, maxiter = 200)
+#' ## Tighter tolerance and fewer iterations
+#' geer_control(tolerance = 1e-08, maxiter = 200)
 #'
-#' ## Custom continuity correction for odds-ratio estimation
+#' ## Larger continuity correction for the odds-ratio estimates
 #' geer_control(or_adding = 1)
 #'
 #' ## Weaker Jeffreys-type penalty
 #' geer_control(jeffreys_power = 0.1)
 #'
-#' ## Damped steps, e.g. when the algorithm diverges from poor starting values
+#' ## Damped steps, useful when the algorithm diverges
 #' geer_control(step_multiplier = 0.5)
 #'
 #' @export
@@ -68,22 +58,22 @@ geer_control <- function(tolerance = 1e-06,
                          step_multiplier = 1,
                          jeffreys_power = 0.5) {
   if (!is_positive_scalar(tolerance)) {
-    stop("'tolerance' must be a positive number", call. = FALSE)
+    stop("'tolerance' must be a positive finite number", call. = FALSE)
   }
   if (!is_positive_integer_scalar(maxiter)) {
     stop("'maxiter' must be a positive integer", call. = FALSE)
   }
   if (!is_positive_scalar(or_adding)) {
-    stop("'or_adding' must be a positive number", call. = FALSE)
+    stop("'or_adding' must be a positive finite number", call. = FALSE)
   }
   if (!is_positive_integer_scalar(step_maxiter)) {
     stop("'step_maxiter' must be a positive integer", call. = FALSE)
   }
   if (!is_positive_scalar(step_multiplier)) {
-    stop("'step_multiplier' must be a positive number", call. = FALSE)
+    stop("'step_multiplier' must be a positive finite number", call. = FALSE)
   }
   if (!is_positive_scalar(jeffreys_power)) {
-    stop("'jeffreys_power' must be a positive number", call. = FALSE)
+    stop("'jeffreys_power' must be a positive finite number", call. = FALSE)
   }
   list(
     tolerance = tolerance,

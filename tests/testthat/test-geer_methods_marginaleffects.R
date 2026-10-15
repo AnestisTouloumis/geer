@@ -1,60 +1,57 @@
-testthat::local_edition(3)
+cerebrovascular <- test_data$cerebrovascular
+epilepsy <- test_data$epilepsy
 
 skip_if_no_marginaleffects <- function() {
-  testthat::skip_if_not_installed(
+  skip_if_not_installed(
     "marginaleffects",
     minimum_version = "0.32.0"
   )
 }
 
-count_fit <- fit_geewa_pois_exch
-binary_fit <- fit_geewa_bin_exch
-
-
 test_that("marginaleffects low-level methods expose geer components", {
   skip_if_no_marginaleffects()
-  expect_equal(insight::get_data(count_fit), count_fit$data)
+  expect_equal(insight::get_data(fit_geewa_pois_exch), fit_geewa_pois_exch$data)
 
   expect_equal(
-    marginaleffects::get_coef(count_fit),
-    coef(count_fit)
+    marginaleffects::get_coef(fit_geewa_pois_exch),
+    coef(fit_geewa_pois_exch)
   )
 
   expect_equal(
-    marginaleffects::get_vcov(count_fit),
-    vcov(count_fit, cov_type = "bias-corrected")
+    marginaleffects::get_vcov(fit_geewa_pois_exch),
+    vcov(fit_geewa_pois_exch, cov_type = "bias-corrected")
   )
   expect_equal(
-    marginaleffects::get_vcov(count_fit, vcov = "robust"),
-    vcov(count_fit, cov_type = "robust")
+    marginaleffects::get_vcov(fit_geewa_pois_exch, vcov = "robust"),
+    vcov(fit_geewa_pois_exch, cov_type = "robust")
   )
 
-  custom_vcov <- vcov(count_fit, cov_type = "naive")
+  custom_vcov <- vcov(fit_geewa_pois_exch, cov_type = "naive")
   expect_equal(
-    marginaleffects::get_vcov(count_fit, vcov = custom_vcov),
+    marginaleffects::get_vcov(fit_geewa_pois_exch, vcov = custom_vcov),
     custom_vcov
   )
 
   expect_equal(
     marginaleffects::get_vcov(
-      count_fit,
+      fit_geewa_pois_exch,
       vcov = function(x) vcov(x, cov_type = "robust")
     ),
-    vcov(count_fit, cov_type = "robust")
+    vcov(fit_geewa_pois_exch, cov_type = "robust")
   )
   expect_error(
-    marginaleffects::get_vcov(count_fit, vcov = function(x) 1)
+    marginaleffects::get_vcov(fit_geewa_pois_exch, vcov = function(x) 1)
   )
 
-  shifted <- coef(count_fit)
+  shifted <- coef(fit_geewa_pois_exch)
   shifted[[1L]] <- shifted[[1L]] + 0.1
-  modified <- marginaleffects::set_coef(count_fit, shifted)
+  modified <- marginaleffects::set_coef(fit_geewa_pois_exch, shifted)
   expect_equal(coef(modified), shifted)
-  expect_equal(coef(count_fit), marginaleffects::get_coef(count_fit))
+  expect_equal(coef(fit_geewa_pois_exch), marginaleffects::get_coef(fit_geewa_pois_exch))
 
-  newdata <- test_data$epilepsy[1:4, , drop = FALSE]
+  newdata <- epilepsy[1:4, , drop = FALSE]
   original_prediction <- marginaleffects::get_predict(
-    count_fit,
+    fit_geewa_pois_exch,
     newdata = newdata,
     type = "response"
   )$estimate
@@ -66,18 +63,17 @@ test_that("marginaleffects low-level methods expose geer components", {
   expect_false(isTRUE(all.equal(original_prediction, modified_prediction)))
 })
 
-
-test_that("marginaleffects get_predict agrees with predict.geer", {
+test_that("marginaleffects get_predict agrees with predict", {
   skip_if_no_marginaleffects()
-  newdata <- test_data$epilepsy[1:6, , drop = FALSE]
+  newdata <- epilepsy[1:6, , drop = FALSE]
 
   response <- marginaleffects::get_predict(
-    count_fit,
+    fit_geewa_pois_exch,
     newdata = newdata,
     type = "response"
   )
   link <- marginaleffects::get_predict(
-    count_fit,
+    fit_geewa_pois_exch,
     newdata = newdata,
     type = "link"
   )
@@ -86,20 +82,19 @@ test_that("marginaleffects get_predict agrees with predict.geer", {
   expect_equal(response$rowid, seq_len(nrow(newdata)))
   expect_equal(
     response$estimate,
-    unname(predict(count_fit, newdata = newdata, type = "response"))
+    unname(predict(fit_geewa_pois_exch, newdata = newdata, type = "response"))
   )
   expect_equal(
     link$estimate,
-    unname(predict(count_fit, newdata = newdata, type = "link"))
+    unname(predict(fit_geewa_pois_exch, newdata = newdata, type = "link"))
   )
 })
 
-
 test_that("marginaleffects predictions work for geer models", {
   skip_if_no_marginaleffects()
-  newdata <- test_data$cerebrovascular[1:8, , drop = FALSE]
+  newdata <- cerebrovascular[1:8, , drop = FALSE]
   out <- marginaleffects::predictions(
-    binary_fit,
+    fit_geewa_bin_exch,
     newdata = newdata,
     type = "response"
   )
@@ -108,22 +103,21 @@ test_that("marginaleffects predictions work for geer models", {
   expect_length(out$estimate, nrow(newdata))
   expect_equal(
     out$estimate,
-    unname(predict(binary_fit, newdata = newdata, type = "response")),
+    unname(predict(fit_geewa_bin_exch, newdata = newdata, type = "response")),
     tolerance = 1e-7
   )
   expect_true(all(is.finite(out$std.error)))
 })
 
-
 test_that("marginaleffects comparisons and slopes work for geer models", {
   skip_if_no_marginaleffects()
   comparison <- marginaleffects::avg_comparisons(
-    binary_fit,
+    fit_geewa_bin_exch,
     variables = "treatment",
     type = "response"
   )
   slope <- marginaleffects::avg_slopes(
-    count_fit,
+    fit_geewa_pois_exch,
     variables = "lnage",
     type = "response"
   )
@@ -136,16 +130,15 @@ test_that("marginaleffects comparisons and slopes work for geer models", {
   expect_true(all(is.finite(slope$std.error)))
 })
 
-
 test_that("marginaleffects robust covariance is available for geer models", {
   skip_if_no_marginaleffects()
   default <- marginaleffects::avg_slopes(
-    count_fit,
+    fit_geewa_pois_exch,
     variables = "lnage",
     type = "response"
   )
   robust <- marginaleffects::avg_slopes(
-    count_fit,
+    fit_geewa_pois_exch,
     variables = "lnage",
     type = "response",
     vcov = "robust"

@@ -1,9 +1,6 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-
 fit_geewa_pois_indep <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   family = poisson(link = "log"),
   corstr = "independence",
@@ -12,7 +9,7 @@ fit_geewa_pois_indep <- geewa(
 
 fit_geewa_pois_exch <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   family = poisson(link = "log"),
   corstr = "exchangeable",
@@ -21,7 +18,7 @@ fit_geewa_pois_exch <- geewa(
 
 fit_geewa_bin_exch <- geewa_binary(
   formula = ecg ~ period + treatment,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   id = id,
   link = "logit",
   orstr = "exchangeable",

@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <string>
 #include <vector>
 
 
@@ -13,7 +15,7 @@ arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
     // The negated comparison also rejects NaN.
     if (!(y[i] >= 1.0 && y[i] <= upper)) {
       Rcpp::stop(
-        "subset_matrix: index out of range -- values must be in [1, %d].",
+        "subset_matrix: index out of range; values must be in [1, %d]",
         static_cast<int>(x.n_rows)
       );
     }
@@ -99,14 +101,14 @@ arma::mat kronecker_vector_identity(const arma::vec& x) {
 
 //============================ factorize once, solve many ======================
 CholOrLuFactor::CholOrLuFactor(const arma::mat& X, const char* context)
-  : context_(context), use_chol_(false) {
+    : context_(context), use_chol_(false) {
   if (arma::chol(chol_upper_, X)) {
     use_chol_ = true;
     return;
   }
   if (!arma::lu(lu_lower_, lu_upper_, permutation_, X)) {
-    Rcpp::stop("%s: LU factorization failed -- "
-                 "matrix is singular or numerically unstable.", context_);
+    Rcpp::stop("%s: LU factorization failed; the matrix is singular or numerically unstable",
+               context_);
   }
 }
 
@@ -125,14 +127,14 @@ T CholOrLuFactor::solve_impl(const T& rhs) const {
   T forward;
   if (!arma::solve(forward, arma::trimatl(lu_lower_), permuted_rhs,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("%s: LU forward solve failed -- "
-                 "matrix is singular or numerically unstable.", context_);
+    Rcpp::stop("%s: LU forward solve failed; the matrix is singular or numerically unstable",
+               context_);
   }
   T result;
   if (!arma::solve(result, arma::trimatu(lu_upper_), forward,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("%s: LU back solve failed -- "
-                 "matrix is singular or numerically unstable.", context_);
+    Rcpp::stop("%s: LU back solve failed; the matrix is singular or numerically unstable",
+               context_);
   }
   return result;
 }
@@ -186,11 +188,17 @@ void symmetrize_if_close(arma::mat& A, double rel_tol) {
   const double scale = std::max(1.0, arma::abs(A).max());
   const double max_asym = arma::abs(A - A.t()).max();
   if (max_asym > rel_tol * scale) {
-    Rcpp::warning(
-      "matrix has non-trivial asymmetry (%.2e) before symmetrization; "
-      "check for numerical issues.",
-      max_asym / scale
-    );
+    // Rcpp::warning() calls Rf_warning() directly. Under options(warn = 2) or
+    // tryCatch(warning = ) that longjmps over this frame, skipping the
+    // destructors of the arma objects alive here (a leak). Rcpp::Function
+    // goes through Rcpp's unwind-protect, so the C++ stack unwinds properly.
+    char message[160];
+    std::snprintf(message, sizeof(message),
+                  "matrix has non-trivial asymmetry (%.2e) before symmetrization; "
+                  "check for numerical issues.",
+                  max_asym / scale);
+    Rcpp::Function warning_function("warning");
+    warning_function(std::string(message), Rcpp::Named("call.") = false);
   }
   A = 0.5 * (A + A.t());
 }
@@ -198,10 +206,10 @@ void symmetrize_if_close(arma::mat& A, double rel_tol) {
 
 
 //============================ lambda from matrix blocks =======================
-arma::vec lambda_from_blocks_chol_or_lu(const arma::mat& A,
+arma::vec get_lambda_from_blocks(const arma::mat& A,
                                         const arma::mat& lambda_matrix) {
   const arma::uword p = A.n_rows;
-  const CholOrLuFactor factor(A, "lambda_from_blocks_chol_or_lu");
+  const CholOrLuFactor factor(A, "get_lambda_from_blocks");
   arma::vec lambda_vector(p, arma::fill::zeros);
   for (arma::uword r = 0; r < p; ++r) {
     const arma::mat block = lambda_matrix.rows(r * p, (r + 1) * p - 1);

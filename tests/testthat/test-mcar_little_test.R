@@ -1,6 +1,3 @@
-testthat::local_edition(3)
-
-
 test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   x <- cbind(
     y1 = 1:8,
@@ -15,12 +12,12 @@ test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   expect_equal(out$exact.f.statistic, 19.2, tolerance = 1e-6)
   expect_equal(
     out$p.value,
-    stats::pf(19.2, df1 = 1, df2 = 6, lower.tail = FALSE),
+    pf(19.2, df1 = 1, df2 = 6, lower.tail = FALSE),
     tolerance = 1e-8
   )
   expect_equal(
     out$asymptotic.p.value,
-    stats::pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
+    pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
     tolerance = 1e-8
   )
   expect_identical(out$reference, "exact bivariate F")
@@ -30,7 +27,6 @@ test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   expect_true(out$converged)
   expect_gt(out$iterations, 0L)
 })
-
 
 test_that("mcar_little_test can force the asymptotic reference", {
   x <- cbind(
@@ -44,13 +40,12 @@ test_that("mcar_little_test can force the asymptotic reference", {
   expect_identical(unname(out$parameter), 1L)
   expect_equal(
     out$p.value,
-    stats::pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
+    pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
     tolerance = 1e-8
   )
   expect_identical(out$reference, "asymptotic chi-squared")
-  expect_equal(out$exact.p.value, stats::pf(19.2, 1, 6, lower.tail = FALSE), tolerance = 1e-8)
+  expect_equal(out$exact.p.value, pf(19.2, 1, 6, lower.tail = FALSE), tolerance = 1e-8)
 })
-
 
 test_that("mcar_little_test applies Little's covariance correction", {
   x <- cbind(
@@ -62,9 +57,8 @@ test_that("mcar_little_test applies Little's covariance correction", {
   expect_equal(out$covariance, nrow(x) / (nrow(x) - 1) * out$ml.covariance, tolerance = 1e-10)
 })
 
-
 test_that("mcar_little_test agrees with the corrected airquality benchmark", {
-  out <- mcar_little_test(datasets::airquality)
+  out <- mcar_little_test(airquality)
 
   expect_s3_class(out, "htest")
   expect_equal(unname(out$statistic), 34.8954, tolerance = 0.05)
@@ -73,7 +67,6 @@ test_that("mcar_little_test agrees with the corrected airquality benchmark", {
   expect_identical(out$missing.patterns, 4L)
   expect_identical(out$reference, "asymptotic chi-squared")
 })
-
 
 test_that("mcar_little_test reconstructs repeated responses from a geer fit", {
   id <- rep(seq_len(30), each = 3)
@@ -106,7 +99,6 @@ test_that("mcar_little_test reconstructs repeated responses from a geer fit", {
   expect_identical(from_fit$variables, 3L)
 })
 
-
 test_that("mcar_little_test uses within-cluster row order when repeated is omitted", {
   id <- rep(seq_len(24), each = 3)
   visit <- rep(seq_len(3), times = 24)
@@ -132,7 +124,6 @@ test_that("mcar_little_test uses within-cluster row order when repeated is omitt
   )
 })
 
-
 test_that("mcar_little_test accepts original data supplied explicitly", {
   id <- rep(seq_len(20), each = 3)
   visit <- rep(seq_len(3), times = 20)
@@ -156,7 +147,6 @@ test_that("mcar_little_test accepts original data supplied explicitly", {
   expect_identical(out$variables, 3L)
 })
 
-
 test_that("mcar_little_test handles complete data explicitly", {
   x <- cbind(
     a = seq_len(10),
@@ -170,10 +160,9 @@ test_that("mcar_little_test handles complete data explicitly", {
   expect_identical(out$missing.patterns, 1L)
   expect_identical(out$iterations, 0L)
   expect_true(out$converged)
-  expect_equal(out$covariance, stats::cov(x), tolerance = 1e-12)
-  expect_equal(out$ml.covariance, stats::cov(x) * 9 / 10, tolerance = 1e-12)
+  expect_equal(out$covariance, cov(x), tolerance = 1e-12)
+  expect_equal(out$ml.covariance, cov(x) * 9 / 10, tolerance = 1e-12)
 })
-
 
 test_that("mcar_little_test warns for binary variables", {
   x <- cbind(
@@ -187,7 +176,6 @@ test_that("mcar_little_test warns for binary variables", {
     "most appropriate for quantitative variables"
   )
 })
-
 
 test_that("mcar_little_test validates inputs", {
   expect_error(
@@ -204,7 +192,7 @@ test_that("mcar_little_test validates inputs", {
   )
   expect_error(
     mcar_little_test(cbind(a = c(1, 2, NA, NA), b = c(NA, NA, 3, 4))),
-    "at least one jointly observed value"
+    "observed together at least once"
   )
   expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), maxit = 0),
@@ -232,12 +220,8 @@ test_that("mcar_little_test validates inputs", {
   )
 })
 
-
 test_that("rows with no observed values are removed before testing", {
-  ## Little's construction assigns every case to a pattern with at least one
-  ## observed variable, so an all-missing row is not a pattern; it must not
-  ## enter n, and hence must not change the degrees-of-freedom correction.
-  set.seed(11)
+  withr::local_seed(11)
   x <- cbind(rnorm(40), rnorm(40))
   x[1:8, 2L] <- NA
   augmented <- rbind(x, c(NA_real_, NA_real_), c(NA_real_, NA_real_))
@@ -256,11 +240,8 @@ test_that("rows with no observed values are removed before testing", {
   expect_identical(out$missing.patterns, reference$missing.patterns)
 })
 
-
 test_that("the statistic is nonnegative by construction", {
-  ## The Cholesky route makes each pattern contribution a squared norm, so no
-  ## clamping is needed and a non-positive-definite submatrix is reported.
-  set.seed(12)
+  withr::local_seed(12)
   x <- cbind(rnorm(30), rnorm(30), rnorm(30))
   x[1:6, 2L] <- NA
   x[7:12, 3L] <- NA

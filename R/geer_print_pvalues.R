@@ -1,7 +1,3 @@
-## Display helpers: p-values smaller than 0.0001 are printed as "<0.0001".
-## printCoefmat()/format.pval() can only produce "<1e-04" (or "< 1e-04"), so
-## the printed text is post-processed. Replacement keeps the column width, so
-## the table stays aligned.
 
 fix_small_pvalue_labels <- function(lines) {
   matches <- gregexpr(" *< ?1e-04", lines)
@@ -38,10 +34,6 @@ print.geer_anova <- function(x, ...) {
 }
 
 
-## Test results are "htest" objects. print.htest() writes the p-value as
-## "p-value = 3e-08" or "p-value < 2.2e-16" and offers no way to change that, so
-## the printed text is post-processed: any p-value below 0.0001 is shown as
-## "p-value < 0.0001". Stored p-values are untouched.
 #' @export
 print.geer_htest <- function(x, ...) {
   y <- x

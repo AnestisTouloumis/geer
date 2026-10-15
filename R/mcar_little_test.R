@@ -1,106 +1,63 @@
 #' @title
-#' Little's Test for Missing Completely at Random Data
+#' Little's Test of Missing Completely at Random
 #'
 #' @description
-#' Performs Little's (1988) test of the null hypothesis that
-#' missing values are missing completely at random (MCAR). For a fitted
-#' \code{geer} object, the repeated response is reconstructed in wide form
-#' from the original data before rows with missing responses were omitted by
-#' model fitting.
+#' Performs Little's (1988) test of the hypothesis that the missing values are
+#' missing completely at random (MCAR).
 #'
-#' @param object a fitted object of class \code{"geer"}, a numeric matrix, or
-#'   a numeric data frame. For matrix or data-frame input, rows are independent
-#'   units and columns are variables or repeated measurements. The supplied
-#'   data must contain at least two rows and two variables, with at least two
-#'   observed values per variable and at least one jointly observed value for
-#'   every pair of variables. Infinite values are not allowed.
-#' @param data optional original data used to fit \code{object}. This is only
-#'   used when \code{object} is a \code{geer} fit and is useful when the
-#'   original data cannot be recovered from the fitted object. Defaults to
-#'   \code{NULL}.
-#' @param maxit positive integer giving the maximum number of EM iterations
-#'   used to obtain the multivariate-normal maximum-likelihood estimates.
-#'   Defaults to 1000.
-#' @param tol a single positive finite number specifying the convergence
-#'   tolerance for the EM algorithm. Defaults to \code{1e-08}.
-#' @param reference reference distribution used for the p-value. \code{"auto"}
-#'   uses Little's exact bivariate monotone result when it applies and
-#'   otherwise falls back, without warning, to the asymptotic chi-squared
-#'   distribution. \code{"asymptotic"} always uses the chi-squared reference.
-#'   Defaults to \code{"auto"}.
+#' @param object a fitted model object of class \code{"geer"}, or a numeric
+#'   matrix or data frame with one row per independent unit and one column per
+#'   variable or repeated measurement. See Details.
+#' @param data optional data frame containing the data used to fit
+#'   \code{object}. Used only when \code{object} is a fitted model object and
+#'   the data cannot be recovered from it. Defaults to \code{NULL}.
+#' @param maxit positive integer giving the maximum number of iterations of the
+#'   EM algorithm used to estimate the multivariate normal mean and covariance
+#'   matrix. Defaults to \code{1000}.
+#' @param tol a single positive finite number giving the relative convergence
+#'   tolerance of the EM algorithm. Defaults to \code{1e-08}.
+#' @param reference character string specifying the reference distribution:
+#'   Little's exact F reference when the data are bivariate monotone and the
+#'   chi-squared reference otherwise (\code{"auto"}), or always the chi-squared
+#'   reference (\code{"asymptotic"}). Defaults to \code{"auto"}.
 #'
 #' @details
-#' Let the rows be divided into missing-data patterns. For pattern \eqn{r},
-#' let \eqn{n_r} be its number of rows and \eqn{\bar y_r} the mean vector
-#' of the variables observed in that pattern. Let \eqn{\hat\mu} and
-#' \eqn{\hat\Sigma} be the common mean vector and covariance matrix estimated
-#' by maximum likelihood under an ignorable multivariate-normal missing-data
-#' model, and define Little's degrees-of-freedom correction
-#' \eqn{\widetilde\Sigma = n\hat\Sigma/(n-1)}. Little's statistic is
-#' \deqn{d^2 = \sum_r n_r (\bar y_r-\hat\mu_r)^T
-#' \widetilde\Sigma_r^{-1}(\bar y_r-\hat\mu_r).}
-#' Under MCAR, the statistic is asymptotically chi-squared with
-#' \deqn{\mathrm{df} = \sum_r p_r - p,}
-#' where \eqn{p_r} is the number of variables observed in pattern \eqn{r}
-#' and \eqn{p} is the total number of variables.
+#' Let the rows be grouped into missing-data patterns. For pattern \eqn{r},
+#' let \eqn{n_r} be its number of rows, \eqn{p_r} the number of observed
+#' variables, and \eqn{\bar y_r}{ybar_r} their mean vector. With \eqn{\hat\mu}{mu} and
+#' \eqn{\hat\Sigma}{Sigma} the maximum likelihood estimates of the common mean vector
+#' and covariance matrix under a multivariate normal model, obtained by the EM
+#' algorithm, and \eqn{\widetilde\Sigma = n\hat\Sigma/(n - 1)}{Sigma~ = n Sigma/(n - 1)}, Little's
+#' statistic is
+#' \deqn{d^2 = \sum_r n_r (\bar y_r - \hat\mu_r)^\top
+#' \widetilde\Sigma_r^{-1}(\bar y_r - \hat\mu_r),}{d^2 = sum_r n_r (ybar_r - mu_r)' Sigma~_r^(-1) (ybar_r - mu_r),}
+#' which under MCAR is asymptotically chi-squared with \eqn{\sum_r p_r - p}{sum_r p_r - p}
+#' degrees of freedom, where \eqn{p} is the number of variables.
 #'
-#' The common mean and covariance are estimated internally with an EM
-#' algorithm, so no additional package is required. Following Little (1988),
-#' the multivariate-normal maximum-likelihood covariance estimate
-#' \eqn{\hat\Sigma} is multiplied by \eqn{n/(n-1)} before its pattern-specific
-#' submatrices are used in the test statistic.
+#' When there are two variables, one fully observed, Little shows that
+#' \eqn{d^2 = (n - 1)F/(n - 2 + F)} with \eqn{F \sim F_{1, n-2}}{F ~ F(1, n - 2)}. With
+#' \code{reference = "auto"} this exact reference is used in that case,
+#' provided the identity is reproduced numerically from the EM estimates;
+#' otherwise a warning is issued and the chi-squared reference is used, which
+#' usually indicates that \code{tol} is too loose.
 #'
-#' For two variables with one variable observed for every row and missingness
-#' confined to the other variable, Little shows that the small-sample null
-#' distribution can be obtained from an ordinary two-group ANOVA (equivalently,
-#' a pooled two-sample t test):
-#' \deqn{d^2 = \frac{(n-1)F}{n-2+F}, \qquad F \sim F_{1,n-2}.}
-#' With \code{reference = "auto"}, this exact normal-theory reference is used
-#' automatically when the data fall in that special bivariate monotone case
-#' and the corresponding Little-statistic identity is reproduced to numerical
-#' tolerance. If the case is detected but the identity is not reproduced, a
-#' warning is issued and the asymptotic chi-squared reference is used instead.
-#' The identity is checked against the statistic obtained from the EM
-#' estimates, so it is sensitive to \code{tol}: at the default the two agree
-#' to well within the comparison tolerance, whereas a substantially looser
-#' \code{tol} can prevent the identity from being reproduced and therefore
-#' cost the exact reference. A warning here indicates insufficient convergence
-#' rather than an inapplicable reference.
-#' For all other missing-data patterns the large-sample chi-squared reference
-#' is used silently, with no warning. Little also derives a more general
-#' small-sample distribution for monotone patterns as a sum of transformed
-#' independent F variables; that nonstandard reference distribution is not
-#' evaluated here.
+#' Matrix or data frame input must have at least two rows and two variables,
+#' at least two observed values per variable, at least one jointly observed
+#' value for every pair of variables, and no infinite values. Rows with no
+#' observed values belong to no pattern and are removed with a warning. For a
+#' fitted model object, the response is arranged with one row per cluster and
+#' one column per \code{repeated} index; if \code{repeated} was not supplied
+#' when fitting, the row order within each cluster defines the occasions.
 #'
-#' Rows with no observed values belong to no missing-data pattern in Little's
-#' construction. They are removed, with a warning, before the statistic and
-#' the sample size \eqn{n} are computed.
-#'
-#' For a \code{geer} fit, only the repeated response is tested. The function
-#' reconstructs a cluster-by-repeated-measure matrix from \code{id} and
-#' \code{repeated}. If \code{repeated} was omitted during fitting, the
-#' within-cluster row order in the original data defines the repeated-measure
-#' positions. Consequently, an entirely absent row cannot be distinguished
-#' from a measurement occasion that never existed unless \code{repeated} was
-#' supplied explicitly.
-#'
-#' Little's test is based on a multivariate-normal working model for the
-#' variables being tested. Little (1988) notes that the test is most appropriate
-#' for quantitative variables and recommends contingency-table methods for
-#' categorical variables. When missing values are present, the function warns
-#' if a binary variable is detected. The paper also reports that the asymptotic
-#' chi-squared test can
-#' be conservative in small samples.
-#'
-#' As emphasized by Hardin and Hilbe (2013), this is a diagnostic for the
-#' missingness mechanism rather than a test of the fitted GEE mean model itself.
-#' A small p-value provides evidence against MCAR; a large p-value does not
-#' establish that MCAR holds. If the supplied data contain no missing values,
-#' the function returns a test statistic of 0 with p-value 1.
+#' The test assumes a multivariate normal model and is most appropriate for
+#' quantitative variables (Little, 1988), so a warning is issued for binary
+#' variables. It is a diagnostic for the missingness mechanism rather than for
+#' the fitted mean model (Hardin and Hilbe, 2013): a large p-value does not
+#' establish MCAR. Without missing values the statistic is 0 and the p-value 1.
 #'
 #' @return
-#' An object of class \code{c("geer_htest", "htest")}. In addition to the standard components,
-#' the object contains:
+#' An object of class \code{c("geer_htest", "htest")}. In addition to the
+#' standard components, the object contains:
 #' \item{missing.patterns}{the number of distinct missing-data patterns.}
 #' \item{n}{the number of independent rows or clusters tested.}
 #' \item{variables}{the number of variables or repeated measurements tested.}
@@ -128,8 +85,9 @@
 #' multivariate data with missing values. \emph{Journal of the American
 #' Statistical Association}, \bold{83}, 1198--1202.
 #'
-#' @seealso \code{\link{runs_test}}, \code{\link{residuals.geer}},
-#'   \code{\link{geewa}}, \code{\link{geewa_binary}}.
+#' @seealso \code{\link{mcar_logistic_test}},
+#'   \code{\link{mcar_homoscedasticity_test}}, \code{\link{geewa}},
+#'   \code{\link{geewa_binary}}.
 #'
 #' @examples
 #' x <- data.frame(
@@ -145,17 +103,20 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
   data_name <- deparse1(substitute(object))
   maxit <- check_integer_at_least(maxit, "maxit")
   if (!is_positive_scalar(tol)) {
-    stop("'tol' must be a single positive finite number", call. = FALSE)
+    stop("'tol' must be a positive finite number", call. = FALSE)
   }
   reference <- match.arg(reference)
 
   if (inherits(object, "geer")) {
     object <- check_geer_object(object)
-    x <- extract_geer_mcar_matrix(object, data = data)
+    x <- extract_mcar_matrix(object, data = data)
     data_name <- "repeated response from fitted geer object"
   } else {
     if (!is.null(data)) {
-      stop("'data' is only used when 'object' is a fitted 'geer' object", call. = FALSE)
+      stop(
+        "'data' is only used when 'object' is a fitted 'geer' object",
+        call. = FALSE
+      )
     }
     x <- object
   }
@@ -215,5 +176,3 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
     class = c("geer_htest", "htest")
   )
 }
-
-

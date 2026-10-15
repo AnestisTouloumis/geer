@@ -12,9 +12,9 @@ arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,
                           const arma::vec& odds_ratios_vector,
                           const arma::vec& weights_vector);
-arma::mat get_g_matrix(const arma::vec& mu_vector,
+arma::mat get_g_matrix_or(const arma::vec& mu_vector,
                        const arma::vec& odds_ratios_vector);
-arma::mat get_g_matrix_mu(const arma::vec& mu_vector,
+arma::mat get_g_matrix_mu_or(const arma::vec& mu_vector,
                           const arma::vec& odds_ratios_vector);
 arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
                              const arma::vec& odds_ratios_vector,

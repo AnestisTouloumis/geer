@@ -24,8 +24,6 @@ geer_link_choices <- c(
   "sqrt", "1/mu^2", "inverse"
 )
 
-## One-step estimators: fitted by a single update from a starting fit rather
-## than by iterating to convergence.
 geer_bcgee_methods <- c(
   "bcgee-naive", "bcgee-robust", "bcgee-empirical"
 )
@@ -60,10 +58,11 @@ geer_integer_tol <- sqrt(.Machine$double.eps)
 
 check_class <- function(x, class_name, name) {
   if (!inherits(x, class_name)) {
-    stop(sprintf("'%s' must be of '%s' class", name, class_name), call. = FALSE)
+    stop(sprintf("'%s' must be a '%s' object", name, class_name), call. = FALSE)
   }
   x
 }
+
 
 check_geer_object <- function(x, name = "object") {
   check_class(x, class_name = "geer", name = name)
@@ -78,7 +77,10 @@ check_summary_geer_object <- function(x, name = "x") {
 check_nonnegative_integerish <- function(x, name) {
   check_single_numeric(x, name)
   if (x < 0 || abs(x - round(x)) > geer_integer_tol) {
-    stop(sprintf("'%s' must be a single nonnegative integer", name), call. = FALSE)
+    stop(
+      sprintf("'%s' must be a non-negative integer", name),
+      call. = FALSE
+    )
   }
   as.integer(round(x))
 }
@@ -160,7 +162,7 @@ check_working_lrt_allowed <- function(object,
   if (identical(test, "working-lrt") &&
       !identical(object$association_structure, "independence")) {
     stop(
-      "the modified working LRT can only be applied to an independence working model",
+      "the modified working LRT requires an independence working structure",
       call. = FALSE
     )
   }
@@ -221,7 +223,10 @@ is_positive_integer_scalar <- function(x, tol = geer_integer_tol) {
 
 check_single_numeric <- function(x, name) {
   if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x)) {
-    stop(sprintf("'%s' must be a single finite numeric value", name), call. = FALSE)
+    stop(
+      sprintf("'%s' must be a finite number", name),
+      call. = FALSE
+    )
   }
   invisible(x)
 }
@@ -238,7 +243,7 @@ check_probability_open <- function(x, name) {
 
 check_choice <- function(x, choices, name) {
   if (!is.character(x) || length(x) != 1L || is.na(x)) {
-    stop(sprintf("'%s' must be a single character value", name), call. = FALSE)
+    stop(sprintf("'%s' must be a character string", name), call. = FALSE)
   }
   if (!(x %in% choices)) {
     stop(
@@ -270,5 +275,3 @@ check_unused_dots <- function(dots, context) {
     call. = FALSE
   )
 }
-
-

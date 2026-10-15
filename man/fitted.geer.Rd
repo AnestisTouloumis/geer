@@ -9,14 +9,12 @@
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{not used. Supplying any argument here is an error rather than
-being silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
-A numeric vector of fitted mean values on the response scale, of the same
-length as the number of observations used in fitting, in the internal
-observation order described below rather than in the row order of the
-supplied data.
+A numeric vector of fitted means, one per observation used in the fit, in
+the order given under Observation order.
 }
 \description{
 Extracts the fitted mean values on the response scale from a fitted
@@ -24,27 +22,23 @@ Extracts the fitted mean values on the response scale from a fitted
 }
 \section{Observation order}{
 
-The returned vector follows the internal observation order of the fitted
-model, not the row order of the data supplied to \code{geewa} or
-\code{geewa_binary}. Rows are restricted to the complete cases retained by
-the \code{na.action} in force and are then sorted by cluster identifier
-and, within cluster, by the repeated index. Unless the supplied data were
-already sorted that way and free of missing values, assigning the result
-back with an expression such as \code{data$r <- residuals(fit)} will
-attach values to the wrong rows without any warning, because the lengths
-can still agree. Order the data by cluster and repeated index before
-fitting, or align the result yourself using \code{fit$id} and
-\code{fit$repeated}, which are stored in the same order as the returned
-vector.
+The values follow the internal order of the fitted model: the complete
+cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
+data were already in this order and had no missing values, assigning the
+values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
+the same order and can be used to align them.
 }
 
 \examples{
-data("leprosy", package = "geer")
-fit <- geewa(
-  formula = bacilli ~ factor(period) + factor(period):treatment,
-  family = poisson(link = "log"),
-  data = leprosy,
-  id = id
+data("cerebrovascular", package = "geer")
+fit <- geewa_binary(
+  formula = ecg ~ treatment + factor(period),
+  link = "logit",
+  data = cerebrovascular,
+  id = id,
+  repeated = period,
+  orstr = "exchangeable"
 )
 head(fitted(fit))
 

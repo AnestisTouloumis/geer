@@ -1,4 +1,5 @@
 #devtools::load_all()
+devtools::build_readme()
 devtools::document()
 devtools::test()
 source("./todelete/extract-correlation.R")

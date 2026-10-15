@@ -23,16 +23,12 @@
 confidence level. Defaults to \code{0.95}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference on the regression parameters. Options are the
-bias-corrected estimator (\code{"bias-corrected"}), the sandwich or
-robust estimator (\code{"robust"}), the degrees-of-freedom adjusted
-estimator (\code{"df-adjusted"}), the leave-one-cluster jackknife
-estimator
-(\code{"jackknife"}), and the model-based or naive estimator
-(\code{"naive"}). Defaults to \code{"bias-corrected"}.}
+used for the standard errors: \code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+\code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
-\item{...}{not used. Supplying any argument here is an error, so that a
-misspelled \code{cov_type} is reported rather than silently ignored.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 A matrix with columns giving lower and upper confidence limits for each
@@ -45,12 +41,9 @@ Computes Wald-type confidence intervals for one or more regression
 parameters from a fitted \code{geer} object.
 }
 \details{
-Confidence intervals are computed as
-\eqn{\hat{\beta} \pm z_{1-\alpha/2} \, \mathrm{SE}(\hat{\beta})},
-where standard errors are obtained from
-\code{vcov(object, cov_type = cov_type)}. The covariance estimator used is
-controlled by \code{cov_type}; see \code{\link{vcov.geer}} for details.
-The resulting intervals rely on the usual large-sample normal approximation.
+The intervals are
+\eqn{\hat\beta \pm z_{1-\alpha/2}\,\mathrm{SE}(\hat\beta)}{beta +/- z_(1 - alpha/2) SE(beta)}, with standard
+errors from \code{vcov(object, cov_type = cov_type)}.
 }
 \examples{
 data("cerebrovascular", package = "geer")
@@ -59,11 +52,11 @@ fit <- geewa_binary(
   link = "logit",
   data = cerebrovascular,
   id = id,
+  repeated = period,
   orstr = "exchangeable"
 )
 confint(fit)
-confint(fit, parm = "treatmentactive")
-confint(fit, cov_type = "naive")
+confint(fit, parm = "treatmentactive", cov_type = "robust")
 
 }
 \seealso{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcar_logistic_test.R
 \name{mcar_logistic_test}
 \alias{mcar_logistic_test}
-\title{Ridout-Style Regression Diagnostic for MCAR in Longitudinal Data}
+\title{Logistic Regression Test of Missing Completely at Random}
 \usage{
 mcar_logistic_test(
   object,
@@ -16,127 +16,104 @@ mcar_logistic_test(
 )
 }
 \arguments{
-\item{object}{a fitted object of class \code{"geer"}.}
+\item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{formula}{optional one-sided formula specifying fully observed
-covariates of response missingness, for example
-\code{~ treatment + age}. The previous response is added automatically
-and should not be included in \code{formula}. If omitted, the right-hand
-side of the fitted GEE mean model is used. Terms aliased with the
-occasion effects, such as a main linear time effect, are omitted
-automatically and reported in \code{dropped_covariates}. Defaults to
-\code{NULL}.}
+\item{formula}{optional one-sided formula of fully observed covariates of
+missingness, for example \code{~ treatment + age}. The previous response is
+added automatically and must not be included. Terms aliased with the
+occasion effects are dropped and reported in \code{dropped_covariates}.
+Defaults to \code{NULL}, which uses the right-hand side of the mean model
+of \code{object}.}
 
-\item{data}{optional original data used to fit \code{object}. This is only
-needed when the original data cannot be recovered from the fitted object.
-Defaults to \code{NULL}.}
+\item{data}{optional data frame containing the data used to fit
+\code{object}. Used only when \code{object} is a fitted model object and
+the data cannot be recovered from it. Defaults to \code{NULL}.}
 
-\item{orstr}{working odds-ratio structure for the binary missingness GEE.
-One of \code{"independence"}, \code{"exchangeable"}, or
-\code{"unstructured"}. Defaults to \code{"independence"}.}
+\item{orstr}{character string specifying the working odds-ratio structure of
+the binary missingness model: \code{"independence"}, \code{"exchangeable"},
+or \code{"unstructured"}. Defaults to \code{"independence"}.}
 
-\item{test}{hypothesis-testing procedure. One of \code{"wald"},
-\code{"score"}, \code{"working-wald"}, \code{"working-score"}, or
-\code{"working-lrt"}. These are the same procedures available in
-\code{\link{anova.geer}}. Defaults to \code{"wald"}.}
+\item{test}{character string specifying the hypothesis test: Wald
+(\code{"wald"}), generalized score (\code{"score"}), modified working Wald
+(\code{"working-wald"}), modified working score (\code{"working-score"}),
+or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
+\code{"wald"}.}
 
-\item{cov_type}{covariance estimator used for inference and for the
-coefficient table. One of \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. Defaults to
-\code{"bias-corrected"}.}
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for inference: \code{"bias-corrected"}, \code{"robust"},
+\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+\code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
-\item{pmethod}{approximation used to compute p-values for the modified
-working tests. One of \code{"rao-scott"} or
-\code{"satterthwaite"}. It is ignored for \code{"wald"} and
-\code{"score"}. Defaults to \code{"rao-scott"}.}
+\item{pmethod}{character string specifying the approximation to the null
+distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
+or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
+tests. Defaults to \code{"rao-scott"}.}
 
-\item{control}{a list returned by \code{\link{geer_control}} controlling
-the binary GEE fit. Defaults to \code{geer_control()}.}
+\item{control}{list of control parameters as returned by
+\code{\link{geer_control}} for the binary GEE fit. Defaults to
+\code{geer_control()}.}
 }
 \value{
-An object of class \code{c("geer_htest", "htest")}. In addition to the usual
-components, it contains:
-\itemize{
-  \item \code{tests}: data frame containing the response-history,
-  covariate, and overall tests using the selected procedure.
-  \item \code{coefficients}: coefficient table for the binary GEE
-  missingness model, or \code{NULL} when no missing response occurs in the
-  risk set.
-  \item \code{model}: fitted \code{geer} object returned by
-  \code{geewa_binary}, or \code{NULL} when no missing response occurs in
-  the risk set.
-  \item \code{formula}: one-sided covariate formula.
-  \item \code{dropped_covariates}: model-matrix columns omitted because
-  they are aliased with occasion effects or earlier covariate columns.
-  \item \code{missing}, \code{observed}, and \code{transitions}: numbers
-  of missing outcomes, observed outcomes, and total transitions in the risk
-  set.
-  \item \code{clusters}: number of clusters represented in the risk set.
-  \item \code{intermittent}: whether an observed response occurs after a
-  missing response for at least one cluster.
-  \item \code{orstr}, \code{test}, \code{cov_type}, and
-  \code{pmethod}: association, testing, covariance, and working-test
-  approximation choices used for inference.
-}
+An object of class \code{c("geer_htest", "htest")}. In addition to the
+standard components, the object contains:
+\item{tests}{a data frame containing the response-history, covariate, and
+  overall tests using the selected procedure.}
+\item{coefficients}{the coefficient table of the binary GEE missingness
+  model, or \code{NULL} when no missing response occurs in the risk set.}
+\item{model}{the fitted model object of class \code{"geer"} returned by
+  \code{\link{geewa_binary}}, or \code{NULL} when no missing response
+  occurs in the risk set.}
+\item{formula}{the one-sided covariate formula.}
+\item{dropped_covariates}{the model-matrix columns omitted because they are
+  aliased with the occasion effects or with earlier covariate columns.}
+\item{missing, observed, transitions}{the numbers of missing outcomes,
+  observed outcomes, and transitions in the risk set.}
+\item{clusters}{the number of clusters represented in the risk set.}
+\item{intermittent}{whether an observed response occurs after a missing
+  response for at least one cluster.}
+\item{orstr, test, cov_type, pmethod}{the association structure, testing
+  procedure, covariance estimator, and working-test approximation used for
+  inference.}
 }
 \description{
-Assesses whether longitudinal response missingness is associated with the
-immediately preceding response, when observed, and with observed covariates. The
-binary missingness model is fitted with \code{\link{geewa_binary}} using a
-logit link. Occasion effects are included as nuisance terms. The same five
-hypothesis-testing procedures available in \code{anova.geer} can be used to
-assess response-history dependence, covariate dependence, and their joint
-contribution.
+Tests whether the missingness of a longitudinal response depends on the
+previous response or on observed covariates, using a logistic regression in
+the spirit of Ridout (1991) and Fitzmaurice, Heath and Clifford (1996) fitted
+by generalized estimating equations. MCAR is defined as in Rubin (1976).
 }
 \details{
-For each cluster, the diagnostic considers transitions from occasion
-\eqn{t-1} to occasion \eqn{t}. A transition enters the risk set only when
-\eqn{Y_{i,t-1}} is observed. The binary response is
-\deqn{R_{it}=I(Y_{it}\text{ is missing}),}
-and the fitted mean model has the form
-\deqn{\mathrm{logit}\{P(R_{it}=1)\}
-= \alpha_t + X_{it}^T\gamma + \delta Y_{i,t-1}.}
-The occasion-specific effects \eqn{\alpha_t} are nuisance parameters.
-The model is fitted with \code{geewa_binary(..., link = "logit",
-method = "gee")} using the original cluster identifiers.
-If a score-based procedure is combined with \code{cov_type = "jackknife"},
-the score and model-based information are evaluated under the corresponding
-null model, while the covariance component is obtained from full
-leave-one-cluster refits of the larger missingness model.
-
-Three tests using the procedure selected by \code{test} are returned in
-\code{tests}:
-\itemize{
-  \item \code{response_history}: tests \eqn{H_0:\delta=0}. Rejection
-  indicates that missingness depends on the immediately preceding response and
-  is evidence against covariate-dependent MCAR/random dropout.
-  \item \code{covariates}: tests \eqn{H_0:\gamma=0}. Covariate
-  dependence alone is evidence against strict MCAR relative to the included
-  covariates but can remain compatible with covariate-dependent MCAR.
-  \item \code{overall}: tests \eqn{H_0:\gamma=0,\delta=0}.
+For each cluster \eqn{i} and occasion \eqn{t}, let
+\eqn{R_{it} = I(Y_{it} \text{ is missing})}{R_it = I(Y_it is missing)}. The transitions with
+\eqn{Y_{i,t-1}} observed form the risk set, on which the model
+\deqn{\mathrm{logit}\{P(R_{it} = 1)\} = \alpha_t + X_{it}^\top\gamma +
+\delta Y_{i,t-1}}{logit P(R_it = 1) = alpha_t + X_it' gamma + delta Y_i,t-1}
+is fitted by \code{\link{geewa_binary}} with \code{method = "gee"}, so that
+the missingness indicators of a cluster may be correlated. The occasion
+effects \eqn{\alpha_t}{alpha_t} are nuisance parameters. The component \code{tests}
+contains three tests, all computed by the procedure selected by
+\code{test}:
+\describe{
+  \item{\code{response_history}}{\eqn{H_0: \delta = 0}{H0: delta = 0}. Rejection indicates
+    that missingness depends on the previous response, which is evidence
+    against covariate-dependent MCAR. This is the primary test.}
+  \item{\code{covariates}}{\eqn{H_0: \gamma = 0}{H0: gamma = 0}. Rejection is evidence
+    against MCAR but is compatible with covariate-dependent MCAR.}
+  \item{\code{overall}}{\eqn{H_0: \gamma = 0, \delta = 0}{H0: gamma = 0, delta = 0}.}
 }
-The primary \code{"htest"} statistic is the \code{response_history}
-test because this directly assesses covariate-dependent MCAR/random dropout,
-the condition most relevant to ordinary GEE consistency. The selected
-procedure is applied consistently to all three hypotheses. The modified
-working LRT requires \code{orstr = "independence"}, matching the restriction
-in \code{anova.geer}.
+The modified working likelihood ratio test requires
+\code{orstr = "independence"}. With score tests and
+\code{cov_type = "jackknife"}, the covariance component is computed from
+the larger model.
 
-The approach is closely related to Ridout's logistic-regression formulation
-for studying random dropout. Using GEE for the binary indicators allows
-correlation among repeated missingness indicators within a cluster. The
-procedure is diagnostic: failure to reject does not prove MCAR and does not
-rule out dependence on unobserved responses (MNAR).
-
-With monotone dropout, the risk-set construction contributes each cluster up
-to the first missing response. With intermittent missingness, transitions are
-included whenever the immediately preceding response is observed. A warning is
-issued in that case because the result should be interpreted as a local
-missingness-transition diagnostic rather than a pure dropout test.
-
-Covariates in \code{formula} must be fully observed on the reconstructed
-longitudinal data. Completely absent measurement rows cannot be detected
-unless they are explicitly represented in the supplied data.
+Under monotone dropout each cluster contributes up to its first missing
+response. With intermittent missingness a warning is issued, because the
+result is then a local transition diagnostic rather than a dropout test.
+Covariates in \code{formula} must be fully observed, and measurement rows
+that are absent from the data cannot be detected: when no response is
+missing but some clusters have no rows for some occasions, a warning is
+issued. The test is a
+diagnostic: failure to reject does not establish MCAR and does not rule
+out dependence on unobserved responses.
 }
 \examples{
 set.seed(1)
@@ -186,6 +163,7 @@ Rubin, D.B. (1976) Inference and missing data. \emph{Biometrika},
 \bold{63}, 581--592.
 }
 \seealso{
-\code{\link{mcar_little_test}}, \code{\link{geewa_binary}},
-  \code{\link{runs_test}}.
+\code{\link{mcar_little_test}},
+  \code{\link{mcar_homoscedasticity_test}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}.
 }

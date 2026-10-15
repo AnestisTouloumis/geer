@@ -1,8 +1,5 @@
-testthat::local_edition(3)
-
-data("respiratory", package = "geer")
-respiratory2 <- respiratory[respiratory$center == "C2", , drop = FALSE]
 cerebrovascular <- test_data$cerebrovascular
+respiratory2 <- test_data$respiratory2
 
 fit_resp_full_indep <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
@@ -66,7 +63,6 @@ fit_bin_lower <- geewa(
   method = "gee"
 )
 
-
 test_that("step_p accepts a list scope with upper only", {
   out <- step_p(
     fit_resp_lower,
@@ -81,7 +77,6 @@ test_that("step_p accepts a list scope with upper only", {
   expect_true(all(c("baseline", "treatment") %in% term_labels(out)))
   expect_true(all(term_labels(out) %in% c("baseline", "treatment", "gender", "visit", "age")))
 })
-
 
 test_that("step_p treats missing scope and explicit NULL scope equivalently", {
   out_missing <- step_p(
@@ -108,7 +103,6 @@ test_that("step_p treats missing scope and explicit NULL scope equivalently", {
   expect_equal(out_missing$anova$Df, out_null$anova$Df)
 })
 
-
 test_that("step_p rejects working-lrt for non-independence association structures", {
   expect_error(
     step_p(
@@ -116,10 +110,9 @@ test_that("step_p rejects working-lrt for non-independence association structure
       direction = "backward",
       test = "working-lrt"
     ),
-    "independence working model"
+    "requires an independence working structure"
   )
 })
-
 
 test_that("step_p backward returns a valid path within the step limit", {
   start_terms <- term_labels(fit_resp_full_indep)
@@ -134,15 +127,14 @@ test_that("step_p backward returns a valid path within the step limit", {
   expect_step_p_result(out)
   final_terms <- term_labels(out)
   expect_true(all(final_terms %in% start_terms))
-  expect_true(length(final_terms) <= length(start_terms))
-  expect_true(nrow(out$anova) <= 4L)
+  expect_lte(length(final_terms), length(start_terms))
+  expect_lte(nrow(out$anova), 4L)
 })
-
 
 test_that("step_p backward respects the lower scope", {
   out <- step_p(
     object = fit_bin_full_indep,
-    scope = list(lower = ~ treatment, upper = ~ treatment + factor(period)),
+    scope = list(lower = ~treatment, upper = ~ treatment + factor(period)),
     direction = "backward",
     test = "wald",
     cov_type = "naive",
@@ -153,7 +145,6 @@ test_that("step_p backward respects the lower scope", {
   expect_true("treatment" %in% term_labels(out))
   expect_true(all(term_labels(out) %in% c("treatment", "factor(period)")))
 })
-
 
 test_that("step_p forward respects the upper scope", {
   out <- step_p(
@@ -170,14 +161,13 @@ test_that("step_p forward respects the upper scope", {
   allowed_terms <- c("baseline", "treatment", "gender", "visit", "age")
   expect_true(all(c("baseline", "treatment") %in% final_terms))
   expect_true(all(final_terms %in% allowed_terms))
-  expect_true(nrow(out$anova) <= 4L)
+  expect_lte(nrow(out$anova), 4L)
 })
-
 
 test_that("step_p forward can stop without taking a step", {
   out <- step_p(
     object = fit_bin_lower,
-    scope = list(lower = ~ treatment, upper = ~ treatment + factor(period)),
+    scope = list(lower = ~treatment, upper = ~ treatment + factor(period)),
     direction = "forward",
     test = "wald",
     cov_type = "naive",
@@ -187,7 +177,6 @@ test_that("step_p forward can stop without taking a step", {
   expect_no_step_taken(out)
   expect_equal(term_labels(out), term_labels(fit_bin_lower))
 })
-
 
 test_that("step_p both-direction respects explicit lower and upper scope", {
   out <- step_p(
@@ -210,9 +199,8 @@ test_that("step_p both-direction respects explicit lower and upper scope", {
   upper_terms <- c("baseline", "treatment", "gender", "visit", "age")
   expect_true(all(lower_terms %in% final_terms))
   expect_true(all(final_terms %in% upper_terms))
-  expect_true(nrow(out$anova) <= 5L)
+  expect_lte(nrow(out$anova), 5L)
 })
-
 
 test_that("step_p returns the original model when steps = 0", {
   out <- step_p(
@@ -228,7 +216,6 @@ test_that("step_p returns the original model when steps = 0", {
   expect_equal(term_labels(out), term_labels(fit_resp_full_indep))
 })
 
-
 test_that("step_p stores a readable anova heading on the returned fit", {
   out <- step_p(
     fit_resp_full_indep,
@@ -241,11 +228,10 @@ test_that("step_p stores a readable anova heading on the returned fit", {
   expect_step_p_result(out)
   heading <- attr(out$anova, "heading")
   expect_type(heading, "character")
-  expect_true(length(heading) >= 4L)
+  expect_gte(length(heading), 4L)
   expect_true(any(grepl("Initial Model:", heading, fixed = TRUE)))
   expect_true(any(grepl("Final Model:", heading, fixed = TRUE)))
 })
-
 
 test_that("step_p stores numbered steps and descriptive row names", {
   out <- step_p(
@@ -268,7 +254,6 @@ test_that("step_p stores numbered steps and descriptive row names", {
     expect_true(all(grepl("^Step [0-9]+: [+-] ", rownames(out$anova)[-1L])))
   }
 })
-
 
 test_that("step_p preserves the original data call for downstream update", {
   fitted_model <- geewa_binary(
@@ -305,13 +290,12 @@ test_that("step_p rejects p_enter above p_remove for the both direction", {
   )
 })
 
-test_that("step_model_key identifies a model by its terms and intercept", {
-  key_full <- step_model_key(fit_bin_full_indep)
-  expect_identical(key_full, step_model_key(fit_bin_full_indep))
-  expect_false(identical(key_full, step_model_key(fit_bin_lower)))
+test_that("build_step_model_key identifies a model by its terms and intercept", {
+  key_full <- build_step_model_key(fit_bin_full_indep)
+  expect_identical(key_full, build_step_model_key(fit_bin_full_indep))
+  expect_false(identical(key_full, build_step_model_key(fit_bin_lower)))
   expect_true(grepl("^1\\|", key_full))
 })
-
 
 test_that("step_p warns when direction = 'forward' has no scope", {
   expect_warning(
@@ -319,7 +303,6 @@ test_that("step_p warns when direction = 'forward' has no scope", {
     "no 'scope' was supplied"
   )
 })
-
 
 test_that("the printed step_p table shows the initial model and numbered steps", {
   out <- step_p(
@@ -330,9 +313,7 @@ test_that("the printed step_p table shows the initial model and numbered steps",
     p_remove = 0.20,
     steps = 3
   )
-  ## Checks on structure rather than a snapshot, so that the printed digits
-  ## (which depend on the BLAS in use) do not enter the test.
-  printed <- utils::capture.output(print(out$anova))
+  printed <- capture.output(print(out$anova))
   expect_true(any(grepl("Initial model", printed, fixed = TRUE)))
   n_steps <- nrow(out$anova) - 1L
   if (n_steps >= 1L) {
@@ -340,6 +321,29 @@ test_that("the printed step_p table shows the initial model and numbered steps",
       expect_true(any(grepl(paste0("Step ", k, ": "), printed, fixed = TRUE)))
     }
   }
-  ## The Step column is numeric: no factor codes and no lexicographic order.
   expect_type(out$anova$Step, "integer")
+})
+
+test_that("step_p works on a fit with a missing covariate", {
+  dat <- test_data$epilepsy
+  dat$lnage[1:8] <- NA
+  fit <- geewa(
+    seizures ~ treatment + lnbaseline + lnage,
+    family = poisson,
+    data = dat,
+    id = id,
+    repeated = visit,
+    corstr = "exchangeable"
+  )
+  selected <- step_p(fit, p_remove = 0.5)
+  expect_identical(selected$obs_no, fit$obs_no)
+  reference <- geewa(
+    formula(selected),
+    family = poisson,
+    data = dat[!is.na(dat$lnage), ],
+    id = id,
+    repeated = visit,
+    corstr = "exchangeable"
+  )
+  expect_equal(coef(selected), coef(reference), tolerance = 1e-10)
 })

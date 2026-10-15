@@ -12,9 +12,9 @@ enum class MethodCode {
   pgee_jeffreys
 };
 
-inline MethodCode method_code(const char* method) {
+inline MethodCode parse_method(const char* method) {
   if (method == nullptr) {
-    Rcpp::stop("method is NULL");
+    Rcpp::stop("'method' must not be NULL");
   }
   switch (method[0]) {
   case 'g':
@@ -29,7 +29,7 @@ inline MethodCode method_code(const char* method) {
     if (std::strcmp(method, "pgee-jeffreys") == 0) return MethodCode::pgee_jeffreys;
     break;
   }
-  Rcpp::stop("Unknown method: %s", method);
+  Rcpp::stop("unsupported method: %s", method);
 }
 
 #endif

@@ -1,8 +1,3 @@
-## A criterion that cannot be evaluated for a particular fit is reported as NA
-## rather than aborting the whole table: geecriteria() compares several models
-## at once, and a single degenerate candidate should not hide the remaining
-## criteria or the remaining models. Failures of argument validation remain
-## ordinary errors, so only this condition class is converted.
 signal_criterion_unavailable <- function(message) {
   stop(structure(
     list(message = message, call = NULL),
@@ -30,7 +25,7 @@ geer_criteria_columns_basic <- c(
 )
 
 
-normalize_geer_criteria <- function(criteria) {
+normalize_criteria <- function(criteria) {
   if (!is.character(criteria) || length(criteria) < 1L || anyNA(criteria)) {
     stop(
       "'criteria' must be a non-missing character vector",
@@ -40,19 +35,23 @@ normalize_geer_criteria <- function(criteria) {
   if (any(toupper(criteria) == "ALL")) {
     if (length(criteria) > 1L) {
       stop(
-        "'criteria' must be either \"all\" or a selection of criterion names, not both",
+        paste0(
+          "'criteria' must be either \"all\" or a selection of criterion ",
+          "names, not both"
+        ),
         call. = FALSE
       )
     }
     return(geer_criteria_columns)
   }
-  ## Matching ignores case so that the usual lower-case spellings are accepted,
-  ## but the canonical names are returned and the requested order is kept.
   matched <- match(toupper(criteria), toupper(geer_criteria_columns))
   if (anyNA(matched)) {
     stop(
       sprintf(
-        "unknown entries in 'criteria': %s. Available criteria are %s, or \"all\"",
+        paste0(
+          "unknown entries in 'criteria': %s. Available criteria are %s, or ",
+          "\"all\""
+        ),
         paste(criteria[is.na(matched)], collapse = ", "),
         paste(geer_criteria_columns, collapse = ", ")
       ),
@@ -79,7 +78,6 @@ compute_qicc <- function(qic, p, association_params_no, clusters_no) {
   if (!is.finite(denominator) || denominator <= 0) {
     return(NA_real_)
   }
-  # Hardin and Hilbe (2013), Equation 4.30, subtract this correction.
   correction <- 2 * (p + association_params_no) *
     (p + association_params_no + 1) / denominator
   qic - correction
@@ -99,20 +97,29 @@ compute_gaussian_pseudolikelihood_criteria <- function(object,
 }
 
 
-compute_bivariate_probability_or <- function(row_prob, col_prob, odds_ratio) {
-  ans_independence <- row_prob * col_prob
+compute_bivariate_covariance_or <- function(row_prob, col_prob, odds_ratio) {
   tol <- 1e-8
   if (row_prob > 1 - tol || col_prob > 1 - tol ||
-      row_prob < tol || col_prob < tol ||
-      abs(odds_ratio - 1) < tol) {
-    return(ans_independence)
+      row_prob < tol || col_prob < tol) {
+    return(0)
   }
-  f_value <- 1 - (1 - odds_ratio) * (row_prob + col_prob)
-  root_value <- max(
-    0,
-    f_value^2 - 4 * odds_ratio * (odds_ratio - 1) * ans_independence
+  ans_independence <- row_prob * col_prob
+  eps <- odds_ratio - 1
+  f_value <- 1 + eps * (row_prob + col_prob)
+  root_value <- sqrt(
+    max(0, f_value^2 - 4 * odds_ratio * eps * ans_independence)
   )
-  (f_value - sqrt(root_value)) / (2 * (odds_ratio - 1))
+  if (f_value > 0) {
+    a_value <- 2 * odds_ratio - f_value
+    numerator <- if (a_value > 0) {
+      4 * odds_ratio * eps * (1 - row_prob) * (1 - col_prob) /
+        (a_value + root_value)
+    } else {
+      a_value - root_value
+    }
+    return(ans_independence * numerator / (f_value + root_value))
+  }
+  (f_value - root_value) / (2 * eps) - ans_independence
 }
 
 
@@ -147,9 +154,11 @@ compute_working_covariance_or <- function(object, indices) {
         repeated_max
       )
       odds_ratio <- alpha[[pair_index]]
-      joint <- compute_bivariate_probability_or(mu[[j]], mu[[k]], odds_ratio)
-      covariance <- (joint - mu[[j]] * mu[[k]]) /
-        sqrt(weights[[j]] * weights[[k]])
+      covariance <- compute_bivariate_covariance_or(
+        mu[[j]],
+        mu[[k]],
+        odds_ratio
+      ) / sqrt(weights[[j]] * weights[[k]])
       ans[j, k] <- covariance
       ans[k, j] <- covariance
     }
@@ -190,12 +199,6 @@ compute_ghyc_pac <- function(object) {
   repeated_max <- max(as.integer(object$repeated))
   cluster_indices <- split(seq_along(object$id), object$id)
 
-  ## Gosho, Hamada and Yoshimura (2011) and Pardo and Alonso (2019) both define
-  ## their criteria for balanced designs: the empirical and working covariance
-  ## matrices are sums of cluster-level matrices, which are only conformable
-  ## when every cluster contributes the same repeated positions. Both criteria
-  ## are therefore reported only when each cluster observes every position
-  ## exactly once.
   positions <- seq_len(repeated_max)
   balanced <- all(vapply(
     cluster_indices,
@@ -240,7 +243,8 @@ compute_ghyc_pac <- function(object) {
 
   working_det <- tryCatch(det(working_mean), error = function(e) NA_real_)
   empirical_det <- tryCatch(det(empirical_mean), error = function(e) NA_real_)
-  pac <- if (!is.finite(working_det) || abs(working_det) <= .Machine$double.eps ||
+  pac <- if (!is.finite(working_det) ||
+             abs(working_det) <= .Machine$double.eps ||
              !is.finite(empirical_det)) {
     NA_real_
   } else {
@@ -269,18 +273,11 @@ compute_independence_naive_inverse <- function(object,
 }
 
 
-## Fitted means are clamped away from the boundaries of their support before
-## the logarithms are taken. The quasi-likelihood diverges there, and a
-## non-finite first term would propagate to QIC, QICu, QICC and QICHH at once.
-## The clamp keeps those criteria finite and comparable across working
-## association structures, for which the first term is very nearly constant.
-## See the documentation of geecriteria() for the caveat this carries when
-## candidate models differ in whether they produce boundary fitted values.
-compute_quasi_loglikelihood_values <- function(y,
-                                               mu,
-                                               weights,
-                                               family_name,
-                                               phi) {
+compute_quasi_loglikelihood <- function(y,
+                                        mu,
+                                        weights,
+                                        family_name,
+                                        phi) {
   eps <- sqrt(.Machine$double.eps)
   ans <- switch(
     family_name,
@@ -301,19 +298,25 @@ compute_quasi_loglikelihood_values <- function(y,
       mu_safe <- pmax(mu, eps)
       sum(weights * (mu_safe - 0.5 * y) / mu_safe^2)
     },
-    stop("'family' is not a recognized distribution", call. = FALSE)
+    stop(
+      sprintf(
+        "the quasi-likelihood is not available for the '%s' family",
+        family_name
+      ),
+      call. = FALSE
+    )
   )
   ans / phi
 }
 
 
-compute_quasi_loglikelihood <- function(object) {
-  compute_quasi_loglikelihood_values(
+compute_fit_quasi_loglikelihood <- function(object, phi = object$phi) {
+  compute_quasi_loglikelihood(
     y = object$y,
     mu = object$fitted.values,
     weights = object$prior.weights,
     family_name = object$family$family,
-    phi = object$phi
+    phi = phi
   )
 }
 
@@ -322,8 +325,6 @@ is_phi_fixed <- function(object) {
   if (!is_geewa_fit(object)) {
     return(TRUE)
   }
-  ## The fit stores the validated flag. Reading the call is only a fallback
-  ## and recognizes a literal TRUE or FALSE, not a variable or an expression.
   phi_fixed <- object$phi_fixed
   if (is.logical(phi_fixed) && length(phi_fixed) == 1L && !is.na(phi_fixed)) {
     return(phi_fixed)
@@ -335,7 +336,10 @@ is_phi_fixed <- function(object) {
 compute_independence_gee_quantities <- function(object) {
   glm_control <- stats::glm.control()
   if (!is.null(object$control$maxiter) && is.finite(object$control$maxiter)) {
-    glm_control$maxit <- max(glm_control$maxit, as.integer(object$control$maxiter))
+    glm_control$maxit <- max(
+      glm_control$maxit,
+      as.integer(object$control$maxiter)
+    )
   }
   if (!is.null(object$control$tolerance) &&
       is.finite(object$control$tolerance) && object$control$tolerance > 0) {
@@ -356,35 +360,46 @@ compute_independence_gee_quantities <- function(object) {
   beta <- as.numeric(fit_independence$coefficients)
   if (!isTRUE(fit_independence$converged) || any(!is.finite(beta))) {
     signal_criterion_unavailable(
-      "QICHH could not be computed because the independence GEE fit did not converge to finite coefficients"
+      paste0(
+        "QICHH could not be computed because the independence GEE fit did not ",
+        "converge to finite coefficients"
+      )
     )
   }
   eta <- as.numeric(object$x %*% beta + object$offset)
   mu <- as.numeric(object$family$linkinv(eta))
   if (any(!is.finite(mu))) {
     signal_criterion_unavailable(
-      "QICHH could not be computed because the independence fitted means are non-finite"
+      paste0(
+        "QICHH could not be computed because the independence fitted means ",
+        "are non-finite"
+      )
     )
   }
   family_name <- object$family$family
-  if (identical(family_name, "binomial")) {
-    phi <- 1
-  } else if (is_phi_fixed(object)) {
+  if (is_phi_fixed(object)) {
     phi <- object$phi
   } else {
     variance <- object$family$variance(mu)
     if (any(!is.finite(variance)) || any(variance <= 0)) {
       signal_criterion_unavailable(
-        "QICHH could not be computed because the independence variance function is non-positive or non-finite"
+        paste0(
+          "QICHH could not be computed because the independence variance ",
+          "function is non-positive or non-finite"
+        )
       )
     }
     denominator <- object$obs_no - length(beta)
     if (denominator <= 0) {
       signal_criterion_unavailable(
-        "QICHH could not be computed because the residual degrees of freedom are non-positive"
+        paste0(
+          "QICHH could not be computed because the residual degrees of ",
+          "freedom are non-positive"
+        )
       )
     }
-    phi <- sum(object$prior.weights * (object$y - mu)^2 / variance) / denominator
+    phi <- sum(object$prior.weights * (object$y - mu)^2 / variance) /
+      denominator
     phi <- max(phi, 10 * .Machine$double.eps)
   }
   naive_inverse <- compute_independence_naive_inverse(
@@ -393,7 +408,7 @@ compute_independence_gee_quantities <- function(object) {
     eta = eta,
     phi = phi
   )
-  quasi_loglikelihood <- compute_quasi_loglikelihood_values(
+  quasi_loglikelihood <- compute_quasi_loglikelihood(
     y = object$y,
     mu = mu,
     weights = object$prior.weights,
@@ -413,7 +428,7 @@ compute_independence_gee_quantities <- function(object) {
 
 compute_eqic_adjusted_variance <- function(mu, family_name, k = 1 / 6) {
   if (!is.numeric(k) || length(k) != 1L || !is.finite(k) || k <= 0) {
-    stop("'k' must be a single positive finite number", call. = FALSE)
+    stop("'k' must be a positive finite number", call. = FALSE)
   }
   variance <- switch(
     family_name,
@@ -426,7 +441,10 @@ compute_eqic_adjusted_variance <- function(mu, family_name, k = 1 / 6) {
   )
   if (any(!is.finite(variance)) || any(variance <= 0)) {
     signal_criterion_unavailable(
-      "EQIC could not be computed because the adjusted variance function is non-positive or non-finite"
+      paste0(
+        "EQIC could not be computed because the adjusted variance function is ",
+        "non-positive or non-finite"
+      )
     )
   }
   variance
@@ -435,7 +453,7 @@ compute_eqic_adjusted_variance <- function(mu, family_name, k = 1 / 6) {
 
 compute_eqic_adjusted_deviance <- function(y, mu, family_name, k = 1 / 6) {
   if (!is.numeric(k) || length(k) != 1L || !is.finite(k) || k <= 0) {
-    stop("'k' must be a single positive finite number", call. = FALSE)
+    stop("'k' must be a positive finite number", call. = FALSE)
   }
   eps <- sqrt(.Machine$double.eps)
   switch(
@@ -493,7 +511,10 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
   }
   if (!is.finite(phi) || phi <= 0) {
     signal_criterion_unavailable(
-      "EQIC could not be computed because the dispersion estimate is not a usable positive value"
+      paste0(
+        "EQIC could not be computed because the dispersion estimate is not a ",
+        "usable positive value"
+      )
     )
   }
   adjusted_variance <- compute_eqic_adjusted_variance(
@@ -515,14 +536,6 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
 
 compute_jang_criteria <- function(beta_covariance, independence_inverse) {
   failed <- list(PT = NA_real_, WR = NA_real_, RMR = NA_real_)
-  ## The generalized eigenvalues of the sandwich covariance with respect to the
-  ## model-based independence covariance are the eigenvalues of
-  ## beta_covariance %*% independence_inverse. That product of two symmetric
-  ## matrices is not itself symmetric, so it is rewritten as the similar
-  ## symmetric matrix L %*% beta_covariance %*% t(L), where t(L) %*% L is the
-  ## Cholesky factorization of independence_inverse. The eigenvalues are then
-  ## real by construction, and the factorization doubles as a check that the
-  ## independence information matrix is positive definite.
   chol_factor <- tryCatch(chol(independence_inverse), error = function(e) NULL)
   if (is.null(chol_factor)) {
     return(failed)
@@ -546,18 +559,11 @@ compute_jang_criteria <- function(beta_covariance, independence_inverse) {
 }
 
 
-compute_gee_criteria <- function(object,
-                                 cov_type,
-                                 digits = NULL,
-                                 include_extended = TRUE,
-                                 criteria = geer_criteria_columns) {
-  ## Only the requested criteria are evaluated; the remaining columns are
-  ## filled with NA so that the shape of the returned table never depends on
-  ## the selection. This matters because several of the blocks below are
-  ## expensive: QICHH refits the model under working independence, GHYC and PAC
-  ## loop over clusters, the eigenvalue criteria factorize a p by p matrix, and
-  ## the sandwich covariance itself costs one deletion refit per cluster when
-  ## cov_type is "jackknife".
+compute_criteria <- function(object,
+                             cov_type,
+                             digits = NULL,
+                             include_extended = TRUE,
+                             criteria = geer_criteria_columns) {
   wanted <- function(...) any(c(...) %in% criteria)
   needs_quasi_loglikelihood <- wanted("QIC", "QICu", "QICC")
   needs_covariance <- wanted(
@@ -566,7 +572,7 @@ compute_gee_criteria <- function(object,
   needs_sc_wc <- wanted("GESSC", "GPC", "AGPC", "SGPC")
 
   quasi_loglikelihood <- if (needs_quasi_loglikelihood) {
-    compute_quasi_loglikelihood(object)
+    compute_fit_quasi_loglikelihood(object)
   } else {
     NA_real_
   }
@@ -594,8 +600,6 @@ compute_gee_criteria <- function(object,
       object$prior.weights
     )
   }
-  ## The C++ helpers return a named list; the names are kept so that the two
-  ## quantities are addressed by name rather than by position.
   sc_wc_stats <- unlist(sc_wc_stats)
   naive_covariance <- if (wanted("RJC")) {
     stats::vcov(object, cov_type = "naive")
@@ -613,9 +617,6 @@ compute_gee_criteria <- function(object,
     NULL
   }
   p <- length(object$coefficients)
-  ## Every criterion that discounts model complexity counts only the
-  ## association parameters that were actually estimated, so a supplied
-  ## correlation or odds-ratio structure contributes none.
   association_params_no <- compute_n_estimated_association_parameters(object)
   gessc <- if (wanted("GESSC")) {
     sc_wc_stats[["sc"]] / (object$obs_no - p - association_params_no)
@@ -634,19 +635,16 @@ compute_gee_criteria <- function(object,
     list(AGPC = NA_real_, SGPC = NA_real_)
   }
   qic_u <- if (wanted("QICu")) 2 * (p - quasi_loglikelihood) else NA_real_
-  ## Same quantity as compute_gee_cic(), which exists so that step_p(), add1()
-  ## and drop1() can obtain CIC on its own without building the whole table.
-  ## It is computed inline here because both matrices are already available:
-  ## calling the standalone helper would re-derive the independence
-  ## information matrix and refit the sandwich covariance, which for
-  ## cov_type = "jackknife" means one deletion refit per cluster. Keep the two
-  ## expressions in step.
   cic <- if (wanted("QIC", "CIC", "QICC")) {
     sum(independence_inverse * beta_covariance)
   } else {
     NA_real_
   }
-  qic <- if (wanted("QIC", "QICC")) 2 * (cic - quasi_loglikelihood) else NA_real_
+  qic <- if (wanted("QIC", "QICC")) {
+    2 * (cic - quasi_loglikelihood)
+  } else {
+    NA_real_
+  }
   qicc <- if (wanted("QICC")) {
     compute_qicc(
       qic = qic,
@@ -668,13 +666,13 @@ compute_gee_criteria <- function(object,
       solve(naive_covariance, beta_covariance),
       error = function(e) {
         signal_criterion_unavailable(
-          "RJC could not be computed because the naive covariance matrix is singular or invalid"
+          paste0(
+            "RJC could not be computed because the naive covariance matrix is ",
+            "singular or invalid"
+          )
         )
       }
     )
-    ## sum(Q * t(Q)) is the trace of Q squared, as in Hin, Carey and Wang
-    ## (2007), and not the Frobenius norm, which would be sum(Q^2). The two
-    ## coincide only for symmetric Q, and Q is not symmetric here.
     rjc_trace <- sum(diag(q_matrix)) / p
     rjc_squared_trace <- sum(q_matrix * t(q_matrix)) / p
     sqrt((1 - rjc_trace)^2 + (1 - rjc_squared_trace)^2)
@@ -741,27 +739,25 @@ compute_gee_criteria <- function(object,
   }
   if (!is.null(digits)) {
     digits <- check_nonnegative_integerish(digits, "digits")
-    ans[, numeric_cols] <- lapply(ans[, numeric_cols, drop = FALSE], round, digits = digits)
+    ans[, numeric_cols] <- lapply(
+      ans[, numeric_cols, drop = FALSE],
+      round,
+      digits = digits
+    )
     ans[, "Parameters"] <- as.integer(ans[, "Parameters"])
   }
   ans
 }
 
 
-## Standalone CIC for callers that need this criterion alone. The same
-## expression appears inline in compute_gee_criteria(), where both matrices
-## have already been computed; keep the two in step.
-compute_gee_cic <- function(object, cov_type) {
+compute_cic <- function(object, cov_type) {
   independence_inverse <- compute_independence_naive_inverse(object)
   beta_covariance <- stats::vcov(object, cov_type = cov_type)
   sum(independence_inverse * beta_covariance)
 }
 
 
-## Criteria computed from different responses or from different quasi-likelihood
-## families cannot be compared across models. A different link function for the
-## same response and family is a legitimate comparison and is not flagged.
-check_geecriteria_comparability <- function(models) {
+check_criteria_comparability <- function(models) {
   if (length(models) < 2L) {
     return(invisible(NULL))
   }
@@ -772,9 +768,10 @@ check_geecriteria_comparability <- function(models) {
   )
   if (length(unique(family_names)) > 1L) {
     warning(
-      "models do not use the same distribution family (",
-      paste(unique(family_names), collapse = ", "),
-      "); the criteria are not comparable across families",
+      sprintf(
+        "models differ in the family (%s); the criteria are not comparable",
+        paste(unique(family_names), collapse = ", ")
+      ),
       call. = FALSE
     )
   }
@@ -782,13 +779,14 @@ check_geecriteria_comparability <- function(models) {
   if (length(unique(lengths(responses))) == 1L) {
     same_response <- vapply(
       responses[-1L],
-      function(y) isTRUE(all.equal(y, responses[[1L]], check.attributes = FALSE)),
+      function(y) {
+        isTRUE(all.equal(y, responses[[1L]], check.attributes = FALSE))
+      },
       logical(1)
     )
     if (!all(same_response)) {
       warning(
-        "models do not have the same response values; the criteria are not ",
-        "comparable across different responses",
+        "models differ in the response; the criteria are not comparable",
         call. = FALSE
       )
     }

@@ -11,7 +11,7 @@
 #'   \item{id}{integer subject identifier.}
 #'   \item{period}{integer period identifier.}
 #'   \item{ecg}{binary indicator of ECG status, 0 = abnormal and 1 = normal.}
-#'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+#'   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 #' }
 #'
 #' @details
@@ -45,18 +45,18 @@
 #'   \item{time}{integer time identifier.}
 #'   \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
 #'     1 = low pain.}
-#'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+#'   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 #'   \item{gender}{factor with levels \code{female} and \code{male}.}
 #'   \item{age}{numeric age in years.}
 #' }
 #'
 #' @details
 #' Forty-one subjects were enrolled in a randomized clinical trial of shoulder
-#' pain after laparoscopic cholecystectomy, yielding 246 observations
-#' (six per subject). Subjects were assigned to either the active group (with
-#' abdominal suction) or the placebo group (without abdominal suction).
-#' Shoulder pain was assessed on six occasions: morning and afternoon on each
-#' of the first three postoperative days.
+#' pain after laparoscopic cholecystectomy (Jorgensen et al., 1995), yielding
+#' 246 observations (six per subject). Subjects were assigned to either the
+#' active group (with abdominal suction) or the placebo group (without abdominal
+#' suction). Shoulder pain was assessed on six occasions: morning and afternoon
+#' on each of the first three postoperative days.
 #'
 #' @source
 #' Lumley, T. (1996) Generalized estimating equations for ordinal data: a note
@@ -94,10 +94,11 @@
 #'
 #' @details
 #' Sixty-one women with major depression were randomly assigned to either a
-#' placebo control group or an oestrogen patch group, yielding 366
-#' observations (six monthly assessments per subject). Before treatment,
-#' depressive symptoms were assessed using the Edinburgh Postnatal Depression
-#' Scale (EPDS). EPDS scores were then collected monthly for six months.
+#' placebo control group or an oestrogen patch group (Gregoire et al., 1996),
+#' yielding 366 observations (six monthly assessments per subject). Before
+#' treatment, depressive symptoms were assessed using the Edinburgh Postnatal
+#' Depression Scale (EPDS). EPDS scores were then collected monthly for six
+#' months.
 #'
 #' @source
 #' \url{https://stats.oarc.ucla.edu/spss/library/spss-librarypanel-data-analysis-using-gee/}
@@ -124,7 +125,7 @@
 #' @format A data frame with 236 rows and 6 columns:
 #' \describe{
 #'   \item{id}{integer subject identifier.}
-#'   \item{visit}{integer visit identifier corresponding to a two-week interval.}
+#'   \item{visit}{integer identifier of the two-week interval.}
 #'   \item{seizures}{integer count of epileptic seizures.}
 #'   \item{treatment}{factor with levels \code{placebo} and \code{progabide}.}
 #'   \item{lnbaseline}{numeric logarithm of one-quarter of the number of
@@ -134,10 +135,11 @@
 #'
 #' @details
 #' Fifty-nine subjects with partial seizures were enrolled in a randomized
-#' clinical trial, yielding 236 observations (four visits per subject).
-#' Subjects were assigned to receive either progabide or placebo. Seizure
-#' counts were recorded during the 8 weeks before treatment (baseline). After
-#' treatment, seizure counts were assessed at four 2-week clinic visits.
+#' clinical trial, yielding 236 observations (four visits per subject). Subjects
+#' were assigned to receive either progabide or placebo. Seizure counts were
+#' recorded during the 8 weeks before treatment (baseline). After treatment,
+#' seizure counts were assessed at four 2-week clinic visits. Carey and Wang
+#' (2011) use these data to compare working covariance structures.
 #'
 #' @source
 #' Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
@@ -203,7 +205,7 @@
 #'   \item{visit}{integer follow-up visit identifier.}
 #'   \item{status}{binary indicator of respiratory status, 0 = poor and
 #'     1 = good.}
-#'   \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+#'   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 #'   \item{baseline}{binary indicator of baseline respiratory status,
 #'     0 = poor and 1 = good.}
 #'   \item{age}{numeric age in years recorded at baseline.}
@@ -241,12 +243,12 @@
 #'   \item{id}{integer subject identifier.}
 #'   \item{time}{integer follow-up month identifier.}
 #'   \item{score}{numeric plaque score.}
-#'   \item{treatment}{factor indicating rinse group with levels \code{A},
-#'     \code{B}, and \code{placebo}.}
+#'   \item{treatment}{factor indicating the rinse group, with levels
+#'     \code{placebo}, \code{A}, and \code{B}.}
 #'   \item{baseline}{numeric plaque score at baseline.}
 #'   \item{gender}{factor with levels \code{female} and \code{male}.}
 #'   \item{age}{numeric age in years recorded at baseline.}
-#'   \item{smoke}{factor with levels \code{yes} and \code{no}.}
+#'   \item{smoke}{factor with levels \code{no} and \code{yes}.}
 #' }
 #'
 #' @details

@@ -1,10 +1,10 @@
-#include <stdexcept>
+#include "cluster_utils.h"
 #include "link_functions.h"
+#include "utils.h"
 #include "variance_functions.h"
 #include "working_covariance_cc.h"
-#include "cluster_utils.h"
 #include "working_covariance_or.h"
-#include "utils.h"
+#include <stdexcept>
 
 //============================ information matrix - independence =============
 // [[Rcpp::export]]
@@ -17,8 +17,8 @@ arma::mat get_information_matrix_independence(const arma::mat& model_matrix,
                                               const double phi,
                                               const arma::vec& weights_vector) {
   const arma::uword params_no = model_matrix.n_cols;
-  const arma::vec delta_vector = geer::link_derivative_1(link, eta_vector);
-  const arma::vec variance_vector = geer::variance_function(family, mu_vector);
+  const arma::vec delta_vector = link_derivative_1(link, eta_vector);
+  const arma::vec variance_vector = variance_function(family, mu_vector);
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::mat result(params_no, params_no, arma::fill::zeros);
   arma::mat d_matrix_i;
@@ -37,7 +37,8 @@ arma::mat get_information_matrix_independence(const arma::mat& model_matrix,
       d_scaled_i.each_col() %= scale_i;
       result += d_matrix_i.t() * d_scaled_i;
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_information_matrix_independence", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_information_matrix_independence", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   return result / phi;
@@ -83,8 +84,8 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(
-          "working covariance V_i is not positive definite -- check correlation "
-          "parameters and model specification.");
+          "the working covariance matrix V_i is not positive definite; check the correlation "
+          "parameters and the model specification");
       }
       const arma::vec whitened_vector_i =
         arma::solve(arma::trimatl(chol_upper.t()), s_vector_i,
@@ -92,7 +93,8 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
       sc_criterion += arma::dot(whitened_vector_i, whitened_vector_i);
       sum_log_det += 2.0 * arma::accu(arma::log(chol_upper.diag()));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_working_covariance_criteria_cc", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_working_covariance_criteria_cc", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   return Rcpp::List::create(
@@ -137,8 +139,8 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(
-          "working covariance V_i is not positive definite -- check odds-ratio "
-          "parameters and model specification.");
+          "the working covariance matrix V_i is not positive definite; check the odds-ratio "
+          "parameters and the model specification");
       }
       const arma::vec whitened_vector_i =
         arma::solve(arma::trimatl(chol_upper.t()), s_vector_i,
@@ -146,7 +148,8 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
       sc_criterion += arma::dot(whitened_vector_i, whitened_vector_i);
       sum_log_det += 2.0 * arma::accu(arma::log(chol_upper.diag()));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_working_covariance_criteria_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_working_covariance_criteria_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   return Rcpp::List::create(

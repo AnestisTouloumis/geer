@@ -23,7 +23,10 @@ build_mcar_covariate_formula <- function(object, formula) {
   trms <- stats::terms(formula)
   if (!identical(attr(trms, "intercept"), 1L)) {
     stop(
-      "'formula' must include an intercept; use '~ 1' when no covariates are required",
+      paste0(
+        "'formula' must include an intercept; use '~ 1' when no covariates ",
+        "are required"
+      ),
       call. = FALSE
     )
   }
@@ -38,7 +41,7 @@ build_mcar_covariate_formula <- function(object, formula) {
 normalize_mcar_response <- function(response, object) {
   if (is.matrix(response) || is.data.frame(response)) {
     stop(
-      "the regression-based MCAR diagnostic currently requires a univariate response at each occasion",
+      "the MCAR tests require a univariate response",
       call. = FALSE
     )
   }
@@ -47,12 +50,15 @@ normalize_mcar_response <- function(response, object) {
     identical(object$family$family, "binomial") ||
     identical(object$family$family, "quasibinomial") ||
     (identical(object$family$family, "quasi") &&
-      !is.null(object$family$varfun) &&
-      identical(object$family$varfun, "mu(1-mu)"))
+     !is.null(object$family$varfun) &&
+     identical(object$family$varfun, "mu(1-mu)"))
 
   if (is_binomial_like && is.factor(response)) {
     if (nlevels(response) != 2L) {
-      stop("a binomial factor response must have exactly two levels", call. = FALSE)
+      stop(
+        "a binomial factor response must have exactly two levels",
+        call. = FALSE
+      )
     }
     out <- as.numeric(response == levels(response)[2L])
     out[is.na(response)] <- NA_real_
@@ -62,7 +68,10 @@ normalize_mcar_response <- function(response, object) {
     observed <- response[!is.na(response)]
     lev <- levels(factor(observed))
     if (length(lev) != 2L) {
-      stop("a binomial character response must have exactly two levels", call. = FALSE)
+      stop(
+        "a binomial character response must have exactly two levels",
+        call. = FALSE
+      )
     }
     out <- as.numeric(response == lev[2L])
     out[is.na(response)] <- NA_real_
@@ -71,7 +80,7 @@ normalize_mcar_response <- function(response, object) {
 
   if (!is.numeric(response) && !is.logical(response)) {
     stop(
-      "the response must be numeric or a two-level binary response for the regression-based MCAR diagnostic",
+      "the response must be numeric or binary with two levels",
       call. = FALSE
     )
   }
@@ -84,17 +93,24 @@ normalize_mcar_response <- function(response, object) {
 
 
 reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
-  if (is.null(data)) data <- object$data
+  if (is.null(data)) {
+    data <- object$data
+  }
   if (is.null(data)) {
     stop(
-      "the original data are not available in the fitted object; supply them through 'data'",
+      paste0(
+        "the original data are not available in the fitted object; supply ",
+        "them through 'data'"
+      ),
       call. = FALSE
     )
   }
 
   object_formula <- stats::formula(object)
   formula_env <- environment(object_formula)
-  if (is.null(formula_env)) formula_env <- parent.frame()
+  if (is.null(formula_env)) {
+    formula_env <- parent.frame()
+  }
   eval_env <- new.env(parent = formula_env)
   assign(".geer_mcar_data", data, envir = eval_env)
   assign(".geer_original_formula", object_formula, envir = eval_env)
@@ -112,7 +128,7 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     error = function(e) {
       stop(
         sprintf(
-          "could not reconstruct the original response for the regression-based MCAR diagnostic: %s",
+          "could not reconstruct the response used by the fit: %s",
           conditionMessage(e)
         ),
         call. = FALSE
@@ -150,7 +166,7 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     error = function(e) {
       stop(
         sprintf(
-          "could not construct the risk-set data for the regression-based MCAR diagnostic: %s",
+          "could not construct the risk-set data: %s",
           conditionMessage(e)
         ),
         call. = FALSE
@@ -168,7 +184,10 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     stop("'id' could not be recovered from the fitted model", call. = FALSE)
   }
   if (anyNA(id_raw)) {
-    stop("'id' cannot contain missing values in the missingness model", call. = FALSE)
+    stop(
+      "'id' must not contain missing values",
+      call. = FALSE
+    )
   }
   id <- as.numeric(factor(id_raw))
 
@@ -177,23 +196,35 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     repeated <- stats::ave(id, id, FUN = seq_along)
   } else {
     if (anyNA(repeated_raw)) {
-      stop("'repeated' cannot contain missing values in the missingness model", call. = FALSE)
+      stop(
+        "'repeated' must not contain missing values",
+        call. = FALSE
+      )
     }
     repeated <- as.numeric(factor(repeated_raw))
   }
 
   if (length(y) != length(id) || length(y) != length(repeated)) {
-    stop("response, 'id', and 'repeated' must have the same length", call. = FALSE)
+    stop(
+      "response, 'id', and 'repeated' must have the same length",
+      call. = FALSE
+    )
   }
   if (any(duplicated(data.frame(id = id, repeated = repeated)))) {
-    stop("'repeated' must identify unique measurements within each 'id'", call. = FALSE)
+    stop(
+      "'repeated' must identify unique measurements within each 'id'",
+      call. = FALSE
+    )
   }
 
   trms <- stats::terms(analysis_formula, data = model_frame)
   design <- stats::model.matrix(trms, model_frame)
   intercept <- which(colnames(design) == "(Intercept)")
   if (length(intercept) != 1L) {
-    stop("the covariate formula must contain exactly one intercept", call. = FALSE)
+    stop(
+      "the covariate formula must contain exactly one intercept",
+      call. = FALSE
+    )
   }
   covariate_index <- setdiff(seq_len(ncol(design)), intercept)
   covariates <- design[, covariate_index, drop = FALSE]
@@ -214,12 +245,16 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
   previous_index <- integer(0)
   intermittent <- FALSE
   id_split <- split(seq_along(id), id)
+  incomplete_clusters <- any(lengths(id_split) < max(repeated))
   for (idx in id_split) {
-    if (length(idx) < 2L) next
+    if (length(idx) < 2L) {
+      next
+    }
     missing_i <- is.na(y[idx])
     if (any(missing_i)) {
       first_missing <- which(missing_i)[1L]
-      if (first_missing < length(idx) && any(!missing_i[(first_missing + 1L):length(idx)])) {
+      if (first_missing < length(idx) &&
+          any(!missing_i[(first_missing + 1L):length(idx)])) {
         intermittent <- TRUE
       }
     }
@@ -233,7 +268,10 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
 
   if (!length(current_index)) {
     stop(
-      "no transition risk set could be constructed; at least one cluster must have two occasions with the previous response observed",
+      paste0(
+        "no transition risk set could be constructed; at least one cluster ",
+        "must have two occasions with the previous response observed"
+      ),
       call. = FALSE
     )
   }
@@ -245,7 +283,8 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     repeated = repeated[current_index],
     occasion = repeated[current_index],
     covariates = covariates[current_index, , drop = FALSE],
-    intermittent = intermittent
+    intermittent = intermittent,
+    incomplete_clusters = incomplete_clusters
   )
 }
 
@@ -276,7 +315,10 @@ select_mcar_covariates <- function(covariates, occasion, lag_response) {
   lag_candidate <- cbind(base, lag_response)
   if (qr(lag_candidate)$rank <= rank_base) {
     stop(
-      "the previous response has no estimable effect after adjustment for occasion and the supplied covariates",
+      paste0(
+        "the previous response has no estimable effect after adjustment for ",
+        "occasion and the supplied covariates"
+      ),
       call. = FALSE
     )
   }
@@ -312,28 +354,36 @@ fit_mcar_binary_model <- function(formula, analysis_data, orstr, control) {
 
 
 compute_mcar_nested_test <- function(object0,
-                                  object1,
-                                  test,
-                                  cov_type,
-                                  pmethod) {
+                                     object1,
+                                     test,
+                                     cov_type,
+                                     pmethod) {
   value <- switch(
     test,
     wald = compute_wald_test(object0, object1, cov_type),
     score = compute_score_test(object0, object1, cov_type),
     `working-wald` = compute_working_wald_test(
-      object0, object1, cov_type, pmethod
+      object0,
+      object1,
+      cov_type,
+      pmethod
     ),
     `working-score` = compute_working_score_test(
-      object0, object1, cov_type, pmethod
+      object0,
+      object1,
+      cov_type,
+      pmethod
     ),
     `working-lrt` = compute_working_lrt_test(
-      object0, object1, cov_type, pmethod
+      object0,
+      object1,
+      cov_type,
+      pmethod
     )
   )
   if (!is.finite(value$test_stat)) {
     stop(
-      "the MCAR test statistic is not available because the test statistic ",
-      "was negative; try another 'cov_type' or 'test'",
+      "the test statistic is negative; try another 'cov_type' or 'test'",
       call. = FALSE
     )
   }

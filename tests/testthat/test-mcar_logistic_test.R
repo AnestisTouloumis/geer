@@ -1,8 +1,5 @@
-testthat::local_edition(3)
-
-
 make_mcar_dropout_data <- function() {
-  set.seed(7401)
+  withr::local_seed(7401)
   subjects <- 140L
   occasions <- 5L
   id <- rep(seq_len(subjects), each = occasions)
@@ -13,7 +10,7 @@ make_mcar_dropout_data <- function() {
   age <- rep(age_subject, each = occasions)
   y_complete <-
     2.5 + 0.5 * treatment + 0.025 * age + 0.18 * visit +
-    stats::rnorm(length(id), sd = 0.8)
+    rnorm(length(id), sd = 0.8)
   y <- y_complete
 
   for (i in seq_len(subjects)) {
@@ -22,7 +19,7 @@ make_mcar_dropout_data <- function() {
       eta <-
         -3.2 + 0.55 * treatment[idx[j]] +
         0.45 * y_complete[idx[j - 1L]] + 0.12 * (j - 2L)
-      if (stats::rbinom(1L, 1L, stats::plogis(eta)) == 1L) {
+      if (rbinom(1L, 1L, plogis(eta)) == 1L) {
         y[idx[j:occasions]] <- NA_real_
         break
       }
@@ -31,7 +28,6 @@ make_mcar_dropout_data <- function() {
 
   data.frame(id, visit, treatment, age, y, y_complete)
 }
-
 
 make_direct_dropout_risk_set <- function(dat) {
   rows <- vector("list", 0L)
@@ -56,7 +52,6 @@ make_direct_dropout_risk_set <- function(dat) {
   }
   do.call(rbind, rows)
 }
-
 
 test_that("mcar_logistic_test agrees with a direct geewa_binary risk-set fit", {
   dat <- make_mcar_dropout_data()
@@ -128,7 +123,6 @@ test_that("mcar_logistic_test agrees with a direct geewa_binary risk-set fit", {
   )
 })
 
-
 test_that("mcar_logistic_test separates response-history and covariate tests", {
   dat <- make_mcar_dropout_data()
   fit <- geewa(
@@ -156,7 +150,6 @@ test_that("mcar_logistic_test separates response-history and covariate tests", {
   )
 })
 
-
 test_that("mcar_logistic_test uses fitted predictors and absorbs occasion main effects", {
   dat <- make_mcar_dropout_data()
   fit <- geewa(
@@ -175,7 +168,6 @@ test_that("mcar_logistic_test uses fitted predictors and absorbs occasion main e
   expect_equal(default$tests$p.value, explicit$tests$p.value, tolerance = 1e-10)
   expect_true("visit" %in% default$dropped_covariates)
 })
-
 
 test_that("mcar_logistic_test supports every geer hypothesis-test procedure", {
   dat <- make_mcar_dropout_data()
@@ -262,7 +254,6 @@ test_that("mcar_logistic_test supports every geer hypothesis-test procedure", {
   )
 })
 
-
 test_that("mcar_logistic_test supports transformed and factor covariates", {
   dat <- make_mcar_dropout_data()
   dat$group <- factor(ifelse(dat$age > 52, "older", "younger"))
@@ -286,7 +277,6 @@ test_that("mcar_logistic_test supports transformed and factor covariates", {
   expect_true("lag_response" %in% out$coefficients$term)
 })
 
-
 test_that("mcar_logistic_test permits a response-history-only diagnostic", {
   dat <- make_mcar_dropout_data()
   fit <- geewa(
@@ -298,7 +288,7 @@ test_that("mcar_logistic_test permits a response-history-only diagnostic", {
     corstr = "independence"
   )
 
-  out <- mcar_logistic_test(fit, formula = ~ 1)
+  out <- mcar_logistic_test(fit, formula = ~1)
 
   expect_equal(out$tests$df, c(1, 0, 1))
   expect_equal(
@@ -307,7 +297,6 @@ test_that("mcar_logistic_test permits a response-history-only diagnostic", {
     tolerance = 1e-12
   )
 })
-
 
 test_that("mcar_logistic_test requires fully observed covariates", {
   dat <- make_mcar_dropout_data()
@@ -328,7 +317,6 @@ test_that("mcar_logistic_test requires fully observed covariates", {
   )
 })
 
-
 test_that("mcar_logistic_test can recover data supplied explicitly", {
   dat <- make_mcar_dropout_data()
   fit <- geewa(
@@ -345,6 +333,28 @@ test_that("mcar_logistic_test can recover data supplied explicitly", {
   expect_s3_class(out, "htest")
 })
 
+test_that("mcar_logistic_test passes control to the binary GEE fits", {
+  dat <- make_mcar_dropout_data()
+  fit <- geewa(
+    y ~ treatment + age + visit,
+    data = dat,
+    id = id,
+    repeated = visit,
+    family = gaussian(),
+    corstr = "independence"
+  )
+  expect_error(
+    suppressWarnings(mcar_logistic_test(fit,
+      formula = ~ treatment + age,
+      orstr = "exchangeable", control = geer_control(maxiter = 1, tolerance = 1e-15)
+    )),
+    "the binary GEE missingness model did not converge"
+  )
+  expect_error(
+    mcar_logistic_test(fit, formula = ~ treatment + age, control = list(maxiter = -1)),
+    "'maxiter' must be a positive integer"
+  )
+})
 
 test_that("mcar_logistic_test warns for intermittent response missingness", {
   dat <- make_mcar_dropout_data()
@@ -363,11 +373,10 @@ test_that("mcar_logistic_test warns for intermittent response missingness", {
 
   expect_warning(
     out <- mcar_logistic_test(fit, formula = ~ treatment + age),
-    "intermittent response missingness"
+    "intermittent missingness detected"
   )
   expect_true(out$intermittent)
 })
-
 
 test_that("mcar_logistic_test handles no response missingness", {
   id <- rep(seq_len(40), each = 4)
@@ -396,7 +405,6 @@ test_that("mcar_logistic_test handles no response missingness", {
   expect_null(out$coefficients)
 })
 
-
 test_that("mcar_logistic_test validates its covariate formula and odds-ratio structure", {
   dat <- make_mcar_dropout_data()
   fit <- geewa(
@@ -420,10 +428,61 @@ test_that("mcar_logistic_test validates its covariate formula and odds-ratio str
       orstr = "exchangeable",
       test = "working-lrt"
     ),
-    "independence working model"
+    "requires an independence working structure"
   )
 })
 
+test_that("normalize_mcar_response codes two-level binary responses as 0/1", {
+  binomial_fit <- list(family = binomial())
+  response <- factor(c("no", "yes", NA, "yes"), levels = c("no", "yes"))
+  expect_identical(normalize_mcar_response(response, binomial_fit), c(0, 1, NA, 1))
+  expect_identical(
+    normalize_mcar_response(c("a", "b", NA, "b"), binomial_fit),
+    c(0, 1, NA, 1)
+  )
+  quasi_fit <- list(family = quasi(link = "logit", variance = "mu(1-mu)"))
+  expect_identical(normalize_mcar_response(response, quasi_fit), c(0, 1, NA, 1))
+  expect_error(
+    normalize_mcar_response(factor(c("a", "b", "c")), binomial_fit),
+    "factor response must have exactly two levels"
+  )
+  expect_error(
+    normalize_mcar_response(c("a", "b", "c"), binomial_fit),
+    "character response must have exactly two levels"
+  )
+  expect_error(
+    normalize_mcar_response(factor(c("a", "b")), list(family = gaussian())),
+    "must be numeric or binary with two levels"
+  )
+  expect_error(
+    normalize_mcar_response(c(1, Inf), list(family = gaussian())),
+    "observed response values must be finite"
+  )
+  expect_error(
+    normalize_mcar_response(cbind(1:2, 2:1), binomial_fit),
+    "require a univariate response"
+  )
+})
+
+test_that("mcar_logistic_test gives the same result for 0/1 and factor responses", {
+  dat <- make_mcar_dropout_data()
+  dat$high <- as.numeric(dat$y > median(dat$y, na.rm = TRUE))
+  dat$high_factor <- factor(dat$high, levels = c(0, 1), labels = c("low", "high"))
+  fit_numeric <- geewa(
+    high ~ treatment + age,
+    data = dat,
+    id = id,
+    repeated = visit,
+    family = binomial(),
+    corstr = "independence"
+  )
+  fit_factor <- update(fit_numeric, high_factor ~ .)
+  out_numeric <- mcar_logistic_test(fit_numeric, formula = ~ treatment + age)
+  out_factor <- mcar_logistic_test(fit_factor, formula = ~ treatment + age)
+  expect_equal(out_factor$statistic, out_numeric$statistic, tolerance = 1e-10)
+  expect_equal(out_factor$parameter, out_numeric$parameter)
+  expect_equal(out_factor$p.value, out_numeric$p.value, tolerance = 1e-10)
+})
 
 test_that("build_mcar_null_formula falls back to an intercept-only model", {
   expect_identical(
@@ -435,7 +494,6 @@ test_that("build_mcar_null_formula falls back to an intercept-only model", {
     "mcar_missing ~ a + b"
   )
 })
-
 
 test_that("mcar_logistic_test works on data with only two occasions", {
   dat <- make_mcar_dropout_data()
@@ -457,4 +515,35 @@ test_that("mcar_logistic_test works on data with only two occasions", {
   expect_true(is.finite(out2$statistic))
   expect_gte(out2$p.value, 0)
   expect_lte(out2$p.value, 1)
+})
+
+test_that("mcar_logistic_test warns when dropout is recorded by absent rows", {
+  dat <- make_mcar_dropout_data()
+  observed <- dat[!is.na(dat$y), , drop = FALSE]
+  fit <- geewa(
+    y ~ treatment + age + visit,
+    data = observed,
+    id = id,
+    repeated = visit,
+    family = gaussian(),
+    corstr = "independence"
+  )
+  expect_warning(
+    out <- mcar_logistic_test(fit),
+    "dropout recorded by omitted rows cannot be detected",
+    fixed = TRUE
+  )
+  expect_identical(out$missing, 0L)
+  expect_equal(out$p.value, 1)
+
+  fit_full <- geewa(
+    y ~ treatment + age + visit,
+    data = dat,
+    id = id,
+    repeated = visit,
+    family = gaussian(),
+    corstr = "independence"
+  )
+  expect_no_warning(out_full <- mcar_logistic_test(fit_full))
+  expect_gt(out_full$missing, 0L)
 })

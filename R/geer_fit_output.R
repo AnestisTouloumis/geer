@@ -49,8 +49,8 @@ build_geer_output <- function(geesolver_fit,
   fit$bias_corrected_covariance <- geesolver_fit$bc_covariance
   dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
   fit$association_structure <- association_structure
-  ## permutation that sorted the model-frame rows by cluster and occasion
   fit$row_order <- row_order
+  fit$frame_rows <- find_geer_frame_rows(model_frame, data)
   fit$alpha <- as.numeric(geesolver_fit$alpha)
   fit$phi <- geesolver_fit$phi
   fit$obs_no <- nrow(model_matrix)
@@ -59,6 +59,19 @@ build_geer_output <- function(geesolver_fit,
   fit$min_cluster_size <- min(cluster_sizes)
   fit$max_cluster_size <- max(cluster_sizes)
   fit
+}
+
+
+find_geer_frame_rows <- function(model_frame, data) {
+  if (!is.data.frame(data)) {
+    return(NULL)
+  }
+  rows <- match(rownames(model_frame), rownames(data))
+  if (length(rows) != nrow(model_frame) || anyNA(rows) ||
+      anyDuplicated(rows)) {
+    return(NULL)
+  }
+  rows
 }
 
 
@@ -75,7 +88,7 @@ finalize_geer_fit <- function(fit,
   if (method %in% geer_onestep_methods) {
     fit$converged <- TRUE
   }
-  solver_failure <- geer_solver_failure(geesolver_fit)
+  solver_failure <- get_solver_failure(geesolver_fit)
   if (nzchar(solver_failure)) {
     fit$converged <- FALSE
   }
@@ -85,7 +98,6 @@ finalize_geer_fit <- function(fit,
   } else {
     as.numeric(geesolver_fit$alpha)
   }
-  ## with a single repeated index there are no pairs to name
   if (association_structure %in% c("unstructured", "fixed") &&
       max(repeated) >= 2L) {
     pairs_matrix <- utils::combn(max(repeated), 2)
@@ -108,7 +120,7 @@ finalize_geer_fit <- function(fit,
     )
   }
   if (!fit$converged) {
-    warning(fit_function, ": algorithm did not converge", call. = FALSE)
+    warning(fit_function, ": the algorithm did not converge", call. = FALSE)
   }
   if (isTRUE(fit$clusters_no <= length(fit$coefficients))) {
     warning(
@@ -120,12 +132,20 @@ finalize_geer_fit <- function(fit,
       call. = FALSE
     )
   }
-  ## Matches the boundary threshold and wording used by stats::glm.fit().
   eps <- 10 * .Machine$double.eps
   if (identical(family$family, "binomial")) {
     if (any(fit$fitted.values > 1 - eps) || any(fit$fitted.values < eps)) {
       warning(
         fit_function, ": fitted probabilities numerically 0 or 1 occurred",
+        call. = FALSE
+      )
+    } else if (fit$converged &&
+               (any(fit$fitted.values > 1 - 1e-12) ||
+                any(fit$fitted.values < 1e-12))) {
+      warning(
+        fit_function, ": fitted probabilities are within 1e-12 of 0 or 1; the ",
+        "data may exhibit (quasi-)separation, in which case the estimates and ",
+        "their standard errors are unreliable",
         call. = FALSE
       )
     }

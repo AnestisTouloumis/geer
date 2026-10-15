@@ -1,12 +1,12 @@
-#include <cmath>
-#include "link_functions.h"
-#include "working_covariance_cc.h"
 #include "cluster_utils.h"
-#include "working_covariance_or.h"
+#include "link_functions.h"
 #include "utils.h"
+#include "working_covariance_cc.h"
+#include "working_covariance_or.h"
+#include <cmath>
 
 namespace {
-inline void validate_estimating_equations_inputs(const arma::vec& y_vector,
+void check_estimating_equations_inputs(const arma::vec& y_vector,
                                                  const arma::mat& model_matrix,
                                                  const arma::vec& id_vector,
                                                  const arma::vec& repeated_vector,
@@ -15,22 +15,22 @@ inline void validate_estimating_equations_inputs(const arma::vec& y_vector,
                                                  const arma::vec& eta_vector) {
   const arma::uword n = y_vector.n_elem;
   if (n == 0) {
-    Rcpp::stop("Input vectors must not be empty.");
+    Rcpp::stop("input vectors must not be empty");
   }
   if (model_matrix.n_rows != n) {
-    Rcpp::stop("'model_matrix' must have the same number of rows as 'y_vector'.");
+    Rcpp::stop("'model_matrix' must have the same number of rows as 'y_vector'");
   }
   if (id_vector.n_elem != n || repeated_vector.n_elem != n ||
       weights_vector.n_elem != n || mu_vector.n_elem != n ||
       eta_vector.n_elem != n) {
-    Rcpp::stop("All observation-level inputs must have the same length.");
+    Rcpp::stop("all observation-level inputs must have the same length");
   }
 }
-}
+}  // namespace
 
 //============================ estimating equations - cc =======================
 // [[Rcpp::export]]
-arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
+arma::vec get_estimating_equations_cc(const arma::vec& y_vector,
                                       const arma::mat& model_matrix,
                                       const arma::vec& id_vector,
                                       const arma::vec& repeated_vector,
@@ -42,23 +42,23 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
                                       const double phi) {
-  validate_estimating_equations_inputs(y_vector,
-                             model_matrix,
-                             id_vector,
-                             repeated_vector,
-                             weights_vector,
-                             mu_vector,
-                             eta_vector);
+  check_estimating_equations_inputs(y_vector,
+                                       model_matrix,
+                                       id_vector,
+                                       repeated_vector,
+                                       weights_vector,
+                                       mu_vector,
+                                       eta_vector);
 
   if (!R_FINITE(phi) || phi <= 0.0) {
-    Rcpp::stop("'phi' must be finite and positive.");
+    Rcpp::stop("'phi' must be a positive finite number");
   }
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   const arma::mat correlation_matrix =
     get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
-  const arma::vec delta_vector = geer::link_derivative_1(link, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec result(params_no, arma::fill::zeros);
@@ -83,9 +83,10 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
                         weights_vector.subvec(first_row, last_row));
 
       result += d_matrix_i.t() *
-        solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
+                solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("estimating_equations_gee_cc", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_estimating_equations_cc", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   return result;
@@ -95,7 +96,7 @@ arma::vec estimating_equations_gee_cc(const arma::vec& y_vector,
 
 //============================ estimating equations - or =======================
 // [[Rcpp::export]]
-arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
+arma::vec get_estimating_equations_or(const arma::vec& y_vector,
                                       const arma::mat& model_matrix,
                                       const arma::vec& id_vector,
                                       const arma::vec& repeated_vector,
@@ -104,17 +105,17 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
                                       const arma::vec& mu_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
-  validate_estimating_equations_inputs(y_vector,
-                             model_matrix,
-                             id_vector,
-                             repeated_vector,
-                             weights_vector,
-                             mu_vector,
-                             eta_vector);
+  check_estimating_equations_inputs(y_vector,
+                                       model_matrix,
+                                       id_vector,
+                                       repeated_vector,
+                                       weights_vector,
+                                       mu_vector,
+                                       eta_vector);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
-  const arma::vec delta_vector = geer::link_derivative_1(link, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec result(params_no, arma::fill::zeros);
@@ -139,9 +140,10 @@ arma::vec estimating_equations_gee_or(const arma::vec& y_vector,
                         weights_vector.subvec(first_row, last_row));
 
       result += d_matrix_i.t() *
-        solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
+                solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("estimating_equations_gee_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("get_estimating_equations_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   return result;

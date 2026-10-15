@@ -1,17 +1,13 @@
-testthat::local_edition(3)
-
-count_fit <- fit_geewa_pois_exch
-
+epilepsy <- test_data$epilepsy
 
 count_runs <- function(signs) {
   signs <- signs[signs != 0]
   1L + sum(signs[-1L] != signs[-length(signs)])
 }
 
-
 test_that("runs-test calculation matches the Chang sign-sequence example", {
   signs <- c(1, 1, -1, -1, 1, -1, 1, 1, -1, -1, -1)
-  out <- geer:::compute_runs_statistics(signs, "two.sided")
+  out <- compute_runs_statistics(signs, "two.sided")
 
   expected_runs <- 71 / 11
   variance_runs <- 294 / 121
@@ -26,42 +22,38 @@ test_that("runs-test calculation matches the Chang sign-sequence example", {
   expect_equal(out$statistic, expected_z, tolerance = 1e-12)
   expect_equal(
     out$p_value,
-    2 * stats::pnorm(-abs(expected_z)),
+    2 * pnorm(-abs(expected_z)),
     tolerance = 1e-12
   )
 })
 
-
 test_that("the statistic does not depend on the residual type", {
-  ## Working, Pearson and deviance residuals differ only by strictly positive
-  ## scale factors (or a signed square root), so they share a sign sequence.
   ord <- order(
-    count_fit$id,
-    count_fit$repeated,
-    seq_len(count_fit$obs_no)
+    fit_geewa_pois_exch$id,
+    fit_geewa_pois_exch$repeated,
+    seq_len(fit_geewa_pois_exch$obs_no)
   )
   signs <- lapply(
     c("working", "pearson", "deviance"),
-    function(type) sign(residuals(count_fit, type = type)[ord])
+    function(type) sign(residuals(fit_geewa_pois_exch, type = type)[ord])
   )
   expect_identical(signs[[2L]], signs[[1L]])
   expect_identical(signs[[3L]], signs[[1L]])
 
   stats <- lapply(
     signs,
-    function(x) geer:::compute_runs_statistics(x, "two.sided")
+    function(x) compute_runs_statistics(x, "two.sided")
   )
   expect_identical(stats[[2L]], stats[[1L]])
   expect_identical(stats[[3L]], stats[[1L]])
 })
 
-
 test_that("runs_test uses natural cluster/repeated ordering by default", {
-  out <- runs_test(count_fit)
-  residual_values <- residuals(count_fit, type = "working")
+  out <- runs_test(fit_geewa_pois_exch)
+  residual_values <- residuals(fit_geewa_pois_exch, type = "working")
   ord <- order(
-    count_fit$id,
-    count_fit$repeated,
+    fit_geewa_pois_exch$id,
+    fit_geewa_pois_exch$repeated,
     seq_along(residual_values)
   )
   signs <- sign(residual_values[ord])
@@ -83,26 +75,25 @@ test_that("runs_test uses natural cluster/repeated ordering by default", {
   )
   expect_equal(
     out$p.value,
-    2 * stats::pnorm(-abs(unname(out$statistic))),
+    2 * pnorm(-abs(unname(out$statistic))),
     tolerance = 1e-12
   )
 })
 
-
 test_that("one-sided alternatives use the corresponding normal tail", {
-  two_sided <- runs_test(count_fit)
-  less <- runs_test(count_fit, alternative = "less")
-  greater <- runs_test(count_fit, alternative = "greater")
+  two_sided <- runs_test(fit_geewa_pois_exch)
+  less <- runs_test(fit_geewa_pois_exch, alternative = "less")
+  greater <- runs_test(fit_geewa_pois_exch, alternative = "greater")
   z <- unname(two_sided$statistic)
 
   expect_identical(less$alternative, "less")
   expect_identical(greater$alternative, "greater")
   expect_identical(unname(less$statistic), z)
   expect_identical(unname(greater$statistic), z)
-  expect_equal(less$p.value, stats::pnorm(z), tolerance = 1e-12)
+  expect_equal(less$p.value, pnorm(z), tolerance = 1e-12)
   expect_equal(
     greater$p.value,
-    stats::pnorm(z, lower.tail = FALSE),
+    pnorm(z, lower.tail = FALSE),
     tolerance = 1e-12
   )
   expect_equal(less$p.value + greater$p.value, 1, tolerance = 1e-12)
@@ -113,19 +104,13 @@ test_that("one-sided alternatives use the corresponding normal tail", {
   )
 })
 
-
 test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
-  ## Hardin and Hilbe (2013), equations (4.35)-(4.41): n_p = 42, n_n = 38,
-  ## T = 44, E(T) = 40.9, V(T) = 19.65, Z = 0.6993 and a one-sided p of .2422.
   signs <- c(rep(c(1, -1), times = 38), rep(1, 4))
-  out <- geer:::compute_runs_statistics(signs, "greater")
+  out <- compute_runs_statistics(signs, "greater")
 
   expect_identical(out$positive, 42L)
   expect_identical(out$negative, 38L)
   expect_equal(out$expected_runs, 40.9, tolerance = 1e-12)
-  ## Closed forms of the runs-test moments, E(T) = 2 n_p n_n / n + 1 and
-  ## V(T) = 2 n_p n_n (2 n_p n_n - n) / (n^2 (n - 1)), so the book's rounded
-  ## values below are only a cross-check.
   n_p <- 42
   n_n <- 38
   n <- n_p + n_n
@@ -135,12 +120,11 @@ test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
 
   z <- (44 - out$expected_runs) / sqrt(variance_expected)
   expect_equal(z, 0.6993, tolerance = 1e-3)
-  expect_equal(stats::pnorm(z, lower.tail = FALSE), 0.2422, tolerance = 1e-3)
+  expect_equal(pnorm(z, lower.tail = FALSE), 0.2422, tolerance = 1e-3)
 })
 
-
 test_that("compute_runs_statistics returns the retained signs it counted", {
-  out <- geer:::compute_runs_statistics(c(1, 0, -1, -1, 2), "two.sided")
+  out <- compute_runs_statistics(c(1, 0, -1, -1, 2), "two.sided")
   expect_identical(out$retained, c(TRUE, FALSE, TRUE, TRUE, TRUE))
   expect_identical(out$signs, c(1L, -1L, -1L, 1L))
   expect_identical(out$zero, 1L)
@@ -148,12 +132,11 @@ test_that("compute_runs_statistics returns the retained signs it counted", {
   expect_identical(out$runs, 3L)
 })
 
-
 test_that("runs_test can order residuals by fitted values", {
-  out <- runs_test(count_fit, order_by = "fitted")
-  residual_values <- residuals(count_fit, type = "working")
-  natural <- order(count_fit$id, count_fit$repeated, seq_along(residual_values))
-  ord <- natural[order(count_fit$fitted.values[natural], seq_along(natural))]
+  out <- runs_test(fit_geewa_pois_exch, order_by = "fitted")
+  residual_values <- residuals(fit_geewa_pois_exch, type = "working")
+  natural <- order(fit_geewa_pois_exch$id, fit_geewa_pois_exch$repeated, seq_along(residual_values))
+  ord <- natural[order(fit_geewa_pois_exch$fitted.values[natural], seq_along(natural))]
   signs <- sign(residual_values[ord])
 
   expect_identical(out$order_by, "fitted values")
@@ -162,12 +145,11 @@ test_that("runs_test can order residuals by fitted values", {
   expect_identical(out$negative, as.integer(sum(signs < 0)))
 })
 
-
 test_that("runs_test can order residuals by a model-matrix covariate", {
-  out <- runs_test(count_fit, order_by = "lnage")
-  residual_values <- residuals(count_fit, type = "working")
-  natural <- order(count_fit$id, count_fit$repeated, seq_along(residual_values))
-  key <- count_fit$x[, "lnage"]
+  out <- runs_test(fit_geewa_pois_exch, order_by = "lnage")
+  residual_values <- residuals(fit_geewa_pois_exch, type = "working")
+  natural <- order(fit_geewa_pois_exch$id, fit_geewa_pois_exch$repeated, seq_along(residual_values))
+  key <- fit_geewa_pois_exch$x[, "lnage"]
   ord <- natural[order(key[natural], seq_along(natural))]
   signs <- sign(residual_values[ord])
 
@@ -175,12 +157,7 @@ test_that("runs_test can order residuals by a model-matrix covariate", {
   expect_identical(out$runs, as.integer(count_runs(signs)))
 })
 
-
 test_that("order_by can name a covariate outside the model matrix", {
-  ## 'visit' supplies the repeated index and is not a model-matrix column, so
-  ## it has to be resolved from the data used to fit the model. With
-  ## repeated = visit the resolved ordering must agree with the stored
-  ## repeated index.
   fit <- geewa(
     formula = seizures ~ treatment + lnbaseline + lnage,
     data = epilepsy,
@@ -200,12 +177,11 @@ test_that("order_by can name a covariate outside the model matrix", {
   expect_identical(unname(out$statistic), unname(reference$statistic))
 })
 
-
 test_that("runs_test accepts a supplied ordering vector", {
-  key <- rep(c(2, 1, 3), length.out = count_fit$obs_no)
-  out <- runs_test(count_fit, order_by = key)
-  residual_values <- residuals(count_fit, type = "working")
-  natural <- order(count_fit$id, count_fit$repeated, seq_along(residual_values))
+  key <- rep(c(2, 1, 3), length.out = fit_geewa_pois_exch$obs_no)
+  out <- runs_test(fit_geewa_pois_exch, order_by = key)
+  residual_values <- residuals(fit_geewa_pois_exch, type = "working")
+  natural <- order(fit_geewa_pois_exch$id, fit_geewa_pois_exch$repeated, seq_along(residual_values))
   ord <- natural[order(key[natural], seq_along(natural))]
   signs <- sign(residual_values[ord])
 
@@ -213,9 +189,8 @@ test_that("runs_test accepts a supplied ordering vector", {
   expect_identical(out$runs, as.integer(count_runs(signs)))
 })
 
-
 test_that("zero residuals are omitted from the sign sequence", {
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   fit$residuals <- rep(c(1, 0, -1, 0), length.out = fit$obs_no)
   out <- runs_test(fit)
 
@@ -224,12 +199,12 @@ test_that("zero residuals are omitted from the sign sequence", {
   expect_identical(out$positive + out$negative, out$nonzero)
 })
 
-
 test_that("the result carries the tested sign sequence", {
-  out <- runs_test(count_fit)
+  out <- runs_test(fit_geewa_pois_exch)
 
   expect_s3_class(out, "geer_runs_test")
   expect_s3_class(out, "htest")
+  expect_s3_class(out, "geer_htest")
   expect_true(out$natural_order)
   expect_length(out$signs, out$nonzero)
   expect_length(out$cluster, out$nonzero)
@@ -242,94 +217,40 @@ test_that("the result carries the tested sign sequence", {
   )
   expect_identical(
     as.numeric(sort(unique(out$cluster))),
-    as.numeric(sort(unique(count_fit$id)))
+    as.numeric(sort(unique(fit_geewa_pois_exch$id)))
   )
 })
-
-
-test_that("plot.geer_runs_test accepts point arguments", {
-  out <- runs_test(count_fit)
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
-
-  expect_silent(plot(out, col = "black", pch = 20L, cex = 0.5))
-  expect_silent(plot(out, run_colors = c("red", "blue", "green")))
-  expect_error(
-    plot(out, run_colors = character(0)),
-    "must contain at least three colors"
-  )
-  expect_error(
-    plot(out, run_colors = c("red", "blue")),
-    "must contain at least three colors"
-  )
-  ## 'col' overrides run coloring, so the minimum does not apply.
-  expect_silent(plot(out, col = "black", run_colors = "red"))
-})
-
 
 test_that("natural_order reports the ordering obtained, not the one requested", {
-  ## An ordering with a single distinct value is entirely tied, so the
-  ## tie-break returns the natural order and the flag must say so.
-  tied <- runs_test(count_fit, order_by = rep(1, count_fit$obs_no))
-  natural <- runs_test(count_fit)
+  tied <- runs_test(fit_geewa_pois_exch, order_by = rep(1, fit_geewa_pois_exch$obs_no))
+  natural <- runs_test(fit_geewa_pois_exch)
 
   expect_true(tied$natural_order)
   expect_identical(tied$signs, natural$signs)
   expect_identical(tied$runs, natural$runs)
   expect_identical(tied$order_by, "supplied ordering vector")
 
-  ## An ordering that genuinely reorders the residuals must not.
-  expect_false(runs_test(count_fit, order_by = "fitted")$natural_order)
+  expect_false(runs_test(fit_geewa_pois_exch, order_by = "fitted")$natural_order)
 })
-
-
-test_that("plot.geer_runs_test guards cluster breaks and its input", {
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
-
-  by_fitted <- runs_test(count_fit, order_by = "fitted")
-  expect_false(by_fitted$natural_order)
-  expect_silent(plot(by_fitted))
-  ## Graphical parameters that the method also sets must reach plot.default
-  ## exactly once rather than colliding with the defaults.
-  expect_silent(plot(by_fitted, ylim = c(-2, 2)))
-  expect_silent(plot(by_fitted, yaxt = "s"))
-  expect_error(plot(by_fitted, type = "p"), "'type' must not be supplied")
-  expect_warning(
-    plot(by_fitted, cluster_breaks = TRUE),
-    "only interpretable under the natural"
-  )
-
-  natural <- runs_test(count_fit)
-  expect_error(
-    plot(natural, cluster_breaks = "yes"),
-    "single non-missing logical"
-  )
-
-  stripped <- natural
-  stripped$signs <- NULL
-  expect_error(plot(stripped), "tested sign sequence")
-})
-
 
 test_that("runs_test validates ordering and residual sign requirements", {
   expect_error(
-    runs_test(count_fit, order_by = "not-a-variable"),
+    runs_test(fit_geewa_pois_exch, order_by = "not-a-variable"),
     "unknown 'order_by'"
   )
   expect_error(
-    runs_test(count_fit, order_by = seq_len(count_fit$obs_no - 1L)),
+    runs_test(fit_geewa_pois_exch, order_by = seq_len(fit_geewa_pois_exch$obs_no - 1L)),
     "one value per fitted observation"
   )
 
-  bad_order <- seq_len(count_fit$obs_no)
+  bad_order <- seq_len(fit_geewa_pois_exch$obs_no)
   bad_order[1] <- NA_real_
   expect_error(
-    runs_test(count_fit, order_by = bad_order),
+    runs_test(fit_geewa_pois_exch, order_by = bad_order),
     "finite and non-missing"
   )
 
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   fit$residuals <- rep(1, fit$obs_no)
   expect_error(
     runs_test(fit),
@@ -337,19 +258,17 @@ test_that("runs_test validates ordering and residual sign requirements", {
   )
 })
 
-
 test_that("large sign counts keep the normal approximation", {
-  out <- runs_test(count_fit)
+  out <- runs_test(fit_geewa_pois_exch)
   expect_equal(
     out$p.value,
-    2 * stats::pnorm(-abs(unname(out$statistic))),
+    2 * pnorm(-abs(unname(out$statistic))),
     tolerance = 1e-12
   )
 })
 
-
 test_that("runs_test warns when the normal approximation is based on small sign counts", {
-  fit <- count_fit
+  fit <- fit_geewa_pois_exch
   fit$residuals <- c(
     rep(1, 10),
     rep(-1, 10),
@@ -362,27 +281,4 @@ test_that("runs_test warns when the normal approximation is based on small sign 
   )
   expect_identical(out$positive, 10L)
   expect_identical(out$negative, 10L)
-})
-
-
-test_that("plot.geer_runs_test returns the plotted sequence invisibly", {
-  out <- runs_test(count_fit)
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
-
-  plotted <- plot(out)
-  expect_s3_class(plotted, "data.frame")
-  expect_identical(nrow(plotted), out$nonzero)
-  expect_identical(names(plotted), c("position", "sign", "run", "cluster"))
-  expect_identical(plotted$sign, out$signs)
-  expect_identical(plotted$position, seq_len(out$nonzero))
-  ## Runs are numbered consecutively and there are exactly T of them.
-  expect_identical(max(plotted$run), out$runs)
-  expect_identical(plotted$run[[1L]], 1L)
-  expect_true(all(diff(plotted$run) %in% c(0L, 1L)))
-  ## A color change happens exactly where the sign changes.
-  expect_identical(
-    which(diff(plotted$run) == 1L),
-    which(plotted$sign[-1L] != plotted$sign[-nrow(plotted)])
-  )
 })

@@ -1,10 +1,8 @@
-testthat::local_edition(3)
-
 cerebrovascular <- test_data$cerebrovascular
-skip_if_no_emmeans <- function() {
-  testthat::skip_if_not_installed("emmeans", minimum_version = "2.0.0")
-}
 
+skip_if_no_emmeans <- function() {
+  skip_if_not_installed("emmeans", minimum_version = "2.0.0")
+}
 
 test_that("emmeans support methods are available for geer objects", {
   skip_if_no_emmeans()
@@ -16,7 +14,6 @@ test_that("emmeans support methods are available for geer objects", {
   )
 })
 
-
 test_that("emmeans recovers the predictor data for geer fits", {
   skip_if_no_emmeans()
   rec <- emmeans::recover_data(fit_geewa_bin_exch)
@@ -25,13 +22,12 @@ test_that("emmeans recovers the predictor data for geer fits", {
   expect_false("ecg" %in% names(rec))
 })
 
-
 test_that("emmeans works for geer objects on link and response scales", {
   skip_if_no_emmeans()
-  emm_link <- emmeans::emmeans(fit_geewa_bin_exch, ~ treatment)
+  emm_link <- emmeans::emmeans(fit_geewa_bin_exch, ~treatment)
   emm_resp <- emmeans::emmeans(
     fit_geewa_bin_exch,
-    ~ treatment,
+    ~treatment,
     type = "response"
   )
   link_df <- as.data.frame(emm_link)
@@ -44,7 +40,6 @@ test_that("emmeans works for geer objects on link and response scales", {
   expect_true(all(is.finite(resp_df$SE)))
   expect_true(all(is.infinite(link_df$df)))
 })
-
 
 test_that("naive emmeans from an independence geer fit match glm results", {
   skip_if_no_emmeans()
@@ -63,32 +58,58 @@ test_that("naive emmeans from an independence geer fit match glm results", {
   )
   emm_geer <- emmeans::emmeans(
     fit_geer,
-    ~ treatment,
+    ~treatment,
     vcov.method = "naive"
   )
-  emm_glm <- emmeans::emmeans(fit_glm, ~ treatment)
+  emm_glm <- emmeans::emmeans(fit_glm, ~treatment)
   geer_df <- as.data.frame(emm_geer)
   glm_df <- as.data.frame(emm_glm)
   expect_equal(geer_df$emmean, glm_df$emmean, tolerance = 1e-6)
   expect_equal(geer_df$SE, glm_df$SE, tolerance = 1e-6)
 })
 
-
 test_that("emmeans support honors covariance aliases and custom matrices", {
   skip_if_no_emmeans()
   custom_vcov <- vcov(fit_geewa_bin_exch, cov_type = "naive")
   emm_custom_method <- emmeans::emmeans(
     fit_geewa_bin_exch,
-    ~ treatment,
+    ~treatment,
     vcov.method = custom_vcov
   )
   emm_custom_dot <- emmeans::emmeans(
     fit_geewa_bin_exch,
-    ~ treatment,
+    ~treatment,
     vcov. = custom_vcov
   )
   custom_method_df <- as.data.frame(emm_custom_method)
   custom_dot_df <- as.data.frame(emm_custom_dot)
   expect_equal(custom_method_df$emmean, custom_dot_df$emmean, tolerance = 1e-10)
   expect_equal(custom_method_df$SE, custom_dot_df$SE, tolerance = 1e-10)
+})
+
+test_that("emmeans weights use the prior weights in the original row order", {
+  skip_if_no_emmeans()
+  dat <- cerebrovascular
+  dat$w <- ifelse(dat$period == 1, 1, 3) * ifelse(dat$treatment == "active", 2, 1)
+  shuffled <- withr::with_seed(3, dat[sample(nrow(dat)), ])
+  fit_weighted <- function(data) {
+    geewa_binary(ecg ~ treatment + factor(period),
+      data = data, id = id, repeated = period, weights = w, orstr = "independence"
+    )
+  }
+  fit_sorted <- fit_weighted(dat)
+  fit_shuffled <- fit_weighted(shuffled)
+  for (weights in c("cells", "proportional")) {
+    expect_equal(
+      as.data.frame(emmeans::emmeans(fit_shuffled, ~treatment, weights = weights)),
+      as.data.frame(emmeans::emmeans(fit_sorted, ~treatment, weights = weights)),
+      tolerance = 1e-10, label = weights
+    )
+  }
+  unordered <- fit_shuffled
+  unordered$row_order <- NULL
+  expect_false(isTRUE(all.equal(
+    as.data.frame(emmeans::emmeans(unordered, ~treatment, weights = "cells"))$emmean,
+    as.data.frame(emmeans::emmeans(fit_sorted, ~treatment, weights = "cells"))$emmean
+  )))
 })

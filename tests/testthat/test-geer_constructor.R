@@ -1,5 +1,3 @@
-testthat::local_edition(3)
-
 make_valid_geer_input <- function() {
   dat <- data.frame(
     y = c(1, 2, 3),
@@ -9,7 +7,7 @@ make_valid_geer_input <- function() {
     repeated = c(1, 2, 1)
   )
   form <- y ~ x1 + x2
-  xmat <- stats::model.matrix(form, dat)
+  xmat <- model.matrix(form, dat)
   beta <- c(`(Intercept)` = 0.2, x1 = 0.5, x2 = -0.1)
   fitted <- as.numeric(xmat %*% beta)
   resid <- dat$y - fitted
@@ -21,7 +19,7 @@ make_valid_geer_input <- function() {
     fitted.values = fitted,
     qr = qr(xmat),
     rank = ncol(xmat),
-    family = stats::gaussian(),
+    family = gaussian(),
     linear.predictors = fitted,
     iter = 3L,
     prior.weights = rep(1, nrow(dat)),
@@ -33,7 +31,7 @@ make_valid_geer_input <- function() {
     converged = TRUE,
     call = quote(geewa(formula = y ~ x1 + x2)),
     formula = form,
-    terms = stats::terms(form),
+    terms = terms(form),
     data = dat,
     offset = NULL,
     control = list(),
@@ -55,20 +53,18 @@ make_valid_geer_object <- function() {
   new_geer(make_valid_geer_input())
 }
 
-
-test_that("new_geer constructs a geer object from a valid list", {
-  stub <- unclass(fit_geewa_pois_indep)
-  expect_s3_class(new_geer(stub), "geer")
+test_that("new_geer and validate_geer accept real geewa fits", {
+  expect_s3_class(new_geer(unclass(fit_geewa_pois_indep)), "geer")
+  expect_s3_class(validate_geer(fit_geewa_pois_exch), "geer")
+  expect_equal(coef(validate_geer(fit_geewa_pois_exch)), coef(fit_geewa_pois_exch))
 })
-
 
 test_that("new_geer rejects non-list input and missing required components", {
   expect_error(new_geer(1), "'x' must be a list")
   x <- make_valid_geer_input()
   x <- x[setdiff(names(x), "phi")]
-  expect_error(new_geer(x), "Input is missing required components: phi")
+  expect_error(new_geer(x), "'x' is missing required component\\(s\\): phi")
 })
-
 
 test_that("new_geer adds geer class and fills optional defaults", {
   x <- make_valid_geer_input()
@@ -79,7 +75,6 @@ test_that("new_geer adds geer class and fills optional defaults", {
   expect_null(out$contrasts)
   expect_equal(out$xlevels, list())
 })
-
 
 test_that("new_geer preserves existing optional fields", {
   x <- make_valid_geer_input()
@@ -92,25 +87,21 @@ test_that("new_geer preserves existing optional fields", {
   expect_identical(out$xlevels, x$xlevels)
 })
 
-
 test_that("validate_geer accepts a valid geer object", {
   obj <- make_valid_geer_object()
   expect_identical(validate_geer(obj), obj)
 })
 
-
 test_that("validate_geer rejects non-list and unclassed inputs", {
   expect_error(validate_geer(1), "a 'geer' object must be a list")
-  expect_error(validate_geer(make_valid_geer_input()), "object must inherit from class 'geer'")
+  expect_error(validate_geer(make_valid_geer_input()), "'x' must be a 'geer' object")
 })
-
 
 test_that("validate_geer rejects missing required fields", {
   obj <- make_valid_geer_object()
   obj <- obj[setdiff(names(obj), "coefficients")]
-  expect_error(validate_geer(obj), "object must inherit from class 'geer'")
+  expect_error(validate_geer(obj), "'x' must be a 'geer' object")
 })
-
 
 test_that("validate_geer checks coefficients type, names, and x consistency", {
   obj <- make_valid_geer_object()
@@ -130,7 +121,6 @@ test_that("validate_geer checks coefficients type, names, and x consistency", {
   expect_error(validate_geer(obj), "column names of 'x' must match names of 'coefficients'")
 })
 
-
 test_that("validate_geer checks fitted values, residuals, id, y, and repeated alignment", {
   obj <- make_valid_geer_object()
   obj$fitted.values <- as.character(obj$fitted.values)
@@ -140,21 +130,20 @@ test_that("validate_geer checks fitted values, residuals, id, y, and repeated al
   expect_error(validate_geer(obj), "'residuals' must be numeric")
   obj <- make_valid_geer_object()
   obj$id <- obj$id[-1]
-  expect_error(validate_geer(obj), "length of 'id' must match number of observations")
+  expect_error(validate_geer(obj), "'id' must have one value per observation")
   obj <- make_valid_geer_object()
   obj$y <- obj$y[-1]
-  expect_error(validate_geer(obj), "response 'y' must match number of observations")
+  expect_error(validate_geer(obj), "'y' must have one value per observation")
   obj <- make_valid_geer_object()
   obj$obs_no <- 2L
   expect_error(validate_geer(obj), "'obs_no' is inconsistent with observation-level components")
   obj <- make_valid_geer_object()
   obj$obs_no <- 2.5
-  expect_error(validate_geer(obj), "'obs_no' must be a single nonnegative integer")
+  expect_error(validate_geer(obj), "'obs_no' must be a non-negative integer")
   obj <- make_valid_geer_object()
   obj$repeated <- obj$repeated[-1]
-  expect_error(validate_geer(obj), "'repeated' must match number of observations")
+  expect_error(validate_geer(obj), "'repeated' must have one value per observation")
 })
-
 
 test_that("validate_geer checks terms, call, and formula components", {
   obj <- make_valid_geer_object()
@@ -174,22 +163,20 @@ test_that("validate_geer checks terms, call, and formula components", {
   expect_error(validate_geer(obj), "'formula' must be a formula object")
 })
 
-
 test_that("validate_geer checks family structure", {
   obj <- make_valid_geer_object()
   obj$family <- 1
   expect_error(validate_geer(obj), "'family' must be a family object")
   obj <- make_valid_geer_object()
   obj$family$family <- NULL
-  expect_error(validate_geer(obj), "'family\\$family' must be a length-1 character value")
+  expect_error(validate_geer(obj), "'family\\$family' must be a character string")
   obj <- make_valid_geer_object()
   obj$family$link <- NULL
-  expect_error(validate_geer(obj), "'family\\$link' must be a length-1 character value")
+  expect_error(validate_geer(obj), "'family\\$link' must be a character string")
   obj <- make_valid_geer_object()
   obj$family$linkinv <- NULL
   expect_error(validate_geer(obj), "'family\\$linkinv' must be a function")
 })
-
 
 test_that("validate_geer checks alpha, association_structure, method, and df.residual", {
   obj <- make_valid_geer_object()
@@ -197,28 +184,26 @@ test_that("validate_geer checks alpha, association_structure, method, and df.res
   expect_error(validate_geer(obj), "'alpha' must be numeric")
   obj <- make_valid_geer_object()
   obj$association_structure <- c("a", "b")
-  expect_error(validate_geer(obj), "'association_structure' must be a length-1 character value")
+  expect_error(validate_geer(obj), "'association_structure' must be a character string")
   obj <- make_valid_geer_object()
   obj$method <- c("gee", "other")
-  expect_error(validate_geer(obj), "'method' must be a length-1 character value")
+  expect_error(validate_geer(obj), "'method' must be a character string")
   obj <- make_valid_geer_object()
   obj$df.residual <- c(1, 2)
-  expect_error(validate_geer(obj), "'df.residual' must be a single finite numeric value")
+  expect_error(validate_geer(obj), "'df.residual' must be a finite number")
 })
-
 
 test_that("validate_geer checks scalar metadata: rank, converged, phi", {
   obj <- make_valid_geer_object()
   obj$rank <- -1
-  expect_error(validate_geer(obj), "'rank' must be a single nonnegative integer")
+  expect_error(validate_geer(obj), "'rank' must be a non-negative integer")
   obj <- make_valid_geer_object()
   obj$converged <- NA
-  expect_error(validate_geer(obj), "'converged' must be a single non-missing logical value")
+  expect_error(validate_geer(obj), "'converged' must be TRUE or FALSE")
   obj <- make_valid_geer_object()
   obj$phi <- NA_real_
-  expect_error(validate_geer(obj), "'phi' must be a single finite numeric value")
+  expect_error(validate_geer(obj), "'phi' must be a finite number")
 })
-
 
 test_that("validate_geer checks xlevels and contrasts", {
   obj <- make_valid_geer_object()
@@ -235,26 +220,24 @@ test_that("validate_geer checks xlevels and contrasts", {
   expect_error(validate_geer(obj), "'contrasts' must be a named list")
 })
 
-
 test_that("validate_geer checks cluster counts and size metadata", {
   obj <- make_valid_geer_object()
   obj$clusters_no <- 0
-  expect_error(validate_geer(obj), "'clusters_no' must be a single positive integer")
+  expect_error(validate_geer(obj), "'clusters_no' must be a positive integer")
   obj <- make_valid_geer_object()
   obj$clusters_no <- 3L
   expect_error(validate_geer(obj), "'clusters_no' is inconsistent with 'id'")
   obj <- make_valid_geer_object()
   obj$min_cluster_size <- 0
-  expect_error(validate_geer(obj), "'min_cluster_size' must be a single positive integer")
+  expect_error(validate_geer(obj), "'min_cluster_size' must be a positive integer")
   obj <- make_valid_geer_object()
   obj$max_cluster_size <- 0
-  expect_error(validate_geer(obj), "'max_cluster_size' must be a single positive integer")
+  expect_error(validate_geer(obj), "'max_cluster_size' must be a positive integer")
   obj <- make_valid_geer_object()
   obj$min_cluster_size <- 3L
   obj$max_cluster_size <- 2L
   expect_error(validate_geer(obj), "'min_cluster_size' cannot exceed 'max_cluster_size'")
 })
-
 
 test_that("validate_geer checks covariance matrix type, dimensions, and dimnames", {
   obj <- make_valid_geer_object()
@@ -262,7 +245,10 @@ test_that("validate_geer checks covariance matrix type, dimensions, and dimnames
   expect_error(validate_geer(obj), "'naive_covariance' must be a numeric matrix")
   obj <- make_valid_geer_object()
   obj$robust_covariance <- diag(2)
-  expect_error(validate_geer(obj), "'robust_covariance' must have dimensions compatible with 'coefficients'")
+  expect_error(
+    validate_geer(obj),
+    "'robust_covariance' must have dimensions compatible with 'coefficients'"
+  )
   obj <- make_valid_geer_object()
   V <- obj$bias_corrected_covariance
   rownames(V) <- NULL
@@ -272,9 +258,11 @@ test_that("validate_geer checks covariance matrix type, dimensions, and dimnames
   V <- obj$robust_covariance
   rownames(V) <- c("a", "b", "c")
   obj$robust_covariance <- V
-  expect_error(validate_geer(obj), "dimnames of 'robust_covariance' must match names of 'coefficients'")
+  expect_error(
+    validate_geer(obj),
+    "dimnames of 'robust_covariance' must match names of 'coefficients'"
+  )
 })
-
 
 test_that("validate_geer accepts and checks optional df_adjusted_covariance", {
   obj <- make_valid_geer_object()
@@ -283,5 +271,8 @@ test_that("validate_geer accepts and checks optional df_adjusted_covariance", {
   obj$df_adjusted_covariance <- V
   expect_identical(validate_geer(obj), obj)
   obj$df_adjusted_covariance <- diag(2)
-  expect_error(validate_geer(obj), "'df_adjusted_covariance' must have dimensions compatible with 'coefficients'")
+  expect_error(
+    validate_geer(obj),
+    "'df_adjusted_covariance' must have dimensions compatible with 'coefficients'"
+  )
 })

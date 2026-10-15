@@ -18,7 +18,7 @@ enum class LinkCode {
 
 inline LinkCode parse_link(const char* link) {
   if (link == nullptr) {
-    Rcpp::stop("Link must not be NULL.");
+    Rcpp::stop("'link' must not be NULL");
   }
   const std::string_view lk(link);
   if (lk == "logit")    return LinkCode::logit;
@@ -30,7 +30,7 @@ inline LinkCode parse_link(const char* link) {
   if (lk == "sqrt")     return LinkCode::sqrt;
   if (lk == "1/mu^2")   return LinkCode::inverse_mu_squared;
   if (lk == "inverse")  return LinkCode::inverse;
-  Rcpp::stop("Unsupported link: %s", link);
+  Rcpp::stop("unsupported link: %s", link);
 }
 
 #endif

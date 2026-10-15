@@ -11,7 +11,7 @@ A data frame with 246 rows and 6 columns:
   \item{time}{integer time identifier.}
   \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
     1 = low pain.}
-  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+  \item{treatment}{factor with levels \code{placebo} and \code{active}.}
   \item{gender}{factor with levels \code{female} and \code{male}.}
   \item{age}{numeric age in years.}
 }
@@ -29,11 +29,11 @@ cholecystectomy.
 }
 \details{
 Forty-one subjects were enrolled in a randomized clinical trial of shoulder
-pain after laparoscopic cholecystectomy, yielding 246 observations
-(six per subject). Subjects were assigned to either the active group (with
-abdominal suction) or the placebo group (without abdominal suction).
-Shoulder pain was assessed on six occasions: morning and afternoon on each
-of the first three postoperative days.
+pain after laparoscopic cholecystectomy (Jorgensen et al., 1995), yielding
+246 observations (six per subject). Subjects were assigned to either the
+active group (with abdominal suction) or the placebo group (without abdominal
+suction). Shoulder pain was assessed on six occasions: morning and afternoon
+on each of the first three postoperative days.
 }
 \examples{
 data("cholecystectomy", package = "geer")

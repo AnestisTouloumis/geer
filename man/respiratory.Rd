@@ -11,7 +11,7 @@ A data frame with 444 rows and 8 columns:
   \item{visit}{integer follow-up visit identifier.}
   \item{status}{binary indicator of respiratory status, 0 = poor and
     1 = good.}
-  \item{treatment}{factor with levels \code{active} and \code{placebo}.}
+  \item{treatment}{factor with levels \code{placebo} and \code{active}.}
   \item{baseline}{binary indicator of baseline respiratory status,
     0 = poor and 1 = good.}
   \item{age}{numeric age in years recorded at baseline.}

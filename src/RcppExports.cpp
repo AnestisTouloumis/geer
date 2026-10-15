@@ -52,9 +52,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// estimating_equations_gee_cc
-arma::vec estimating_equations_gee_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double phi);
-RcppExport SEXP _geer_estimating_equations_gee_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
+// get_estimating_equations_cc
+arma::vec get_estimating_equations_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, const arma::vec& mu_vector, const arma::vec& eta_vector, const char* correlation_structure, const arma::vec& alpha_vector, const double phi);
+RcppExport SEXP _geer_get_estimating_equations_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP phiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -70,13 +70,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const double >::type phi(phiSEXP);
-    rcpp_result_gen = Rcpp::wrap(estimating_equations_gee_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
+    rcpp_result_gen = Rcpp::wrap(get_estimating_equations_cc(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi));
     return rcpp_result_gen;
 END_RCPP
 }
-// estimating_equations_gee_or
-arma::vec estimating_equations_gee_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
-RcppExport SEXP _geer_estimating_equations_gee_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
+// get_estimating_equations_or
+arma::vec get_estimating_equations_or(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const arma::vec& mu_vector, const arma::vec& eta_vector, const arma::vec& alpha_vector);
+RcppExport SEXP _geer_get_estimating_equations_or(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP mu_vectorSEXP, SEXP eta_vectorSEXP, SEXP alpha_vectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,7 +89,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type mu_vector(mu_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type eta_vector(eta_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(estimating_equations_gee_or(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector));
+    rcpp_result_gen = Rcpp::wrap(get_estimating_equations_or(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -219,7 +219,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_marginalized_odds_ratios
-Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double adding_constant, const Rcpp::String& or_structure);
+Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double adding_constant, const char* or_structure);
 RcppExport SEXP _geer_get_marginalized_odds_ratios(SEXP response_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP adding_constantSEXP, SEXP or_structureSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -229,7 +229,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type repeated_vector(repeated_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
     Rcpp::traits::input_parameter< const double >::type adding_constant(adding_constantSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::String& >::type or_structure(or_structureSEXP);
+    Rcpp::traits::input_parameter< const char* >::type or_structure(or_structureSEXP);
     rcpp_result_gen = Rcpp::wrap(get_marginalized_odds_ratios(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure));
     return rcpp_result_gen;
 END_RCPP
@@ -251,8 +251,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_covariance_matrices_cc", (DL_FUNC) &_geer_get_covariance_matrices_cc, 12},
     {"_geer_get_covariance_matrices_or", (DL_FUNC) &_geer_get_covariance_matrices_or, 9},
-    {"_geer_estimating_equations_gee_cc", (DL_FUNC) &_geer_estimating_equations_gee_cc, 12},
-    {"_geer_estimating_equations_gee_or", (DL_FUNC) &_geer_estimating_equations_gee_or, 9},
+    {"_geer_get_estimating_equations_cc", (DL_FUNC) &_geer_get_estimating_equations_cc, 12},
+    {"_geer_get_estimating_equations_or", (DL_FUNC) &_geer_get_estimating_equations_or, 9},
     {"_geer_fit_geesolver_cc", (DL_FUNC) &_geer_fit_geesolver_cc, 23},
     {"_geer_fit_geesolver_or", (DL_FUNC) &_geer_fit_geesolver_or, 15},
     {"_geer_get_information_matrix_independence", (DL_FUNC) &_geer_get_information_matrix_independence, 8},

@@ -14,59 +14,41 @@
 )
 }
 \arguments{
-\item{x}{an object of class \code{"geer"}.}
+\item{x}{a fitted model object of class \code{"geer"}.}
 
-\item{conf.int}{logical indicating whether to append confidence interval
-columns \code{conf.low} and \code{conf.high}. Defaults to
-\code{FALSE}.}
+\item{conf.int}{logical indicating whether Wald confidence limits are
+included. Defaults to \code{FALSE}.}
 
 \item{conf.level}{a single number strictly between 0 and 1 specifying the
-confidence level when \code{conf.int = TRUE}. Defaults to \code{0.95}.}
+confidence level. Defaults to \code{0.95}.}
 
-\item{exponentiate}{logical indicating whether to exponentiate coefficient
-estimates and confidence limits. This is often useful for models with a
-log, logit, or complementary log-log link. Standard errors and Wald
-z-statistics are \emph{not} transformed. Defaults to \code{FALSE}.}
+\item{exponentiate}{logical indicating whether the estimates and confidence
+limits are exponentiated, for example to obtain odds ratios. Defaults to
+\code{FALSE}.}
 
-\item{cov_type}{character string specifying the covariance estimator used to
-compute standard errors and Wald z-statistics. Options are
+\item{cov_type}{character string specifying the covariance matrix estimator
+used for the standard errors, z-statistics, and confidence intervals:
 \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, and \code{"naive"} (model-based). See
-\code{\link{vcov.geer}} for details. Defaults to \code{"bias-corrected"}.}
+\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
+Defaults to \code{"bias-corrected"}.}
 
-\item{...}{additional arguments passed to or from other methods. Currently
-unused.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
-A data frame with one row per regression coefficient and columns as
-described in the Details section. When \pkg{tibble} is available, the result
-has class \code{c("tbl_df", "tbl", "data.frame")}. Otherwise, a plain
-\code{data.frame} is returned.
+A data frame, a tibble if \pkg{tibble} is installed, with columns:
+\item{term}{the name of the coefficient.}
+\item{estimate}{the estimate, exponentiated if \code{exponentiate = TRUE}.}
+\item{std.error}{the standard error, on the original scale.}
+\item{statistic}{the Wald z-statistic, on the original scale.}
+\item{p.value}{the two-sided p-value.}
+\item{conf.low, conf.high}{the confidence limits, if
+  \code{conf.int = TRUE}.}
 }
 \description{
-Summarizes a fitted \code{geer} object at the coefficient level, returning
-one row per regression term in a tidy data frame.
-}
-\details{
-The returned data frame contains the following columns:
-\describe{
-  \item{\code{term}}{name of the regression coefficient.}
-  \item{\code{estimate}}{point estimate, or the exponentiated point estimate
-  when \code{exponentiate = TRUE}.}
-  \item{\code{std.error}}{standard error derived from
-  \code{vcov(x, cov_type = cov_type)}.}
-  \item{\code{statistic}}{Wald z-statistic, computed as the coefficient
-  estimate divided by its standard error. \code{NA} is reported when the
-  standard error is not positive.}
-  \item{\code{p.value}}{two-sided p-value from the standard normal
-  distribution.}
-  \item{\code{conf.low}, \code{conf.high}}{lower and upper Wald confidence
-  limits. These columns are included only when \code{conf.int = TRUE}.}
-}
-
-When \code{exponentiate = TRUE}, only \code{estimate}, \code{conf.low}, and
-\code{conf.high} are exponentiated. The columns \code{std.error} and
-\code{statistic} remain on the original scale.
+Summarizes the regression coefficients of a fitted \code{geer} object in a
+data frame with one row per coefficient, following the conventions of
+\pkg{broom} (Robinson, Hayes and Couch, 2024).
 }
 \examples{
 data("epilepsy", package = "geer")
@@ -75,31 +57,21 @@ fit <- geewa(
   family = poisson(link = "log"),
   data = epilepsy,
   id = id,
-  corstr = "exchangeable",
-  method = "gee"
+  repeated = visit,
+  corstr = "exchangeable"
 )
 tidy(fit)
-tidy(fit, conf.int = TRUE)
 tidy(fit, conf.int = TRUE, exponentiate = TRUE)
 tidy(fit, cov_type = "robust")
-
-data("cerebrovascular", package = "geer")
-fit_bin <- geewa_binary(
-  formula = ecg ~ treatment + factor(period),
-  link = "logit",
-  data = cerebrovascular,
-  id = id,
-  orstr = "exchangeable"
-)
-tidy(fit_bin, conf.int = TRUE, conf.level = 0.90, exponentiate = TRUE)
 
 }
 \references{
 Robinson, D., Hayes, A. and Couch, S. (2024) \emph{broom: Convert
-Statistical Objects into Tidy Tibbles}. \url{https://broom.tidymodels.org/}
+Statistical Objects into Tidy Tibbles}. R package.
+\url{https://broom.tidymodels.org/}
 }
 \seealso{
 \code{\link{glance.geer}}, \code{\link{vcov.geer}},
-\code{\link{confint.geer}}, \code{\link{geewa}},
-\code{\link{geewa_binary}}.
+  \code{\link{confint.geer}}, \code{\link{geewa}},
+  \code{\link{geewa_binary}}.
 }

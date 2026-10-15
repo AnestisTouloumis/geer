@@ -1,7 +1,6 @@
-testthat::local_edition(3)
-testthat::skip_on_cran()
+skip_on_cran()
 
-data(epilepsy, package = "geer")
+epilepsy <- test_data$epilepsy
 
 fit_full <- geewa(
   seizures ~ treatment + lnbaseline + lnage,
@@ -24,7 +23,6 @@ test_that("core printed outputs remain stable", {
     print(anova(fit_full, test = "wald", cov_type = "robust"))
   )
 })
-
 
 test_that("stepwise printed outputs remain stable", {
   expect_snapshot_output(

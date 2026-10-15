@@ -1,9 +1,9 @@
+#include "cluster_utils.h"
+#include "covariance_matrices.h"
 #include "link_functions.h"
+#include "method_codes.h"
 #include "utils.h"
 #include "working_covariance_or.h"
-#include "covariance_matrices.h"
-#include "cluster_utils.h"
-#include "method_codes.h"
 #include <algorithm>
 #include <cmath>
 #include <new>
@@ -31,7 +31,7 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
   const arma::uword repeated_max = static_cast<arma::uword>(arma::max(repeated_vector));
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link_code, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
@@ -59,13 +59,14 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(first_row, last_row);
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("update_beta_gee_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("update_beta_gee_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   symmetrize_if_close(information_matrix, 1e-10);
   return beta_vector +
-    solve_chol_or_lu_vec(information_matrix, u_vector,
-        "update_beta_gee_or: naive information matrix");
+         solve_chol_or_lu_vec(information_matrix, u_vector,
+                              "update_beta_gee_or: naive information matrix");
 }
 //==============================================================================
 
@@ -88,9 +89,9 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat lambda_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link_code, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec delta_star_vector =
-    geer::link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
+    link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
@@ -133,7 +134,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
       u_vector += u_vector_i;
       weights_matrix_sq_inverse_i = arma::diagmat(1.0 / arma::sqrt(weights_vector_i));
       v_matrix_tilde_inverse_i = v_matrix_inverse_i * weights_matrix_sq_inverse_i;
-      g_matrix_i = get_g_matrix(mu_vector_i, odds_ratios_vector_i);
+      g_matrix_i = get_g_matrix_or(mu_vector_i, odds_ratios_vector_i);
       identity_matrix_i = arma::eye(cluster_size, cluster_size);
       vecdiag_matrix_delta_star_matrix_i =
         vecdiag_right_diag(delta_star_vector.subvec(first_row, last_row));
@@ -148,7 +149,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
         ) +
           arma::kron(v_matrix_tilde_inverse_mu_vector_i, identity_matrix_i)) *
           weights_matrix_sq_inverse_i;
-      add_kron_self_t_s_d(
+      add_kronecker_self_t_s_d(
         lambda_matrix,
         d_matrix_i,
         arma::kron(v_matrix_tilde_inverse_mu_vector_i, v_matrix_tilde_inverse_i.t()) -
@@ -156,12 +157,13 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
           arma::kron(v_matrix_tilde_inverse_mu_vector_i, v_matrix_tilde_inverse_i) +
           h_epsilon_trans_i * v_matrix_inverse_i +
           arma::kron(v_matrix_inverse_i, v_matrix_inverse_i) *
-          get_v_matrix_mu_or(mu_vector_i,
-                             odds_ratios_vector_i,
-                             weights_vector_i),
+            get_v_matrix_mu_or(mu_vector_i,
+                               odds_ratios_vector_i,
+                               weights_vector_i),
         -1.0);
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("update_beta_naive_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("update_beta_naive_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   symmetrize_if_close(information_matrix, 1e-10);
@@ -171,12 +173,12 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
       lambda_matrix.rows(r * params_no, (r + 1) * params_no - 1);
     const arma::mat solved_block =
       solve_chol_or_lu_mat(information_matrix, block,
-        "update_beta_naive_or: naive information matrix");
+                           "update_beta_naive_or: naive information matrix");
     lambda_vector[r] = 0.5 * arma::trace(solved_block);
   }
   const arma::vec update_step =
     solve_chol_or_lu_vec(information_matrix, u_vector + lambda_vector,
-        "update_beta_naive_or: naive information matrix");
+                         "update_beta_naive_or: naive information matrix");
   return beta_vector + update_step;
 }
 //==============================================================================
@@ -202,9 +204,9 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link_code, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec delta_star_vector =
-    geer::link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
+    link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
@@ -248,7 +250,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
       meat_matrix += u_vector_i * u_vector_i.t();
       weights_matrix_sq_inverse_i = arma::diagmat(1.0 / arma::sqrt(weights_vector_i));
       v_matrix_tilde_inverse_i = v_matrix_inverse_i * weights_matrix_sq_inverse_i;
-      g_matrix_i = get_g_matrix(mu_vector_i, odds_ratios_vector_i);
+      g_matrix_i = get_g_matrix_or(mu_vector_i, odds_ratios_vector_i);
       identity_matrix_i = arma::eye(cluster_size, cluster_size);
       vecdiag_matrix_delta_star_matrix_i =
         vecdiag_right_diag(delta_star_vector.subvec(first_row, last_row));
@@ -264,11 +266,11 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
           arma::kron(v_matrix_tilde_inverse_mu_vector_i, identity_matrix_i)) *
           weights_matrix_sq_inverse_i;
       partial_derivatives_matrix +=
-        kron_self_t_vec(
+        kronecker_self_t_vec(
           d_matrix_i,
           h_epsilon_trans_i * v_matrix_inverse_i * s_vector_i) *
         u_vector_i.t();
-      add_kron_self_t_s_d(
+      add_kronecker_self_t_s_d(
         second_derivatives_matrix,
         d_matrix_i,
         arma::kron(v_matrix_tilde_inverse_mu_vector_i, v_matrix_tilde_inverse_i.t()) -
@@ -276,20 +278,21 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
           arma::kron(v_matrix_tilde_inverse_mu_vector_i, v_matrix_tilde_inverse_i) -
           h_epsilon_trans_i * v_matrix_inverse_i +
           arma::kron(v_matrix_inverse_i, v_matrix_inverse_i) *
-          get_v_matrix_mu_or(mu_vector_i,
-                             odds_ratios_vector_i,
-                             weights_vector_i));
+            get_v_matrix_mu_or(mu_vector_i,
+                               odds_ratios_vector_i,
+                               weights_vector_i));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("update_beta_robust_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("update_beta_robust_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   symmetrize_if_close(information_matrix, 1e-10);
   const arma::mat naive_covariance_meat_matrix =
     solve_chol_or_lu_mat(information_matrix, meat_matrix,
-        "update_beta_robust_or: naive information matrix");
+                         "update_beta_robust_or: naive information matrix");
   const arma::mat robust_matrix =
     solve_chol_or_lu_mat(information_matrix, naive_covariance_meat_matrix.t(),
-        "update_beta_robust_or: naive information matrix");
+                         "update_beta_robust_or: naive information matrix");
   arma::vec lambda_vector(params_no, arma::fill::zeros);
   for (arma::uword r = 0; r < params_no; ++r) {
     const arma::mat first_block =
@@ -298,15 +301,104 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
       second_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
     const arma::mat solved_first_block =
       solve_chol_or_lu_mat(information_matrix, first_block,
-        "update_beta_robust_or: naive information matrix");
+                           "update_beta_robust_or: naive information matrix");
     lambda_vector[r] =
       -(arma::trace(solved_first_block) +
-      0.5 * arma::trace(robust_matrix * second_block));
+        0.5 * arma::trace(robust_matrix * second_block));
   }
   const arma::vec update_step =
     solve_chol_or_lu_vec(information_matrix, u_vector + lambda_vector,
-        "update_beta_robust_or: naive information matrix");
+                         "update_beta_robust_or: naive information matrix");
   return beta_vector + update_step;
+}
+//==============================================================================
+
+
+//============================ derivative of epsilon - OR ======================
+// Derivative of the matrix eps(mu) = diag(delta* % Z) + dZ/dmu, with
+// Z = V^{-1} s, with respect to the cluster means, for the marginalized
+// odds-ratio working model V = C V0(mu) C, C = W^{-1/2}.
+//
+// Notation (all m x m unless stated): P = V^{-1}, Vt = P C, Q = C P C,
+// q = Vt' s, h_c = G[c, ] - mu + e_c / 2 (columns of H), r_c = Vt h_c,
+// g_c = h_c' q. Since dV0/dmu_c = e_c h_c' + h_c e_c',
+//   dP/dmu_c = -(Vt_c r_c' + r_c Vt_c'),   dVt/dmu_c = (dP/dmu_c) C,
+//   eps_ab   = delta*_a Z_a 1(a = b) - P_ab - Vt_ab g_b - (Vt H)_ab q_b,
+//   dq_b/dmu_c = c_b (-q_c r_cb - g_c Vt_bc) - Vt_cb,
+// and the result differentiates each term of eps_ab by the product rule.
+// Returns an (m*m) x m matrix with entry (a * m + b, c) = d eps_ab / d mu_c.
+arma::mat get_epsilon_derivative_or(const arma::vec& mu_vector,
+                                    const arma::vec& s_vector,
+                                    const arma::mat& v_matrix_inverse,
+                                    const arma::vec& weights_sq_inverse_vector,
+                                    const arma::mat& g_matrix,
+                                    const arma::mat& g_matrix_mu,
+                                    const arma::vec& delta_star_vector,
+                                    const arma::vec& delta_tilde_star_vector,
+                                    const arma::mat& epsilon_matrix) {
+  const arma::uword m = mu_vector.n_elem;
+  arma::mat v_tilde = v_matrix_inverse;
+  v_tilde.each_row() %= weights_sq_inverse_vector.t();
+  const arma::vec q_vector = v_tilde.t() * s_vector;
+  const arma::vec z_vector = v_matrix_inverse * s_vector;
+  arma::mat h_matrix(m, m);
+  for (arma::uword b = 0; b < m; ++b) {
+    h_matrix.col(b) = g_matrix.row(b).t() - mu_vector;
+    h_matrix(b, b) += 0.5;
+  }
+  const arma::mat r_matrix = v_tilde * h_matrix;
+  const arma::vec g_vector = h_matrix.t() * q_vector;
+  // dP_ab / dmu_c
+  auto dp = [&](arma::uword a, arma::uword b, arma::uword c) {
+    return -(v_tilde(a, c) * r_matrix(b, c) + r_matrix(a, c) * v_tilde(b, c));
+  };
+  // dq_b / dmu_c
+  arma::mat dq_matrix(m, m);
+  for (arma::uword b = 0; b < m; ++b) {
+    for (arma::uword c = 0; c < m; ++c) {
+      dq_matrix(b, c) =
+        weights_sq_inverse_vector[b] *
+          (-q_vector[c] * r_matrix(b, c) - g_vector[c] * v_tilde(b, c)) -
+        v_tilde(c, b);
+    }
+  }
+  // dH_jb / dmu_c = dG[b, j] / dmu_c - 1(j = c), with dG[b, j] / dmu_c stored
+  // at row (b + j * m) of g_matrix_mu.
+  arma::mat dg_matrix(m, m);
+  for (arma::uword b = 0; b < m; ++b) {
+    for (arma::uword c = 0; c < m; ++c) {
+      double value = arma::dot(h_matrix.col(b), dq_matrix.col(c));
+      for (arma::uword j = 0; j < m; ++j) {
+        value += (g_matrix_mu(b + j * m, c) - (j == c ? 1.0 : 0.0)) * q_vector[j];
+      }
+      dg_matrix(b, c) = value;
+    }
+  }
+  arma::mat result(m * m, m, arma::fill::zeros);
+  for (arma::uword a = 0; a < m; ++a) {
+    for (arma::uword b = 0; b < m; ++b) {
+      for (arma::uword c = 0; c < m; ++c) {
+        const double dp_abc = dp(a, b, c);
+        double value = -dp_abc;
+        if (a == b) {
+          const double dz = epsilon_matrix(a, c) -
+                            (a == c ? delta_star_vector[a] * z_vector[a] : 0.0);
+          value += (a == c ? delta_tilde_star_vector[a] * z_vector[a] : 0.0) +
+                   delta_star_vector[a] * dz;
+        }
+        value -= dp_abc * weights_sq_inverse_vector[b] * g_vector[b] +
+                 v_tilde(a, b) * dg_matrix(b, c);
+        double d_vh = 0.0;
+        for (arma::uword j = 0; j < m; ++j) {
+          d_vh += dp(a, j, c) * weights_sq_inverse_vector[j] * h_matrix(j, b) +
+                  v_tilde(a, j) * (g_matrix_mu(b + j * m, c) - (j == c ? 1.0 : 0.0));
+        }
+        value -= d_vh * q_vector[b] + r_matrix(a, b) * dq_matrix(b, c);
+        result(a * m + b, c) = value;
+      }
+    }
+  }
+  return result;
 }
 //==============================================================================
 
@@ -331,33 +423,24 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
   arma::mat second_derivatives_matrix(params_no * params_no, params_no, arma::fill::zeros);
   arma::mat observed_fisher_info_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link_code, eta_vector);
-  const arma::vec mueta2_vector = geer::link_derivative_2(link_code, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
+  const arma::vec mueta2_vector = link_derivative_2(link_code, eta_vector);
   const arma::vec delta_star_vector =
     mueta2_vector / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::vec delta_tilde_star_vector =
-    (delta_vector % geer::link_derivative_3(link_code, eta_vector) - 2.0 * arma::square(mueta2_vector)) /
-      arma::pow(delta_vector, 4.0);
+    (delta_vector % link_derivative_3(link_code, eta_vector) - 2.0 * arma::square(mueta2_vector)) /
+    arma::pow(delta_vector, 4.0);
   arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_i;
   arma::mat delta_star_matrix_i;
-  arma::mat weights_matrix_sq_inverse_i;
   arma::mat w_matrix_i;
   arma::mat identity_matrix_i;
   arma::mat v_matrix_inverse_derivative_i;
   arma::mat epsilon_matrix_i;
   arma::mat observed_fisher_info_matrix_i;
-  arma::mat v_matrix_tilde_inverse_i;
-  arma::mat g_matrix_i;
-  arma::mat h_epsilon_matrix_trans_i;
-  arma::mat epsilon_matrix_transpose_derivative_term1_i;
-  arma::mat epsilon_matrix_transpose_derivative_term2_i;
-  arma::mat w_tilde_matrix_i;
-  arma::mat epsilon_matrix_transpose_derivative_term3_i;
-  arma::mat epsilon_matrix_transpose_derivative_term4_i;
   arma::mat epsilon_matrix_transpose_derivative_i;
   arma::mat second_derivatives_matrix_terms12_i;
   for (arma::uword cluster_index = 0;
@@ -387,7 +470,6 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       u_vector += u_vector_i;
       meat_matrix += u_vector_i * u_vector_i.t();
       delta_star_matrix_i = arma::diagmat(delta_star_vector.subvec(first_row, last_row));
-      weights_matrix_sq_inverse_i = arma::diagmat(1.0 / arma::sqrt(weights_vector_i));
       w_matrix_i = arma::diagmat(v_matrix_inverse_i * s_vector_i);
       identity_matrix_i = arma::eye(cluster_size, cluster_size);
       v_matrix_inverse_derivative_i =
@@ -404,63 +486,27 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
       partial_derivatives_matrix +=
         arma::vectorise(observed_fisher_info_matrix_i.t()) * u_vector_i.t();
-      v_matrix_tilde_inverse_i =
-        v_matrix_inverse_i * weights_matrix_sq_inverse_i;
-      const arma::vec v_matrix_tilde_inverse_trans_s_vector_i =
-        v_matrix_tilde_inverse_i.t() * s_vector_i;
-      const arma::vec v_matrix_tilde_inverse_mu_vector_i =
-        v_matrix_tilde_inverse_i * mu_vector_i;
-      epsilon_matrix_transpose_derivative_term1_i =
-        vecdiag_right(w_matrix_i * arma::diagmat(delta_tilde_star_vector.subvec(first_row, last_row))) +
-        arma::vectorise(v_matrix_tilde_inverse_i.t()) * v_matrix_tilde_inverse_trans_s_vector_i.t() -
-        arma::kron(v_matrix_tilde_inverse_mu_vector_i, v_matrix_tilde_inverse_i) +
-        arma::kron(v_matrix_tilde_inverse_i, v_matrix_tilde_inverse_trans_s_vector_i);
-      g_matrix_i = get_g_matrix(mu_vector_i, odds_ratios_vector_i);
-      epsilon_matrix_transpose_derivative_term2_i =
-        vecdiag_right(delta_star_matrix_i) +
-        (arma::vectorise(v_matrix_tilde_inverse_i.t()) * mu_vector_i.t() -
-        kronecker_left_identity_vecdiag(v_matrix_tilde_inverse_i) * g_matrix_i -
-        kronecker_left_identity_vecdiag(
-          v_matrix_tilde_inverse_i * (g_matrix_i.t() + identity_matrix_i)
-        )) *
-          weights_matrix_sq_inverse_i;
-      epsilon_matrix_transpose_derivative_term2_i =
-        epsilon_matrix_transpose_derivative_term2_i *
-        (epsilon_matrix_i - w_matrix_i * delta_star_matrix_i);
-      w_tilde_matrix_i = weights_matrix_sq_inverse_i * w_matrix_i;
-      h_epsilon_matrix_trans_i =
-        v_matrix_tilde_inverse_trans_s_vector_i * mu_vector_i.t() -
-        w_tilde_matrix_i * (identity_matrix_i + g_matrix_i) +
-        arma::diagmat(
-          -g_matrix_i * v_matrix_tilde_inverse_trans_s_vector_i +
-            arma::as_scalar(v_matrix_tilde_inverse_trans_s_vector_i.t() * mu_vector_i)
-        );
-      epsilon_matrix_transpose_derivative_term3_i =
-        arma::kron(v_matrix_tilde_inverse_mu_vector_i * s_vector_i.t(),
-                   weights_matrix_sq_inverse_i) +
-                     arma::kron(identity_matrix_i,
-                                weights_matrix_sq_inverse_i * h_epsilon_matrix_trans_i - identity_matrix_i);
-      epsilon_matrix_transpose_derivative_term3_i =
-        epsilon_matrix_transpose_derivative_term3_i * v_matrix_inverse_derivative_i;
-      epsilon_matrix_transpose_derivative_term4_i =
-        (arma::kron(v_matrix_tilde_inverse_i, w_tilde_matrix_i) +
-        kronecker_left_identity_vecdiag(v_matrix_tilde_inverse_i) *
-        kronecker_vector_identity(v_matrix_tilde_inverse_trans_s_vector_i).t()) *
-        get_g_matrix_mu(mu_vector_i, odds_ratios_vector_i);
+      // d eps_ab / d mu_c, stored at row (a * m + b), column c.
       epsilon_matrix_transpose_derivative_i =
-        epsilon_matrix_transpose_derivative_term1_i +
-        epsilon_matrix_transpose_derivative_term2_i +
-        epsilon_matrix_transpose_derivative_term3_i -
-        epsilon_matrix_transpose_derivative_term4_i;
+        get_epsilon_derivative_or(mu_vector_i,
+                                  s_vector_i,
+                                  v_matrix_inverse_i,
+                                  1.0 / arma::sqrt(weights_vector_i),
+                                  get_g_matrix_or(mu_vector_i, odds_ratios_vector_i),
+                                  get_g_matrix_mu_or(mu_vector_i, odds_ratios_vector_i),
+                                  delta_star_vector.subvec(first_row, last_row),
+                                  delta_tilde_star_vector.subvec(first_row, last_row),
+                                  epsilon_matrix_i);
       second_derivatives_matrix_terms12_i =
         kronecker_left_identity_vecdiag(epsilon_matrix_i * delta_star_matrix_i) +
         kronecker_identity_right_vecdiag(epsilon_matrix_i.t() * delta_star_matrix_i);
-      add_kron_self_t_s_d(second_derivatives_matrix,
+      add_kronecker_self_t_s_d(second_derivatives_matrix,
                           d_matrix_i,
                           second_derivatives_matrix_terms12_i +
                             epsilon_matrix_transpose_derivative_i);
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("update_beta_empirical_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("update_beta_empirical_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
@@ -470,15 +516,14 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
   // real singularity signal is a near-zero pivot on the diagonal of U.
   if (!arma::lu(lu_lower, lu_upper, permutation_matrix,
                 observed_fisher_info_matrix)) {
-    Rcpp::stop("update_beta_empirical_or: LU factorization failed -- "
-                 "observed Fisher information is singular or numerically unstable.");
+    Rcpp::stop("update_beta_empirical_or: LU factorization failed; the observed Fisher "
+               "information is singular or numerically unstable");
   }
   const arma::vec abs_pivots = arma::abs(lu_upper.diag());
   if (abs_pivots.min() <
     abs_pivots.max() * arma::datum::eps * static_cast<double>(params_no)) {
-    Rcpp::stop("update_beta_empirical_or: observed Fisher information matrix "
-                 "is numerically singular -- check for collinearity or near-zero "
-                 "cluster variances.");
+    Rcpp::stop("update_beta_empirical_or: the observed Fisher information matrix is numerically "
+               "singular; check for collinearity or near-zero cluster variances");
   }
   auto solve_observed_fisher_matrix = [&](const arma::mat& rhs_matrix) -> arma::mat {
     const arma::mat permuted_rhs = permutation_matrix * rhs_matrix;
@@ -487,14 +532,14 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                      arma::trimatl(lu_lower),
                      permuted_rhs,
                      arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: forward LU solve failed.");
+      Rcpp::stop("update_beta_empirical_or: forward LU solve failed");
     }
     arma::mat result;
     if (!arma::solve(result,
                      arma::trimatu(lu_upper),
                      lu_forward,
                      arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: backward LU solve failed.");
+      Rcpp::stop("update_beta_empirical_or: backward LU solve failed");
     }
     return result;
   };
@@ -505,14 +550,14 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                      arma::trimatl(lu_lower),
                      permuted_rhs,
                      arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: forward LU solve failed.");
+      Rcpp::stop("update_beta_empirical_or: forward LU solve failed");
     }
     arma::vec result;
     if (!arma::solve(result,
                      arma::trimatu(lu_upper),
                      lu_forward,
                      arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: backward LU solve failed.");
+      Rcpp::stop("update_beta_empirical_or: backward LU solve failed");
     }
     return result;
   };
@@ -527,7 +572,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       solve_observed_fisher_matrix(first_block);
     lambda_vector[r] =
       -(arma::trace(solved_first_block) +
-      0.5 * arma::trace(robust_matrix * second_block));
+        0.5 * arma::trace(robust_matrix * second_block));
   }
   const arma::vec update_step =
     solve_observed_fisher_vector(u_vector + lambda_vector);
@@ -557,9 +602,9 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
   arma::mat naive_matrix_inverse_derivative(params_no * params_no,
                                             params_no,
                                             arma::fill::zeros);
-  const arma::vec delta_vector = geer::link_derivative_1(link_code, eta_vector);
+  const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec delta_star_vector =
-    geer::link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
+    link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
@@ -589,7 +634,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
       d_matrix_trans_v_matrix_inverse_i = d_matrix_i.t() * v_matrix_inverse_i;
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(first_row, last_row);
-      add_kron_self_t_s_d(
+      add_kronecker_self_t_s_d(
         naive_matrix_inverse_derivative,
         d_matrix_i,
         kronecker_sum_same(
@@ -597,24 +642,25 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
         ) *
           vecdiag_matrix(cluster_size) -
           arma::kron(v_matrix_inverse_i, v_matrix_inverse_i) *
-          get_v_matrix_mu_or(mu_vector_i,
-                             odds_ratios_vector_i,
-                             weights_vector_i));
+            get_v_matrix_mu_or(mu_vector_i,
+                               odds_ratios_vector_i,
+                               weights_vector_i));
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("update_beta_jeffreys_or", cluster_index, id_vector[cluster.start], e);
+      rethrow_with_cluster_context("update_beta_jeffreys_or", cluster_index,
+                                   id_vector[cluster.start], e);
     }
   }
   symmetrize_if_close(information_matrix, 1e-10);
   const arma::mat naive_covariance =
     solve_chol_or_lu_mat(information_matrix, arma::eye(params_no, params_no),
-        "update_beta_jeffreys_or: naive information matrix");
+                         "update_beta_jeffreys_or: naive information matrix");
   const arma::vec lambda_vector =
     jeffreys_power *
     naive_matrix_inverse_derivative.t() *
     arma::vectorise(naive_covariance);
   const arma::vec update_step =
     solve_chol_or_lu_vec(information_matrix, u_vector + lambda_vector,
-        "update_beta_jeffreys_or: naive information matrix");
+                         "update_beta_jeffreys_or: naive information matrix");
   return beta_vector + update_step;
 }
 //==============================================================================
@@ -634,7 +680,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                          const arma::vec& alpha_vector,
                          const double jeffreys_power,
                          const char* method) {
-  switch (method_code(method)) {
+  switch (parse_method(method)) {
   case MethodCode::gee:
     return update_beta_gee_or(y_vector,
                               model_matrix,
@@ -697,12 +743,12 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                                    alpha_vector,
                                    jeffreys_power);
   }
-  Rcpp::stop("update_beta_or: unsupported method.");
+  Rcpp::stop("update_beta_or: unsupported method");
 }
 //==============================================================================
 
 
-} // namespace
+}  // namespace
 
 //============================ fitting function ================================
 // [[Rcpp::export]]
@@ -721,6 +767,16 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                             const double jeffreys_power,
                             const char* method,
                             const arma::vec& alpha_vector) {
+  if (maxiter < 0 || step_maxiter < 0) {
+    Rcpp::stop("'maxiter' and 'step_maxiter' must be non-negative integers");
+  }
+  // Non-finite inputs would otherwise only surface later as an opaque
+  // factorization failure (and Armadillo's "matrix is not symmetric" notice).
+  // (the response is validated below with a per-observation message)
+  if (!model_matrix.is_finite() || !offset.is_finite() ||
+      !weights_vector.is_finite() || !beta_vector.is_finite()) {
+    Rcpp::stop("the model matrix, offset, weights and starting values must be finite");
+  }
   const LinkCode link_code = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const auto clusters = clusters_from_sorted_id(id_vector);
@@ -731,8 +787,7 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   for (arma::uword i = 0; i < y_vector.n_elem; ++i) {
     const double y_i = y_vector[i];
     if (!(y_i >= 0.0 && y_i <= 1.0)) {
-      Rcpp::stop("fit_geesolver_or: the response must be finite and lie in "
-                   "[0, 1]; observation %d has value %g.",
+      Rcpp::stop("the response must lie in [0, 1]; observation %d has value %g",
                  static_cast<int>(i + 1), y_i);
     }
   }
@@ -744,15 +799,15 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   arma::vec stepsize_vector(params_no, arma::fill::zeros);
   arma::vec criterion_vector(maxiter, arma::fill::zeros);
   arma::vec eta_vector = model_matrix * beta_vector + offset;
-  if (!geer::is_valid_eta(link_code, eta_vector)) {
+  if (!is_valid_eta(link_code, eta_vector)) {
     Rcpp::stop(
-      "invalid initial linear predictor: please try different starting values for beta."
+      "the initial linear predictor is invalid; supply different 'beta_start' values"
     );
   }
-  arma::vec mu_vector = geer::inverse_link(link_code, eta_vector);
-  if (!geer::is_valid_mu(FamilyCode::binomial, mu_vector)) {
+  arma::vec mu_vector = inverse_link(link_code, eta_vector);
+  if (!is_valid_mu(FamilyCode::binomial, mu_vector)) {
     Rcpp::stop(
-      "invalid initial fitted values: please try different starting values for beta."
+      "the initial fitted values are invalid; supply different 'beta_start' values"
     );
   }
   // Rebuilds eta and mu at a given beta with exactly the calls used for a trial
@@ -760,7 +815,7 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   // accepted iterate.
   auto refresh_state = [&](const arma::vec& beta) {
     eta_vector = model_matrix * beta + offset;
-    mu_vector = geer::inverse_link(link_code, eta_vector);
+    mu_vector = inverse_link(link_code, eta_vector);
   };
   // Empty unless a numerical failure stopped the iterations early.
   std::string failure_message;
@@ -788,9 +843,8 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                        jeffreys_power,
                        method) - beta_vector;
       if (!stepsize_vector.is_finite()) {
-        Rcpp::stop("the Newton step at the starting values contains "
-                     "non-finite values: please try different starting "
-                     "values for beta.");
+        Rcpp::stop("the Newton step at the starting values contains non-finite values; supply "
+                   "different 'beta_start' values");
       }
     }
     // Damped Newton continuation: if the full-step candidate does not improve
@@ -826,12 +880,12 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
         beta_vector_inner +
         step_multiplier * std::pow(0.5, j - 1) * stepsize_vector_inner;
       eta_trial_vector = model_matrix * beta_vector_new_inner + offset;
-      if (!geer::is_valid_eta(link_code, eta_trial_vector)) {
+      if (!is_valid_eta(link_code, eta_trial_vector)) {
         last_failure = 1;
         continue;
       }
-      mu_trial_vector = geer::inverse_link(link_code, eta_trial_vector);
-      if (!geer::is_valid_mu(FamilyCode::binomial, mu_trial_vector)) {
+      mu_trial_vector = inverse_link(link_code, eta_trial_vector);
+      if (!is_valid_mu(FamilyCode::binomial, mu_trial_vector)) {
         last_failure = 2;
         continue;
       }
