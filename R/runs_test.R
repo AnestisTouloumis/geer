@@ -54,8 +54,8 @@
 #' determines the alternative. Ordering by a variable gives power against
 #' signs that depend on that variable:
 #' \describe{
-#'   \item{\code{"natural"}}{signs that cluster within subjects or drift over
-#'     time;}
+#'   \item{\code{"natural"}}{signs that are grouped within clusters or
+#'     drift over time;}
 #'   \item{\code{"fitted"}}{signs that depend on the fitted mean, suggesting
 #'     an inadequate link or variance function;}
 #'   \item{a model covariate}{a misspecified functional form of that

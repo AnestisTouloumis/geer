@@ -15,9 +15,10 @@
 #'   bias-corrected covariance matrix, \code{FALSE} for none,
 #'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
 #'   \code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
-#'   See \code{\link{vcov.geer}}.
-#' @param newdata data frame of predictor values at which predictions are
-#'   computed.
+#'   See \code{\link{vcov.geer}}. Defaults to \code{NULL}.
+#' @param newdata optional data frame of predictor values at which predictions
+#'   are computed. Defaults to \code{NULL}, which uses the data used to fit the
+#'   model.
 #' @param type character string specifying the prediction scale,
 #'   \code{"response"} or \code{"link"}. Defaults to \code{NULL}, which is
 #'   treated as \code{"response"}.

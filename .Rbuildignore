@@ -9,3 +9,4 @@
 ^\src\*.dll
 ^codecov\.yml$
 ^README\.Rmd$
+^benchmarks$

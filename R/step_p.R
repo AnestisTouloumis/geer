@@ -35,7 +35,9 @@
 #'
 #' The tests are described in \code{\link{anova.geer}}. The CIC column is
 #' computed with \code{cov_type}, so \code{cov_type = "jackknife"} refits every
-#' candidate model once per cluster and can be slow.
+#' candidate model once per cluster and can be slow. Candidate models are
+#' refitted to the rows used by \code{object}, as described in
+#' \code{\link{add1.geer}}.
 #'
 #' @return
 #' The selected model, a fitted model object of class \code{"geer"} with an

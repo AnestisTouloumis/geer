@@ -5,7 +5,7 @@
 * Added `cov_type = "jackknife"`, the leave-one-cluster-out jackknife covariance
   (each estimate a full refit with the association parameters held at their
   full-data values), available for all estimation methods and wherever
-  `cov_type` is accepted.
+  `cov_type` is accepted. It is computed once and cached on the fit.
 
 * Added optional support for the `marginaleffects` package (predictions,
   comparisons and slopes).
@@ -37,7 +37,7 @@
   1990). Results change when the dispersion is estimated.
 
 * The inverse-Gaussian quasi-log-likelihood had the wrong sign, affecting `QIC`,
-  `QICu`, `QICC`, `QICHH` and the working LRT for `inverse.gaussian` fits.
+  `QICu` and the working LRT for `inverse.gaussian` fits.
 
 * P-values of the Wald, score and working tests were computed as `1 - pchisq()`
   and were exactly 0 for large statistics (above about 70 on one degree of
@@ -62,7 +62,7 @@
 
 * Fits called as `geer::geewa(...)`, or with `phi_fixed` passed as a variable,
   were treated as odds-ratio fits or as having an estimated dispersion in tests,
-  `geecriteria()`, `glance()`, `frechet_bounds_cor()` and Mahalanobis residuals.
+  `geecriteria()`, `glance()` and `frechet_bounds_cor()`.
 
 * A scalar `offset` failed with a `model.frame()` error and is now recycled.
 
@@ -75,8 +75,6 @@
 
 * Refits in `add1()`, `drop1()`, `anova()` and `step_p()` reused a `beta_start`
   of the wrong length.
-
-* `get_vcov()` (marginaleffects) ignored a function supplied as `vcov`.
 
 * `emmeans` support passed prior weights in the wrong row order for unsorted
   data.
@@ -159,10 +157,7 @@
 
 * `glance()` computes only `QIC`, `QICu` and `CIC`.
 
-* P-values below 0.0001 are printed as `<0.0001`, and the results of
-  `runs_test()` and the MCAR tests gain the class `"geer_htest"`.
-
-* The jackknife covariance is cached on the fit.
+* P-values below 0.0001 are printed as `<0.0001`.
 
 * Faster C++ solvers with lower memory use. Estimates are unchanged.
 

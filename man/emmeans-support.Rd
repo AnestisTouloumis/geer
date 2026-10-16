@@ -24,7 +24,8 @@ emm_basis.geer(
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{data}{optional data frame from which \pkg{emmeans} recovers the
-predictors.}
+predictors. Defaults to \code{NULL}, which uses the data used to fit the
+model.}
 
 \item{...}{additional arguments passed through from \pkg{emmeans}.}
 
@@ -40,13 +41,15 @@ estimator, \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
 accepted by \pkg{emmeans}. See \code{\link{vcov.geer}}. Defaults to
 \code{"bias-corrected"}.}
 
-\item{cov_type}{optional alias of \code{vcov.method}, which it overrides.}
+\item{cov_type}{optional alias of \code{vcov.method}, which it overrides.
+Defaults to \code{NULL}.}
 
 \item{vcov.}{optional covariance matrix or function supplied through the
 \pkg{emmeans} argument \code{vcov.}, which overrides \code{cov_type} and
-\code{vcov.method}.}
+\code{vcov.method}. Defaults to \code{NULL}.}
 
-\item{misc}{optional list passed through by \pkg{emmeans}.}
+\item{misc}{optional list passed through by \pkg{emmeans}. Defaults to
+\code{NULL}.}
 }
 \value{
 \code{recover_data.geer()} returns the predictor data, and

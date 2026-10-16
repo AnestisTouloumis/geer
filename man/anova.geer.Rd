@@ -64,6 +64,9 @@ pair must be nested. A model whose working association structure differs
 from that of the first model is omitted with a warning, and any other
 difference in the fitting settings, such as the estimation method or the
 handling of the dispersion, is an error.
+
+With one model, the sequential models are refitted to the rows used by the
+fit, as described in \code{\link{add1.geer}}.
 }
 \examples{
 data("cerebrovascular", package = "geer")
@@ -79,8 +82,8 @@ fit <- geewa_binary(
 anova(fit)
 
 ## Comparison of nested models
-fit0 <- update(fit, . ~ . - treatment)
-anova(fit0, fit, test = "score")
+fit_null <- update(fit, . ~ . - treatment)
+anova(fit_null, fit, test = "score")
 
 }
 \references{

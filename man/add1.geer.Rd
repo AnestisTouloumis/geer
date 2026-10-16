@@ -67,6 +67,12 @@ its lower-order terms. The tests are described in
 information criterion (CIC) of each model, computed with \code{cov_type};
 with \code{cov_type = "jackknife"} every candidate model is therefore
 refitted once per cluster.
+
+When \code{object} was fitted with a data frame, every candidate model is
+refitted to the rows of that data frame used by \code{object}, so rows
+omitted because of missing values stay omitted even if the candidate model
+does not use the variable concerned. For \code{add1()}, a term with missing
+values in these rows is an error.
 }
 \examples{
 data("respiratory", package = "geer")

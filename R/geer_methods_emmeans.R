@@ -10,7 +10,8 @@
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param data optional data frame from which \pkg{emmeans} recovers the
-#'   predictors.
+#'   predictors. Defaults to \code{NULL}, which uses the data used to fit the
+#'   model.
 #' @param trms the terms component supplied by \pkg{emmeans}.
 #' @param xlev the factor levels supplied by \pkg{emmeans}.
 #' @param grid the reference grid supplied by \pkg{emmeans}.
@@ -20,10 +21,12 @@
 #'   accepted by \pkg{emmeans}. See \code{\link{vcov.geer}}. Defaults to
 #'   \code{"bias-corrected"}.
 #' @param cov_type optional alias of \code{vcov.method}, which it overrides.
+#'   Defaults to \code{NULL}.
 #' @param vcov. optional covariance matrix or function supplied through the
 #'   \pkg{emmeans} argument \code{vcov.}, which overrides \code{cov_type} and
-#'   \code{vcov.method}.
-#' @param misc optional list passed through by \pkg{emmeans}.
+#'   \code{vcov.method}. Defaults to \code{NULL}.
+#' @param misc optional list passed through by \pkg{emmeans}. Defaults to
+#'   \code{NULL}.
 #' @param ... additional arguments passed through from \pkg{emmeans}.
 #'
 #' @return

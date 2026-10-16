@@ -80,7 +80,9 @@ a move would return to a model already visited.
 
 The tests are described in \code{\link{anova.geer}}. The CIC column is
 computed with \code{cov_type}, so \code{cov_type = "jackknife"} refits every
-candidate model once per cluster and can be slow.
+candidate model once per cluster and can be slow. Candidate models are
+refitted to the rows used by \code{object}, as described in
+\code{\link{add1.geer}}.
 }
 \examples{
 \donttest{

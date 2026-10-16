@@ -24,6 +24,12 @@
 #' with \code{cov_type = "jackknife"} every candidate model is therefore
 #' refitted once per cluster.
 #'
+#' When \code{object} was fitted with a data frame, every candidate model is
+#' refitted to the rows of that data frame used by \code{object}, so rows
+#' omitted because of missing values stay omitted even if the candidate model
+#' does not use the variable concerned. For \code{add1()}, a term with missing
+#' values in these rows is an error.
+#'
 #' @return
 #' An object of class \code{c("geer_anova", "anova", "data.frame")} with one row
 #' for the current model and one for each admissible addition or deletion, and
@@ -287,6 +293,9 @@ drop1.geer <- function(object,
 #' difference in the fitting settings, such as the estimation method or the
 #' handling of the dispersion, is an error.
 #'
+#' With one model, the sequential models are refitted to the rows used by the
+#' fit, as described in \code{\link{add1.geer}}.
+#'
 #' @return
 #' An object of class \code{c("geer_anova", "anova", "data.frame")} with columns
 #' \code{Df}, \code{Resid. Df}, \code{Chi}, and \code{Pr(>Chi)}. With one model,
@@ -314,8 +323,8 @@ drop1.geer <- function(object,
 #' anova(fit)
 #'
 #' ## Comparison of nested models
-#' fit0 <- update(fit, . ~ . - treatment)
-#' anova(fit0, fit, test = "score")
+#' fit_null <- update(fit, . ~ . - treatment)
+#' anova(fit_null, fit, test = "score")
 #'
 #' @export
 anova.geer <-

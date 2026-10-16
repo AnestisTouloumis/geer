@@ -32,10 +32,11 @@
 bias-corrected covariance matrix, \code{FALSE} for none,
 \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
 \code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
-See \code{\link{vcov.geer}}.}
+See \code{\link{vcov.geer}}. Defaults to \code{NULL}.}
 
-\item{newdata}{data frame of predictor values at which predictions are
-computed.}
+\item{newdata}{optional data frame of predictor values at which predictions
+are computed. Defaults to \code{NULL}, which uses the data used to fit the
+model.}
 
 \item{type}{character string specifying the prediction scale,
 \code{"response"} or \code{"link"}. Defaults to \code{NULL}, which is
