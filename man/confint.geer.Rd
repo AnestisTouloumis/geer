@@ -4,13 +4,7 @@
 \alias{confint.geer}
 \title{Confidence Intervals for Model Parameters from a geer Object}
 \usage{
-\method{confint}{geer}(
-  object,
-  parm,
-  level = 0.95,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
-  ...
-)
+\method{confint}{geer}(object, parm, level = 0.95, cov_type = "bias-corrected", ...)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
@@ -23,8 +17,7 @@
 confidence level. Defaults to \code{0.95}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for the standard errors: \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+used for the standard errors: one of the estimators described in
 \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
 \item{...}{not used. Supplying any argument is an error, so that a misspelled

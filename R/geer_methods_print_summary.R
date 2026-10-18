@@ -64,10 +64,9 @@ print.geer <- function(x, ...) {
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for the standard errors, z-statistics, and p-values:
-#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-#'   Defaults to \code{"bias-corrected"}.
+#'   used for the standard errors, z-statistics, and p-values: one of the
+#'   estimators described in \code{\link{vcov.geer}}. Defaults to
+#'   \code{"bias-corrected"}.
 #' @param ... not used. Supplying any argument is an error, so that a misspelled
 #'   argument name is reported rather than silently ignored.
 #'
@@ -110,11 +109,10 @@ print.geer <- function(x, ...) {
 #'
 #' @export
 summary.geer <- function(object,
-                         cov_type = c("bias-corrected", "robust",
-                                      "df-adjusted", "jackknife", "naive"),
+                         cov_type = "bias-corrected",
                          ...) {
   object <- check_geer_object(object)
-  cov_type <- match.arg(cov_type)
+  cov_type <- match_cov_type(cov_type)
   check_unused_dots(list(...), "summary.geer")
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)

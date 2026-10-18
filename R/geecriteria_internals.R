@@ -199,15 +199,7 @@ compute_ghyc_pac <- function(object) {
   repeated_max <- max(as.integer(object$repeated))
   cluster_indices <- split(seq_along(object$id), object$id)
 
-  positions <- seq_len(repeated_max)
-  balanced <- all(vapply(
-    cluster_indices,
-    function(indices) {
-      identical(sort(as.integer(object$repeated[indices])), positions)
-    },
-    logical(1L)
-  ))
-  if (!balanced) {
+  if (!is_balanced_design(object)) {
     return(list(GHYC = NA_real_, PAC = NA_real_))
   }
 

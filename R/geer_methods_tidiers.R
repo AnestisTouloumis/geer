@@ -23,10 +23,9 @@ generics::glance
 #'   limits are exponentiated, for example to obtain odds ratios. Defaults to
 #'   \code{FALSE}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for the standard errors, z-statistics, and confidence intervals:
-#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-#'   Defaults to \code{"bias-corrected"}.
+#'   used for the standard errors, z-statistics, and confidence intervals: one
+#'   of the estimators described in \code{\link{vcov.geer}}. Defaults to
+#'   \code{"bias-corrected"}.
 #' @param ... not used. Supplying any argument is an error, so that a misspelled
 #'   argument name is reported rather than silently ignored.
 #'
@@ -68,11 +67,10 @@ tidy.geer <- function(x,
                       conf.int = FALSE,
                       conf.level = 0.95,
                       exponentiate = FALSE,
-                      cov_type = c("bias-corrected", "robust", "df-adjusted",
-                                   "jackknife", "naive"),
+                      cov_type = "bias-corrected",
                       ...) {
   object <- check_geer_object(x)
-  cov_type <- match.arg(cov_type)
+  cov_type <- match_cov_type(cov_type)
   check_unused_dots(list(...), "tidy.geer")
   if (!is.logical(conf.int) || length(conf.int) != 1L || is.na(conf.int)) {
     stop("'conf.int' must be TRUE or FALSE", call. = FALSE)

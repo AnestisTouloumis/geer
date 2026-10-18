@@ -16,9 +16,8 @@
 #' @param xlev the factor levels supplied by \pkg{emmeans}.
 #' @param grid the reference grid supplied by \pkg{emmeans}.
 #' @param vcov.method character string specifying the covariance matrix
-#'   estimator, \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function
-#'   accepted by \pkg{emmeans}. See \code{\link{vcov.geer}}. Defaults to
+#'   estimator, one of the estimators described in \code{\link{vcov.geer}},
+#'   or a covariance matrix or function accepted by \pkg{emmeans}. Defaults to
 #'   \code{"bias-corrected"}.
 #' @param cov_type optional alias of \code{vcov.method}, which it overrides.
 #'   Defaults to \code{NULL}.
@@ -77,9 +76,9 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
   idx <- pmatch(key, choices)
   if (is.na(idx)) {
     stop(
-      paste0(
-        "'vcov.method' must be one of: bias-corrected, robust, df-adjusted, ",
-        "jackknife, naive"
+      sprintf(
+        "'vcov.method' must be one of: %s",
+        paste(choices, collapse = ", ")
       ),
       call. = FALSE
     )

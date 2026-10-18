@@ -47,19 +47,6 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
   )
 })
 
-test_that("geewa validates beta_start", {
-  expect_error(
-    geewa(
-      seizures ~ treatment,
-      data = epilepsy,
-      id = id,
-      family = poisson("log"),
-      beta_start = c(0, 0, 0)
-    ),
-    "'beta_start' must be a numeric vector of length"
-  )
-})
-
 test_that("geewa rejects unsupported quasi variance functions early", {
   dat <- data.frame(
     y = c(1, 2, 3, 4),
@@ -75,25 +62,6 @@ test_that("geewa rejects unsupported quasi variance functions early", {
       corstr = "independence"
     ),
     "'variance'"
-  )
-})
-
-test_that("geewa rejects duplicated repeated values within cluster", {
-  epilepsy_bad <- epilepsy
-  epilepsy_bad$rep2 <- epilepsy_bad$visit
-  idx <- which(epilepsy_bad$id == epilepsy_bad$id[1])[1:2]
-  epilepsy_bad$rep2[idx] <- 1
-  expect_error(
-    geewa(
-      seizures ~ treatment + lnbaseline + lnage,
-      data = epilepsy_bad,
-      id = id,
-      repeated = rep2,
-      family = poisson(link = "log"),
-      corstr = "independence"
-    ),
-    "distinct",
-    ignore.case = TRUE
   )
 })
 

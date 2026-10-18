@@ -12,10 +12,9 @@
 #' @param x a fitted model object of class \code{"geer"}.
 #' @param coefs a named numeric vector of regression coefficients.
 #' @param vcov covariance specification: \code{NULL} or \code{TRUE} for the
-#'   bias-corrected covariance matrix, \code{FALSE} for none,
-#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
-#'   See \code{\link{vcov.geer}}. Defaults to \code{NULL}.
+#'   bias-corrected covariance matrix, \code{FALSE} for none, the name of one
+#'   of the estimators described in \code{\link{vcov.geer}}, or a covariance
+#'   matrix or function. Defaults to \code{NULL}.
 #' @param newdata optional data frame of predictor values at which predictions
 #'   are computed. Defaults to \code{NULL}, which uses the data used to fit the
 #'   model.
@@ -140,9 +139,9 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
     choices <- geer_cov_type_choices
     if (!(vcov_type %in% choices)) {
       stop(
-        paste0(
-          "'vcov' must be one of: bias-corrected, robust, df-adjusted, ",
-          "jackknife, naive, or a covariance matrix or function"
+        sprintf(
+          "'vcov' must be one of: %s, or a covariance matrix or function",
+          paste(choices, collapse = ", ")
         ),
         call. = FALSE
       )

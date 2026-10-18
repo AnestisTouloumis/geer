@@ -9,7 +9,7 @@
   conf.int = FALSE,
   conf.level = 0.95,
   exponentiate = FALSE,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   ...
 )
 }
@@ -27,10 +27,9 @@ limits are exponentiated, for example to obtain odds ratios. Defaults to
 \code{FALSE}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for the standard errors, z-statistics, and confidence intervals:
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-Defaults to \code{"bias-corrected"}.}
+used for the standard errors, z-statistics, and confidence intervals: one
+of the estimators described in \code{\link{vcov.geer}}. Defaults to
+\code{"bias-corrected"}.}
 
 \item{...}{not used. Supplying any argument is an error, so that a misspelled
 argument name is reported rather than silently ignored.}

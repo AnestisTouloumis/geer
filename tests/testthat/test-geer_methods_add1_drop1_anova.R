@@ -77,33 +77,19 @@ test_that("add1 and drop1 require independence for working-lrt", {
   )
 })
 
-test_that("anova single-model returns an anova data frame with correct structure", {
+test_that("anova single-model returns a sequential table with one row per term", {
   out <- anova(fit_geewa_pois_indep, test = "wald", cov_type = "robust")
+  terms <- attr(fit_geewa_pois_indep$terms, "term.labels")
   expect_s3_class(out, "anova")
   expect_s3_class(out, "data.frame")
   expect_true(all(c("Df", "Resid. Df", "Chi", "Pr(>Chi)") %in% names(out)))
-  expect_equal(nrow(out), 1L + length(attr(fit_geewa_pois_indep$terms, "term.labels")))
-})
-
-test_that("anova single-model first row has NA test statistics", {
-  out <- anova(fit_geewa_pois_indep, test = "wald", cov_type = "robust")
+  expect_equal(nrow(out), 1L + length(terms))
+  expect_identical(rownames(out), c("NULL", terms))
   expect_true(is.na(out$Chi[1L]))
   expect_true(is.na(out$`Pr(>Chi)`[1L]))
-})
-
-test_that("anova single-model subsequent rows have finite test statistics", {
-  out <- anova(fit_geewa_pois_indep, test = "wald", cov_type = "robust")
   expect_true(all(is.finite(out$Chi[-1L])))
-  expect_true(all(is.finite(out$`Pr(>Chi)`[-1L])))
   expect_true(all(out$Chi[-1L] >= 0))
   expect_true(all(out$`Pr(>Chi)`[-1L] >= 0 & out$`Pr(>Chi)`[-1L] <= 1))
-})
-
-test_that("anova single-model row names match term labels", {
-  out <- anova(fit_geewa_pois_indep, test = "wald", cov_type = "robust")
-  terms <- attr(fit_geewa_pois_indep$terms, "term.labels")
-  expect_identical(rownames(out)[-1L], terms)
-  expect_identical(rownames(out)[1L], "NULL")
 })
 
 test_that("anova heading contains family and link information", {
@@ -114,38 +100,17 @@ test_that("anova heading contains family and link information", {
   expect_true(grepl("log", heading, ignore.case = TRUE))
 })
 
-test_that("anova single-model works for wald and score test types", {
-  for (tst in c("wald", "score")) {
-    out <- anova(fit_geewa_pois_indep, test = tst, cov_type = "robust")
-    expect_s3_class(out, "anova")
-    expect_true(all(is.finite(out$Chi[-1L])))
-  }
-})
-
-test_that("anova multi-model returns an anova data frame with correct structure", {
+test_that("anova multi-model returns one row per model with decreasing residual df", {
   out <- anova(fit_null, fit_trt, fit_geewa_pois_indep, test = "wald", cov_type = "robust")
   expect_s3_class(out, "anova")
   expect_s3_class(out, "data.frame")
   expect_true(all(c("Df", "Resid. Df", "Chi", "Pr(>Chi)") %in% names(out)))
   expect_equal(nrow(out), 3L)
-})
-
-test_that("anova multi-model first row has NA test statistics", {
-  out <- anova(fit_null, fit_trt, fit_geewa_pois_indep, test = "wald", cov_type = "robust")
   expect_true(is.na(out$Chi[1L]))
   expect_true(is.na(out$`Pr(>Chi)`[1L]))
-})
-
-test_that("anova multi-model subsequent rows have finite test statistics", {
-  out <- anova(fit_null, fit_trt, fit_geewa_pois_indep, test = "wald", cov_type = "robust")
   expect_true(all(is.finite(out$Chi[-1L])))
-  expect_true(all(is.finite(out$`Pr(>Chi)`[-1L])))
   expect_true(all(out$Chi[-1L] >= 0))
   expect_true(all(out$`Pr(>Chi)`[-1L] >= 0 & out$`Pr(>Chi)`[-1L] <= 1))
-})
-
-test_that("anova multi-model Resid. Df decreases monotonically", {
-  out <- anova(fit_null, fit_trt, fit_geewa_pois_indep, test = "wald", cov_type = "robust")
   expect_true(all(diff(out$`Resid. Df`) < 0))
 })
 

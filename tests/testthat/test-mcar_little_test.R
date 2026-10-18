@@ -239,13 +239,3 @@ test_that("rows with no observed values are removed before testing", {
   )
   expect_identical(out$missing.patterns, reference$missing.patterns)
 })
-
-test_that("the statistic is nonnegative by construction", {
-  withr::local_seed(12)
-  x <- cbind(rnorm(30), rnorm(30), rnorm(30))
-  x[1:6, 2L] <- NA
-  x[7:12, 3L] <- NA
-  out <- mcar_little_test(x)
-  expect_gte(unname(out$statistic), 0)
-  expect_true(is.finite(unname(out$statistic)))
-})

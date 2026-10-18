@@ -13,10 +13,9 @@
 #'   ignoring case, or \code{"all"}. Only the requested criteria are computed
 #'   and they are returned in the order requested. Defaults to \code{"all"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used in the covariance-based penalty terms: \code{"bias-corrected"},
-#'   \code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, or
-#'   \code{"naive"}. See \code{\link{vcov.geer}}. Defaults to \code{"robust"},
-#'   which gives the classical definitions of the criteria.
+#'   used in the covariance-based penalty terms: one of the estimators described
+#'   in \code{\link{vcov.geer}}. Defaults to \code{"robust"}, which gives the
+#'   classical definitions of the criteria.
 #' @param digits nonnegative integer giving the number of decimal places used
 #'   to round the criteria. Defaults to \code{2}.
 #'
@@ -211,10 +210,9 @@
 geecriteria <- function(object,
                         ...,
                         criteria = "all",
-                        cov_type = c("robust", "bias-corrected", "df-adjusted",
-                                     "jackknife", "naive"),
+                        cov_type = "robust",
                         digits = 2) {
-  cov_type <- match.arg(cov_type)
+  cov_type <- match_cov_type(cov_type, default = "robust")
   criteria <- normalize_criteria(criteria)
   digits <- check_nonnegative_integerish(digits, "digits")
   models <- c(list(object), list(...))

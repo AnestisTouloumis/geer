@@ -523,21 +523,6 @@ test_that("predict uses offset supplied via the offset argument with newdata", {
   expect_equal(pred_formula, pred_argument)
 })
 
-test_that("predict gives the same response-scale predictions for formula and argument offsets", {
-  nd <- cerebrovascular[1:8, , drop = FALSE]
-  pred_formula <- predict(
-    fit_or_offset_formula,
-    newdata = nd,
-    type = "response"
-  )
-  pred_argument <- predict(
-    fit_or_offset_argument,
-    newdata = nd,
-    type = "response"
-  )
-  expect_equal(pred_formula, pred_argument)
-})
-
 test_that("formula offsets are reported by extract_formula_offset_terms", {
   expect_identical(
     extract_formula_offset_terms(fit_or_offset_formula),

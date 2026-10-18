@@ -4,20 +4,15 @@
 \alias{summary.geer}
 \title{Summarize a geer Object}
 \usage{
-\method{summary}{geer}(
-  object,
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
-  ...
-)
+\method{summary}{geer}(object, cov_type = "bias-corrected", ...)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for the standard errors, z-statistics, and p-values:
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-Defaults to \code{"bias-corrected"}.}
+used for the standard errors, z-statistics, and p-values: one of the
+estimators described in \code{\link{vcov.geer}}. Defaults to
+\code{"bias-corrected"}.}
 
 \item{...}{not used. Supplying any argument is an error, so that a misspelled
 argument name is reported rather than silently ignored.}

@@ -40,8 +40,8 @@ fit_bin_ar1_T4 <- geewa(
   method = "gee"
 )
 
-test_that("frechet_bounds_cor returns a data frame with the correct columns", {
-  out <- frechet_bounds_cor(fit_bin_exch_T2)
+test_that("frechet_bounds_cor returns a data frame with the documented columns", {
+  out <- frechet_bounds_cor(fit_bin_exch_T4)
   expect_s3_class(out, "data.frame")
   expect_named(
     out,
@@ -50,6 +50,13 @@ test_that("frechet_bounds_cor returns a data frame with the correct columns", {
       "n_clusters", "n_violated"
     )
   )
+  expect_type(out$alpha_name, "character")
+  expect_type(out$alpha_value, "double")
+  expect_type(out$lower_max, "double")
+  expect_type(out$upper_min, "double")
+  expect_type(out$n_clusters, "integer")
+  expect_type(out$n_violated, "integer")
+  expect_true(all(grepl("^alpha_\\d+\\.\\d+$", out$alpha_name)))
 })
 
 test_that("frechet_bounds_cor returns one row per unique time pair", {
@@ -58,24 +65,6 @@ test_that("frechet_bounds_cor returns one row per unique time pair", {
 
   out_T4 <- frechet_bounds_cor(fit_bin_exch_T4)
   expect_equal(nrow(out_T4), choose(4L, 2L))
-})
-
-test_that("frechet_bounds_cor column types are correct", {
-  out <- frechet_bounds_cor(fit_bin_exch_T4)
-  expect_type(out$alpha_name, "character")
-  expect_type(out$alpha_value, "double")
-  expect_type(out$lower_max, "double")
-  expect_type(out$upper_min, "double")
-  expect_type(out$n_clusters, "integer")
-  expect_type(out$n_violated, "integer")
-})
-
-test_that("frechet_bounds_cor alpha_name labels follow alpha_j.k convention", {
-  out <- frechet_bounds_cor(fit_bin_exch_T2)
-  expect_match(out$alpha_name, "^alpha_\\d+\\.\\d+$")
-
-  out4 <- frechet_bounds_cor(fit_bin_exch_T4)
-  expect_true(all(grepl("^alpha_\\d+\\.\\d+$", out4$alpha_name)))
 })
 
 test_that("frechet_bounds_cor bounds are numerically valid", {
@@ -104,17 +93,10 @@ test_that("frechet_bounds_cor works for ar1 association structure", {
   expect_true(all(is.finite(out$upper_min)))
 })
 
-test_that("frechet_bounds_cor works for unstructured association structure", {
+test_that("frechet_bounds_cor works for an unstructured association structure", {
   out <- frechet_bounds_cor(fit_bin_unstr_T4)
-  expect_s3_class(out, "data.frame")
   expect_equal(nrow(out), choose(4L, 2L))
-  expect_true(all(is.finite(out$lower_max)))
-  expect_true(all(is.finite(out$upper_min)))
   expect_true(all(out$lower_max < out$upper_min))
-})
-
-test_that("under unstructured the labels and values match the fitted alpha", {
-  out <- frechet_bounds_cor(fit_bin_unstr_T4)
   expect_identical(out$alpha_name, names(fit_bin_unstr_T4$alpha))
   expect_equal(
     out$alpha_value,

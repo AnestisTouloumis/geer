@@ -9,7 +9,7 @@
   object,
   scope,
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   pmethod = c("rao-scott", "satterthwaite"),
   ...
 )
@@ -18,7 +18,7 @@
   object,
   scope,
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   pmethod = c("rao-scott", "satterthwaite"),
   ...
 )
@@ -36,8 +36,7 @@ or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference: \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+used for inference: one of the estimators described in
 \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation to the null

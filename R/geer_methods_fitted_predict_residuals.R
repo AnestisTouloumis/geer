@@ -155,10 +155,9 @@ fitted.geer <- function(object, ...) {
 #'   predictor (\code{"link"}) or response (\code{"response"}). Defaults to
 #'   \code{"link"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for the standard errors when \code{se.fit = TRUE}:
-#'   \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-#'   \code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-#'   Defaults to \code{"bias-corrected"}.
+#'   used for the standard errors when \code{se.fit = TRUE}: one of the
+#'   estimators described in \code{\link{vcov.geer}}. Defaults to
+#'   \code{"bias-corrected"}.
 #' @param se.fit logical indicating whether standard errors are returned.
 #'   Defaults to \code{FALSE}.
 #' @param ... not used. Supplying any argument is an error, so that a misspelled
@@ -212,14 +211,13 @@ fitted.geer <- function(object, ...) {
 predict.geer <- function(object,
                          newdata = NULL,
                          type = c("link", "response"),
-                         cov_type = c("bias-corrected", "robust",
-                                      "df-adjusted", "jackknife", "naive"),
+                         cov_type = "bias-corrected",
                          se.fit = FALSE,
                          ...) {
   check_unused_dots(list(...), "predict.geer")
   object <- check_geer_object(object)
   type <- match.arg(type)
-  cov_type <- match.arg(cov_type)
+  cov_type <- match_cov_type(cov_type)
   if (!is.logical(se.fit) || length(se.fit) != 1L || is.na(se.fit)) {
     stop("'se.fit' must be TRUE or FALSE", call. = FALSE)
   }

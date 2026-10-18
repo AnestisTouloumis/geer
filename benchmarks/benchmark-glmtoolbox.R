@@ -8,16 +8,12 @@ bench_dir <- if (file.exists("benchmark-helpers.R")) "." else "benchmarks"
 devtools::load_all(file.path(bench_dir, ".."))
 source(file.path(bench_dir, "benchmark-helpers.R"))
 
-# Fits glmgee() with every argument inlined in the call. anova() with one
-# model re-evaluates the stored call from inside glmtoolbox, where the
-# objects of this script are not visible.
 glmgee_fit <- function(formula, id, family, data, corstr = "Independence") {
   eval(as.call(list(quote(glmgee), formula = formula, family = family,
                     id = as.name(id), data = data, corstr = corstr,
                     toler = 1e-10, maxit = 200)))
 }
 
-# id values of the clusters, in the order geer uses for cluster-level output.
 geer_cluster_ids <- function(fit, id) {
   used <- id[fit$frame_rows]
   unique(as.character(used[fit$row_order]))
@@ -27,7 +23,6 @@ fixed_from_glmgee <- function(args, ref) {
   geewa_fixed(args, ref$corr, ref$phi)
 }
 
-# Number of correlation parameters glmgee() counts in AGPC and SGPC.
 glmgee_m <- function(ref) {
   corstr <- ref$corstr
   if (identical(as.character(corstr), "Independence")) return(0)
@@ -36,8 +31,6 @@ glmgee_m <- function(ref) {
 }
 
 as_ref_glmgee <- function(ref, fit, id) {
-  # glmtoolbox returns the Mahalanobis residuals unnamed, in the order in
-  # which the clusters first appear in the data; geer sorts the clusters.
   mahal <- num(residuals(ref, type = "mahalanobis"))
   data_order <- unique(as.character(id[fit$frame_rows]))
   mahal <- mahal[match(geer_cluster_ids(fit, id), data_order)]
@@ -104,9 +97,6 @@ check_predict_glmgee <- function(label, ref, fit, newdata) {
   })
 }
 
-# Wald or score statistics of a sequence of nested glmgee() models, computed
-# with geer: each pair of neighbouring models is fitted with the correlation
-# and scale of the larger model (Wald) or of the smaller model (score).
 anova_relation <- function(refs, formulas, args, test) {
   vapply(seq_along(refs)[-1L], function(i) {
     ref_i <- if (test == "wald") refs[[i]] else refs[[i - 1L]]
@@ -129,8 +119,6 @@ sequential_formulas <- function(formula) {
 
 # =============================================================================
 # Example 1: spruces, Gamma(log)
-# ?glmgee, ?AGPC, ?CIC, ?GHYC, ?PAC, ?QIC, ?RJC, ?SGPC, ?vcov.glmgee,
-# ?predict.glmgee, ?residuals.glmgee, ?anova.glmgee
 # =============================================================================
 
 data("spruces", package = "glmtoolbox")

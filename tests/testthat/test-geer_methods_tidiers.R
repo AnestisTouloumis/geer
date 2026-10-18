@@ -24,9 +24,11 @@ test_that("tidy returns coefficient-level output with expected columns", {
 })
 
 test_that("tidy standard errors use the requested covariance type", {
-  out <- tidy(fit_geewa_pois_exch, cov_type = "naive")
-  expected_se <- unname(sqrt(diag(vcov(fit_geewa_pois_exch, cov_type = "naive"))))
-  expect_equal(out$std.error, expected_se, tolerance = 1e-6)
+  for (cov_type in c("naive", "kauermann-carroll")) {
+    out <- tidy(fit_geewa_pois_exch, cov_type = cov_type)
+    expected_se <- unname(sqrt(diag(vcov(fit_geewa_pois_exch, cov_type = cov_type))))
+    expect_equal(out$std.error, expected_se, tolerance = 1e-6)
+  }
 })
 
 test_that("tidy adds confidence intervals when requested", {

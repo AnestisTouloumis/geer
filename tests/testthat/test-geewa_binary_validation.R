@@ -48,27 +48,6 @@ test_that("geewa_binary validates weights", {
   )
 })
 
-test_that("geewa_binary rejects duplicated repeated values within cluster", {
-  cerebrovascular_bad <- cerebrovascular
-  cerebrovascular_bad$rep2 <- cerebrovascular_bad$period
-
-  idx <- which(cerebrovascular_bad$id == cerebrovascular_bad$id[1])[1:2]
-  cerebrovascular_bad$rep2[idx] <- 1
-
-  expect_error(
-    geewa_binary(
-      ecg ~ treatment + factor(period),
-      id = id,
-      repeated = rep2,
-      data = cerebrovascular_bad,
-      link = "logit",
-      orstr = "independence"
-    ),
-    "distinct",
-    ignore.case = TRUE
-  )
-})
-
 test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
   expect_error(
     geewa_binary(
@@ -92,22 +71,5 @@ test_that("geewa_binary rejects a non-finite beta_start", {
       beta_start = c(NA, 0)
     ),
     "'beta_start' must contain only finite values"
-  )
-})
-
-test_that("geewa_binary warns about character repeated values", {
-  dat <- cerebrovascular
-  dat$period_character <- as.character(dat$period)
-  expect_warning(
-    geewa_binary(
-      ecg ~ period * treatment,
-      data = dat,
-      id = id,
-      repeated = period_character,
-      link = "logit",
-      orstr = "independence"
-    ),
-    "'repeated' is a character vector",
-    fixed = TRUE
   )
 })

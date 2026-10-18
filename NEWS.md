@@ -7,6 +7,14 @@
   full-data values), available for all estimation methods and wherever
   `cov_type` is accepted. It is computed once and cached on the fit.
 
+* Added nine small-sample sandwich estimators to `cov_type`, those of
+  Kauermann and Carroll (2001), Mancl and DeRouen (2001), Ford and Westgate
+  (2017), Fay and Graubard (2001), Fan, Zhang and Zhang (2013), Pan (2001),
+  Gosho, Sato and Takeuchi (2014), Wang and Long (2011) and Westgate and
+  Burchett (2016), for `geewa()` and `geewa_binary()` fits with any family and
+  link. They are available wherever `cov_type` is accepted, including the score
+  tests, where they are evaluated at the fit of the smaller model.
+
 * Added optional support for the `marginaleffects` package (predictions,
   comparisons and slopes).
 
@@ -104,6 +112,11 @@
 ## Changes
 
 * Default `cov_type` of `geecriteria()` is now `"robust"`.
+
+* `cov_type` is validated in the same way by every function, requires an exact
+  name, and its default is shown as a single value in the usage. Abbreviations
+  such as `cov_type = "rob"`, which `vcov()`, `confint()`, `summary()`,
+  `predict()` and `tidy()` accepted before, are now an error.
 
 * Deviance residuals are now divided by the square root of the dispersion, as in
   `glmtoolbox`.

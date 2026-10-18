@@ -90,8 +90,7 @@ step_p <- function(object,
                    p_remove = 0.15,
                    test = c("wald", "score", "working-wald", "working-score",
                             "working-lrt"),
-                   cov_type = c("bias-corrected", "robust", "df-adjusted",
-                                "jackknife", "naive"),
+                   cov_type = "bias-corrected",
                    pmethod = c("rao-scott", "satterthwaite"),
                    steps = 1000) {
   object <- check_geer_object(object)
@@ -114,7 +113,7 @@ step_p <- function(object,
   steps <- check_step_count(steps)
   opts <- normalize_geer_test_options(
     test = test[1L],
-    cov_type = cov_type[1L],
+    cov_type = cov_type,
     pmethod = pmethod[1L],
     object = object
   )

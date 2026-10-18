@@ -36,8 +36,19 @@ geer_test_choices <- c(
   "wald", "score", "working-wald", "working-score", "working-lrt"
 )
 
+geer_small_sample_cov_types <- c(
+  "kauermann-carroll", "mancl-derouen", "ford-westgate", "fay-graubard",
+  "fan-zhang-zhang", "pan", "gosho-sato-takeuchi", "wang-long",
+  "westgate-burchett"
+)
+
+geer_pooled_cov_types <- c(
+  "pan", "gosho-sato-takeuchi", "wang-long", "westgate-burchett"
+)
+
 geer_cov_type_choices <- c(
-  "bias-corrected", "robust", "df-adjusted", "jackknife", "naive"
+  "bias-corrected", "robust", "df-adjusted", "jackknife", "naive",
+  geer_small_sample_cov_types
 )
 
 geer_pmethod_choices <- c(
@@ -122,11 +133,12 @@ match_test_type <- function(test) {
 }
 
 
-match_cov_type <- function(cov_type) {
+match_cov_type <- function(cov_type, default = geer_cov_type_choices[1L]) {
   match_choice_with_default(
     x = cov_type,
     choices = geer_cov_type_choices,
-    name = "cov_type"
+    name = "cov_type",
+    default = default
   )
 }
 

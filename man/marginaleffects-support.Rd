@@ -29,10 +29,9 @@
 \item{coefs}{a named numeric vector of regression coefficients.}
 
 \item{vcov}{covariance specification: \code{NULL} or \code{TRUE} for the
-bias-corrected covariance matrix, \code{FALSE} for none,
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function.
-See \code{\link{vcov.geer}}. Defaults to \code{NULL}.}
+bias-corrected covariance matrix, \code{FALSE} for none, the name of one
+of the estimators described in \code{\link{vcov.geer}}, or a covariance
+matrix or function. Defaults to \code{NULL}.}
 
 \item{newdata}{optional data frame of predictor values at which predictions
 are computed. Defaults to \code{NULL}, which uses the data used to fit the

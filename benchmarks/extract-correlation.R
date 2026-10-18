@@ -1,28 +1,5 @@
 # =============================================================================
 # extract_corr_matrix()
-#
-# Reconstructs the full working correlation matrix from a fitted GEE object.
-# Supported classes: geeglm (geepack), gee (gee), geem2 (mmmgee),
-#                    glmgee (glmtoolbox).
-#
-# Arguments:
-#   fit      — a fitted GEE object
-#   max_size — integer; dimension of the desired square matrix.
-#              Required for geeglm, gee, and geem2 where no full matrix is
-#              stored directly. For glmgee, inferred automatically from
-#              fit$corr.
-#
-# Returns:
-#   A symmetric max_size x max_size correlation matrix with ones on the
-#   diagonal, suitable for:
-#     geewa(..., corstr = "fixed", alpha_vector = R[lower.tri(R)])
-#
-# geepack slot reference (from geese.R source):
-#   fit$geese$alpha    — compact correlation parameters
-#   fit$geese$gamma    — dispersion phi
-#   fit$corstr         — correlation structure string
-#   fit$geese$vbeta    — robust vcov
-#   fit$geese$vbeta.naiv — naive vcov (unscaled; multiply by gamma for phi-scaled)
 # =============================================================================
 
 extract_corr_matrix <- function(fit, max_size) {

@@ -89,7 +89,7 @@ fits2 <- fixed_pair(list(formula = y ~ offset(log(t)) + x + trt + x:trt,
                          id = quote(id), data = seiz.l,
                          family = poisson(link = "log")), ref2)
 
-# BCgee() applied after adding the offset to the gee() fitted values.
+
 ref2_with_offset <- ref2
 ref2_with_offset$fitted.values <- exp(ref2$linear.predictors + log(seiz.l$t))
 ref2_bc_offset <- BCgee(ref2_with_offset)
@@ -125,7 +125,6 @@ describe("Ex2 seizure: offset handling of gee and BCgee", {
   })
 })
 
-# The same model without the offset (not part of the example).
 ref2b <- quietly(gee(y ~ x + trt + x:trt, id = id, data = seiz.l,
                      corstr = "exchangeable", family = poisson(log),
                      tol = gee_tol))

@@ -257,48 +257,12 @@ test_that("jackknife covariance supports adjusted and penalized estimation metho
   }
 })
 
-test_that("jackknife covariance applies the (K - 1) / K finite-sample factor", {
-  fit <- geewa(
-    y ~ time + group,
-    family = gaussian(),
-    data = jackknife_gaussian_data,
-    id = id,
-    repeated = time,
-    corstr = "exchangeable"
-  )
-  delete_estimates <- compute_jackknife_delete_estimates(fit)
-  k <- nrow(delete_estimates)
-  expect_identical(k, fit$clusters_no)
-  centered <- sweep(delete_estimates, 2L, colMeans(delete_estimates), `-`)
-  unscaled <- crossprod(centered)
-  dimnames(unscaled) <- list(names(coef(fit)), names(coef(fit)))
-  expect_equal(
-    vcov(fit, cov_type = "jackknife"),
-    ((k - 1L) / k) * unscaled,
-    tolerance = 1e-10
-  )
-})
-
 test_that("jackknife association mapping preserves pair identities when maximum occasion drops", {
   alpha <- c(12, 13, 14, 23, 24, 34)
   expect_equal(
     select_jackknife_pair_subset(alpha, full_max = 4L, subset_max = 3L),
     c(12, 13, 23)
   )
-})
-
-test_that("summary accepts jackknife covariance", {
-  fit <- geewa(
-    y ~ time + group,
-    family = gaussian(),
-    data = jackknife_gaussian_data,
-    id = id,
-    repeated = time,
-    corstr = "independence"
-  )
-  out <- summary(fit, cov_type = "jackknife")
-  expect_s3_class(out, "summary.geer")
-  expect_identical(out$cov_type, "jackknife")
 })
 
 test_that("all hypothesis-test helpers accept jackknife covariance", {

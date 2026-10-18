@@ -13,8 +13,6 @@ gp_control <- geese.control(epsilon = 1e-10, maxit = 100)
 
 run_id <- function(id) cumsum(c(TRUE, id[-1L] != id[-length(id)]))
 
-# Working correlation matrix from the alpha of a geese object, or of the
-# geese component of a geeglm object. "toeplitz" has one parameter per lag.
 geese_corr <- function(alpha, structure, size) {
   alpha <- unname(alpha)
   lag <- abs(outer(seq_len(size), seq_len(size), "-"))
@@ -66,8 +64,6 @@ check_pearson_geepack <- function(label, ref, fit) {
   })
 }
 
-# fit_ind: geewa() fit of the working-independence model at the scale of the
-# geepack independence refit made by QIC().
 check_qic_geepack <- function(label, ref, fit, fit_ind) {
   q <- geepack::QIC(ref)
   p <- length(coef(fit))
@@ -104,13 +100,11 @@ check_qic_geepack <- function(label, ref, fit, fit_ind) {
   })
 }
 
-# geewa() counterpart of the working-independence refit made by QIC().
 independence_fit <- function(ref, args, size) {
   ref_ind <- update(ref, corstr = "independence", zcor = NULL)
   geewa_fixed(args, diag(size), ref_ind$geese$gamma)
 }
 
-# Fixed geewa() fit from a geeglm object.
 fixed_from_geeglm <- function(args, ref, size) {
   geewa_fixed(args, extract_corr_matrix(ref, size), ref$geese$gamma)
 }
@@ -376,13 +370,6 @@ check_pearson_geepack("genZcor geeglm", ref_zfit2, fit_zfit2)
 
 # =============================================================================
 # ?ordgee: ordinal GEE with an odds-ratio association
-#
-# For a binary response, ordgee() is GEE for the marginal logit of
-# P(y = 1) with the association modelled by log odds ratios, which is
-# geewa_binary(). Its alpha holds the log odds ratios, so geewa_binary() is
-# fitted with orstr = "fixed" and alpha_vector = exp(alpha) (all 1 for
-# "independence"). The koch and respdis examples have three response
-# categories, which geer does not model.
 # =============================================================================
 
 data("ohio", package = "geepack")
@@ -410,8 +397,6 @@ ref_ord <- ordgee(resp ~ age + smoke + age:smoke, id = id, data = ohio_ord,
 check_fit("ordgee ohio binary, independence", as_ref_ordgee(ref_ord),
           fixed_from_ordgee(ref_ord))
 
-# The same model with the other association structures of ordgee() (not
-# part of the example).
 for (cs in c("exchangeable", "unstructured")) {
   ref_ord_cs <- ordgee(resp ~ age + smoke + age:smoke, id = id,
                        data = ohio_ord, corstr = cs, control = gp_control)

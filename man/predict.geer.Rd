@@ -8,7 +8,7 @@
   object,
   newdata = NULL,
   type = c("link", "response"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   se.fit = FALSE,
   ...
 )
@@ -25,10 +25,9 @@ predictor (\code{"link"}) or response (\code{"response"}). Defaults to
 \code{"link"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for the standard errors when \code{se.fit = TRUE}:
-\code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}. See \code{\link{vcov.geer}}.
-Defaults to \code{"bias-corrected"}.}
+used for the standard errors when \code{se.fit = TRUE}: one of the
+estimators described in \code{\link{vcov.geer}}. Defaults to
+\code{"bias-corrected"}.}
 
 \item{se.fit}{logical indicating whether standard errors are returned.
 Defaults to \code{FALSE}.}

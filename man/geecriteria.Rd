@@ -4,13 +4,7 @@
 \alias{geecriteria}
 \title{Model Selection Criteria for geer Objects}
 \usage{
-geecriteria(
-  object,
-  ...,
-  criteria = "all",
-  cov_type = c("robust", "bias-corrected", "df-adjusted", "jackknife", "naive"),
-  digits = 2
-)
+geecriteria(object, ..., criteria = "all", cov_type = "robust", digits = 2)
 }
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
@@ -23,10 +17,9 @@ ignoring case, or \code{"all"}. Only the requested criteria are computed
 and they are returned in the order requested. Defaults to \code{"all"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used in the covariance-based penalty terms: \code{"bias-corrected"},
-\code{"robust"}, \code{"df-adjusted"}, \code{"jackknife"}, or
-\code{"naive"}. See \code{\link{vcov.geer}}. Defaults to \code{"robust"},
-which gives the classical definitions of the criteria.}
+used in the covariance-based penalty terms: one of the estimators described
+in \code{\link{vcov.geer}}. Defaults to \code{"robust"}, which gives the
+classical definitions of the criteria.}
 
 \item{digits}{nonnegative integer giving the number of decimal places used
 to round the criteria. Defaults to \code{2}.}

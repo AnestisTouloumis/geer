@@ -8,7 +8,7 @@
   object,
   ...,
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   pmethod = c("rao-scott", "satterthwaite")
 )
 }
@@ -25,8 +25,7 @@ or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference: \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+used for inference: one of the estimators described in
 \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation to the null
@@ -57,7 +56,9 @@ structure, and both working log-likelihoods are scaled by the dispersion of
 the larger model. The score tests are evaluated at the fitted means of the
 smaller model with the association and dispersion parameters of the larger
 model; with \code{cov_type = "jackknife"}, the covariance component is the
-jackknife covariance of the larger model.
+jackknife covariance of the larger model. The small-sample estimators of
+\code{\link{vcov.geer}}, such as \code{"kauermann-carroll"}, are evaluated
+at the same fitted means, which extends their published definitions.
 
 With several models, the fits must use the same data and each consecutive
 pair must be nested. A model whose working association structure differs

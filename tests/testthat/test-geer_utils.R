@@ -110,6 +110,32 @@ test_that("jackknife covariance is cached on the fit and invalidated by coeffici
   expect_equal(dim(v1), dim(v2))
 })
 
+test_that("small-sample covariances are cached on the fit and invalidated by coefficient changes", {
+  fit <- fit_geewa_pois_indep
+  expect_null(fit$cache$small_sample)
+  v1 <- vcov(fit, cov_type = "mancl-derouen")
+  expect_false(is.null(fit$cache$small_sample))
+  fit$cache$small_sample$covariances[["mancl-derouen"]][1L, 1L] <- 12345
+  expect_equal(unname(vcov(fit, cov_type = "mancl-derouen")[1L, 1L]), 12345)
+  fit2 <- fit
+  fit2$coefficients <- fit2$coefficients + 1e-3
+  v2 <- vcov(fit2, cov_type = "mancl-derouen")
+  expect_false(isTRUE(all.equal(unname(v2[1L, 1L]), 12345)))
+  expect_equal(dim(v1), dim(v2))
+})
+
+test_that("is_balanced_design requires every cluster to observe each position once", {
+  expect_true(is_balanced_design(fit_geewa_pois_exch))
+  fit <- fit_geewa_pois_exch
+  fit$repeated[2L] <- 1L
+  expect_false(is_balanced_design(fit))
+  fit <- fit_geewa_pois_exch
+  keep <- -2L
+  fit$id <- fit$id[keep]
+  fit$repeated <- fit$repeated[keep]
+  expect_false(is_balanced_design(fit))
+})
+
 test_that("refit_geer stops when the refit did not converge", {
   fit <- geewa(
     seizures ~ treatment,

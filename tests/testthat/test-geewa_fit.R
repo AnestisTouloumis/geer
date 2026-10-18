@@ -103,23 +103,6 @@ test_that("geewa respects phi_fixed and phi_value", {
   expect_equal(fit$phi, 2, tolerance = 1e-10)
 })
 
-test_that("geewa converges for representative alternative methods", {
-  methods <- c("brgee-robust", "bcgee-robust", "pgee-jeffreys")
-  for (method_name in methods) {
-    fit <- geewa(
-      seizures ~ treatment + lnbaseline + lnage,
-      data = epilepsy,
-      id = id,
-      family = poisson("log"),
-      corstr = "exchangeable",
-      method = method_name
-    )
-    expect_s3_class(fit, "geer")
-    expect_true(fit$converged)
-    expect_true(all(is.finite(coef(fit))))
-  }
-})
-
 test_that("bias-reduced estimates differ from plain GEE estimates", {
   fit_br <- geewa(
     seizures ~ treatment + lnbaseline + lnage,

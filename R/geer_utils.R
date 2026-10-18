@@ -163,3 +163,16 @@ compute_standard_errors_or_na <- function(variances,
   names(se) <- names(variances)
   se
 }
+
+
+is_balanced_design <- function(object) {
+  positions <- seq_len(max(as.integer(object$repeated)))
+  cluster_indices <- split(seq_along(object$id), object$id)
+  all(vapply(
+    cluster_indices,
+    function(indices) {
+      identical(sort(as.integer(object$repeated[indices])), positions)
+    },
+    logical(1L)
+  ))
+}

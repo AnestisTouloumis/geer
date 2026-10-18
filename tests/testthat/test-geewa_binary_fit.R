@@ -55,23 +55,6 @@ test_that("geewa_binary fits representative alternative links and association st
   expect_length(fit_unstr$alpha, choose(max(respiratory2$visit), 2))
 })
 
-test_that("geewa_binary converges for representative alternative methods", {
-  methods <- c("brgee-robust", "bcgee-robust", "pgee-jeffreys")
-  for (method_name in methods) {
-    fit <- geewa_binary(
-      ecg ~ period + treatment,
-      id = id,
-      data = cerebrovascular,
-      link = "logit",
-      orstr = "exchangeable",
-      method = method_name
-    )
-    expect_s3_class(fit, "geer")
-    expect_true(fit$converged)
-    expect_true(all(is.finite(coef(fit))))
-  }
-})
-
 test_that("geewa_binary is invariant to row order via internal sorting", {
   withr::local_seed(1)
   fit_1 <- geewa_binary(

@@ -67,14 +67,13 @@ add1.geer <-
            scope,
            test = c("wald", "score", "working-wald", "working-score",
                     "working-lrt"),
-           cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife",
-                        "naive"),
+           cov_type = "bias-corrected",
            pmethod = c("rao-scott", "satterthwaite"),
            ...) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
       test = test[1L],
-      cov_type = cov_type[1L],
+      cov_type = cov_type,
       pmethod = pmethod[1L],
       object = object
     )
@@ -158,14 +157,13 @@ drop1.geer <- function(object,
                        scope,
                        test = c("wald", "score", "working-wald",
                                 "working-score", "working-lrt"),
-                       cov_type = c("bias-corrected", "robust", "df-adjusted",
-                                    "jackknife", "naive"),
+                       cov_type = "bias-corrected",
                        pmethod = c("rao-scott", "satterthwaite"),
                        ...) {
   object <- check_geer_object(object)
   opts <- normalize_geer_test_options(
     test = test[1L],
-    cov_type = cov_type[1L],
+    cov_type = cov_type,
     pmethod = pmethod[1L],
     object = object
   )
@@ -266,8 +264,7 @@ drop1.geer <- function(object,
 #'   or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 #'   \code{"wald"}.
 #' @param cov_type character string specifying the covariance matrix estimator
-#'   used for inference: \code{"bias-corrected"}, \code{"robust"},
-#'   \code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+#'   used for inference: one of the estimators described in
 #'   \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.
 #' @param pmethod character string specifying the approximation to the null
 #'   distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
@@ -285,7 +282,9 @@ drop1.geer <- function(object,
 #' the larger model. The score tests are evaluated at the fitted means of the
 #' smaller model with the association and dispersion parameters of the larger
 #' model; with \code{cov_type = "jackknife"}, the covariance component is the
-#' jackknife covariance of the larger model.
+#' jackknife covariance of the larger model. The small-sample estimators of
+#' \code{\link{vcov.geer}}, such as \code{"kauermann-carroll"}, are evaluated
+#' at the same fitted means, which extends their published definitions.
 #'
 #' With several models, the fits must use the same data and each consecutive
 #' pair must be nested. A model whose working association structure differs
@@ -332,13 +331,12 @@ anova.geer <-
            ...,
            test = c("wald", "score", "working-wald", "working-score",
                     "working-lrt"),
-           cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife",
-                        "naive"),
+           cov_type = "bias-corrected",
            pmethod = c("rao-scott", "satterthwaite")) {
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
       test = test[1L],
-      cov_type = cov_type[1L],
+      cov_type = cov_type,
       pmethod = pmethod[1L],
       object = object
     )

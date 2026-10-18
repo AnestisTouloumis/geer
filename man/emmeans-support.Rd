@@ -36,9 +36,8 @@ model.}
 \item{grid}{the reference grid supplied by \pkg{emmeans}.}
 
 \item{vcov.method}{character string specifying the covariance matrix
-estimator, \code{"bias-corrected"}, \code{"robust"}, \code{"df-adjusted"},
-\code{"jackknife"}, or \code{"naive"}, or a covariance matrix or function
-accepted by \pkg{emmeans}. See \code{\link{vcov.geer}}. Defaults to
+estimator, one of the estimators described in \code{\link{vcov.geer}},
+or a covariance matrix or function accepted by \pkg{emmeans}. Defaults to
 \code{"bias-corrected"}.}
 
 \item{cov_type}{optional alias of \code{vcov.method}, which it overrides.

@@ -166,7 +166,9 @@ or `"fixed"`).
 **Inference:** `summary()`, `vcov()`, `confint()`, `predict()`,
 `tidy()`, and `glance()`, with the covariance matrix estimator selected
 by `cov_type`: `"bias-corrected"` (the default), `"robust"`,
-`"df-adjusted"`, `"jackknife"`, or `"naive"`.
+`"df-adjusted"`, `"jackknife"`, `"naive"`, or one of nine small-sample
+corrected sandwich estimators, such as `"kauermann-carroll"` and
+`"mancl-derouen"`.
 
 **Model building:** `anova()`, `add1()`, `drop1()`, and `step_p()`, with
 Wald, generalized score, and modified working Wald, score, and

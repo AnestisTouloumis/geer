@@ -14,7 +14,8 @@ test_that("summary returns a coherent summary object", {
 })
 
 test_that("summary respects the requested covariance type", {
-  for (cov_type in c("robust", "naive", "bias-corrected", "df-adjusted")) {
+  for (cov_type in c("robust", "naive", "bias-corrected", "df-adjusted",
+                     "kauermann-carroll")) {
     out <- summary(fit_geewa_pois_exch, cov_type = cov_type)
 
     expect_s3_class(out, "summary.geer")

@@ -334,6 +334,24 @@ compute_score_components <- function(object0, object1) {
 }
 
 
+compute_score_small_sample_covariance <- function(object0,
+                                                  object1,
+                                                  cov_type,
+                                                  context) {
+  select_small_sample_covariance(
+    covariances = compute_small_sample_covariances(
+      object1,
+      fitted_values = object0$fitted.values,
+      linear_predictors = object0$linear.predictors
+    ),
+    cov_type = cov_type,
+    object = object1,
+    coef_no = length(stats::coef(object1)),
+    context = context
+  )
+}
+
+
 compute_wald_test <- function(object0, object1,
                               cov_type = geer_cov_type_choices) {
   cov_type <- match.arg(cov_type)
@@ -442,23 +460,29 @@ compute_score_test <- function(object0, object1,
   test_df <- check_test_index(index, "score test")
   sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
-  cov_test <- switch(
-    cov_type,
-    robust = sc$robust_covariance[index, index, drop = FALSE],
-    naive = sc$naive_covariance[index, index, drop = FALSE],
-    `bias-corrected` = sc$bc_covariance[index, index, drop = FALSE],
-    `df-adjusted` = compute_df_adjusted_covariance(
-      robust_covariance = sc$robust_covariance[index, index, drop = FALSE],
-      clusters_no = obj1$clusters_no,
-      coef_no = length(stats::coef(obj1)),
-      context = "score test"
-    ),
-    jackknife = stats::vcov(obj1, cov_type = "jackknife")[
-      index,
-      index,
-      drop = FALSE
-    ]
-  )
+  cov_test <- if (cov_type %in% geer_small_sample_cov_types) {
+    compute_score_small_sample_covariance(
+      obj0, obj1, cov_type, "score test"
+    )[index, index, drop = FALSE]
+  } else {
+    switch(
+      cov_type,
+      robust = sc$robust_covariance[index, index, drop = FALSE],
+      naive = sc$naive_covariance[index, index, drop = FALSE],
+      `bias-corrected` = sc$bc_covariance[index, index, drop = FALSE],
+      `df-adjusted` = compute_df_adjusted_covariance(
+        robust_covariance = sc$robust_covariance[index, index, drop = FALSE],
+        clusters_no = obj1$clusters_no,
+        coef_no = length(stats::coef(obj1)),
+        context = "score test"
+      ),
+      jackknife = stats::vcov(obj1, cov_type = "jackknife")[
+        index,
+        index,
+        drop = FALSE
+      ]
+    )
+  }
   naive_mat <- sc$naive_covariance
   mid <- naive_mat[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(
@@ -492,19 +516,25 @@ compute_working_score_test <- function(object0, object1,
   sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
   naive_mat <- sc$naive_covariance
-  robust_mat <- switch(
-    cov_type,
-    robust = sc$robust_covariance,
-    naive = sc$naive_covariance,
-    `bias-corrected` = sc$bc_covariance,
-    `df-adjusted` = compute_df_adjusted_covariance(
-      robust_covariance = sc$robust_covariance,
-      clusters_no = obj1$clusters_no,
-      coef_no = length(stats::coef(obj1)),
-      context = "working score test"
-    ),
-    jackknife = stats::vcov(obj1, cov_type = "jackknife")
-  )
+  robust_mat <- if (cov_type %in% geer_small_sample_cov_types) {
+    compute_score_small_sample_covariance(
+      obj0, obj1, cov_type, "working score test"
+    )
+  } else {
+    switch(
+      cov_type,
+      robust = sc$robust_covariance,
+      naive = sc$naive_covariance,
+      `bias-corrected` = sc$bc_covariance,
+      `df-adjusted` = compute_df_adjusted_covariance(
+        robust_covariance = sc$robust_covariance,
+        clusters_no = obj1$clusters_no,
+        coef_no = length(stats::coef(obj1)),
+        context = "working score test"
+      ),
+      jackknife = stats::vcov(obj1, cov_type = "jackknife")
+    )
+  }
   cov_test <- naive_mat[index, index, drop = FALSE]
   mid <- naive_mat[index, , drop = FALSE] %*% score_vector
   sol <- tryCatch(

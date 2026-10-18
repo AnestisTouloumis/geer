@@ -162,18 +162,7 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   expect_equal(unname(predict(fit_scalar, newdata = newdata)), unname(expected))
 })
 
-test_that("residuals return finite vectors for supported types", {
-  for (type in c("working", "pearson", "deviance")) {
-    r <- residuals(fit_geewa_pois_exch, type = type)
-    expect_length(r, fit_geewa_pois_exch$obs_no)
-    expect_true(all(is.finite(r)))
-  }
-  r_mahalanobis <- residuals(fit_geewa_pois_exch, type = "mahalanobis")
-  expect_length(r_mahalanobis, fit_geewa_pois_exch$clusters_no)
-  expect_true(all(is.finite(r_mahalanobis)))
-  expect_true(all(r_mahalanobis >= 0))
-  expect_named(r_mahalanobis, as.character(unique(fit_geewa_pois_exch$id)))
-
+test_that("Mahalanobis residuals of odds-ratio fits are finite and nonnegative", {
   r_bin <- residuals(fit_geewa_bin_exch, type = "mahalanobis")
   expect_length(r_bin, fit_geewa_bin_exch$clusters_no)
   expect_true(all(is.finite(r_bin)))

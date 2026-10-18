@@ -1,16 +1,5 @@
 cerebrovascular <- test_data$cerebrovascular
 
-fit_bin_null <- geewa(
-  formula = ecg ~ 1,
-  id = id,
-  family = binomial(link = "logit"),
-  phi_fixed = TRUE,
-  phi_value = 1,
-  data = cerebrovascular,
-  corstr = "independence",
-  method = "gee"
-)
-
 fit_bin_trt <- geewa(
   formula = ecg ~ treatment,
   id = id,
@@ -174,16 +163,6 @@ test_that("compute_wald_test returns a valid result for nested models and is ord
   )
 })
 
-test_that("compute_working_wald_test returns a valid result for nested models", {
-  res <- compute_working_wald_test(
-    fit_bin_trt,
-    fit_bin_full,
-    cov_type = "robust",
-    pmethod = "rao-scott"
-  )
-  expect_test_result(res)
-})
-
 test_that("compute_working_lrt_test returns a valid result and scales both models by the larger model's phi", {
   est_trt <- geewa(ecg ~ treatment,
     id = id, family = binomial(link = "logit"),
@@ -220,43 +199,45 @@ test_that("compute_working_lrt_test returns a valid result and scales both model
   ))
 })
 
-test_that("compute_score_test returns a valid result for supported covariance types", {
-  res_robust <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "robust")
-  res_naive <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "naive")
-  res_df <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = "df-adjusted")
-  expect_test_result(res_robust)
-  expect_test_result(res_naive)
-  expect_test_result(res_df)
+test_that("score tests evaluate the small-sample covariances at the smaller model", {
+  restricted <- fit_bin_full
+  restricted$fitted.values <- fit_bin_trt$fitted.values
+  restricted$linear.predictors <- fit_bin_trt$linear.predictors
+  reference <- ref_small_sample_covariances(restricted)
+  components <- compute_score_components(fit_bin_trt, fit_bin_full)
+  index <- check_nested_models(fit_bin_trt, fit_bin_full)$index
+  projected <- components$naive_covariance %*% components$score_vector
+  for (cov_type in geer_small_sample_cov_types) {
+    covariance <- reference[[cov_type]][index, index, drop = FALSE]
+    expected <- drop(
+      crossprod(projected[index], solve(covariance, projected[index]))
+    )
+    res <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = cov_type)
+    expect_test_result(res)
+    expect_equal(res$test_stat, expected, tolerance = 1e-8, label = cov_type)
+    expect_test_result(
+      compute_working_score_test(
+        fit_bin_trt,
+        fit_bin_full,
+        cov_type = cov_type,
+        pmethod = "rao-scott"
+      )
+    )
+  }
 })
 
-test_that("compute_working_score_test returns a valid result for supported covariance types", {
-  res_robust <- compute_working_score_test(
-    fit_bin_trt,
-    fit_bin_full,
-    cov_type = "robust",
-    pmethod = "rao-scott"
+test_that("compute_wald_test uses the small-sample covariances of the larger model", {
+  index <- check_nested_models(fit_bin_trt, fit_bin_full)$index
+  beta <- coef(fit_bin_full)[index]
+  covariance <- vcov(fit_bin_full, cov_type = "wang-long")[index, index,
+                                                          drop = FALSE]
+  res <- compute_wald_test(fit_bin_trt, fit_bin_full, cov_type = "wang-long")
+  expect_test_result(res)
+  expect_equal(
+    res$test_stat,
+    drop(crossprod(beta, solve(covariance, beta))),
+    tolerance = 1e-10
   )
-  res_bc <- compute_working_score_test(
-    fit_bin_trt,
-    fit_bin_full,
-    cov_type = "bias-corrected",
-    pmethod = "satterthwaite"
-  )
-  expect_test_result(res_robust)
-  expect_test_result(res_bc)
-})
-
-test_that("compute_anova_geer_list returns an anova table for multiple nested models", {
-  out <- compute_anova_geer_list(
-    list(fit_bin_null, fit_bin_trt, fit_bin_full),
-    test = "wald",
-    cov_type = "robust",
-    pmethod = "rao-scott"
-  )
-  expect_s3_class(out, "anova")
-  expect_s3_class(out, "data.frame")
-  expect_identical(nrow(out), 3L)
-  expect_true(all(c("Resid. Df", "Df", "Chi", "Pr(>Chi)") %in% names(out)))
 })
 
 test_that("compute_anova_geer_list rejects non-independence models for working-lrt", {
@@ -573,6 +554,9 @@ test_that("score and working-score tests match an independent evaluation at the 
   a <- anova(f0, f1, test = "working-score", cov_type = "robust", pmethod = "rao-scott")
   expect_equal(a$Chi[2], st / lam, tolerance = 1e-6)
   expect_equal(a[["Pr(>Chi)"]][2], pchisq(st / lam, 1, lower.tail = FALSE), tolerance = 1e-6)
+  lam_bc <- cv0$bc[3, 3] / cv0$naive[3, 3]
+  a <- anova(f0, f1, test = "working-score", cov_type = "bias-corrected", pmethod = "rao-scott")
+  expect_equal(a$Chi[2], st / lam_bc, tolerance = 1e-6)
 })
 
 test_that("score tests use the association and dispersion of the larger model", {

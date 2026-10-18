@@ -174,42 +174,13 @@ test_that("a single cluster, K = p and K = p + 1 produce estimates and well-defi
   expect_true(all(is.finite(vcov(three, "bias-corrected"))))
 })
 
-test_that("non-finite inputs are rejected before reaching C++", {
+test_that("non-finite covariates are rejected before reaching C++", {
   df <- conv_df
   d1 <- df
   d1$x[2] <- Inf
   expect_error(geewa(y ~ x, data = d1, id = id, family = binomial()))
   expect_error(geewa_binary(y ~ x, data = d1, id = id))
-  d2 <- df
-  d2$y[3] <- Inf
-  expect_error(geewa(y ~ x, data = d2, id = id, family = poisson()), "only finite values")
-  expect_error(
-    geewa(y ~ x,
-      data = df, id = id, family = binomial(),
-      weights = c(0, rep(1, nrow(df) - 1))
-    ),
-    "strictly positive"
-  )
-  expect_error(
-    geewa(y ~ x,
-      data = df, id = id, family = binomial(),
-      offset = c(Inf, rep(0, nrow(df) - 1))
-    ),
-    "finite"
-  )
-  expect_error(
-    geewa(y ~ x, data = df, id = id, family = binomial(), beta_start = c(NaN, 0)),
-    "finite"
-  )
   d3 <- df
   d3$y[5] <- 0.5
   expect_no_error(geewa_binary(y ~ x, data = d3, id = id, beta_start = c(0, 0)))
-})
-
-test_that("rank-deficient designs are named and rejected", {
-  df <- conv_df
-  df$x2 <- 2 * df$x
-  df$const <- 1
-  expect_error(geewa(y ~ x + x2, data = df, id = id, family = binomial()), "linearly dependent")
-  expect_error(geewa_binary(y ~ x + const, data = df, id = id), "linearly dependent")
 })

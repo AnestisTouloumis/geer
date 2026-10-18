@@ -11,7 +11,6 @@ source(file.path(bench_dir, "benchmark-helpers.R"))
 beta_map <- c(GEE = "gee", BCGEE = "bcgee-robust", PGEE = "pgee-jeffreys")
 se_map <- c(SA = "robust", MK = "df-adjusted", MB = "bias-corrected")
 
-# geessbin's Morel et al. covariance, from the geer naive and robust matrices.
 morel_kappa_in_trace <- function(fit) {
   K <- fit$clusters_no
   N <- fit$obs_no
@@ -27,7 +26,6 @@ morel_kappa_in_trace <- function(fit) {
 
 data("wheeze", package = "geessbin")
 
-# geessbin() with uncentered cluster scores in the MB covariance.
 geessbin_uncentered <- geessbin::geessbin
 body(geessbin_uncentered) <- parse(text = sub(
   "cov(d)", "crossprod(d) / (K - 1)",
@@ -120,5 +118,32 @@ for (corstr in c("independence", "exchangeable", "ar1", "unstructured")) {
   }
 }
 
-not_comparable("SE.method KC, MD, FG, PA, GS, WL, WB, FW and FZ",
-               "geer has no counterpart of these covariance estimators")
+
+
+# =============================================================================
+# The other covariance estimators, compared with vcov()
+# =============================================================================
+
+small_sample_map <- c(KC = "kauermann-carroll", MD = "mancl-derouen",
+                  FW = "ford-westgate", FG = "fay-graubard",
+                  FZ = "fan-zhang-zhang", PA = "pan",
+                  GS = "gosho-sato-takeuchi", WL = "wang-long",
+                  WB = "westgate-burchett")
+
+for (corstr in c("independence", "exchangeable", "ar1", "unstructured")) {
+  for (beta_method in names(beta_map)) {
+    refs <- lapply(names(small_sample_map), function(se_method) {
+      fit_geessbin(corstr, beta_method, se_method)
+    })
+    names(refs) <- names(small_sample_map)
+    fit <- fixed_from_geessbin(refs[[1L]])
+    describe(paste("wheeze", corstr, beta_method, "small-sample vcov()"), {
+      for (se_method in names(small_sample_map)) {
+        eval(bquote(it(.(paste(se_method, "covariance agrees")), {
+          expect_agree(refs[[.(se_method)]]$covb,
+                       vcov(fit, cov_type = .(small_sample_map[[se_method]])))
+        })))
+      }
+    })
+  }
+}

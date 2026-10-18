@@ -10,7 +10,7 @@ mcar_logistic_test(
   data = NULL,
   orstr = c("independence", "exchangeable", "unstructured"),
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
-  cov_type = c("bias-corrected", "robust", "df-adjusted", "jackknife", "naive"),
+  cov_type = "bias-corrected",
   pmethod = c("rao-scott", "satterthwaite"),
   control = geer_control()
 )
@@ -40,8 +40,7 @@ or modified working likelihood ratio (\code{"working-lrt"}). Defaults to
 \code{"wald"}.}
 
 \item{cov_type}{character string specifying the covariance matrix estimator
-used for inference: \code{"bias-corrected"}, \code{"robust"},
-\code{"df-adjusted"}, \code{"jackknife"}, or \code{"naive"}. See
+used for inference: one of the estimators described in
 \code{\link{vcov.geer}}. Defaults to \code{"bias-corrected"}.}
 
 \item{pmethod}{character string specifying the approximation to the null
@@ -103,7 +102,9 @@ contains three tests, all computed by the procedure selected by
 The modified working likelihood ratio test requires
 \code{orstr = "independence"}. With score tests and
 \code{cov_type = "jackknife"}, the covariance component is computed from
-the larger model.
+the larger model. The small-sample estimators of \code{\link{vcov.geer}}
+are evaluated at the fitted means of the smaller model, which extends their
+published definitions.
 
 Under monotone dropout each cluster contributes up to its first missing
 response. With intermittent missingness a warning is issued, because the

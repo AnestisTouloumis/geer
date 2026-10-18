@@ -45,6 +45,14 @@ get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_ve
     .Call(`_geer_get_marginalized_odds_ratios`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
 }
 
+get_small_sample_covariances_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_get_small_sample_covariances_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
+get_small_sample_covariances_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_get_small_sample_covariances_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
+}
+
 get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
     .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
 }

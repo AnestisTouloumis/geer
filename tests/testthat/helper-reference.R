@@ -260,3 +260,100 @@ expect_rel <- function(object, expected, tolerance, label = NULL) {
     )
   )
 }
+
+ref_small_sample_covariances <- function(object) {
+  model_matrix <- object$x
+  d_all <- model_matrix * object$family$mu.eta(object$linear.predictors)
+  e_all <- object$y - object$fitted.values
+  clusters <- split(seq_along(object$id), object$id)
+  clusters_no <- length(clusters)
+  p <- ncol(model_matrix)
+  repeated_max <- max(as.integer(object$repeated))
+
+  pieces <- lapply(clusters, function(indices) {
+    v_matrix <- geer:::compute_working_covariance_for_criteria(object, indices)
+    d_matrix <- d_all[indices, , drop = FALSE]
+    list(
+      d = d_matrix,
+      vd = solve(v_matrix, d_matrix),
+      e = e_all[indices],
+      sd = sqrt(diag(v_matrix)),
+      positions = as.integer(object$repeated[indices])
+    )
+  })
+  bread <- solve(Reduce(`+`, lapply(pieces, function(z) crossprod(z$vd, z$d))))
+  u_list <- lapply(pieces, function(z) drop(crossprod(z$vd, z$e)))
+  meat_all <- Reduce(`+`, lapply(u_list, tcrossprod))
+  principal_sqrt <- function(a) {
+    decomposition <- eigen(a)
+    values <- sqrt(as.complex(decomposition$values))
+    Re(decomposition$vectors %*% diag(values, nrow(a)) %*%
+         solve(decomposition$vectors))
+  }
+  leverage_inverses <- lapply(pieces, function(z) {
+    h_matrix <- z$d %*% bread %*% t(z$vd)
+    md <- solve(diag(length(z$e)) - h_matrix)
+    list(md = md, kc = principal_sqrt(md))
+  })
+  sandwich <- function(meat) bread %*% meat %*% bread
+  corrected_meat <- function(type) {
+    Reduce(`+`, Map(function(z, l) {
+      tcrossprod(crossprod(z$vd, l[[type]] %*% z$e))
+    }, pieces, leverage_inverses))
+  }
+  meat_kc <- corrected_meat("kc")
+  meat_md <- corrected_meat("md")
+  meat_fg <- Reduce(`+`, Map(function(z, u) {
+    leverage <- diag(crossprod(z$vd, z$d) %*% bread)
+    tcrossprod(u / sqrt(1 - pmin(0.75, leverage)))
+  }, pieces, u_list))
+  meat_fz <- Reduce(`+`, Map(function(z, l, u) {
+    inner <- tcrossprod(z$e) -
+      z$d %*% bread %*% (meat_all - tcrossprod(u)) %*% bread %*% t(z$d)
+    g_matrix <- crossprod(z$vd, l$md)
+    g_matrix %*% inner %*% t(g_matrix)
+  }, pieces, leverage_inverses, u_list))
+
+  complete <- all(vapply(pieces, function(z) {
+    identical(sort(z$positions), seq_len(repeated_max))
+  }, logical(1)))
+  pooled_meat <- function(transform) {
+    pooled <- matrix(0, repeated_max, repeated_max)
+    for (i in seq_along(pieces)) {
+      z <- pieces[[i]]
+      r <- transform(z, leverage_inverses[[i]]) / z$sd
+      pooled[z$positions, z$positions] <-
+        pooled[z$positions, z$positions] + tcrossprod(r)
+    }
+    pooled <- pooled / clusters_no
+    Reduce(`+`, lapply(pieces, function(z) {
+      w_matrix <- z$sd * z$vd
+      t(w_matrix) %*% pooled[z$positions, z$positions] %*% w_matrix
+    }))
+  }
+  na_matrix <- matrix(NA_real_, p, p)
+  pan <- if (complete) sandwich(pooled_meat(function(z, l) z$e)) else na_matrix
+  list(
+    `kauermann-carroll` = sandwich(meat_kc),
+    `mancl-derouen` = sandwich(meat_md),
+    `ford-westgate` = sandwich((meat_kc + meat_md) / 2),
+    `fay-graubard` = sandwich(meat_fg),
+    `fan-zhang-zhang` = sandwich(meat_fz),
+    pan = pan,
+    `gosho-sato-takeuchi` = if (complete && clusters_no > p) {
+      clusters_no / (clusters_no - p) * pan
+    } else {
+      na_matrix
+    },
+    `wang-long` = if (complete) {
+      sandwich(pooled_meat(function(z, l) l$md %*% z$e))
+    } else {
+      na_matrix
+    },
+    `westgate-burchett` = if (complete) {
+      sandwich(pooled_meat(function(z, l) l$kc %*% z$e))
+    } else {
+      na_matrix
+    }
+  )
+}

@@ -48,11 +48,14 @@ test_that("normalize_geer_test_options keeps pmethod for working tests", {
   expect_identical(out$pmethod, "satterthwaite")
 })
 
-test_that("jackknife is a valid package-wide covariance choice", {
-  out <- normalize_geer_test_options("wald", "jackknife", "rao-scott")
-  expect_identical(out$cov_type, "jackknife")
-  expect_true("jackknife" %in% geer_cov_type_choices)
-  expect_true("jackknife" %in% eval(formals(geecriteria)$cov_type))
+test_that("match_cov_type accepts the exact names only", {
+  for (cov_type in geer_cov_type_choices) {
+    expect_identical(match_cov_type(cov_type), cov_type)
+  }
+  expect_identical(match_cov_type(NULL), "bias-corrected")
+  expect_identical(match_cov_type(NULL, default = "robust"), "robust")
+  expect_error(match_cov_type("rob"), "'cov_type' must be one of")
+  expect_error(match_cov_type("kauermann"), "'cov_type' must be one of")
 })
 
 test_that("literal choice defaults in public signatures match the constants", {
@@ -72,10 +75,12 @@ test_that("literal choice defaults in public signatures match the constants", {
   for (name in names(cov_fns)) {
     expect_identical(
       default_of(cov_fns[[name]], "cov_type"),
-      geer_cov_type_choices,
+      geer_cov_type_choices[1L],
       label = paste(name, "cov_type")
     )
   }
+  expect_identical(default_of(geecriteria, "cov_type"), "robust")
+  expect_true("robust" %in% geer_cov_type_choices)
   for (fn in list(
     add1.geer, drop1.geer, anova.geer,
     step_p, mcar_logistic_test

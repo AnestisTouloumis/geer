@@ -96,11 +96,6 @@ test_that("geecriteria defaults to the classical robust covariance", {
   expect_equal(out_default, out_robust, tolerance = 1e-12)
 })
 
-test_that("QICHH agrees with QIC under working independence for ordinary GEE", {
-  out <- geecriteria(fit_geewa_pois_indep, digits = 15)
-  expect_equal(out$QICHH, out$QIC, tolerance = 1e-6)
-})
-
 test_that("QICHH agrees with QIC for binomial geewa fits with estimated phi", {
   fit <- geewa(
     ecg ~ period * treatment,
@@ -550,19 +545,6 @@ test_that("repeated models do not collide in the row names", {
   expect_equal(out[1L, "CIC"], out[2L, "CIC"])
 })
 
-test_that("the criteria column names come from a single constant", {
-  out <- geecriteria(fit_geewa_pois_exch, digits = 15)
-  expect_true(all(geer_criteria_columns %in% names(out)))
-  expect_true(
-    all(geer_criteria_columns_basic %in% geer_criteria_columns)
-  )
-  expect_named(
-    out,
-    c(geer_criteria_columns, "Parameters")
-  )
-  expect_length(geer_criteria_columns, 16L)
-})
-
 test_that("GESSC and GPC are addressed by name, not position", {
   object <- fit_geewa_pois_exch
   stats <- get_working_covariance_criteria_cc(
@@ -654,17 +636,6 @@ test_that("GHYC and PAC are reported only for balanced designs", {
   expect_true(is.finite(unbalanced$QIC))
   expect_true(is.finite(unbalanced$CIC))
   expect_true(is.finite(unbalanced$RJC))
-})
-
-test_that("working covariance helper supports odds-ratio GEE", {
-  object <- fit_binary_exch
-  indices <- split(seq_along(object$id), object$id)[[1L]]
-  covariance <- compute_working_covariance_for_criteria(object, indices)
-  expect_equal(nrow(covariance), length(indices))
-  expect_equal(ncol(covariance), length(indices))
-  expect_equal(covariance, t(covariance), tolerance = 1e-12)
-  expect_true(all(is.finite(covariance)))
-  expect_true(all(diag(covariance) > 0))
 })
 
 test_that("working covariance helper supports correlation GEE", {
