@@ -152,7 +152,6 @@ check_predict_glmgee("Ex1 spruces AR-M-dependent(1)",
                      ref_sp[["AR-M-dependent(1)"]],
                      fit_sp[["AR-M-dependent(1)"]], newdata_sp)
 
-# ?anova.glmgee, example 1: Wald tests
 formulas_a <- list(size ~ poly(days, 4),
                    size ~ poly(days, 4) + treat,
                    size ~ poly(days, 4) + treat + poly(days, 4):treat)
@@ -210,7 +209,6 @@ check_predict_glmgee("Ex2 depression AR-M-dependent(1)",
                      ref_d2[["AR-M-dependent(1)"]],
                      fit_d2[["AR-M-dependent(1)"]], newdata_d)
 
-# ?anova.glmgee, example 2: score tests
 formulas_b <- list(depressd ~ group,
                    depressd ~ group + visit,
                    depressd ~ group + visit + group:visit)
@@ -334,13 +332,148 @@ check_glmgee("Ex8 Seizures poisson/log exchangeable", ref8, fit8,
 
 
 # =============================================================================
+# stepCriterion() versus step_criterion()
+# =============================================================================
+
+sorted_term <- function(term) {
+  vapply(
+    strsplit(term, ":", fixed = TRUE),
+    function(x) paste(sort(x), collapse = ":"),
+    character(1)
+  )
+}
+
+glmgee_steps <- function(trace_output) {
+  moves <- grep("^Step [0-9]+ : [+-] ", trace_output, value = TRUE)
+  moves <- sub("^Step [0-9]+ : ", "", trimws(moves))
+  paste(substr(moves, 1L, 2L), sorted_term(substring(moves, 3L)))
+}
+
+geer_steps <- function(fit) {
+  moves <- rownames(fit$anova)[-1L]
+  moves <- sub("^Step [0-9]+: ", "", moves)
+  paste(substr(moves, 1L, 2L), sorted_term(substring(moves, 3L)))
+}
+
+glmgee_criterion <- function(ref, criterion) {
+  as.numeric(switch(
+    criterion,
+    QIC = -2 * ref$logLik + 2 * ref$CIC,
+    QICu = -2 * ref$logLik + 2 * length(coef(ref)),
+    AGPC = AGPC(ref, verbose = FALSE, digits = 15),
+    SGPC = SGPC(ref, verbose = FALSE, digits = 15)
+  ))
+}
+
+check_step_criterion <- function(label, start_formula, lower, upper, id,
+                                 family, data, direction) {
+  for (criterion in c("QIC", "QICu", "AGPC", "SGPC")) {
+    ref_start <- glmgee_fit(start_formula, id, family, data)
+    trace_output <- capture.output(
+      ref <- stepCriterion(
+        ref_start,
+        criterion = tolower(criterion),
+        direction = direction,
+        scope = list(lower = lower, upper = upper),
+        force.in = lower,
+        trace = TRUE
+      )
+    )
+    ref_final <- glmgee_fit(
+      as.formula(paste(deparse(start_formula[[2L]]), ref$final)),
+      id, family, data
+    )
+    fit_start <- geewa_native(list(
+      formula = start_formula, id = as.name(id), data = data,
+      family = family, corstr = "independence"
+    ))
+    fit <- step_criterion(
+      fit_start,
+      scope = list(lower = lower, upper = upper),
+      direction = "both",
+      criterion = criterion
+    )
+    describe(paste(label, criterion), {
+      it("the sequence of moves agrees", {
+        expect_identical(geer_steps(fit), glmgee_steps(trace_output))
+      })
+      it("the selected model agrees", {
+        expect_setequal(
+          sorted_term(attr(terms(formula(fit)), "term.labels")),
+          sorted_term(attr(terms(formula(ref_final)), "term.labels"))
+        )
+      })
+      it("the criterion of the initial model agrees", {
+        expect_agree(glmgee_criterion(ref_start, criterion),
+                     fit$anova[[criterion]][1L])
+      })
+      it("the criterion of the selected model agrees", {
+        expect_agree(glmgee_criterion(ref_final, criterion),
+                     fit$anova[[criterion]][nrow(fit$anova)])
+      })
+      it("the criterion of every candidate agrees", {
+        for (candidate_table in fit$candidates) {
+          current <- as.formula(attr(candidate_table, "heading")[3L])
+          changes <- setdiff(rownames(candidate_table), "<none>")
+          for (change in changes) {
+            ref_candidate <- glmgee_fit(
+              update(current, as.formula(paste(". ~ .", change))),
+              id, family, data
+            )
+            expect_agree(glmgee_criterion(ref_candidate, criterion),
+                         candidate_table[change, criterion])
+          }
+        }
+      })
+    })
+  }
+}
+
+data("depression", package = "glmtoolbox")
+check_step_criterion(
+  "?stepCriterion Ex2 depression binomial/probit forward",
+  start_formula = depressd ~ group,
+  lower = ~group,
+  upper = depressd ~ visit * group,
+  id = "subj",
+  family = binomial(probit),
+  data = depression,
+  direction = "forward"
+)
+check_step_criterion(
+  "?stepCriterion Ex3 depression gaussian/identity forward",
+  start_formula = dep ~ group,
+  lower = ~group,
+  upper = dep ~ visit * group,
+  id = "subj",
+  family = gaussian(identity),
+  data = depression,
+  direction = "forward"
+)
+data("spruces", package = "glmtoolbox")
+check_step_criterion(
+  "?stepCriterion Ex1 spruces Gamma/log forward",
+  start_formula = size ~ treat,
+  lower = ~treat,
+  upper = size ~ poly(days, 4) * treat,
+  id = "tree",
+  family = Gamma(log),
+  data = spruces,
+  direction = "forward"
+)
+not_comparable("stepCriterion(direction = \"backward\") with force.in",
+               paste("glmtoolbox stops with an error when no candidate is",
+                     "left at the final model"))
+
+
+# =============================================================================
 # Examples without a geer counterpart
 # =============================================================================
 
-not_comparable("stepCriterion()",
-               paste("glmgee() refits every candidate model with its own",
-                     "working correlation, so the selection has no fixed",
-                     "counterpart; step_p() selects by p-values only"))
+not_comparable("stepCriterion(criterion = \"p-value\")",
+               paste("glmtoolbox mixes additions and deletions with its own",
+                     "hybrid rule and Wilson-Hilferty p-values, which step_p()",
+                     "does not reproduce"))
 not_comparable("cooks.distance(), dfbeta(), leverage(), localInfluence()",
                "geer has no influence diagnostics")
 not_comparable("estequa()", "geer does not export the estimating equations")

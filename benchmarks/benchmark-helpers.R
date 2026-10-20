@@ -45,7 +45,6 @@ in_geer_order <- function(x, fit) {
   x[fit$row_order]
 }
 
-# Full T x T working correlation matrix of a geewa() fit.
 geer_corr_matrix <- function(fit, size) {
   alpha <- unname(fit$alpha)
   R <- diag(size)
@@ -64,11 +63,6 @@ geer_corr_matrix <- function(fit, size) {
   R
 }
 
-# corstr = "fixed" refit of a geewa() call: same model, with the working
-# correlation matrix R and the dispersion phi of a reference fit held fixed.
-# Used when the reference package estimates alpha (or phi) differently, so
-# that the estimating equations, covariance matrices and derived quantities
-# are still compared exactly.
 geewa_fixed <- function(args, R, phi) {
   args$corstr <- "fixed"
   args$Mv <- NULL
@@ -78,9 +72,6 @@ geewa_fixed <- function(args, R, phi) {
   geewa_native(args)
 }
 
-# geewa() with bench_control. The warning that the bias-corrected covariance
-# matrix is undefined (clusters <= parameters, as in warpbreaks) is muffled;
-# any other warning is kept.
 geewa_native <- function(args) {
   args$control <- bench_control
   withCallingHandlers(
@@ -94,11 +85,6 @@ geewa_native <- function(args) {
   )
 }
 
-# Muffles the "non-integer x" warnings that dpois() gives once per
-# observation when a Poisson model is fitted to a non-integer response (the
-# dietox examples of geepack). Both geeglm() and geewa() give them: geewa()
-# computes its identity-link starting values with stats::glm.fit(), whose
-# aic() calls dpois(). Thousands of warnings make test_file() very slow.
 muffle_noninteger <- function(expr) {
   withCallingHandlers(
     expr,
@@ -110,27 +96,12 @@ muffle_noninteger <- function(expr) {
   )
 }
 
-# Evaluates a reference fit while discarding what it prints (gee prints the
-# starting values and its version banner).
 quietly <- function(expr) {
   out <- NULL
   suppressMessages(utils::capture.output(out <- expr))
   out
 }
 
-# -----------------------------------------------------------------------------
-# check_fit(): compares every component that is present in `ref`.
-#
-# ref is a list with any of
-#   coefficients, phi, alpha (in the order of fit$alpha), corr (T x T matrix),
-#   naive, robust, df_adjusted, bias_corrected (covariance matrices),
-#   fitted, linear_predictors (data order unless ref$ordered = TRUE),
-#   residuals_working, residuals_pearson, residuals_deviance (same),
-#   residuals_mahalanobis (one value per cluster, in sorted cluster order),
-#   summary = list(cov_type, se, statistic, p_value, statistic_type),
-#     statistic_type = "z" (default) or "wald" (squared z),
-#   confint = list(cov_type, level, ci)
-# -----------------------------------------------------------------------------
 check_fit <- function(label, ref, fit, tol = bench_tol) {
   order_vec <- function(x) {
     if (isTRUE(ref$ordered)) num(x) else in_geer_order(x, fit)
@@ -218,16 +189,12 @@ check_fit <- function(label, ref, fit, tol = bench_tol) {
   })
 }
 
-# geecriteria() values of one fit, unrounded.
 geer_criteria <- function(fit, criteria, cov_type = "robust") {
   out <- geecriteria(fit, criteria = criteria, cov_type = cov_type,
                      digits = 15)
   vapply(criteria, function(k) as.numeric(out[1L, k]), numeric(1))
 }
 
-# Compares criteria computed by a reference package (a named vector) with
-# geecriteria(). Criteria named in `known` are reported with
-# expect_known_difference(), using the reason given there.
 check_criteria <- function(label, ref, fit, cov_type = "robust",
                            known = list(), tol = bench_tol) {
   values <- geer_criteria(fit, names(ref), cov_type = cov_type)
@@ -247,8 +214,6 @@ check_criteria <- function(label, ref, fit, cov_type = "robust",
   })
 }
 
-# An example of the reference package that geer cannot reproduce. It is listed
-# as a skip so that the output shows every example of the package.
 not_comparable <- function(label, reason) {
   describe(label, {
     it("is not compared", {

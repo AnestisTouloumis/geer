@@ -56,6 +56,43 @@ extract_step_scope_terms <- function(base_formula, scope_term) {
 }
 
 
+normalize_step_term_labels <- function(labels) {
+  vapply(
+    strsplit(labels, ":", fixed = TRUE),
+    function(x) paste(sort(x), collapse = ":"),
+    character(1)
+  )
+}
+
+
+check_step_scope_nesting <- function(model_terms, factors, name, inner) {
+  if (!length(factors)) {
+    return(invisible(NULL))
+  }
+  model_labels <- normalize_step_term_labels(
+    attr(model_terms, "term.labels")
+  )
+  scope_labels <- normalize_step_term_labels(colnames(factors))
+  missing_labels <- if (inner) {
+    setdiff(scope_labels, model_labels)
+  } else {
+    setdiff(model_labels, scope_labels)
+  }
+  if (!length(missing_labels)) {
+    return(invisible(NULL))
+  }
+  message <- if (inner) {
+    "the initial model must contain every term of '%s'; missing: %s"
+  } else {
+    "'%s' must contain every term of the initial model; missing: %s"
+  }
+  stop(
+    sprintf(message, name, paste(missing_labels, collapse = ", ")),
+    call. = FALSE
+  )
+}
+
+
 extract_step_scope_factors <- function(object, scope, model_terms) {
   base_formula <- stats::formula(object)
   scope <- check_step_scope(scope)
@@ -66,14 +103,20 @@ extract_step_scope_factors <- function(object, scope, model_terms) {
     ))
   }
   if (inherits(scope, "formula") || is.character(scope)) {
+    add <- extract_step_scope_terms(base_formula, scope)
+    check_step_scope_nesting(model_terms, add, "scope", inner = FALSE)
     return(list(
-      add = extract_step_scope_terms(base_formula, scope),
+      add = add,
       drop = numeric()
     ))
   }
+  add <- extract_step_scope_terms(base_formula, scope$upper)
+  drop <- extract_step_scope_terms(base_formula, scope$lower)
+  check_step_scope_nesting(model_terms, add, "scope$upper", inner = FALSE)
+  check_step_scope_nesting(model_terms, drop, "scope$lower", inner = TRUE)
   list(
-    add = extract_step_scope_terms(base_formula, scope$upper),
-    drop = extract_step_scope_terms(base_formula, scope$lower)
+    add = add,
+    drop = drop
   )
 }
 
@@ -133,7 +176,7 @@ append_step_model <- function(models, models_no, change, df, chi, pval, cic) {
 }
 
 
-build_step_results <- function(models, fit, object) {
+build_step_row_labels <- function(models) {
   step_no <- vapply(models, `[[`, integer(1), "Step")
   change <- vapply(
     models,
@@ -143,11 +186,29 @@ build_step_results <- function(models, fit, object) {
     },
     character(1)
   )
-  row_labels <- ifelse(
+  ifelse(
     step_no == 0L,
     "Initial model",
     paste0("Step ", step_no, ": ", change)
   )
+}
+
+
+build_step_heading <- function(object, fit, criterion_label = NULL) {
+  c(
+    "Stepwise Model Selection Table",
+    if (!is.null(criterion_label)) c("\nCriterion:", criterion_label),
+    "\nInitial Model:",
+    paste(deparse(stats::formula(object), width.cutoff = 500L), collapse = " "),
+    "\nFinal Model:",
+    paste(deparse(stats::formula(fit), width.cutoff = 500L), collapse = " "),
+    "\n"
+  )
+}
+
+
+build_step_results <- function(models, fit, object) {
+  step_no <- vapply(models, `[[`, integer(1), "Step")
   aod <- data.frame(
     Step = ifelse(step_no == 0L, NA_integer_, step_no),
     Df = vapply(models, `[[`, NA_real_, "Df"),
@@ -157,13 +218,8 @@ build_step_results <- function(models, fit, object) {
     check.names = FALSE,
     stringsAsFactors = FALSE
   )
-  row.names(aod) <- row_labels
-  heading <- c(
-    "Stepwise Model Selection Table",
-    "\nInitial Model:", paste(deparse(stats::formula(object)), collapse = " "),
-    "\nFinal Model:", paste(deparse(stats::formula(fit)), collapse = " "), "\n"
-  )
-  attr(aod, "heading") <- heading
+  row.names(aod) <- build_step_row_labels(models)
+  attr(aod, "heading") <- build_step_heading(object, fit)
   class(aod) <- c("geer_anova", "anova", "data.frame")
   fit$anova <- aod
   fit

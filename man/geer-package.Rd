@@ -35,7 +35,8 @@ with an odds-ratio parameterization. \emph{arXiv preprint}.
     \code{\link{predict.geer}}, \code{\link{tidy.geer}},
     \code{\link{glance.geer}}.
   \item Model building: \code{\link{anova.geer}}, \code{\link{add1.geer}},
-    \code{\link{step_p}}, \code{\link{geecriteria}}.
+    \code{\link{step_p}}, \code{\link{step_criterion}},
+    \code{\link{geecriteria}}.
   \item Diagnostics: \code{\link{residuals.geer}}, \code{\link{runs_test}},
     \code{\link{frechet_bounds_cor}}, \code{\link{mcar_little_test}},
     \code{\link{mcar_logistic_test}},

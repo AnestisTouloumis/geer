@@ -214,7 +214,7 @@ correlation matrix in generalized estimating equations. \emph{Chinese
 Journal of Applied Probability and Statistics}, \bold{29}, 515--530.
 }
 \seealso{
-\code{\link{vcov.geer}}, \code{\link{step_p}},
-  \code{\link{glance.geer}}, \code{\link{anova.geer}}, \code{\link{geewa}},
+\code{\link{vcov.geer}}, \code{\link{step_criterion}},
+  \code{\link{step_p}}, \code{\link{glance.geer}}, \code{\link{anova.geer}}, \code{\link{geewa}},
   \code{\link{geewa_binary}}.
 }

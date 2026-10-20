@@ -15,6 +15,10 @@
   link. They are available wherever `cov_type` is accepted, including the score
   tests, where they are evaluated at the fit of the smaller model.
 
+* Added `step_criterion()`, stepwise model selection that moves to the
+  addition or deletion with the smallest QICu, QIC, QICC, AGPC or SGPC. The
+  candidate table of every step is returned, and printed with `trace = TRUE`.
+
 * Added optional support for the `marginaleffects` package (predictions,
   comparisons and slopes).
 
@@ -37,6 +41,14 @@
 * Added cluster-level Mahalanobis residuals, `residuals(type = "mahalanobis")`.
 
 ## Bug fixes
+
+* The heading of the `step_p()` table split long formulas over several pieces
+  joined by runs of spaces. Formulas are now printed on one line.
+
+* `step_p()` with a scope that does not nest the initial model failed with the
+  `stats::factor.scope()` message "upper scope has term ... not included in
+  model". `step_p()` and `step_criterion()` now name the scope and the missing
+  terms.
 
 * `test = "working-lrt"` scaled each model's working log-likelihood by its own
   estimated dispersion, so the statistic was not a likelihood ratio (for a

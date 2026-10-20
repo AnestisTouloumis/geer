@@ -119,7 +119,6 @@ for (corstr in c("independence", "exchangeable", "ar1", "unstructured")) {
 }
 
 
-
 # =============================================================================
 # The other covariance estimators, compared with vcov()
 # =============================================================================

@@ -27,11 +27,13 @@
 #' \code{step_p()} repeatedly calls \code{\link{add1.geer}} and
 #' \code{\link{drop1.geer}}. The terms of \code{scope$lower} are always kept,
 #' and \code{scope$upper} defines the largest model considered. A single
-#' formula is taken as \code{upper}, with an empty \code{lower}. Moves respect
-#' marginality. With \code{direction = "both"}, a deletion is tried first at
-#' each step and an addition only if no deletion qualifies. The search stops
-#' when no move meets its p-value threshold, after \code{steps} steps, or when
-#' a move would return to a model already visited.
+#' formula is taken as \code{upper}, with an empty \code{lower}. The initial
+#' model must contain every term of \code{scope$lower}, and \code{scope$upper}
+#' every term of the initial model. Moves respect marginality. With
+#' \code{direction = "both"}, a deletion is tried first at each step and an
+#' addition only if no deletion qualifies. The search stops when no move meets
+#' its p-value threshold, after \code{steps} steps, or when a move would return
+#' to a model already visited.
 #'
 #' The tests are described in \code{\link{anova.geer}}. The CIC column is
 #' computed with \code{cov_type}, so \code{cov_type = "jackknife"} refits every
@@ -49,8 +51,9 @@
 #'
 #' @inherit add1.geer references
 #'
-#' @seealso \code{\link{add1.geer}}, \code{\link{drop1.geer}},
-#'   \code{\link{anova.geer}}, \code{\link{geecriteria}}, \code{\link{geewa}},
+#' @seealso \code{\link{step_criterion}}, \code{\link{add1.geer}},
+#'   \code{\link{drop1.geer}}, \code{\link{anova.geer}},
+#'   \code{\link{geecriteria}}, \code{\link{geewa}},
 #'   \code{\link{geewa_binary}}.
 #'
 #' @examples

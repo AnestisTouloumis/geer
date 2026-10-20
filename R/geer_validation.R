@@ -59,6 +59,10 @@ geer_direction_choices <- c(
   "backward", "forward", "both"
 )
 
+geer_step_criteria <- c(
+  "QICu", "QIC", "QICC", "AGPC", "SGPC"
+)
+
 geer_integer_tol <- sqrt(.Machine$double.eps)
 
 
@@ -148,6 +152,30 @@ match_pmethod <- function(pmethod) {
     x = pmethod,
     choices = geer_pmethod_choices,
     name = "pmethod"
+  )
+}
+
+
+match_step_criterion <- function(criterion) {
+  if (is.character(criterion) && length(criterion) == 1L &&
+      !is.na(criterion) && !(criterion %in% geer_step_criteria) &&
+      criterion %in% geer_criteria_columns) {
+    stop(
+      sprintf(
+        paste0(
+          "'criterion' must be one of: %s; %s is meant for selecting the ",
+          "working association structure, not the mean model"
+        ),
+        paste(geer_step_criteria, collapse = ", "),
+        criterion
+      ),
+      call. = FALSE
+    )
+  }
+  match_choice_with_default(
+    x = criterion,
+    choices = geer_step_criteria,
+    name = "criterion"
   )
 }
 

@@ -45,10 +45,11 @@ test_that("scope factor helper handles NULL, formula, and list scopes", {
   out_null <- extract_step_scope_factors(fit_resp_full_indep, NULL, model_terms)
   expect_equal(out_null$add, model_factors)
   expect_identical(out_null$drop, numeric())
+  small_terms <- terms(status ~ baseline)
   out_formula <- extract_step_scope_factors(
     fit_resp_full_indep,
     ~ baseline + treatment,
-    model_terms
+    small_terms
   )
   expect_true(is.matrix(out_formula$add))
   expect_true(all(c("baseline", "treatment") %in% colnames(out_formula$add)))
@@ -56,12 +57,43 @@ test_that("scope factor helper handles NULL, formula, and list scopes", {
   out_list <- extract_step_scope_factors(
     fit_resp_full_indep,
     list(lower = ~baseline, upper = ~ baseline + treatment),
-    model_terms
+    small_terms
   )
   expect_true(is.matrix(out_list$add))
   expect_true(is.matrix(out_list$drop))
   expect_true("baseline" %in% colnames(out_list$add))
   expect_true("baseline" %in% colnames(out_list$drop))
+})
+
+test_that("scope factor helper stops when the scope does not nest the model", {
+  small_terms <- terms(status ~ baseline + treatment:gender)
+  expect_error(
+    extract_step_scope_factors(fit_resp_full_indep, ~ baseline, small_terms),
+    paste0(
+      "'scope' must contain every term of the initial model; missing: ",
+      "gender:treatment"
+    ),
+    fixed = TRUE
+  )
+  expect_silent(extract_step_scope_factors(
+    fit_resp_full_indep,
+    list(upper = ~ baseline + gender:treatment),
+    small_terms
+  ))
+  expect_error(
+    extract_step_scope_factors(
+      fit_resp_full_indep,
+      list(lower = ~ baseline + age, upper = ~ baseline + treatment:gender),
+      small_terms
+    ),
+    "the initial model must contain every term of 'scope$lower'; missing: age",
+    fixed = TRUE
+  )
+  expect_error(
+    step_criterion(fit_resp_full_indep, scope = list(upper = ~ baseline)),
+    "'scope$upper' must contain every term of the initial model",
+    fixed = TRUE
+  )
 })
 
 test_that("step-path initializer stores the initial model state", {

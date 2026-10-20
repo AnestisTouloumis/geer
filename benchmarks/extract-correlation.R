@@ -4,9 +4,6 @@
 
 extract_corr_matrix <- function(fit, max_size) {
 
-  # ---------------------------------------------------------------------------
-  # glmtoolbox::glmgee — full matrix stored directly in fit$corr
-  # ---------------------------------------------------------------------------
   if (inherits(fit, "glmgee")) {
     R <- fit$corr
     if (!is.matrix(R))
@@ -15,9 +12,6 @@ extract_corr_matrix <- function(fit, max_size) {
     return(R)
   }
 
-  # ---------------------------------------------------------------------------
-  # gee::gee — full matrix stored directly in fit$working.correlation
-  # ---------------------------------------------------------------------------
   if (inherits(fit, "gee") && !inherits(fit, "geeglm")) {
     R <- fit$working.correlation
     if (!is.matrix(R))
@@ -26,18 +20,10 @@ extract_corr_matrix <- function(fit, max_size) {
     return(R)
   }
 
-  # For all remaining classes we reconstruct from compact alpha + corstr
   if (missing(max_size) || is.null(max_size))
     stop("max_size must be supplied for ", paste(class(fit), collapse = "/"),
          " objects.", call. = FALSE)
 
-  # ---------------------------------------------------------------------------
-  # geepack::geeglm — reconstruct from fit$geese$alpha + fit$corstr
-  #
-  # corstr strings used by geepack: "independence", "exchangeable", "ar1",
-  # "unstructured", "userdefined", "fixed"
-  # fit$geese$alpha is the compact vector from the C++ engine.
-  # ---------------------------------------------------------------------------
   if (inherits(fit, "geeglm")) {
     corstr <- tolower(fit$corstr)
     alpha  <- fit$geese$alpha
@@ -45,9 +31,6 @@ extract_corr_matrix <- function(fit, max_size) {
     return(.build_corr_matrix(corstr, alpha, max_size, Mv))
   }
 
-  # ---------------------------------------------------------------------------
-  # mmmgee::geem2 — reconstruct from fit$alpha + fit$corstr
-  # ---------------------------------------------------------------------------
   if (inherits(fit, "geem2")) {
     corstr <- tolower(fit$corstr)
     alpha  <- fit$alpha
@@ -68,14 +51,12 @@ extract_corr_matrix <- function(fit, max_size) {
   R <- diag(size)
 
   if (corstr %in% c("independence", "independent")) {
-    # R stays identity; alpha is unused
 
   } else if (corstr %in% c("exchangeable", "exch")) {
     R[lower.tri(R)] <- alpha[1L]
     R[upper.tri(R)] <- alpha[1L]
 
   } else if (corstr == "ar1") {
-    # R[i,j] = alpha^|i-j|
     for (i in seq_len(size))
       for (j in seq_len(size))
         if (i != j) R[i, j] <- alpha[1L]^abs(i - j)
@@ -91,7 +72,6 @@ extract_corr_matrix <- function(fit, max_size) {
     }
 
   } else if (corstr %in% c("unstructured", "unstr", "un")) {
-    # alpha is the lower triangle in column-major order
     if (length(alpha) != size * (size - 1L) / 2L)
       stop("length(alpha) does not match choose(max_size, 2) for unstructured.",
            call. = FALSE)

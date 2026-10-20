@@ -31,8 +31,6 @@ naive_summary_bcgee <- function(ref) {
                       statistic = tab[, "Naive z"]))
 }
 
-# geer fits with method = "gee" and "bcgee-robust", alpha and phi fixed at
-# the values of the gee() fit.
 fixed_pair <- function(args, ref) {
   R <- ref$working.correlation
   list(gee = geewa_fixed(args, R, ref$scale),
@@ -88,7 +86,6 @@ ref2_bc <- BCgee(ref2)
 fits2 <- fixed_pair(list(formula = y ~ offset(log(t)) + x + trt + x:trt,
                          id = quote(id), data = seiz.l,
                          family = poisson(link = "log")), ref2)
-
 
 ref2_with_offset <- ref2
 ref2_with_offset$fitted.values <- exp(ref2$linear.predictors + log(seiz.l$t))

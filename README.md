@@ -174,7 +174,8 @@ corrected sandwich estimators, such as `"kauermann-carroll"` and
 Wald, generalized score, and modified working Wald, score, and
 likelihood ratio tests (Rotnitzky and Jewell, 1990), and
 `geecriteria()`, with 16 model selection criteria, including QIC (Pan,
-2001) and CIC (Hin and Wang, 2009).
+2001) and CIC (Hin and Wang, 2009). `step_criterion()` selects terms by
+QICu, QIC, QICC, AGPC, or SGPC.
 
 **Diagnostics:**
 
