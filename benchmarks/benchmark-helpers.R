@@ -127,7 +127,8 @@ check_fit <- function(label, ref, fit, tol = bench_tol) {
         expect_agree(ref$corr, geer_corr_matrix(fit, nrow(ref$corr)), tol)
       })
     }
-    cov_types <- c("naive", "robust", "df_adjusted", "bias_corrected")
+    cov_types <- c("naive", "robust", "df_adjusted", "bias_corrected",
+                   "mancl_derouen")
     cov_types <- cov_types[cov_types %in% names(ref)]
     if (length(cov_types) > 0) {
       it(paste(paste(sub("_", "-", cov_types), collapse = ", "),

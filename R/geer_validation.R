@@ -63,6 +63,22 @@ geer_step_criteria <- c(
   "QICu", "QIC", "QICC", "AGPC", "SGPC"
 )
 
+geer_influence_levels <- c(
+  "clusters", "observations"
+)
+
+geer_influence_methods <- c(
+  "one-step", "exact"
+)
+
+geer_perturbation_choices <- c(
+  "cluster-weights", "observation-weights", "response"
+)
+
+geer_local_influence_types <- c(
+  "total", "local"
+)
+
 geer_integer_tol <- sqrt(.Machine$double.eps)
 
 
@@ -186,6 +202,58 @@ match_direction_type <- function(direction) {
     choices = geer_direction_choices,
     name = "direction"
   )
+}
+
+
+match_influence_level <- function(level) {
+  match_choice_with_default(
+    x = level,
+    choices = geer_influence_levels,
+    name = "level"
+  )
+}
+
+
+match_influence_method <- function(method) {
+  match_choice_with_default(
+    x = method,
+    choices = geer_influence_methods,
+    name = "method"
+  )
+}
+
+
+match_perturbation_type <- function(perturbation) {
+  match_choice_with_default(
+    x = perturbation,
+    choices = geer_perturbation_choices,
+    name = "perturbation"
+  )
+}
+
+
+match_local_influence_type <- function(type) {
+  match_choice_with_default(
+    x = type,
+    choices = geer_local_influence_types,
+    name = "type"
+  )
+}
+
+
+match_parm <- function(parm, beta_names) {
+  if (is.null(parm)) {
+    return(beta_names)
+  }
+  if (is.numeric(parm)) {
+    parm <- beta_names[parm]
+  } else if (!is.character(parm)) {
+    stop("'parm' must be missing, numeric, or character", call. = FALSE)
+  }
+  if (anyNA(parm) || !all(parm %in% beta_names)) {
+    stop("'parm' must index or name model coefficients", call. = FALSE)
+  }
+  parm
 }
 
 

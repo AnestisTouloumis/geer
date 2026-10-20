@@ -357,3 +357,65 @@ ref_small_sample_covariances <- function(object) {
     }
   )
 }
+
+ref_influence <- function(object) {
+  d_all <- object$x * object$family$mu.eta(object$linear.predictors)
+  e_all <- object$y - object$fitted.values
+  clusters <- split(seq_along(object$id), object$id)
+  pieces <- lapply(clusters, function(indices) {
+    v_matrix <- geer:::compute_working_covariance_for_criteria(object, indices)
+    d_matrix <- d_all[indices, , drop = FALSE]
+    list(v = v_matrix, d = d_matrix, vd = solve(v_matrix, d_matrix),
+         e = e_all[indices])
+  })
+  bread <- solve(Reduce(`+`, lapply(pieces, function(z) crossprod(z$vd, z$d))))
+  observation_dfbeta <- function(z, j) {
+    others <- seq_along(z$e)[-j]
+    a <- if (length(others)) {
+      z$v[j, others] %*% solve(z$v[others, others])
+    } else {
+      matrix(0, 1, 0)
+    }
+    d_tilde <- z$d[j, ] - drop(a %*% z$d[others, , drop = FALSE])
+    e_tilde <- z$e[j] - sum(a * z$e[others])
+    v_tilde <- z$v[j, j] - sum(a * z$v[others, j])
+    h_tilde <- drop(d_tilde %*% bread %*% d_tilde) / v_tilde
+    drop(bread %*% d_tilde) * e_tilde / (v_tilde * (1 - h_tilde))
+  }
+  rows <- lapply(pieces, function(z) {
+    h_matrix <- z$d %*% bread %*% t(z$vd)
+    z_vector <- solve(z$v, z$e)
+    list(
+      hat = diag(h_matrix),
+      cluster = drop(bread %*% t(z$vd) %*% solve(diag(length(z$e)) - h_matrix,
+                                                   z$e)),
+      observation = t(vapply(seq_along(z$e), observation_dfbeta,
+                             numeric(ncol(z$d)), z = z)),
+      cluster_delta = drop(crossprod(z$d, z_vector)),
+      observation_delta = z$d * z_vector,
+      response_delta = sqrt(diag(z$v)) * z$vd
+    )
+  })
+  list(
+    hat = unlist(lapply(rows, `[[`, "hat"), use.names = FALSE),
+    cluster_dfbeta = do.call(rbind, lapply(rows, `[[`, "cluster")),
+    observation_dfbeta = do.call(rbind, lapply(rows, `[[`, "observation")),
+    cluster_delta = do.call(rbind, lapply(rows, `[[`, "cluster_delta")),
+    observation_delta = do.call(rbind, lapply(rows, `[[`, "observation_delta")),
+    response_delta = do.call(rbind, lapply(rows, `[[`, "response_delta")),
+    bread = bread
+  )
+}
+
+ref_estimating_equations <- function(object, beta) {
+  eta <- drop(object$x %*% beta) + as.numeric(object$offset)
+  mu <- object$family$linkinv(eta)
+  shifted <- object
+  shifted$fitted.values <- mu
+  d_all <- object$x * object$family$mu.eta(eta)
+  Reduce(`+`, lapply(split(seq_along(object$id), object$id), function(i) {
+    v_matrix <- geer:::compute_working_covariance_for_criteria(shifted, i)
+    drop(crossprod(d_all[i, , drop = FALSE],
+                   solve(v_matrix, object$y[i] - mu[i])))
+  }))
+}

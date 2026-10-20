@@ -393,39 +393,32 @@ test_that("the standard-correlation solver stops on a non-finite starting step",
   )
 })
 
-test_that("update can change the fitting method", {
+test_that("update changes the method, association structure, and formula", {
   fit2 <- update(fit_geewa_pois_exch, method = "brgee-robust")
-  expect_s3_class(fit2, "geer")
   expect_identical(fit2$method, "brgee-robust")
-  expect_identical(fit2$association_structure, fit_geewa_pois_exch$association_structure)
-  expect_identical(fit2$family$family, fit_geewa_pois_exch$family$family)
-  expect_identical(fit2$family$link, fit_geewa_pois_exch$family$link)
-})
-
-test_that("update can change association structure for geewa fits", {
-  fit2 <- update(fit_geewa_pois_exch, corstr = "ar1")
-  expect_s3_class(fit2, "geer")
-  expect_identical(fit2$association_structure, "ar1")
-})
-
-test_that("update can change association structure for geewa_binary fits", {
-  fit2 <- update(fit_geewa_bin_exch, orstr = "independence")
-  expect_s3_class(fit2, "geer")
-  expect_identical(fit2$association_structure, "independence")
-})
-
-test_that("update can add a term to the model formula", {
-  fit2 <- update(fit_geewa_pois_exch, . ~ . + treatment:lnbaseline)
-  expect_s3_class(fit2, "geer")
-  expect_true("treatmentprogabide:lnbaseline" %in% names(coef(fit2)))
-  expect_gt(length(coef(fit2)), length(coef(fit_geewa_pois_exch)))
-})
-
-test_that("update can remove a term from the model formula", {
+  expect_identical(
+    fit2[c("association_structure", "family")],
+    fit_geewa_pois_exch[c("association_structure", "family")]
+  )
+  expect_identical(
+    update(fit_geewa_pois_exch, corstr = "ar1")$association_structure,
+    "ar1"
+  )
+  expect_identical(
+    update(fit_geewa_bin_exch, orstr = "independence")$association_structure,
+    "independence"
+  )
+  expect_identical(
+    names(coef(update(fit_geewa_pois_exch, . ~ . + treatment:lnbaseline))),
+    c(names(coef(fit_geewa_pois_exch)), "treatmentprogabide:lnbaseline")
+  )
   fit2 <- update(fit_geewa_pois_exch, . ~ . - lnage)
-  expect_s3_class(fit2, "geer")
-  expect_false("lnage" %in% names(coef(fit2)))
-  expect_lt(length(coef(fit2)), length(coef(fit_geewa_pois_exch)))
+  expect_identical(
+    names(coef(fit2)),
+    setdiff(names(coef(fit_geewa_pois_exch)), "lnage")
+  )
+  expect_s3_class(fit2$formula, "formula")
+  expect_false("lnage" %in% all.vars(fit2$formula))
 })
 
 test_that("formula is stored as a formula object when passed as a symbol", {
@@ -441,12 +434,6 @@ test_that("formula is stored as a formula object when passed as a symbol", {
   expect_s3_class(fit$formula, "formula")
   expect_identical(fit$call$formula, quote(user_formula))
   expect_equal(fit$formula, user_formula, ignore_attr = TRUE)
-})
-
-test_that("update preserves the stored formula as a formula object", {
-  fit2 <- update(fit_geewa_pois_exch, . ~ . - lnage)
-  expect_s3_class(fit2$formula, "formula")
-  expect_false("lnage" %in% all.vars(fit2$formula))
 })
 
 test_that("fits called as geer::geewa or with phi_fixed in a variable behave the same", {

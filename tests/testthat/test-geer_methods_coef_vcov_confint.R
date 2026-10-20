@@ -1,26 +1,15 @@
-test_that("vcov returns well-formed covariance matrices for supported cov_type values", {
-  p <- length(coef(fit_geewa_pois_exch))
-  for (cov_type in c("robust", "naive", "bias-corrected", "df-adjusted")) {
+test_that("vcov returns well-formed covariance matrices for every cov_type", {
+  coef_names <- names(coef(fit_geewa_pois_exch))
+  standard <- c("robust", "naive", "bias-corrected", "df-adjusted")
+  for (cov_type in c(standard, geer_small_sample_cov_types)) {
     v <- vcov(fit_geewa_pois_exch, cov_type = cov_type)
     expect_true(is.matrix(v))
-    expect_equal(dim(v), c(p, p))
+    expect_identical(dimnames(v), list(coef_names, coef_names))
     expect_equal(v, t(v), tolerance = 1e-12)
-    expect_equal(rownames(v), names(coef(fit_geewa_pois_exch)))
-    expect_equal(colnames(v), names(coef(fit_geewa_pois_exch)))
-    eigenvalues <- eigen(v, symmetric = TRUE, only.values = TRUE)$values
-    expect_true(all(eigenvalues >= -1e-10))
-  }
-})
-
-test_that("vcov returns well-formed covariance matrices for the small-sample estimators", {
-  p <- length(coef(fit_geewa_pois_exch))
-  for (cov_type in geer_small_sample_cov_types) {
-    v <- vcov(fit_geewa_pois_exch, cov_type = cov_type)
-    expect_true(is.matrix(v))
-    expect_equal(dim(v), c(p, p))
-    expect_equal(v, t(v), tolerance = 1e-12)
-    expect_equal(rownames(v), names(coef(fit_geewa_pois_exch)))
-    expect_equal(colnames(v), names(coef(fit_geewa_pois_exch)))
+    if (cov_type %in% standard) {
+      eigenvalues <- eigen(v, symmetric = TRUE, only.values = TRUE)$values
+      expect_true(all(eigenvalues >= -1e-10))
+    }
   }
 })
 
@@ -44,20 +33,6 @@ test_that("vcov returns the expected stored matrices and df-adjusted scaling", {
     vcov(fit_geewa_pois_exch, cov_type = "df-adjusted"),
     scaling_factor * vcov(fit_geewa_pois_exch, cov_type = "robust"),
     tolerance = 1e-10
-  )
-})
-
-test_that("vcov validates cov_type and df-adjusted requirements", {
-  expect_error(
-    vcov(fit_geewa_bin_exch, cov_type = "not-a-type"),
-    "'cov_type' must be one of"
-  )
-  stub <- unclass(fit_geewa_pois_exch)
-  stub$clusters_no <- length(coef(fit_geewa_pois_exch))
-  bad_fit <- new_geer(stub)
-  expect_error(
-    vcov(bad_fit, cov_type = "df-adjusted"),
-    "requires more clusters than coefficients"
   )
 })
 

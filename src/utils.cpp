@@ -6,13 +6,22 @@
 #include <vector>
 
 
+namespace {
+constexpr double symmetry_tolerance = 1e-10;
+
+double get_relative_asymmetry(const arma::mat& X) {
+  const double scale = std::max(1.0, arma::abs(X).max());
+  return arma::abs(X - X.t()).max() / scale;
+}
+}  // namespace
+
+
 //============================ subset matrix x[y, y] ===========================
 arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
   const arma::uword subset_size = y.n_elem;
   const double upper = static_cast<double>(x.n_rows);
   std::vector<arma::uword> zero_based_indices(subset_size);
   for (arma::uword i = 0; i < subset_size; ++i) {
-    // The negated comparison also rejects NaN.
     if (!(y[i] >= 1.0 && y[i] <= upper)) {
       Rcpp::stop(
         "subset_matrix: index out of range; values must be in [1, %d]",
@@ -102,7 +111,9 @@ arma::mat kronecker_vector_identity(const arma::vec& x) {
 //============================ factorize once, solve many ======================
 CholOrLuFactor::CholOrLuFactor(const arma::mat& X, const char* context)
     : context_(context), use_chol_(false) {
-  if (arma::chol(chol_upper_, X)) {
+  if (X.is_square() && X.n_elem > 0 &&
+      get_relative_asymmetry(X) <= symmetry_tolerance &&
+      arma::chol(chol_upper_, X)) {
     use_chol_ = true;
     return;
   }
@@ -115,8 +126,6 @@ CholOrLuFactor::CholOrLuFactor(const arma::mat& X, const char* context)
 template <typename T>
 T CholOrLuFactor::solve_impl(const T& rhs) const {
   if (use_chol_) {
-    // Cholesky succeeded: X is positive-definite so triangular solves
-    // cannot fail -- no explicit check needed.
     const T forward =
       arma::solve(arma::trimatl(chol_upper_.t()), rhs,
                   arma::solve_opts::no_approx);
@@ -185,18 +194,13 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X,
 
 //============================ symmetrize if close to symmetric ================
 void symmetrize_if_close(arma::mat& A, double rel_tol) {
-  const double scale = std::max(1.0, arma::abs(A).max());
-  const double max_asym = arma::abs(A - A.t()).max();
-  if (max_asym > rel_tol * scale) {
-    // Rcpp::warning() calls Rf_warning() directly. Under options(warn = 2) or
-    // tryCatch(warning = ) that longjmps over this frame, skipping the
-    // destructors of the arma objects alive here (a leak). Rcpp::Function
-    // goes through Rcpp's unwind-protect, so the C++ stack unwinds properly.
+  const double relative_asymmetry = get_relative_asymmetry(A);
+  if (relative_asymmetry > rel_tol) {
     char message[160];
     std::snprintf(message, sizeof(message),
                   "matrix has non-trivial asymmetry (%.2e) before symmetrization; "
                   "check for numerical issues.",
-                  max_asym / scale);
+                  relative_asymmetry);
     Rcpp::Function warning_function("warning");
     warning_function(std::string(message), Rcpp::Named("call.") = false);
   }

@@ -19,6 +19,22 @@
   addition or deletion with the smallest QICu, QIC, QICC, AGPC or SGPC. The
   candidate table of every step is returned, and printed with `trace = TRUE`.
 
+* Added `hatvalues()`, `dfbeta()`, `dfbetas()` and `cooks.distance()` methods,
+  for clusters or single observations, with the one-step deletion estimates of
+  Preisser and Qaqish (1996) or, for clusters, exact refits without each
+  cluster. The one-step estimates for an observation condition on the rest of
+  its cluster. Deletions that leave coefficients that cannot be estimated give
+  `NA` with a warning.
+
+* Added `local_influence()`, the total local influence and the direction of
+  maximum curvature (Cook, 1986) for case-weight perturbations of the clusters
+  or the observations and for additive perturbations of the responses.
+
+* Fitted objects store the cluster identifiers and the values of `repeated`
+  supplied, as `cluster_labels` and `repeated_labels`. Cluster-level
+  diagnostics are named by these identifiers, and observation-level
+  diagnostics by `"id(repeated)"`.
+
 * Added optional support for the `marginaleffects` package (predictions,
   comparisons and slopes).
 
@@ -38,7 +54,8 @@
 * Added `mcar_homoscedasticity_test()`, the MCAR test of Jamshidian and Jalal
   (2010) as implemented in `MissMech`.
 
-* Added cluster-level Mahalanobis residuals, `residuals(type = "mahalanobis")`.
+* Added cluster-level Mahalanobis residuals, `residuals(type = "mahalanobis")`,
+  named by the cluster identifiers supplied.
 
 ## Bug fixes
 

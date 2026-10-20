@@ -213,17 +213,17 @@ test_that("score tests evaluate the small-sample covariances at the smaller mode
       crossprod(projected[index], solve(covariance, projected[index]))
     )
     res <- compute_score_test(fit_bin_trt, fit_bin_full, cov_type = cov_type)
-    expect_test_result(res)
     expect_equal(res$test_stat, expected, tolerance = 1e-8, label = cov_type)
-    expect_test_result(
-      compute_working_score_test(
-        fit_bin_trt,
-        fit_bin_full,
-        cov_type = cov_type,
-        pmethod = "rao-scott"
-      )
+    working <- compute_working_score_test(
+      fit_bin_trt,
+      fit_bin_full,
+      cov_type = cov_type,
+      pmethod = "rao-scott"
     )
+    expect_true(is.finite(working$test_p), label = cov_type)
   }
+  expect_test_result(res)
+  expect_test_result(working)
 })
 
 test_that("compute_wald_test uses the small-sample covariances of the larger model", {

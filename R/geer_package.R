@@ -35,9 +35,10 @@
 #'   \item Model building: \code{\link{anova.geer}}, \code{\link{add1.geer}},
 #'     \code{\link{step_p}}, \code{\link{step_criterion}},
 #'     \code{\link{geecriteria}}.
-#'   \item Diagnostics: \code{\link{residuals.geer}}, \code{\link{runs_test}},
-#'     \code{\link{frechet_bounds_cor}}, \code{\link{mcar_little_test}},
-#'     \code{\link{mcar_logistic_test}},
+#'   \item Diagnostics: \code{\link{residuals.geer}},
+#'     \code{\link{hatvalues.geer}}, \code{\link{local_influence}},
+#'     \code{\link{runs_test}}, \code{\link{frechet_bounds_cor}},
+#'     \code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}},
 #'     \code{\link{mcar_homoscedasticity_test}}.
 #'   \item Other packages: \code{\link{emmeans-support}},
 #'     \code{\link{marginaleffects-support}}.
@@ -51,6 +52,7 @@
 #' @importFrom generics tidy glance
 #' @importFrom stats add1 anova coef confint drop1 fitted model.matrix
 #' @importFrom stats predict residuals vcov
+#' @importFrom stats cooks.distance dfbeta dfbetas hatvalues
 #' @importFrom stats Gamma binomial gaussian inverse.gaussian poisson
 #' @importFrom stats quasi quasibinomial quasipoisson
 #' @keywords package

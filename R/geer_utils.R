@@ -165,6 +165,30 @@ compute_standard_errors_or_na <- function(variances,
 }
 
 
+get_cluster_labels <- function(object) {
+  codes <- as.numeric(names(split(seq_along(object$id), object$id)))
+  if (is.null(object$cluster_labels)) {
+    return(as.character(codes))
+  }
+  object$cluster_labels[codes]
+}
+
+
+get_observation_labels <- function(object) {
+  cluster_labels <- if (is.null(object$cluster_labels)) {
+    as.character(object$id)
+  } else {
+    object$cluster_labels[object$id]
+  }
+  repeated_labels <- if (is.null(object$repeated_labels)) {
+    as.character(object$repeated)
+  } else {
+    object$repeated_labels[object$repeated]
+  }
+  paste0(cluster_labels, "(", repeated_labels, ")")
+}
+
+
 is_balanced_design <- function(object) {
   positions <- seq_len(max(as.integer(object$repeated)))
   cluster_indices <- split(seq_along(object$id), object$id)

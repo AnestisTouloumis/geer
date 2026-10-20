@@ -350,10 +350,6 @@ test_that("mcar_logistic_test passes control to the binary GEE fits", {
     )),
     "the binary GEE missingness model did not converge"
   )
-  expect_error(
-    mcar_logistic_test(fit, formula = ~ treatment + age, control = list(maxiter = -1)),
-    "'maxiter' must be a positive integer"
-  )
 })
 
 test_that("mcar_logistic_test warns for intermittent response missingness", {

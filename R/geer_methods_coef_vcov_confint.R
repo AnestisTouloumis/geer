@@ -314,17 +314,7 @@ confint.geer <- function(object,
   check_probability_open(level, "level")
   cov_type <- match_cov_type(cov_type)
   beta <- object$coefficients
-  beta_names <- names(beta)
-  if (missing(parm)) {
-    parm <- beta_names
-  } else if (is.numeric(parm)) {
-    parm <- beta_names[parm]
-  } else if (!is.character(parm)) {
-    stop("'parm' must be missing, numeric, or character", call. = FALSE)
-  }
-  if (anyNA(parm) || !all(parm %in% beta_names)) {
-    stop("'parm' must index or name model coefficients", call. = FALSE)
-  }
+  parm <- match_parm(if (missing(parm)) NULL else parm, names(beta))
   conf_probs <- (1 - level) / 2
   conf_probs <- c(conf_probs, 1 - conf_probs)
   pct <- format_percent(conf_probs, 3)

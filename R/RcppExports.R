@@ -37,6 +37,14 @@ get_working_covariance_criteria_or <- function(y_vector, id_vector, repeated_vec
     .Call(`_geer_get_working_covariance_criteria_or`, y_vector, id_vector, repeated_vector, mu_vector, alpha_vector, weights_vector)
 }
 
+get_influence_quantities_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
+    .Call(`_geer_get_influence_quantities_cc`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi)
+}
+
+get_influence_quantities_or <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector) {
+    .Call(`_geer_get_influence_quantities_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
+}
+
 get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
     .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
 }

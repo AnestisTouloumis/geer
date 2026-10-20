@@ -122,6 +122,11 @@
 #'       checking.}
 #' \item{id}{the recoded cluster identifier vector.}
 #' \item{repeated}{the recoded within-cluster ordering vector.}
+#' \item{cluster_labels}{the cluster identifiers supplied, in the order of
+#'       their recoded values in \code{id}.}
+#' \item{repeated_labels}{the values of \code{repeated} supplied, in the order
+#'       of their recoded values in \code{repeated}, or \code{NULL} if
+#'       \code{repeated} was not supplied.}
 #' \item{converged}{logical indicating whether the algorithm converged.}
 #' \item{call}{the matched call.}
 #' \item{formula}{the formula supplied.}

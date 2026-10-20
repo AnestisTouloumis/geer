@@ -4,9 +4,13 @@ S3method(add1,geer)
 S3method(anova,geer)
 S3method(coef,geer)
 S3method(confint,geer)
+S3method(cooks.distance,geer)
+S3method(dfbeta,geer)
+S3method(dfbetas,geer)
 S3method(drop1,geer)
 S3method(fitted,geer)
 S3method(glance,geer)
+S3method(hatvalues,geer)
 S3method(insight::get_data,geer)
 S3method(marginaleffects::get_coef,geer)
 S3method(marginaleffects::get_predict,geer)
@@ -30,6 +34,7 @@ export(geer_control)
 export(geewa)
 export(geewa_binary)
 export(glance)
+export(local_influence)
 export(mcar_homoscedasticity_test)
 export(mcar_little_test)
 export(mcar_logistic_test)
@@ -54,9 +59,13 @@ importFrom(stats,
   binomial,
   coef,
   confint,
+  cooks.distance,
+  dfbeta,
+  dfbetas,
   drop1,
   fitted,
   gaussian,
+  hatvalues,
   inverse.gaussian,
   model.matrix,
   poisson,

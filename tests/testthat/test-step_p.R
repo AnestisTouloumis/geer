@@ -271,7 +271,8 @@ test_that("step_p preserves the original data call for downstream update", {
     test = "wald",
     cov_type = "bias-corrected",
     p_remove = 0.1,
-    direction = "backward"
+    direction = "backward",
+    steps = 1
   )
   expect_s3_class(out, "geer")
   expect_no_error(update(out, orstr = "exchangeable"))

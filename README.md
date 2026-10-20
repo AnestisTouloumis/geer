@@ -180,6 +180,9 @@ QICu, QIC, QICC, AGPC, or SGPC.
 **Diagnostics:**
 
 - `residuals()`, including cluster-level Mahalanobis residuals.
+- `hatvalues()`, `dfbeta()`, `dfbetas()`, `cooks.distance()` (Preisser
+  and Qaqish, 1996), and `local_influence()` (Cook, 1986), for clusters
+  or observations.
 - `runs_test()`, the Wald-Wolfowitz runs test of residual signs (Chang,
   2000, and Hardin and Hilbe, 2013).
 - `frechet_bounds_cor()`, which checks the working correlations of
@@ -214,6 +217,9 @@ Please report bugs and request features at
 Chang, Y.-C. (2000) Residuals analysis of the generalized linear models
 for longitudinal data. *Statistics in Medicine*, **19**, 1277–1293.
 
+Cook, R.D. (1986) Assessment of local influence. *Journal of the Royal
+Statistical Society, Series B*, **48**, 133–169.
+
 Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 
@@ -243,6 +249,9 @@ correction for the variance of GEE estimators. *Biometrical Journal*,
 
 Pan, W. (2001) Akaike’s information criterion in generalized estimating
 equations. *Biometrics*, **57**, 120–125.
+
+Preisser, J.S. and Qaqish, B.F. (1996) Deletion diagnostics for
+generalised estimating equations. *Biometrika*, **83**, 551–562.
 
 Ridout, M.S. (1991) Testing for random dropouts in repeated measurement
 data. *Biometrics*, **47**, 1617–1619.

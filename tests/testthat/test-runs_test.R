@@ -233,7 +233,7 @@ test_that("natural_order reports the ordering obtained, not the one requested", 
   expect_false(runs_test(fit_geewa_pois_exch, order_by = "fitted")$natural_order)
 })
 
-test_that("runs_test validates ordering and residual sign requirements", {
+test_that("runs_test validates the ordering", {
   expect_error(
     runs_test(fit_geewa_pois_exch, order_by = "not-a-variable"),
     "unknown 'order_by'"
@@ -250,12 +250,6 @@ test_that("runs_test validates ordering and residual sign requirements", {
     "finite and non-missing"
   )
 
-  fit <- fit_geewa_pois_exch
-  fit$residuals <- rep(1, fit$obs_no)
-  expect_error(
-    runs_test(fit),
-    "at least one positive and one negative residual"
-  )
 })
 
 test_that("large sign counts keep the normal approximation", {

@@ -33,6 +33,11 @@ build_geer_output <- function(geesolver_fit,
   fit$na.action <- attr(model_frame, "na.action")
   fit$id <- as.numeric(id)
   fit$repeated <- as.numeric(repeated)
+  fit$cluster_labels <- levels(factor(stats::model.extract(model_frame, "id")))
+  repeated_raw <- stats::model.extract(model_frame, "repeated")
+  fit$repeated_labels <- if (!is.null(repeated_raw)) {
+    levels(factor(repeated_raw))
+  }
   fit$call <- call
   fit$formula <- formula
   fit$terms <- model_terms

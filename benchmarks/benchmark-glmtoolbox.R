@@ -39,6 +39,7 @@ as_ref_glmgee <- function(ref, fit, id) {
     naive = vcov(ref, type = "model"),
     robust = vcov(ref, type = "robust"),
     df_adjusted = vcov(ref, type = "df-adjusted"),
+    mancl_derouen = vcov(ref, type = "bias-corrected"),
     fitted = ref$fitted.values,
     linear_predictors = ref$linear.predictors,
     residuals_pearson = residuals(ref, type = "pearson"),
@@ -467,6 +468,146 @@ not_comparable("stepCriterion(direction = \"backward\") with force.in",
 
 
 # =============================================================================
+# Influence diagnostics
+# =============================================================================
+
+geer_observation_labels <- function(fit, id) {
+  used <- as.character(id[fit$frame_rows])[fit$row_order]
+  paste0(used, "(", as.integer(fit$repeated), ")")
+}
+
+glmgee_local_influence <- function(fit, perturbation, type) {
+  quantities <- compute_influence_quantities(fit)
+  upper <- quantities$sensitivity
+  upper[lower.tri(upper)] <- t(upper)[lower.tri(upper)]
+  inverse <- chol2inv(chol(upper))
+  delta <- switch(
+    perturbation,
+    "cluster-weights" = quantities$cluster_delta[
+      get_influence_cluster_order(fit)$index, , drop = FALSE
+    ],
+    "observation-weights" = quantities$observation_delta,
+    response = quantities$response_delta
+  )
+  if (identical(type, "total")) {
+    2 * abs(rowSums((delta %*% inverse) * delta))
+  } else {
+    compute_local_direction(delta, inverse)
+  }
+}
+
+check_influence_glmgee <- function(label, ref, fit, id) {
+  clusters <- geer_cluster_ids(fit, id)
+  observations <- geer_observation_labels(fit, id)
+  sensitivity <- compute_influence_quantities(fit)$sensitivity
+  symmetric <- isTRUE(all.equal(sensitivity, t(sensitivity),
+                                tolerance = 1e-10))
+  perturbations <- list(
+    "cluster-weights" = list(ref = "cw-clusters", rows = clusters,
+                             scale = 2 / ref$phi),
+    "observation-weights" = list(ref = "cw-observations",
+                                 rows = observations, scale = 2 / ref$phi),
+    response = list(ref = "response", rows = observations, scale = 2)
+  )
+  describe(paste(label, "influence diagnostics"), {
+    it("leverages agree", {
+      expect_agree(leverage(ref)[clusters, ], hatvalues(fit))
+      expect_agree(leverage(ref, level = "observations")[observations, ],
+                   hatvalues(fit, level = "observations"))
+    })
+    it("one-step dfbeta agrees", {
+      expect_agree(dfbeta(ref)[clusters, ], dfbeta(fit))
+      expect_agree(dfbeta(ref, level = "observations")[observations, ],
+                   dfbeta(fit, level = "observations"))
+    })
+    it("Cook's distance agrees", {
+      expect_agree(cooks.distance(ref, varest = "model")[clusters, ],
+                   cooks.distance(fit))
+      expect_agree(
+        cooks.distance(ref, level = "observations",
+                       varest = "model")[observations, ],
+        cooks.distance(fit, level = "observations")
+      )
+      expect_agree(
+        suppressMessages(
+          cooks.distance(ref, varest = "robust", coefs = "treat|group")
+        )[clusters, ],
+        cooks.distance(fit, cov_type = "robust",
+                       parm = grep("treat|group", names(coef(fit)),
+                                   ignore.case = TRUE))
+      )
+    })
+    it("total local influence agrees", {
+      for (perturbation in names(perturbations)) {
+        setting <- perturbations[[perturbation]]
+        ref_total <- setting$scale *
+          abs(localInfluence(ref, perturbation = setting$ref)[
+            setting$rows,
+          ])
+        expect_agree(ref_total,
+                     glmgee_local_influence(fit, perturbation, "total"))
+        if (symmetric) {
+          expect_agree(ref_total,
+                       local_influence(fit, perturbation = perturbation))
+        } else {
+          expect_known_difference(
+            ref_total,
+            local_influence(fit, perturbation = perturbation),
+            paste("glmtoolbox inverts the upper triangle of the",
+                  "nonsymmetric observed derivative with chol()")
+          )
+        }
+      }
+    })
+    it("the direction of maximum curvature agrees", {
+      set.seed(1)
+      ref_local <- tryCatch(
+        localInfluence(ref, type = "local")[clusters, ],
+        error = function(e) NULL
+      )
+      if (is.null(ref_local)) {
+        skip(paste("glmtoolbox's power iteration failed: its stopping rule",
+                   "max(abs((bnew - bold) / bold)) is NA when a component",
+                   "is exactly zero"))
+      }
+      expect_agree(ref_local,
+                   glmgee_local_influence(fit, "cluster-weights", "local"),
+                   tol = 1e-4)
+      if (symmetric) {
+        expect_agree(ref_local, local_influence(fit, type = "local"),
+                     tol = 1e-4)
+      } else {
+        expect_known_difference(
+          ref_local,
+          local_influence(fit, type = "local"),
+          paste("glmtoolbox inverts the upper triangle of the",
+                "nonsymmetric observed derivative with chol()"),
+          tol = 1e-4
+        )
+      }
+    })
+  })
+}
+
+for (cs in names(ref_sp)) {
+  check_influence_glmgee(paste("Ex1 spruces Gamma/log", cs), ref_sp[[cs]],
+                         fit_sp[[cs]], spruces$tree)
+}
+for (cs in names(ref_d2)) {
+  check_influence_glmgee(paste("Ex2 depression binomial", cs), ref_d2[[cs]],
+                         fit_d2[[cs]], depression$subj)
+}
+for (cs in names(ref_d3)) {
+  check_influence_glmgee(paste("Ex3 depression gaussian", cs), ref_d3[[cs]],
+                         fit_d3[[cs]], depression$subj)
+}
+not_comparable("dfbeta(method = \"full\")",
+               paste("glmtoolbox takes one step with re-estimated",
+                     "association parameters; geer refits exactly with",
+                     "them held fixed"))
+
+
+# =============================================================================
 # Examples without a geer counterpart
 # =============================================================================
 
@@ -474,8 +615,6 @@ not_comparable("stepCriterion(criterion = \"p-value\")",
                paste("glmtoolbox mixes additions and deletions with its own",
                      "hybrid rule and Wilson-Hilferty p-values, which step_p()",
                      "does not reproduce"))
-not_comparable("cooks.distance(), dfbeta(), leverage(), localInfluence()",
-               "geer has no influence diagnostics")
 not_comparable("estequa()", "geer does not export the estimating equations")
 not_comparable("wglmgee() (amenorrhea)",
                "geer has no weighted GEE for dropout")

@@ -312,12 +312,13 @@ predict.geer <- function(object,
 
 compute_mahalanobis_residuals <- function(object) {
   cluster_index <- split(seq_along(object$id), object$id)
-  cluster_ids <- names(cluster_index)
+  cluster_ids <- get_cluster_labels(object)
   ans <- vapply(
-    cluster_ids,
+    seq_along(cluster_index),
     FUN.VALUE = numeric(1),
-    FUN = function(cluster_id) {
-      indices <- cluster_index[[cluster_id]]
+    FUN = function(k) {
+      indices <- cluster_index[[k]]
+      cluster_id <- cluster_ids[[k]]
       residual_vector <- object$y[indices] - object$fitted.values[indices]
       working_covariance <- compute_working_covariance_for_criteria(
         object,
@@ -356,6 +357,7 @@ compute_mahalanobis_residuals <- function(object) {
       value
     }
   )
+  names(ans) <- cluster_ids
   ans
 }
 

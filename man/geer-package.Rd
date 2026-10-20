@@ -37,9 +37,10 @@ with an odds-ratio parameterization. \emph{arXiv preprint}.
   \item Model building: \code{\link{anova.geer}}, \code{\link{add1.geer}},
     \code{\link{step_p}}, \code{\link{step_criterion}},
     \code{\link{geecriteria}}.
-  \item Diagnostics: \code{\link{residuals.geer}}, \code{\link{runs_test}},
-    \code{\link{frechet_bounds_cor}}, \code{\link{mcar_little_test}},
-    \code{\link{mcar_logistic_test}},
+  \item Diagnostics: \code{\link{residuals.geer}},
+    \code{\link{hatvalues.geer}}, \code{\link{local_influence}},
+    \code{\link{runs_test}}, \code{\link{frechet_bounds_cor}},
+    \code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}},
     \code{\link{mcar_homoscedasticity_test}}.
   \item Other packages: \code{\link{emmeans-support}},
     \code{\link{marginaleffects-support}}.
