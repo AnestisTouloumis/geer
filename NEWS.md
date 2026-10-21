@@ -30,6 +30,16 @@
   maximum curvature (Cook, 1986) for case-weight perturbations of the clusters
   or the observations and for additive perturbations of the responses.
 
+* Added goodness-of-fit tests for binary responses. `gof_score_test()` gives
+  the deciles-of-risk test of Horton et al. (1999) and the covariate-region
+  test of Barnhart and Williamson (1998) as score tests at the fit.
+  `gof_residual_test()` gives the Pearson and unweighted sum of squares tests
+  of Pan (2002), and `gof_tests()` collects them in one table. The robust
+  covariate-region statistic is the robust score statistic, which differs from
+  the robust statistic printed by Barnhart and Williamson (1998). The tests
+  were developed for `method = "gee"`, and fits with another method give a
+  warning.
+
 * Fitted objects store the cluster identifiers and the values of `repeated`
   supplied, as `cluster_labels` and `repeated_labels`. Cluster-level
   diagnostics are named by these identifiers, and observation-level

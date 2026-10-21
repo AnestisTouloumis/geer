@@ -200,3 +200,111 @@ is_balanced_design <- function(object) {
     logical(1L)
   ))
 }
+
+
+build_fit_data_frames <- function(object, env) {
+  if (is.null(object$call) || is.null(object$formula)) {
+    return(NULL)
+  }
+  fit_env <- environment(object$formula)
+  if (is.null(fit_env)) {
+    fit_env <- env
+  }
+  model_call <- object$call
+  model_call$formula <- object$formula
+  fit_frame <- tryCatch(
+    build_geer_model_frame(model_call, env = fit_env),
+    error = function(e) NULL
+  )
+  if (is.null(fit_frame)) {
+    return(NULL)
+  }
+  data <- NULL
+  if (!is.null(model_call$data)) {
+    data <- tryCatch(
+      eval(model_call$data, envir = fit_env),
+      error = function(e) NULL
+    )
+    if (is.null(data)) {
+      return(NULL)
+    }
+  }
+  list(fit_frame = fit_frame, data = data, fit_env = fit_env)
+}
+
+
+evaluate_fit_data_variables <- function(variables, data, enclos, rows) {
+  variable_formula <- stats::as.formula(
+    call("~", Reduce(function(x, y) call("+", x, y), variables)),
+    env = enclos
+  )
+  variable_frame <- tryCatch(
+    stats::model.frame(
+      variable_formula,
+      data = data,
+      na.action = stats::na.pass
+    ),
+    error = function(e) NULL
+  )
+  if (is.null(variable_frame) || ncol(variable_frame) != length(variables)) {
+    return(NULL)
+  }
+  index <- match(rows, rownames(variable_frame))
+  if (anyNA(index)) {
+    return(NULL)
+  }
+  lapply(variable_frame, function(x) x[index])
+}
+
+
+get_fit_frame_order <- function(object, fit_frame) {
+  if (nrow(fit_frame) != object$obs_no || is.null(object$id) ||
+      is.null(object$repeated)) {
+    return(NULL)
+  }
+  id_repeated <- extract_geer_id_repeated(
+    fit_frame,
+    nrow(fit_frame),
+    warn_character = FALSE
+  )
+  ord <- order(id_repeated$id, id_repeated$repeated)
+  aligned <- isTRUE(all.equal(
+    as.numeric(id_repeated$id[ord]),
+    as.numeric(object$id),
+    check.attributes = FALSE
+  )) &&
+    isTRUE(all.equal(
+      as.numeric(id_repeated$repeated[ord]),
+      as.numeric(object$repeated),
+      check.attributes = FALSE
+    ))
+  if (aligned) ord else NULL
+}
+
+
+extract_fit_data_variables <- function(object, variables, enclos, env) {
+  frames <- build_fit_data_frames(object, env)
+  if (is.null(frames)) {
+    return(list(status = "unavailable", values = NULL))
+  }
+  if (is.null(enclos)) {
+    enclos <- frames$fit_env
+  }
+  values <- evaluate_fit_data_variables(
+    variables,
+    frames$data,
+    enclos,
+    rownames(frames$fit_frame)
+  )
+  if (is.null(values)) {
+    return(list(status = "unavailable", values = NULL))
+  }
+  if (any(vapply(values, anyNA, logical(1)))) {
+    return(list(status = "incomplete", values = NULL))
+  }
+  ord <- get_fit_frame_order(object, frames$fit_frame)
+  if (is.null(ord)) {
+    return(list(status = "unaligned", values = NULL))
+  }
+  list(status = "ok", values = lapply(values, function(x) x[ord]))
+}

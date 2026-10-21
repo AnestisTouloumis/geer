@@ -79,6 +79,18 @@ geer_local_influence_types <- c(
   "total", "local"
 )
 
+geer_gof_partitions <- c(
+  "risk", "covariates"
+)
+
+geer_gof_statistics <- c(
+  "pearson", "uss"
+)
+
+geer_gof_covariances <- c(
+  "unstructured", "empirical"
+)
+
 geer_integer_tol <- sqrt(.Machine$double.eps)
 
 
@@ -237,6 +249,33 @@ match_local_influence_type <- function(type) {
     x = type,
     choices = geer_local_influence_types,
     name = "type"
+  )
+}
+
+
+match_gof_partition <- function(partition) {
+  match_choice_with_default(
+    x = partition,
+    choices = geer_gof_partitions,
+    name = "partition"
+  )
+}
+
+
+match_gof_statistic <- function(statistic) {
+  match_choice_with_default(
+    x = statistic,
+    choices = geer_gof_statistics,
+    name = "statistic"
+  )
+}
+
+
+match_gof_covariance <- function(covariance) {
+  match_choice_with_default(
+    x = covariance,
+    choices = geer_gof_covariances,
+    name = "covariance"
   )
 }
 

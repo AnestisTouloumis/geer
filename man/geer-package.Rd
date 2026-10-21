@@ -39,6 +39,8 @@ with an odds-ratio parameterization. \emph{arXiv preprint}.
     \code{\link{geecriteria}}.
   \item Diagnostics: \code{\link{residuals.geer}},
     \code{\link{hatvalues.geer}}, \code{\link{local_influence}},
+    \code{\link{gof_tests}}, \code{\link{gof_score_test}},
+    \code{\link{gof_residual_test}},
     \code{\link{runs_test}}, \code{\link{frechet_bounds_cor}},
     \code{\link{mcar_little_test}}, \code{\link{mcar_logistic_test}},
     \code{\link{mcar_homoscedasticity_test}}.

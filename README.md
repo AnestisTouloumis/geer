@@ -183,6 +183,9 @@ QICu, QIC, QICC, AGPC, or SGPC.
 - `hatvalues()`, `dfbeta()`, `dfbetas()`, `cooks.distance()` (Preisser
   and Qaqish, 1996), and `local_influence()` (Cook, 1986), for clusters
   or observations.
+- `gof_tests()`, `gof_score_test()`, and `gof_residual_test()`,
+  goodness-of-fit tests for binary responses (Barnhart and Williamson,
+  1998, Horton et al., 1999, and Pan, 2002).
 - `runs_test()`, the Wald-Wolfowitz runs test of residual signs (Chang,
   2000, and Hardin and Hilbe, 2013).
 - `frechet_bounds_cor()`, which checks the working correlations of
@@ -214,6 +217,9 @@ Please report bugs and request features at
 
 ## References
 
+Barnhart, H.X. and Williamson, J.M. (1998) Goodness-of-fit tests for GEE
+modeling with binary responses. *Biometrics*, **54**, 720–729.
+
 Chang, Y.-C. (2000) Residuals analysis of the generalized linear models
 for longitudinal data. *Statistics in Medicine*, **19**, 1277–1293.
 
@@ -226,6 +232,11 @@ Hardin, J.W. and Hilbe, J.M. (2013) *Generalized Estimating Equations*,
 Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure
 identification in generalized estimating equations. *Statistics in
 Medicine*, **28**, 642–658.
+
+Horton, N.J., Bebchuk, J.D., Jones, C.L., Lipsitz, S.R., Catalano, P.J.,
+Zahner, G.E.P. and Fitzmaurice, G.M. (1999) Goodness-of-fit for GEE: an
+example with mental health service utilization. *Statistics in Medicine*,
+**18**, 213–222.
 
 Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity,
 normality, and missing completely at random for incomplete multivariate
@@ -249,6 +260,9 @@ correction for the variance of GEE estimators. *Biometrical Journal*,
 
 Pan, W. (2001) Akaike’s information criterion in generalized estimating
 equations. *Biometrics*, **57**, 120–125.
+
+Pan, W. (2002) Goodness-of-fit tests for GEE with correlated binary data.
+*Scandinavian Journal of Statistics*, **29**, 101–110.
 
 Preisser, J.S. and Qaqish, B.F. (1996) Deletion diagnostics for
 generalised estimating equations. *Biometrika*, **83**, 551–562.

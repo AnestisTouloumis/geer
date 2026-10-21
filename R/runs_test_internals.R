@@ -60,43 +60,26 @@ resolve_runs_order <- function(object, order_by, env = parent.frame()) {
 
 
 extract_runs_order_variable <- function(object, name, env = parent.frame()) {
-  unknown_message <- sprintf(
-    paste0(
-      "unknown 'order_by' value '%s': use 'natural', 'fitted', a ",
-      "model-matrix column name, a variable in the data used to fit the ",
-      "model, or a numeric vector"
-    ),
-    name
+  extracted <- extract_fit_data_variables(
+    object,
+    list(as.name(name)),
+    enclos = NULL,
+    env = env
   )
-  if (is.null(object$call) || is.null(object$formula)) {
-    stop(unknown_message, call. = FALSE)
+  if (identical(extracted$status, "unavailable")) {
+    stop(
+      sprintf(
+        paste0(
+          "unknown 'order_by' value '%s': use 'natural', 'fitted', a ",
+          "model-matrix column name, a variable in the data used to fit the ",
+          "model, or a numeric vector"
+        ),
+        name
+      ),
+      call. = FALSE
+    )
   }
-  extended_formula <- tryCatch(
-    stats::update.formula(
-      object$formula,
-      stats::as.formula(
-        call("~", quote(.), call("+", quote(.), as.name(name)))
-      )
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(extended_formula)) {
-    stop(unknown_message, call. = FALSE)
-  }
-  model_call <- object$call
-  model_call$formula <- extended_formula
-  eval_env <- environment(object$formula)
-  if (is.null(eval_env)) {
-    eval_env <- env
-  }
-  model_frame <- tryCatch(
-    build_geer_model_frame(model_call, env = eval_env),
-    error = function(e) NULL
-  )
-  if (is.null(model_frame) || !(name %in% names(model_frame))) {
-    stop(unknown_message, call. = FALSE)
-  }
-  if (nrow(model_frame) != object$obs_no) {
+  if (identical(extracted$status, "incomplete")) {
     stop(
       sprintf(
         paste0(
@@ -109,24 +92,7 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
       call. = FALSE
     )
   }
-  id_repeated <- extract_geer_id_repeated(
-    model_frame,
-    nrow(model_frame),
-    warn_character = FALSE
-  )
-  ord <- order(id_repeated$id, id_repeated$repeated)
-  aligned <- !is.null(object$id) && !is.null(object$repeated) &&
-    isTRUE(all.equal(
-      as.numeric(id_repeated$id[ord]),
-      as.numeric(object$id),
-      check.attributes = FALSE
-    )) &&
-    isTRUE(all.equal(
-      as.numeric(id_repeated$repeated[ord]),
-      as.numeric(object$repeated),
-      check.attributes = FALSE
-    ))
-  if (!aligned) {
+  if (identical(extracted$status, "unaligned")) {
     stop(
       sprintf(
         paste0(
@@ -139,7 +105,7 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
       call. = FALSE
     )
   }
-  key <- model_frame[[name]]
+  key <- extracted$values[[1L]]
   if (inherits(key, "POSIXlt")) {
     key <- as.POSIXct(key)
   }
@@ -157,7 +123,7 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
       call. = FALSE
     )
   }
-  as.numeric(key)[ord]
+  as.numeric(key)
 }
 
 
