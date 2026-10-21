@@ -14,7 +14,7 @@ test_that("internal Anderson-Darling calculation follows Scholz-Stephens", {
     -0.8, -0.1, 0.2, 0.45, 0.7, 1.0, 1.4, 1.7, 2.0
   )
   group <- rep(1:3, c(7, 8, 9))
-  out <- compute_mcar_anderson_darling_test(x, group, c(7L, 8L, 9L))
+  out <- compute_mcar_ad_test(x, group, c(7L, 8L, 9L))
 
   expect_equal(out$statistic, 0.8000654142, tolerance = 1e-9)
   expect_equal(
@@ -52,7 +52,7 @@ test_that("internal modified Hawkins calculation follows the published transform
     completed,
     group = group,
     group_counts = c(8L, 8L, 8L),
-    neyman_nulls = simulate_mcar_neyman_nulls_by_pattern(c(8L, 8L, 8L), nrep = 20L, n_min = 2L)
+    neyman_nulls = compute_mcar_neyman_nulls(c(8L, 8L, 8L), n_replicates = 20L, n_min = 2L)
   )
 
   expect_equal(
@@ -240,7 +240,7 @@ test_that("mcar_homoscedasticity_test validates inputs", {
     "greater than or equal to 2"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), nrep = 0),
+    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = 0),
     "positive integer"
   )
   expect_error(
@@ -248,12 +248,12 @@ test_that("mcar_homoscedasticity_test validates inputs", {
     "greater than or equal to 2"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), alpha = 1),
+    mcar_homoscedasticity_test(make_jj_screening_data(), sig_level = 1),
     "strictly between 0 and 1"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), method = "invalid"),
-    "'arg' should be one of"
+    "'method' must be one of"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), n_imputations = 0),
@@ -268,28 +268,28 @@ test_that("mcar_homoscedasticity_test validates inputs", {
     "'seed' must be NULL or a whole number"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), nrep = "200"),
-    "'nrep' must be a positive integer"
+    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = "200"),
+    "'n_replicates' must be a positive integer"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), nrep = TRUE),
-    "'nrep' must be a positive integer"
+    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = TRUE),
+    "'n_replicates' must be a positive integer"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), n_min = "2"),
     "'n_min' must be an integer greater than or equal to 2"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), maxit = 1e12),
-    "'maxit' must be a positive integer"
+    mcar_homoscedasticity_test(make_jj_screening_data(), maxiter = 1e12),
+    "'maxiter' must be a positive integer"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), alpha = "0.05"),
-    "'alpha' must be a finite number"
+    mcar_homoscedasticity_test(make_jj_screening_data(), sig_level = "0.05"),
+    "'sig_level' must be a finite number"
   )
   expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), tol = "1e-8"),
-    "'tol' must be a positive finite number"
+    mcar_homoscedasticity_test(make_jj_screening_data(), tolerance = "1e-8"),
+    "'tolerance' must be a positive finite number"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), data = data.frame()),
@@ -320,12 +320,12 @@ test_that("Hawkins transformed statistics match MissMech on deterministic data",
     completed,
     group = group,
     group_counts = counts,
-    neyman_nulls = simulate_mcar_neyman_nulls_by_pattern(counts, nrep = 10L, n_min = 2L)
+    neyman_nulls = compute_mcar_neyman_nulls(counts, n_replicates = 10L, n_min = 2L)
   )
   expect_equal(hawkins$f.values, missmech_fij, tolerance = 1e-9)
   expect_equal(hawkins$group.statistics[1L], 5.7707840618, tolerance = 1e-9)
 
-  ad <- compute_mcar_anderson_darling_test(hawkins$f.values, group, counts)
+  ad <- compute_mcar_ad_test(hawkins$f.values, group, counts)
   expect_equal(ad$statistic, 0.8206642148, tolerance = 1e-9)
   expect_equal(ad$variance, 0.9910839542, tolerance = 1e-9)
   expect_equal(
@@ -340,7 +340,7 @@ test_that("Anderson-Darling statistic reproduces the published MissMech example"
   withr::local_seed(50)
   x <- c(rnorm(30), runif(45), rnorm(60, 2, 3))
   counts <- c(30L, 45L, 60L)
-  out <- compute_mcar_anderson_darling_test(x, rep(1:3, counts), counts)
+  out <- compute_mcar_ad_test(x, rep(1:3, counts), counts)
 
   expect_equal(out$statistic, 18.62008, tolerance = 1e-6)
   expect_equal(out$variance, 1.119502, tolerance = 1e-6)
@@ -384,10 +384,10 @@ test_that("Anderson-Darling p-values match kSamples reference quantiles", {
   expect_false(compute_mcar_ad_p_value(2, 4)$extrapolated)
 })
 
-test_that("simulated Neyman p-values use the (1 + b) / (nrep + 1) form", {
+test_that("simulated Neyman p-values use (1 + b) / (n_replicates + 1)", {
   withr::local_seed(31)
   x <- runif(12)
-  null <- simulate_mcar_neyman_null(12L, nrep = 499L)
+  null <- compute_mcar_neyman_null(12L, n_replicates = 499L)
   out <- compute_mcar_neyman_p_value(x, null = null)
 
   expect_true(out$simulated)
@@ -404,7 +404,7 @@ test_that("simulated Neyman p-values use the (1 + b) / (nrep + 1) form", {
     numeric(1)
   )
   withr::local_seed(8)
-  blocked <- simulate_mcar_neyman_null(7L, nrep = 25L, block_size = 10L)
+  blocked <- compute_mcar_neyman_null(7L, n_replicates = 25L, block_size = 10L)
   expect_equal(blocked, looped, tolerance = 1e-12)
 })
 
@@ -482,7 +482,7 @@ test_that("user-supplied completed data bypass imputation", {
     method = "nonparametric",
     imputed_data = complete
   )
-  direct <- compute_mcar_anderson_darling_test(
+  direct <- compute_mcar_ad_test(
     compute_mcar_hawkins_test(
       complete,
       group = rep(1:3, c(50L, 40L, 30L)),

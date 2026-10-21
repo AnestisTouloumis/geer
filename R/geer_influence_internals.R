@@ -18,23 +18,11 @@ compute_influence_quantities <- function(object) {
 
 
 get_cached_influence_values <- function(object) {
-  cache <- object$cache
-  if (is.environment(cache)) {
-    stored <- cache$influence
-    if (!is.null(stored) &&
-        identical(stored$coefficients, object$coefficients)) {
-      return(stored$quantities)
-    }
-  }
-  quantities <- compute_influence_quantities(object)
-  if (is.environment(cache)) {
-    assign(
-      "influence",
-      list(coefficients = object$coefficients, quantities = quantities),
-      envir = cache
-    )
-  }
-  quantities
+  get_cached_value(
+    object,
+    "influence",
+    function() compute_influence_quantities(object)
+  )
 }
 
 
@@ -47,19 +35,19 @@ get_influence_cluster_order <- function(object) {
 }
 
 
-warn_influence_na <- function(values, level) {
+warn_influence_na <- function(values, unit) {
   missing <- rownames(values)[!stats::complete.cases(values)]
   if (!length(missing)) {
     return(invisible(NULL))
   }
-  unit <- if (identical(level, "clusters")) "cluster" else "observation"
+  label <- if (identical(unit, "clusters")) "cluster" else "observation"
   warning(
     sprintf(
       paste0(
         "deleting %s %s leaves coefficients that cannot be estimated, so ",
         "the corresponding values are NA"
       ),
-      if (length(missing) > 1L) paste0(unit, "s") else unit,
+      if (length(missing) > 1L) paste0(label, "s") else label,
       paste(missing, collapse = ", ")
     ),
     call. = FALSE
@@ -67,13 +55,13 @@ warn_influence_na <- function(values, level) {
 }
 
 
-check_influence_method <- function(object, level, method, context) {
-  if (identical(level, "observations") && identical(method, "exact")) {
+check_influence_method <- function(object, unit, method, context) {
+  if (identical(unit, "observations") && identical(method, "exact")) {
     stop(
       sprintf(
         paste0(
           "%s failed: method = \"exact\" is available only for ",
-          "level = \"clusters\""
+          "unit = \"clusters\""
         ),
         context
       ),
@@ -85,7 +73,7 @@ check_influence_method <- function(object, level, method, context) {
       sprintf(
         paste0(
           "%s failed: method = \"one-step\" requires a fit with ",
-          "method = \"gee\"; use method = \"exact\" with level = \"clusters\""
+          "method = \"gee\"; use method = \"exact\" with unit = \"clusters\""
         ),
         context
       ),
@@ -96,9 +84,9 @@ check_influence_method <- function(object, level, method, context) {
 }
 
 
-compute_influence_hatvalues <- function(object, level) {
+compute_influence_hatvalues <- function(object, unit) {
   hat_vector <- as.numeric(get_cached_influence_values(object)$hat)
-  if (identical(level, "observations")) {
+  if (identical(unit, "observations")) {
     names(hat_vector) <- get_observation_labels(object)
     return(hat_vector)
   }
@@ -112,14 +100,14 @@ compute_influence_hatvalues <- function(object, level) {
 }
 
 
-compute_influence_dfbeta <- function(object, level, method, context) {
-  check_influence_method(object, level, method, context)
+compute_influence_dfbeta <- function(object, unit, method, context) {
+  check_influence_method(object, unit, method, context)
   coef_names <- names(object$coefficients)
   quantities <- get_cached_influence_values(object)
-  if (identical(level, "observations")) {
+  if (identical(unit, "observations")) {
     ans <- quantities$observation_dfbeta
     dimnames(ans) <- list(get_observation_labels(object), coef_names)
-    warn_influence_na(ans, level)
+    warn_influence_na(ans, unit)
     return(ans)
   }
   cluster_order <- get_influence_cluster_order(object)
@@ -128,24 +116,24 @@ compute_influence_dfbeta <- function(object, level, method, context) {
   if (identical(method, "exact")) {
     singular <- !stats::complete.cases(ans)
     delete_estimates <- if (any(singular)) {
-      compute_jackknife_delete_estimates(object, context, skip = singular)
+      compute_jackknife_deletes(object, context, skip = singular)
     } else {
       get_cached_jackknife_estimates(object, context)
     }
     ans <- sweep(-delete_estimates, 2L, object$coefficients, `+`)
   }
-  warn_influence_na(ans, level)
+  warn_influence_na(ans, unit)
   ans
 }
 
 
 compute_cooks_distance <- function(object,
-                                   level,
+                                   unit,
                                    method,
                                    cov_type,
                                    parm,
                                    context) {
-  dfbeta_matrix <- compute_influence_dfbeta(object, level, method, context)
+  dfbeta_matrix <- compute_influence_dfbeta(object, unit, method, context)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)[
     parm, parm, drop = FALSE
   ]
@@ -173,12 +161,12 @@ compute_cooks_distance <- function(object,
 
 
 compute_influence_dfbetas <- function(object,
-                                      level,
+                                      unit,
                                       method,
                                       cov_type,
                                       context) {
-  dfbeta_matrix <- compute_influence_dfbeta(object, level, method, context)
-  standard_errors <- compute_standard_errors_or_stop(
+  dfbeta_matrix <- compute_influence_dfbeta(object, unit, method, context)
+  standard_errors <- compute_se_or_stop(
     stats::vcov(object, cov_type = cov_type),
     parm = colnames(dfbeta_matrix),
     context = context

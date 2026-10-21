@@ -10,7 +10,7 @@
 #' fitted \code{geer} object.
 #'
 #' @param model a fitted model object of class \code{"geer"}.
-#' @param level character string specifying whether the diagnostics refer to
+#' @param unit character string specifying whether the diagnostics refer to
 #'   clusters (\code{"clusters"}) or to single observations
 #'   (\code{"observations"}). Defaults to \code{"clusters"}.
 #' @param method character string specifying how the deletion estimates are
@@ -35,8 +35,8 @@
 #' matrix of cluster \eqn{i} is
 #' \deqn{H_i = D_i \Sigma D_i^\top V_i^{-1}.}{H_i = D_i Sigma D_i' V_i^(-1).}
 #' \code{hatvalues()} returns the diagonal elements of \eqn{H_i} for
-#' \code{level = "observations"} and their sum, the trace of \eqn{H_i}, for
-#' \code{level = "clusters"}. The leverages sum to the number of coefficients.
+#' \code{unit = "observations"} and their sum, the trace of \eqn{H_i}, for
+#' \code{unit = "clusters"}. The leverages sum to the number of coefficients.
 #'
 #' \code{dfbeta()} returns \eqn{\hat\beta - \hat\beta_{(i)}}{beta - beta_(i)},
 #' where \eqn{\hat\beta_{(i)}}{beta_(i)} is the estimate without cluster or
@@ -59,7 +59,7 @@
 #' refitted with the association parameters held at their full-data values,
 #' as for \code{cov_type = "jackknife"} in \code{\link{vcov.geer}}. The
 #' refits are computed once and cached on the fit. It is available only for
-#' \code{level = "clusters"}. The one-step approximation is derived from the
+#' \code{unit = "clusters"}. The one-step approximation is derived from the
 #' ordinary generalized estimating equations, so it is available only for
 #' fits with \code{method = "gee"}; for the other estimation methods, use
 #' \code{method = "exact"}.
@@ -86,7 +86,7 @@
 #' robust covariance matrix by default.
 #'
 #' @section Observation order:
-#' For \code{level = "observations"}, the values follow the internal order of
+#' For \code{unit = "observations"}, the values follow the internal order of
 #' the fitted model: the complete cases, sorted by cluster and, within
 #' cluster, by \code{repeated}. They are named \code{"id(repeated)"} by the
 #' cluster identifier and the value of \code{repeated}, or the position within
@@ -128,17 +128,17 @@
 #' head(dfbeta(fit))
 #' head(dfbetas(fit, cov_type = "robust"))
 #' head(cooks.distance(fit))
-#' head(cooks.distance(fit, level = "observations"))
+#' head(cooks.distance(fit, unit = "observations"))
 #' head(cooks.distance(fit, parm = "treatmentprogabide"))
 #'
 #' @export
 hatvalues.geer <- function(model,
-                           level = c("clusters", "observations"),
+                           unit = c("clusters", "observations"),
                            ...) {
   check_unused_dots(list(...), "hatvalues.geer")
   model <- check_geer_object(model, name = "model")
-  level <- match_influence_level(level[1L])
-  compute_influence_hatvalues(model, level)
+  unit <- match_influence_unit(unit[1L])
+  compute_influence_hatvalues(model, unit)
 }
 
 
@@ -146,14 +146,14 @@ hatvalues.geer <- function(model,
 #' @method dfbeta geer
 #' @export
 dfbeta.geer <- function(model,
-                        level = c("clusters", "observations"),
+                        unit = c("clusters", "observations"),
                         method = c("one-step", "exact"),
                         ...) {
   check_unused_dots(list(...), "dfbeta.geer")
   model <- check_geer_object(model, name = "model")
-  level <- match_influence_level(level[1L])
+  unit <- match_influence_unit(unit[1L])
   method <- match_influence_method(method[1L])
-  compute_influence_dfbeta(model, level, method, "dfbeta.geer")
+  compute_influence_dfbeta(model, unit, method, "dfbeta.geer")
 }
 
 
@@ -161,16 +161,16 @@ dfbeta.geer <- function(model,
 #' @method dfbetas geer
 #' @export
 dfbetas.geer <- function(model,
-                         level = c("clusters", "observations"),
+                         unit = c("clusters", "observations"),
                          method = c("one-step", "exact"),
                          cov_type = "naive",
                          ...) {
   check_unused_dots(list(...), "dfbetas.geer")
   model <- check_geer_object(model, name = "model")
-  level <- match_influence_level(level[1L])
+  unit <- match_influence_unit(unit[1L])
   method <- match_influence_method(method[1L])
   cov_type <- match_cov_type(cov_type, default = "naive")
-  compute_influence_dfbetas(model, level, method, cov_type, "dfbetas.geer")
+  compute_influence_dfbetas(model, unit, method, cov_type, "dfbetas.geer")
 }
 
 
@@ -178,14 +178,14 @@ dfbetas.geer <- function(model,
 #' @method cooks.distance geer
 #' @export
 cooks.distance.geer <- function(model,
-                                level = c("clusters", "observations"),
+                                unit = c("clusters", "observations"),
                                 method = c("one-step", "exact"),
                                 cov_type = "naive",
                                 parm,
                                 ...) {
   check_unused_dots(list(...), "cooks.distance.geer")
   model <- check_geer_object(model, name = "model")
-  level <- match_influence_level(level[1L])
+  unit <- match_influence_unit(unit[1L])
   method <- match_influence_method(method[1L])
   cov_type <- match_cov_type(cov_type, default = "naive")
   parm <- match_parm(
@@ -194,7 +194,7 @@ cooks.distance.geer <- function(model,
   )
   compute_cooks_distance(
     model,
-    level = level,
+    unit = unit,
     method = method,
     cov_type = cov_type,
     parm = parm,

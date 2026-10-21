@@ -1,4 +1,4 @@
-resolve_runs_order <- function(object, order_by, env = parent.frame()) {
+get_runs_order <- function(object, order_by, env = parent.frame()) {
   natural_order <- order(object$id, object$repeated)
   if (is.character(order_by)) {
     if (length(order_by) != 1L || is.na(order_by) || !nzchar(order_by)) {

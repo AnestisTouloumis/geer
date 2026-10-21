@@ -43,7 +43,7 @@ fit_step_criterion_candidate <- function(fitted_model,
   if (!is.null(stored)) {
     return(stored)
   }
-  fit <- update_step_fit(fitted_model, change, obs_no)
+  fit <- refit_step_model(fitted_model, change, obs_no)
   candidate <- list(
     fit = fit,
     value = compute_step_criterion(fit, criterion, cov_type)
@@ -160,7 +160,7 @@ build_step_criterion_results <- function(models,
                                          object,
                                          criterion,
                                          cov_type) {
-  step_no <- vapply(models, `[[`, integer(1), "Step")
+  step_no <- as.integer(vapply(models, `[[`, numeric(1), "Step"))
   aod <- data.frame(
     Step = ifelse(step_no == 0L, NA_integer_, step_no),
     Df = vapply(models, `[[`, NA_real_, "Df"),

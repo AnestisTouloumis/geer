@@ -12,12 +12,12 @@ mcar_homoscedasticity_test(
   n_imputations = 1L,
   imputed_data = NULL,
   min_pattern_size = 7L,
-  nrep = 10000L,
+  n_replicates = 10000L,
   n_min = 30L,
-  alpha = 0.05,
+  sig_level = 0.05,
   seed = 110L,
-  maxit = 1000L,
-  tol = 1e-08
+  maxiter = 1000L,
+  tolerance = 1e-08
 )
 }
 \arguments{
@@ -55,28 +55,29 @@ performed. Defaults to \code{NULL}.}
 cases for a missingness pattern to be retained. Defaults to \code{7}, as in
 Jamshidian and Jalal (2010) and \pkg{MissMech}.}
 
-\item{nrep}{positive integer giving the number of simulated samples for the
-null distribution of the Neyman statistic in patterns with fewer than
-\code{n_min} cases. Defaults to \code{10000}.}
+\item{n_replicates}{positive integer giving the number of simulated samples
+for the null distribution of the Neyman statistic in patterns with fewer
+than \code{n_min} cases. Defaults to \code{10000}.}
 
 \item{n_min}{integer, at least 2, giving the pattern size from which the
 chi-squared reference with four degrees of freedom is used for the Neyman
 statistic. Defaults to \code{30}.}
 
-\item{alpha}{a single number strictly between 0 and 1 giving the significance
-level of the rule used with \code{method = "auto"}. Defaults to
-\code{0.05}.}
+\item{sig_level}{a single number strictly between 0 and 1 giving the
+significance level of the rule used with \code{method = "auto"}. Defaults
+to \code{0.05}.}
 
 \item{seed}{\code{NULL} or a single integer giving the random number seed
 used for imputation and for the simulated Neyman p-values. The previous
 random number state is restored on exit, and \code{NULL} uses the current
 random number stream. Defaults to \code{110}.}
 
-\item{maxit}{positive integer giving the maximum number of iterations of the
-EM algorithm used for normal-theory imputation. Defaults to \code{1000}.}
+\item{maxiter}{positive integer giving the maximum number of iterations of
+the EM algorithm used for normal-theory imputation. Defaults to
+\code{1000}.}
 
-\item{tol}{a single positive finite number giving the relative convergence
-tolerance of the EM algorithm. Defaults to \code{1e-08}.}
+\item{tolerance}{a single positive finite number giving the relative
+convergence tolerance of the EM algorithm. Defaults to \code{1e-08}.}
 }
 \value{
 An object of class \code{c("geer_htest", "htest")}. The standard
@@ -112,7 +113,7 @@ addition, the object contains:
   used.}
 \item{method.requested, selected.test}{the requested diagnostic and the
   test giving the primary result.}
-\item{alpha}{the significance level of the rule used with
+\item{sig.level}{the significance level of the rule used with
   \code{method = "auto"}.}
 \item{interpretation}{a short interpretation of the first imputation.}
 }
@@ -135,9 +136,10 @@ Uniform(0, 1) under multivariate normality and homogeneous covariances,
 applies a fourth-order Neyman smooth test within each pattern, and combines
 the pattern p-values by Fisher's method. For patterns with fewer than
 \code{n_min} cases the null distribution of the Neyman statistic is
-simulated and the p-value is \eqn{(1 + b)/(nrep + 1)}, where \eqn{b} is the
-number of simulated statistics at least as large as the observed one. The
-nonparametric test compares the distributions of the transformed distances
+simulated and the p-value is \eqn{(1 + b)/(n_replicates + 1)}, where
+\eqn{b} is the number of simulated statistics at least as large as the
+observed one. The nonparametric test compares the distributions of the
+transformed distances
 across patterns with the k-sample Anderson-Darling test of Scholz and
 Stephens (1987), which is less sensitive to nonnormality. With
 \code{method = "auto"} both tests are computed: if the Hawkins test does not
@@ -163,7 +165,7 @@ chi-squared reference is used for the Neyman statistic in patterns with at
 least \code{n_min} cases. Setting \code{n_min} larger than the largest
 pattern simulates the reference for all patterns, as in Jamshidian and Jalal
 (2010). This function differs from \pkg{MissMech} in two respects: the
-simulated Neyman p-values use \eqn{(1 + b)/(nrep + 1)}, and the
+simulated Neyman p-values use \eqn{(1 + b)/(n_replicates + 1)}, and the
 Anderson-Darling p-value is interpolated from the simulated quantiles of the
 \pkg{kSamples} package (Scholz and Zhu, 2025) instead of the five critical
 values of Scholz and Stephens (1987). P-values can therefore differ from

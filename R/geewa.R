@@ -235,7 +235,7 @@ geewa <- function(formula,
                   repeated,
                   control = geer_control(...),
                   corstr = "independence",
-                  Mv = 1,
+                  Mv = 1L,
                   method = "gee",
                   weights,
                   beta_start = NULL,
@@ -256,7 +256,7 @@ geewa <- function(formula,
   caller_env <- parent.frame()
   family <- normalize_family(family)
   link <- family$link
-  inputs <- prepare_geer_inputs(
+  inputs <- build_geer_inputs(
     mcall = mcall,
     family = family,
     env = caller_env,
@@ -275,7 +275,6 @@ geewa <- function(formula,
   qr_model_matrix <- inputs$qr_model_matrix
   control <- inputs$control
   method <- inputs$method
-  maxiter <- control$maxiter
   tolerance <- control$tolerance
   check_choice(corstr, geer_corstr_choices, "corstr")
   if (!identical(corstr, "m-dependent")) {
@@ -296,12 +295,21 @@ geewa <- function(formula,
         call. = FALSE
       )
     }
+    if (!is.numeric(alpha_vector)) {
+      stop("'alpha_vector' must be a numeric vector", call. = FALSE)
+    }
     alpha_vector <- as.numeric(alpha_vector)
     repeated_max <- max(repeated)
     if (length(alpha_vector) != choose(repeated_max, 2)) {
       stop(
         "'alpha_vector' must be a numeric vector of length ",
         choose(repeated_max, 2),
+        call. = FALSE
+      )
+    }
+    if (any(!is.finite(alpha_vector))) {
+      stop(
+        "'alpha_vector' must be finite when 'corstr = \"fixed\"'",
         call. = FALSE
       )
     }
@@ -359,11 +367,7 @@ geewa <- function(formula,
     link <- family$link
   }
   fit_pass <- function(beta, pass, previous) {
-    iterations <- if (pass$one_step) {
-      list(1L, 1L, 1)
-    } else {
-      list(maxiter, control$step_maxiter, control$step_multiplier)
-    }
+    iterations <- get_pass_iterations(pass, control)
     if (pass$carry_nuisance) {
       alpha_pass <- previous$alpha
       alpha_fixed_pass <- 1L
@@ -426,7 +430,7 @@ geewa <- function(formula,
     association_structure = corstr,
     row_order = inputs$row_order
   )
-  fit <- finalize_geer_fit(
+  fit <- build_geer_final_fit(
     fit = fit,
     geesolver_fit = geesolver_fit,
     tolerance = tolerance,

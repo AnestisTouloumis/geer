@@ -79,7 +79,7 @@ frechet_bounds_cor <- function(object) {
     )
   }
   y <- object$y
-  if (anyNA(y) || !all(y == 0 | y == 1)) {
+  if (!is_binary_response(y)) {
     stop(
       paste0(
         "'object' must have a binary (0/1) response; grouped binomial ",
@@ -89,7 +89,7 @@ frechet_bounds_cor <- function(object) {
     )
   }
   mu <- object$fitted.values
-  degenerate <- !is.finite(mu) | mu <= 0 | mu >= 1
+  degenerate <- is_degenerate_probability(mu)
   if (any(degenerate)) {
     stop(
       sprintf(

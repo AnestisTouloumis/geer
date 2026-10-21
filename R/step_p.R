@@ -95,7 +95,7 @@ step_p <- function(object,
                             "working-lrt"),
                    cov_type = "bias-corrected",
                    pmethod = c("rao-scott", "satterthwaite"),
-                   steps = 1000) {
+                   steps = 1000L) {
   object <- check_geer_object(object)
   direction <- match_direction_type(direction[1L])
   step_args <- check_step_thresholds(

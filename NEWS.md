@@ -150,6 +150,19 @@
 
 ## Changes
 
+* `anova()`, `add1()`, `drop1()`, and `step_p()` now stop with an error when a
+  test statistic is negative because the covariance estimate is not positive
+  semi-definite, instead of reporting `NA` with a warning.
+
+* `add1()`, `drop1()`, `model.matrix()`, `glance()`, and the `print()` methods
+  for fits and their summaries now reject unused arguments. `anova()` rejects
+  named arguments and objects that are not `geer` fits instead of ignoring
+  them.
+
+* `geewa_binary()` checks `link` against the supported links before building
+  the family, and `geewa()` checks that `beta_start`, `alpha_vector`, and
+  `control_glm` have the right type before using them.
+
 * Default `cov_type` of `geecriteria()` is now `"robust"`.
 
 * `cov_type` is validated in the same way by every function, requires an exact

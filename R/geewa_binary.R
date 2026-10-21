@@ -115,9 +115,10 @@ geewa_binary <- function(formula,
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
   caller_env <- parent.frame()
+  check_choice(link, geer_link_choices, "link")
   family <- normalize_family(stats::binomial(link = link))
   link <- family$link
-  inputs <- prepare_geer_inputs(
+  inputs <- build_geer_inputs(
     mcall = mcall,
     family = family,
     env = caller_env,
@@ -136,9 +137,8 @@ geewa_binary <- function(formula,
   qr_model_matrix <- inputs$qr_model_matrix
   control <- inputs$control
   method <- inputs$method
-  maxiter <- control$maxiter
   tolerance <- control$tolerance
-  beta_zero <- compute_geer_binary_start_values(
+  beta_zero <- compute_binary_start_values(
     model_matrix = model_matrix,
     y = y,
     family = family,
@@ -184,11 +184,7 @@ geewa_binary <- function(formula,
   }
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
   fit_pass <- function(beta, pass, previous) {
-    iterations <- if (pass$one_step) {
-      list(1L, 1L, 1)
-    } else {
-      list(maxiter, control$step_maxiter, control$step_multiplier)
-    }
+    iterations <- get_pass_iterations(pass, control)
     fit_geesolver_or(
       y, model_matrix, id, repeated, weights, link,
       as.numeric(beta), offset,
@@ -225,7 +221,7 @@ geewa_binary <- function(formula,
     association_structure = orstr,
     row_order = inputs$row_order
   )
-  fit <- finalize_geer_fit(
+  fit <- build_geer_final_fit(
     fit = fit,
     geesolver_fit = geesolver_fit,
     tolerance = tolerance,

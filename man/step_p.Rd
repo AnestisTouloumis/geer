@@ -13,7 +13,7 @@ step_p(
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
   cov_type = "bias-corrected",
   pmethod = c("rao-scott", "satterthwaite"),
-  steps = 1000
+  steps = 1000L
 )
 }
 \arguments{

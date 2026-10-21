@@ -21,32 +21,32 @@ fit_runs_order <- function(data) {
   )
 }
 
-test_that("resolve_runs_order requires a single non-empty character value", {
+test_that("get_runs_order requires a single non-empty character value", {
   for (bad in list(character(0), NA_character_, "", c("natural", "fitted"))) {
     expect_error(
-      resolve_runs_order(fit_geewa_pois_exch, bad),
+      get_runs_order(fit_geewa_pois_exch, bad),
       "'order_by' must be a single non-empty character string or a numeric vector"
     )
   }
 })
 
-test_that("resolve_runs_order rejects values that are neither text nor numeric", {
+test_that("get_runs_order rejects values that are neither text nor numeric", {
   expect_error(
-    resolve_runs_order(fit_geewa_pois_exch, TRUE),
+    get_runs_order(fit_geewa_pois_exch, TRUE),
     "'order_by' must be a single non-empty character string or a numeric vector"
   )
   expect_error(
-    resolve_runs_order(fit_geewa_pois_exch, list(1, 2)),
+    get_runs_order(fit_geewa_pois_exch, list(1, 2)),
     "'order_by' must be a single non-empty character string or a numeric vector"
   )
 })
 
-test_that("resolve_runs_order flags the natural order", {
-  natural <- resolve_runs_order(fit_geewa_pois_exch, "natural")
+test_that("get_runs_order flags the natural order", {
+  natural <- get_runs_order(fit_geewa_pois_exch, "natural")
   expect_true(natural$natural)
   expect_identical(natural$index, order(fit_geewa_pois_exch$id, fit_geewa_pois_exch$repeated))
 
-  tied <- resolve_runs_order(fit_geewa_pois_exch, rep(1, fit_geewa_pois_exch$obs_no))
+  tied <- get_runs_order(fit_geewa_pois_exch, rep(1, fit_geewa_pois_exch$obs_no))
   expect_true(tied$natural)
   expect_identical(tied$label, "supplied ordering vector")
 })

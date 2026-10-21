@@ -137,11 +137,6 @@ check_test_index <- function(index, context) {
 }
 
 
-build_missing_test_result <- function(test_df) {
-  list(test_stat = NA_real_, test_df = test_df, test_p = NA_real_)
-}
-
-
 check_test_statistic <- function(test_stat, context, tol = 1e-10) {
   if (!is.finite(test_stat)) {
     stop(
@@ -150,22 +145,19 @@ check_test_statistic <- function(test_stat, context, tol = 1e-10) {
     )
   }
   if (test_stat < 0) {
-    if (test_stat > -tol) {
-      test_stat <- 0
-    } else {
-      warning(
+    if (test_stat <= -tol) {
+      stop(
         sprintf(
           paste0(
-            "%s: the test statistic is negative (%s), probably because the ",
-            "covariance estimate is not positive semi-definite; the ",
-            "statistic and p-value are set to NA"
+            "%s failed: the test statistic is negative (%s), probably because ",
+            "the covariance estimate is not positive semi-definite"
           ),
           context, format(test_stat, digits = 3)
         ),
         call. = FALSE
       )
-      test_stat <- NA_real_
     }
+    test_stat <- 0
   }
   test_stat
 }
@@ -262,8 +254,7 @@ get_alpha_or <- function(object) {
 
 compute_chisq_mixture <- function(x,
                                   test_stat,
-                                  pmethod = geer_pmethod_choices) {
-  pmethod <- match.arg(pmethod)
+                                  pmethod) {
   x <- Re(x)
   if (!is.numeric(test_stat) || length(test_stat) != 1L ||
       !is.finite(test_stat)) {
@@ -334,12 +325,12 @@ compute_score_components <- function(object0, object1) {
 }
 
 
-compute_score_small_sample_covariance <- function(object0,
-                                                  object1,
-                                                  cov_type,
-                                                  context) {
+compute_score_ss_cov <- function(object0,
+                                 object1,
+                                 cov_type,
+                                 context) {
   select_small_sample_covariance(
-    covariances = compute_small_sample_covariances(
+    covariances = compute_ss_covariances(
       object1,
       fitted_values = object0$fitted.values,
       linear_predictors = object0$linear.predictors
@@ -353,8 +344,7 @@ compute_score_small_sample_covariance <- function(object0,
 
 
 compute_wald_test <- function(object0, object1,
-                              cov_type = geer_cov_type_choices) {
-  cov_type <- match.arg(cov_type)
+                              cov_type) {
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$object1
   index <- nested_models$index
@@ -379,10 +369,8 @@ compute_wald_test <- function(object0, object1,
 
 
 compute_working_wald_test <- function(object0, object1,
-                                      cov_type = geer_cov_type_choices,
-                                      pmethod = geer_pmethod_choices) {
-  cov_type <- match.arg(cov_type)
-  pmethod <- match.arg(pmethod)
+                                      cov_type,
+                                      pmethod) {
   nested_models <- check_nested_models(object0, object1)
   obj1 <- nested_models$object1
   index <- nested_models$index
@@ -405,9 +393,6 @@ compute_working_wald_test <- function(object0, object1,
     }
   )
   test_stat <- check_test_statistic(test_stat, "working Wald test")
-  if (is.na(test_stat)) {
-    return(build_missing_test_result(length(index)))
-  }
   robust_mat <- stats::vcov(obj1, cov_type = cov_type)
   rob_test <- robust_mat[index, index, drop = FALSE]
   eigen_test <- compute_mixture_eigenvalues(
@@ -420,23 +405,18 @@ compute_working_wald_test <- function(object0, object1,
 
 
 compute_working_lrt_test <- function(object0, object1,
-                                     cov_type = geer_cov_type_choices,
-                                     pmethod = geer_pmethod_choices) {
-  cov_type <- match.arg(cov_type)
-  pmethod <- match.arg(pmethod)
+                                     cov_type,
+                                     pmethod) {
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$object0
   obj1 <- nested_models$object1
   index <- nested_models$index
   check_test_index(index, "working LRT")
   phi_common <- obj1$phi
-  ll_obj0 <- compute_fit_quasi_loglikelihood(obj0, phi = phi_common)
-  ll_obj1 <- compute_fit_quasi_loglikelihood(obj1, phi = phi_common)
+  ll_obj0 <- compute_fit_quasi_lik(obj0, phi = phi_common)
+  ll_obj1 <- compute_fit_quasi_lik(obj1, phi = phi_common)
   test_stat <- -2 * (ll_obj0 - ll_obj1)
   test_stat <- check_test_statistic(test_stat, "working LRT")
-  if (is.na(test_stat)) {
-    return(build_missing_test_result(length(index)))
-  }
   naive_mat <- stats::vcov(obj1, cov_type = "naive")
   cov_test <- naive_mat[index, index, drop = FALSE]
   robust_mat <- stats::vcov(obj1, cov_type = cov_type)
@@ -451,8 +431,7 @@ compute_working_lrt_test <- function(object0, object1,
 
 
 compute_score_test <- function(object0, object1,
-                               cov_type = geer_cov_type_choices) {
-  cov_type <- match.arg(cov_type)
+                               cov_type) {
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$object0
   obj1 <- nested_models$object1
@@ -460,8 +439,8 @@ compute_score_test <- function(object0, object1,
   test_df <- check_test_index(index, "score test")
   sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
-  cov_test <- if (cov_type %in% geer_small_sample_cov_types) {
-    compute_score_small_sample_covariance(
+  cov_test <- if (cov_type %in% geer_ss_cov_types) {
+    compute_score_ss_cov(
       obj0, obj1, cov_type, "score test"
     )[index, index, drop = FALSE]
   } else {
@@ -504,10 +483,8 @@ compute_score_test <- function(object0, object1,
 
 
 compute_working_score_test <- function(object0, object1,
-                                       cov_type = geer_cov_type_choices,
-                                       pmethod = geer_pmethod_choices) {
-  cov_type <- match.arg(cov_type)
-  pmethod <- match.arg(pmethod)
+                                       cov_type,
+                                       pmethod) {
   nested_models <- check_nested_models(object0, object1)
   obj0 <- nested_models$object0
   obj1 <- nested_models$object1
@@ -516,8 +493,8 @@ compute_working_score_test <- function(object0, object1,
   sc <- compute_score_components(obj0, obj1)
   score_vector <- sc$score_vector
   naive_mat <- sc$naive_covariance
-  robust_mat <- if (cov_type %in% geer_small_sample_cov_types) {
-    compute_score_small_sample_covariance(
+  robust_mat <- if (cov_type %in% geer_ss_cov_types) {
+    compute_score_ss_cov(
       obj0, obj1, cov_type, "working score test"
     )
   } else {
@@ -553,15 +530,39 @@ compute_working_score_test <- function(object0, object1,
     (t(score_vector) %*% naive_mat[, index, drop = FALSE]) %*% sol
   )
   test_stat <- check_test_statistic(test_stat, "working score test")
-  if (is.na(test_stat)) {
-    return(build_missing_test_result(length(index)))
-  }
   eigen_test <- compute_mixture_eigenvalues(
     naive_mat = cov_test,
     robust_mat = robust_mat[index, index, drop = FALSE],
     context = "working score test"
   )
   compute_chisq_mixture(eigen_test, test_stat, pmethod)
+}
+
+
+compute_nested_test <- function(object0, object1, test, cov_type, pmethod) {
+  switch(
+    test,
+    wald = compute_wald_test(object0, object1, cov_type),
+    score = compute_score_test(object0, object1, cov_type),
+    `working-wald` = compute_working_wald_test(
+      object0,
+      object1,
+      cov_type,
+      pmethod
+    ),
+    `working-score` = compute_working_score_test(
+      object0,
+      object1,
+      cov_type,
+      pmethod
+    ),
+    `working-lrt` = compute_working_lrt_test(
+      object0,
+      object1,
+      cov_type,
+      pmethod
+    )
+  )
 }
 
 
@@ -586,25 +587,14 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
       call. = FALSE
     )
   }
-  if (identical(test, "working-lrt")) {
-    association_vector <- vapply(
-      object,
-      function(x) x$association_structure,
-      character(1)
-    )
-    independence_vector <- association_vector == "independence"
-    if (!all(independence_vector)) {
-      stop(
-        "the modified working LRT requires an independence working structure",
-        call. = FALSE
-      )
-    }
-  }
   association_vector <- vapply(
     object,
     function(x) x$association_structure,
     character(1)
   )
+  for (structure_name in association_vector) {
+    check_working_lrt_allowed(test, structure_name)
+  }
   same_association <- association_vector == association_vector[1L]
   if (!all(same_association)) {
     removed <- unique(association_vector[!same_association])
@@ -620,7 +610,7 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
       call. = FALSE
     )
   }
-  sample_size_vector <- vapply(object, get_model_sample_size, integer(1))
+  sample_size_vector <- vapply(object, get_model_sample_size, numeric(1))
   if (any(sample_size_vector != sample_size_vector[1L])) {
     stop(
       "models must be fitted to the same observations",
@@ -646,30 +636,14 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
     `Pr(>Chi)` = NA_real_,
     check.names = FALSE
   )
-  test_type <- format_test_label(test)
+  test_type <- build_test_label(test)
   for (i in 2:models_no) {
-    value <- switch(
+    value <- compute_nested_test(
+      object[[i - 1L]],
+      object[[i]],
       test,
-      wald = compute_wald_test(object[[i - 1L]], object[[i]], cov_type),
-      score = compute_score_test(object[[i - 1L]], object[[i]], cov_type),
-      `working-wald` = compute_working_wald_test(
-        object[[i - 1L]],
-        object[[i]],
-        cov_type,
-        pmethod
-      ),
-      `working-score` = compute_working_score_test(
-        object[[i - 1L]],
-        object[[i]],
-        cov_type,
-        pmethod
-      ),
-      `working-lrt` = compute_working_lrt_test(
-        object[[i - 1L]],
-        object[[i]],
-        cov_type,
-        pmethod
-      )
+      cov_type,
+      pmethod
     )
     table[i, -1L] <- c(value$test_df, value$test_stat, value$test_p)
   }

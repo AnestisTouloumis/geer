@@ -1,6 +1,6 @@
-test_that("fix_small_pvalue_labels relabels tiny p-values and keeps width", {
+test_that("normalize_pvalue_labels relabels tiny p-values and keeps width", {
   lines <- c("a  1.0  <1e-04 ***", "b  2.0  < 1e-04 ***", "c  3.0  0.0123 *")
-  out <- fix_small_pvalue_labels(lines)
+  out <- normalize_pvalue_labels(lines)
   expect_equal(out[3L], lines[3L])
   expect_true(all(grepl("<0.0001", out[1:2], fixed = TRUE)))
   expect_false(any(grepl("1e-04", out, fixed = TRUE)))

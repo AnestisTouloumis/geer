@@ -11,7 +11,7 @@
 #' @param partition character string specifying the partition: groups of the
 #'   fitted probabilities (\code{"risk"}) or regions of the covariates
 #'   (\code{"covariates"}). See Details. Defaults to \code{"risk"}.
-#' @param groups a single integer, at least 2, giving the number of groups of
+#' @param n_groups a single integer, at least 2, giving the number of groups of
 #'   fitted probabilities for \code{partition = "risk"}. Defaults to \code{10}.
 #' @param regions for \code{partition = "covariates"}, a one-sided formula
 #'   whose variables, evaluated in the data used to fit the model and then in
@@ -42,7 +42,7 @@
 #' With \code{partition = "risk"} (Horton et al., 1999), the fitted
 #' probabilities of all observations are divided at their empirical quantiles
 #' of orders \eqn{0, 1/G, \ldots, 1}{0, 1/G, ..., 1}, where \eqn{G} is
-#' \code{groups}, into intervals closed on the right. Tied fitted
+#' \code{n_groups}, into intervals closed on the right. Tied fitted
 #' probabilities fall into the same group, so the groups may have unequal
 #' sizes and, with few distinct fitted probabilities, there may be fewer than
 #' \eqn{G} groups. Implementations of Hosmer-Lemeshow type tests differ in
@@ -143,7 +143,7 @@
 #' @export
 gof_score_test <- function(object,
                            partition = c("risk", "covariates"),
-                           groups = 10,
+                           n_groups = 10L,
                            regions,
                            by_repeated = TRUE,
                            cov_type = "bias-corrected") {
@@ -166,8 +166,8 @@ gof_score_test <- function(object,
       call. = FALSE
     )
   }
-  if (!risk && !missing(groups)) {
-    stop("'groups' is used only with partition = \"risk\"", call. = FALSE)
+  if (!risk && !missing(n_groups)) {
+    stop("'n_groups' is used only with partition = \"risk\"", call. = FALSE)
   }
   if (!risk && missing(regions)) {
     stop(
@@ -175,10 +175,10 @@ gof_score_test <- function(object,
       call. = FALSE
     )
   }
-  groups <- check_integer_at_least(groups, "groups", lower = 2L)
+  n_groups <- check_integer_at_least(n_groups, "n_groups", lower = 2L)
   check_gof_fit(object, context)
   if (risk) {
-    partition_factor <- build_gof_risk_groups(object, groups, context)
+    partition_factor <- build_gof_risk_groups(object, n_groups, context)
     by_repeated <- FALSE
     method <- paste(
       "Horton et al. goodness-of-fit test",

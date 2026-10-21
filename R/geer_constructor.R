@@ -1,4 +1,4 @@
-geer_required_components <- c(
+geer_fit_components <- c(
   "coefficients", "residuals", "fitted.values", "qr", "rank", "family",
   "linear.predictors", "iter", "prior.weights", "df.residual", "y", "x",
   "id", "repeated", "converged", "call", "formula", "terms",
@@ -13,7 +13,7 @@ new_geer <- function(x) {
   if (!is.list(x)) {
     stop("'x' must be a list", call. = FALSE)
   }
-  missing_components <- setdiff(geer_required_components, names(x))
+  missing_components <- setdiff(geer_fit_components, names(x))
   if (length(missing_components) > 0L) {
     stop(
       "'x' is missing required component(s): ",
@@ -39,7 +39,7 @@ validate_geer <- function(x) {
   if (!inherits(x, "geer")) {
     stop("'x' must be a 'geer' object", call. = FALSE)
   }
-  missing_components <- setdiff(geer_required_components, names(x))
+  missing_components <- setdiff(geer_fit_components, names(x))
   if (length(missing_components) > 0L) {
     stop(
       sprintf(
@@ -87,7 +87,7 @@ validate_geer <- function(x) {
     if (!is.numeric(x$obs_no) || length(x$obs_no) != 1L ||
         !is.finite(x$obs_no) || x$obs_no < 0 ||
         abs(x$obs_no - round(x$obs_no)) > geer_integer_tol) {
-      stop("'obs_no' must be a non-negative integer", call. = FALSE)
+      stop("'obs_no' must be a nonnegative integer", call. = FALSE)
     }
     if (x$obs_no != n_obs) {
       stop(
@@ -148,7 +148,7 @@ validate_geer <- function(x) {
     if (!is.numeric(x$rank) || length(x$rank) != 1L ||
         !is.finite(x$rank) || x$rank < 0 ||
         abs(x$rank - round(x$rank)) > geer_integer_tol) {
-      stop("'rank' must be a non-negative integer", call. = FALSE)
+      stop("'rank' must be a nonnegative integer", call. = FALSE)
     }
   }
   if ("converged" %in% names(x)) {

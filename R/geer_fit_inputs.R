@@ -17,12 +17,12 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
       enclos <- environment(formula_obj)
     }
   }
-  model_call <- recycle_geer_scalar_offset(model_call, env, enclos)
+  model_call <- normalize_geer_scalar_offset(model_call, env, enclos)
   eval(model_call, envir = env, enclos = enclos)
 }
 
 
-recycle_geer_scalar_offset <- function(model_call, env, enclos) {
+normalize_geer_scalar_offset <- function(model_call, env, enclos) {
   if (is.null(model_call$offset)) {
     return(model_call)
   }
@@ -160,7 +160,7 @@ check_geer_response_support <- function(y, family) {
     if (family$varfun %in% c("mu", "mu^2", "mu^3") && any(y < 0)) {
       stop(
         sprintf(
-          "negative values not allowed for quasi(variance = \"%s\")",
+          "the response must be nonnegative for quasi(variance = \"%s\")",
           family$varfun
         ),
         call. = FALSE
@@ -171,16 +171,16 @@ check_geer_response_support <- function(y, family) {
   message <- switch(
     family_name,
     poisson = if (any(y < 0)) {
-      "negative values not allowed for the 'Poisson' family"
+      "the response must be nonnegative for the poisson family"
     },
     quasipoisson = if (any(y < 0)) {
-      "negative values not allowed for the 'quasiPoisson' family"
+      "the response must be nonnegative for the quasipoisson family"
     },
     Gamma = if (any(y <= 0)) {
-      "non-positive values not allowed for the 'Gamma' family"
+      "the response must be positive for the Gamma family"
     },
     inverse.gaussian = if (any(y <= 0)) {
-      "positive values only are allowed for the 'inverse.gaussian' family"
+      "the response must be positive for the inverse.gaussian family"
     },
     NULL
   )
@@ -191,13 +191,15 @@ check_geer_response_support <- function(y, family) {
 }
 
 
-extract_geer_response_weights <- function(model_frame, family) {
-  is_binomial_like <-
-    identical(family$family, "binomial") ||
-    identical(family$family, "quasibinomial") ||
+is_binomial_like_family <- function(family) {
+  family$family %in% c("binomial", "quasibinomial") ||
     (identical(family$family, "quasi") &&
-     !is.null(family$varfun) &&
-     identical(family$varfun, "mu(1-mu)"))
+       identical(family$varfun, "mu(1-mu)"))
+}
+
+
+extract_geer_response_weights <- function(model_frame, family) {
+  is_binomial_like <- is_binomial_like_family(family)
   y <- stats::model.response(model_frame, "any")
   if (is.null(y)) {
     stop("the formula must have a response", call. = FALSE)
@@ -284,7 +286,7 @@ extract_geer_response_weights <- function(model_frame, family) {
     }
     if (any(y < 0)) {
       stop(
-        "for binomial matrix responses, all counts must be non-negative",
+        "for binomial matrix responses, all counts must be nonnegative",
         call. = FALSE
       )
     }
@@ -398,7 +400,7 @@ normalize_use_p <- function(use_p) {
 }
 
 
-prepare_geer_inputs <- function(mcall, family, env, control, method) {
+build_geer_inputs <- function(mcall, family, env, control, method) {
   model_frame <- build_geer_model_frame(mcall, env = env)
   response_weights <- extract_geer_response_weights(model_frame, family)
   y <- response_weights$y

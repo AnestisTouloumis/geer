@@ -36,7 +36,7 @@ geer_test_choices <- c(
   "wald", "score", "working-wald", "working-score", "working-lrt"
 )
 
-geer_small_sample_cov_types <- c(
+geer_ss_cov_types <- c(
   "kauermann-carroll", "mancl-derouen", "ford-westgate", "fay-graubard",
   "fan-zhang-zhang", "pan", "gosho-sato-takeuchi", "wang-long",
   "westgate-burchett"
@@ -48,7 +48,7 @@ geer_pooled_cov_types <- c(
 
 geer_cov_type_choices <- c(
   "bias-corrected", "robust", "df-adjusted", "jackknife", "naive",
-  geer_small_sample_cov_types
+  geer_ss_cov_types
 )
 
 geer_pmethod_choices <- c(
@@ -63,7 +63,7 @@ geer_step_criteria <- c(
   "QICu", "QIC", "QICC", "AGPC", "SGPC"
 )
 
-geer_influence_levels <- c(
+geer_influence_units <- c(
   "clusters", "observations"
 )
 
@@ -71,11 +71,11 @@ geer_influence_methods <- c(
   "one-step", "exact"
 )
 
-geer_perturbation_choices <- c(
+geer_perturbations <- c(
   "cluster-weights", "observation-weights", "response"
 )
 
-geer_local_influence_types <- c(
+geer_influence_types <- c(
   "total", "local"
 )
 
@@ -89,6 +89,37 @@ geer_gof_statistics <- c(
 
 geer_gof_covariances <- c(
   "unstructured", "empirical"
+)
+
+geer_alternatives <- c(
+  "two.sided", "less", "greater"
+)
+
+geer_mcar_references <- c(
+  "auto", "asymptotic"
+)
+
+geer_mcar_methods <- c(
+  "auto", "nonparametric", "hawkins"
+)
+
+geer_mcar_imputations <- c(
+  "distribution-free", "normal"
+)
+
+geer_mcar_structures <- setdiff(geer_orstr_choices, "fixed")
+
+geer_step_actions <- c(
+  "add", "drop"
+)
+
+geer_criteria_columns <- c(
+  "QIC", "QICHH", "QICC", "CIC", "RJC", "QICu", "EQIC", "GESSC",
+  "GPC", "AGPC", "SGPC", "GHYC", "PAC", "PT", "WR", "RMR"
+)
+
+geer_criteria_basic <- c(
+  "QIC", "CIC", "RJC", "QICu", "GESSC", "GPC"
 )
 
 geer_integer_tol <- sqrt(.Machine$double.eps)
@@ -121,7 +152,7 @@ check_nonnegative_integerish <- function(x, name) {
   check_single_numeric(x, name)
   if (x < 0 || abs(x - round(x)) > geer_integer_tol) {
     stop(
-      sprintf("'%s' must be a non-negative integer", name),
+      sprintf("'%s' must be a nonnegative integer", name),
       call. = FALSE
     )
   }
@@ -217,11 +248,11 @@ match_direction_type <- function(direction) {
 }
 
 
-match_influence_level <- function(level) {
+match_influence_unit <- function(unit) {
   match_choice_with_default(
-    x = level,
-    choices = geer_influence_levels,
-    name = "level"
+    x = unit,
+    choices = geer_influence_units,
+    name = "unit"
   )
 }
 
@@ -238,7 +269,7 @@ match_influence_method <- function(method) {
 match_perturbation_type <- function(perturbation) {
   match_choice_with_default(
     x = perturbation,
-    choices = geer_perturbation_choices,
+    choices = geer_perturbations,
     name = "perturbation"
   )
 }
@@ -247,7 +278,7 @@ match_perturbation_type <- function(perturbation) {
 match_local_influence_type <- function(type) {
   match_choice_with_default(
     x = type,
-    choices = geer_local_influence_types,
+    choices = geer_influence_types,
     name = "type"
   )
 }
@@ -280,6 +311,51 @@ match_gof_covariance <- function(covariance) {
 }
 
 
+match_alternative <- function(alternative) {
+  match_choice_with_default(
+    x = alternative,
+    choices = geer_alternatives,
+    name = "alternative"
+  )
+}
+
+
+match_mcar_reference <- function(reference) {
+  match_choice_with_default(
+    x = reference,
+    choices = geer_mcar_references,
+    name = "reference"
+  )
+}
+
+
+match_mcar_method <- function(method) {
+  match_choice_with_default(
+    x = method,
+    choices = geer_mcar_methods,
+    name = "method"
+  )
+}
+
+
+match_mcar_imputation <- function(imputation) {
+  match_choice_with_default(
+    x = imputation,
+    choices = geer_mcar_imputations,
+    name = "imputation"
+  )
+}
+
+
+match_mcar_orstr <- function(orstr) {
+  match_choice_with_default(
+    x = orstr,
+    choices = geer_mcar_structures,
+    name = "orstr"
+  )
+}
+
+
 match_parm <- function(parm, beta_names) {
   if (is.null(parm)) {
     return(beta_names)
@@ -301,13 +377,9 @@ is_working_test <- function(test) {
 }
 
 
-check_working_lrt_allowed <- function(object,
-                                      test = "working-lrt",
-                                      name = "object") {
-  object <- check_geer_object(object, name = name)
-  test <- match_test_type(test)
+check_working_lrt_allowed <- function(test, association_structure) {
   if (identical(test, "working-lrt") &&
-      !identical(object$association_structure, "independence")) {
+      !identical(association_structure, "independence")) {
     stop(
       "the modified working LRT requires an independence working structure",
       call. = FALSE
@@ -328,8 +400,8 @@ normalize_geer_test_options <- function(test,
   } else {
     pmethod <- NULL
   }
-  if (identical(test, "working-lrt") && !is.null(object)) {
-    check_working_lrt_allowed(object, test = test)
+  if (!is.null(object)) {
+    check_working_lrt_allowed(test, object$association_structure)
   }
   list(
     test = test,

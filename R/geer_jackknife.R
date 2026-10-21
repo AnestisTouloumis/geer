@@ -1,4 +1,4 @@
-require_geer_fit_function <- function(object) {
+check_geer_fit_function <- function(object) {
   fit_function <- get_geer_fit_function(object)
   if (!is.na(fit_function)) {
     return(fit_function)
@@ -64,7 +64,7 @@ compute_jackknife_alpha_or <- function(object, repeated) {
 }
 
 
-extract_jackknife_last_criterion <- function(fit) {
+get_jackknife_criterion <- function(fit) {
   index <- ncol(fit$beta_mat) - 1L
   if (index < 1L || length(fit$criterion) < index) {
     return(Inf)
@@ -78,7 +78,7 @@ check_jackknife_convergence <- function(fit,
                                         cluster_label,
                                         stage = NULL,
                                         context = "jackknife covariance") {
-  criterion <- extract_jackknife_last_criterion(fit)
+  criterion <- get_jackknife_criterion(fit)
   if (!is.finite(criterion) || criterion > tolerance) {
     stage_text <- if (is.null(stage)) "" else paste0(" during ", stage)
     reason <- get_solver_failure(fit)
@@ -120,6 +120,52 @@ check_jackknife_solver_failure <- function(fit,
 }
 
 
+run_jackknife_passes <- function(fit_pass,
+                                 object,
+                                 coef_no,
+                                 cluster_label,
+                                 context) {
+  method <- object$method
+  tolerance <- object$control$tolerance
+  final <- run_geer_estimation_passes(
+    fit_pass = fit_pass,
+    method = method,
+    beta_start = as.numeric(object$coefficients),
+    check_first = function(fit, method) {
+      stage <- if (method %in% geer_bcgee_methods) {
+        "the preliminary GEE fit"
+      } else {
+        "the preliminary independence PGEE fit"
+      }
+      check_jackknife_convergence(
+        fit, tolerance, cluster_label, stage, context
+      )
+    }
+  )
+  if (!(method %in% geer_onestep_methods)) {
+    check_jackknife_convergence(
+      final, tolerance, cluster_label, context = context
+    )
+  }
+  check_jackknife_solver_failure(final, cluster_label, context)
+  beta <- as.numeric(final$beta_hat)
+  if (length(beta) != coef_no || any(!is.finite(beta))) {
+    stop(
+      sprintf(
+        paste0(
+          "%s failed for cluster '%s': invalid ",
+          "leave-one-cluster coefficient estimate"
+        ),
+        context,
+        cluster_label
+      ),
+      call. = FALSE
+    )
+  }
+  beta
+}
+
+
 refit_jackknife_cc <- function(object,
                                keep,
                                cluster_label,
@@ -132,7 +178,6 @@ refit_jackknife_cc <- function(object,
   offset <- object$offset[keep]
   control <- object$control
   tolerance <- control$tolerance
-  method <- object$method
   alpha <- compute_jackknife_alpha_cc(object, repeated)
   alpha_fixed <- 1L
   mdependence <- if (identical(object$association_structure, "m-dependent")) {
@@ -148,14 +193,9 @@ refit_jackknife_cc <- function(object,
     FALSE
   }
   phi_value <- if (phi_fixed) object$phi else 1
-  beta_start <- as.numeric(object$coefficients)
 
   fit_pass <- function(beta, pass, previous) {
-    iterations <- if (pass$one_step) {
-      list(1L, 1L, 1)
-    } else {
-      list(control$maxiter, control$step_maxiter, control$step_multiplier)
-    }
+    iterations <- get_pass_iterations(pass, control)
     if (pass$carry_nuisance) {
       phi_pass <- previous$phi
       phi_fixed_pass <- 1L
@@ -174,43 +214,13 @@ refit_jackknife_cc <- function(object,
       as.integer(isTRUE(pass$hold_nuisance))
     )
   }
-  final <- run_geer_estimation_passes(
+  run_jackknife_passes(
     fit_pass = fit_pass,
-    method = method,
-    beta_start = beta_start,
-    check_first = function(fit, method) {
-      stage <- if (method %in% geer_bcgee_methods) {
-        "the preliminary GEE fit"
-      } else {
-        "the preliminary independence PGEE fit"
-      }
-      check_jackknife_convergence(
-        fit, tolerance, cluster_label, stage, context
-      )
-    }
+    object = object,
+    coef_no = ncol(x),
+    cluster_label = cluster_label,
+    context = context
   )
-  if (!(method %in% geer_onestep_methods)) {
-    check_jackknife_convergence(
-      final, tolerance, cluster_label, context = context
-    )
-  }
-  check_jackknife_solver_failure(final, cluster_label, context)
-
-  beta <- as.numeric(final$beta_hat)
-  if (length(beta) != ncol(x) || any(!is.finite(beta))) {
-    stop(
-      sprintf(
-        paste0(
-          "%s failed for cluster '%s': invalid ",
-          "leave-one-cluster coefficient estimate"
-        ),
-        context,
-        cluster_label
-      ),
-      call. = FALSE
-    )
-  }
-  beta
 }
 
 
@@ -226,17 +236,11 @@ refit_jackknife_or <- function(object,
   offset <- object$offset[keep]
   control <- object$control
   tolerance <- control$tolerance
-  method <- object$method
   alpha <- compute_jackknife_alpha_or(object, repeated)
   alpha_independence <- rep.int(1, choose(max(repeated), 2L))
-  beta_start <- as.numeric(object$coefficients)
 
   fit_pass <- function(beta, pass, previous) {
-    iterations <- if (pass$one_step) {
-      list(1L, 1L, 1)
-    } else {
-      list(control$maxiter, control$step_maxiter, control$step_multiplier)
-    }
+    iterations <- get_pass_iterations(pass, control)
     fit_geesolver_or(
       y, x, id, repeated, weights, object$family$link,
       as.numeric(beta), offset,
@@ -245,47 +249,17 @@ refit_jackknife_or <- function(object,
       if (pass$independence) alpha_independence else alpha
     )
   }
-  final <- run_geer_estimation_passes(
+  run_jackknife_passes(
     fit_pass = fit_pass,
-    method = method,
-    beta_start = beta_start,
-    check_first = function(fit, method) {
-      stage <- if (method %in% geer_bcgee_methods) {
-        "the preliminary GEE fit"
-      } else {
-        "the preliminary independence PGEE fit"
-      }
-      check_jackknife_convergence(
-        fit, tolerance, cluster_label, stage, context
-      )
-    }
+    object = object,
+    coef_no = ncol(x),
+    cluster_label = cluster_label,
+    context = context
   )
-  if (!(method %in% geer_onestep_methods)) {
-    check_jackknife_convergence(
-      final, tolerance, cluster_label, context = context
-    )
-  }
-  check_jackknife_solver_failure(final, cluster_label, context)
-
-  beta <- as.numeric(final$beta_hat)
-  if (length(beta) != ncol(x) || any(!is.finite(beta))) {
-    stop(
-      sprintf(
-        paste0(
-          "%s failed for cluster '%s': invalid ",
-          "leave-one-cluster coefficient estimate"
-        ),
-        context,
-        cluster_label
-      ),
-      call. = FALSE
-    )
-  }
-  beta
 }
 
 
-compute_jackknife_delete_estimates <- function(
+compute_jackknife_deletes <- function(
     object,
     context = "jackknife covariance",
     skip = NULL) {
@@ -306,7 +280,7 @@ compute_jackknife_delete_estimates <- function(
     ncol = p,
     dimnames = list(cluster_labels, names(object$coefficients))
   )
-  fit_origin <- require_geer_fit_function(object)
+  fit_origin <- check_geer_fit_function(object)
 
   for (i in which(!skip)) {
     keep <- rep.int(TRUE, length(object$id))
@@ -323,23 +297,11 @@ compute_jackknife_delete_estimates <- function(
 
 get_cached_jackknife_estimates <- function(object,
                                            context = "jackknife covariance") {
-  cache <- object$cache
-  if (is.environment(cache)) {
-    stored <- cache$jackknife_estimates
-    if (!is.null(stored) &&
-        identical(stored$coefficients, object$coefficients)) {
-      return(stored$estimates)
-    }
-  }
-  estimates <- compute_jackknife_delete_estimates(object, context)
-  if (is.environment(cache)) {
-    assign(
-      "jackknife_estimates",
-      list(coefficients = object$coefficients, estimates = estimates),
-      envir = cache
-    )
-  }
-  estimates
+  get_cached_value(
+    object,
+    "jackknife_estimates",
+    function() compute_jackknife_deletes(object, context)
+  )
 }
 
 
@@ -356,22 +318,10 @@ compute_jackknife_covariance <- function(object) {
 }
 
 
-get_cached_jackknife_covariance <- function(object) {
-  cache <- object$cache
-  if (is.environment(cache)) {
-    stored <- cache$jackknife
-    if (!is.null(stored) &&
-        identical(stored$coefficients, object$coefficients)) {
-      return(stored$covariance)
-    }
-  }
-  covariance <- compute_jackknife_covariance(object)
-  if (is.environment(cache)) {
-    assign(
-      "jackknife",
-      list(coefficients = object$coefficients, covariance = covariance),
-      envir = cache
-    )
-  }
-  covariance
+get_cached_jackknife_cov <- function(object) {
+  get_cached_value(
+    object,
+    "jackknife",
+    function() compute_jackknife_covariance(object)
+  )
 }

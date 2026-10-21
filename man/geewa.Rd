@@ -12,7 +12,7 @@ geewa(
   repeated,
   control = geer_control(...),
   corstr = "independence",
-  Mv = 1,
+  Mv = 1L,
   method = "gee",
   weights,
   beta_start = NULL,

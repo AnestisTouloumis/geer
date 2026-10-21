@@ -33,7 +33,7 @@ expect_jackknife_vcov <- function(fit, delete_estimates) {
     crossprod(centered)
   dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
   observed <- vcov(fit, cov_type = "jackknife")
-  expect_equal(geer:::compute_jackknife_delete_estimates(fit), delete_estimates,
+  expect_equal(geer:::compute_jackknife_deletes(fit), delete_estimates,
     tolerance = 1e-7
   )
   expect_equal(observed, expected, tolerance = 1e-7)

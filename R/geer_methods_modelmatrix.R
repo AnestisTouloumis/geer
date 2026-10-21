@@ -36,6 +36,7 @@
 #'
 #' @export
 model.matrix.geer <- function(object, ...) {
+  check_unused_dots(list(...), "model.matrix.geer")
   object <- check_geer_object(object)
   object$x
 }

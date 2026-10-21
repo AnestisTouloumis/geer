@@ -2,7 +2,7 @@ check_gof_fit <- function(object, context) {
   binary_family <- identical(get_geer_fit_function(object), "geewa_binary") ||
     object$family$family %in% c("binomial", "quasibinomial")
   y <- object$y
-  if (!binary_family || anyNA(y) || !all(y == 0 | y == 1) ||
+  if (!binary_family || !is_binary_response(y) ||
       !all(object$prior.weights == 1)) {
     stop(
       sprintf(
@@ -16,7 +16,7 @@ check_gof_fit <- function(object, context) {
     )
   }
   mu <- object$fitted.values
-  if (any(!is.finite(mu) | mu <= 0 | mu >= 1)) {
+  if (any(is_degenerate_probability(mu))) {
     stop(
       sprintf(
         paste0(
@@ -71,11 +71,11 @@ check_gof_by_repeated <- function(by_repeated) {
 }
 
 
-build_gof_risk_groups <- function(object, groups, context) {
+build_gof_risk_groups <- function(object, n_groups, context) {
   mu <- object$fitted.values
   breaks <- unique(stats::quantile(
     mu,
-    probs = seq(0, 1, length.out = groups + 1L),
+    probs = seq(0, 1, length.out = n_groups + 1L),
     names = FALSE
   ))
   if (length(breaks) < 3L) {
@@ -91,7 +91,7 @@ build_gof_risk_groups <- function(object, groups, context) {
     )
   }
   risk <- cut(mu, breaks = breaks, include.lowest = TRUE)
-  if (nlevels(risk) < groups) {
+  if (nlevels(risk) < n_groups) {
     warning(
       sprintf(
         paste0(
@@ -99,7 +99,7 @@ build_gof_risk_groups <- function(object, groups, context) {
           "of tied fitted probabilities, instead of the %d requested"
         ),
         nlevels(risk),
-        groups
+        n_groups
       ),
       call. = FALSE
     )
@@ -334,7 +334,7 @@ compute_gof_residual_parts <- function(object, covariance) {
     naive_covariance = object$naive_covariance,
     inverse_v_d = lapply(cluster_indices, function(i) {
       solve(
-        compute_working_covariance_for_criteria(object, i),
+        get_working_covariance(object, i),
         d_matrix[i, , drop = FALSE]
       )
     }),

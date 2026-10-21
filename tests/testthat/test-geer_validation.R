@@ -27,8 +27,8 @@ test_that("check_step_thresholds accepts valid thresholds and rejects invalid on
 test_that("check_step_count accepts valid counts and rejects invalid ones", {
   expect_identical(check_step_count(10), 10L)
   expect_identical(check_step_count(0), 0L)
-  expect_error(check_step_count(-1), "'steps' must be a non-negative integer")
-  expect_error(check_step_count(1.5), "'steps' must be a non-negative integer")
+  expect_error(check_step_count(-1), "'steps' must be a nonnegative integer")
+  expect_error(check_step_count(1.5), "'steps' must be a nonnegative integer")
   expect_error(check_step_count(c(1, 2)), "'steps' must be a finite number")
 })
 
@@ -91,5 +91,29 @@ test_that("literal choice defaults in public signatures match the constants", {
   expect_identical(
     default_of(step_p, "direction"),
     geer_direction_choices
+  )
+})
+
+test_that("match helpers for the new choice sets require exact names", {
+  expect_identical(match_alternative("less"), "less")
+  expect_identical(match_mcar_reference("asymptotic"), "asymptotic")
+  expect_identical(match_mcar_method("hawkins"), "hawkins")
+  expect_identical(match_mcar_imputation("normal"), "normal")
+  expect_identical(match_mcar_orstr("unstructured"), "unstructured")
+  expect_identical(match_influence_unit("observations"), "observations")
+  expect_error(match_alternative("two"), "'alternative' must be one of")
+  expect_error(match_mcar_reference("asym"), "'reference' must be one of")
+  expect_error(match_mcar_method("haw"), "'method' must be one of")
+  expect_error(match_mcar_imputation("norm"), "'imputation' must be one of")
+  expect_error(match_mcar_orstr("fixed"), "'orstr' must be one of")
+  expect_error(match_influence_unit("clus"), "'unit' must be one of")
+})
+
+test_that("check_working_lrt_allowed requires independence", {
+  expect_true(check_working_lrt_allowed("working-lrt", "independence"))
+  expect_true(check_working_lrt_allowed("wald", "exchangeable"))
+  expect_error(
+    check_working_lrt_allowed("working-lrt", "exchangeable"),
+    "requires an independence working structure"
   )
 })

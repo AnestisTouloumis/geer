@@ -55,19 +55,19 @@ build_geer_output <- function(geesolver_fit,
   dimnames(fit$bias_corrected_covariance) <- list(xnames, xnames)
   fit$association_structure <- association_structure
   fit$row_order <- row_order
-  fit$frame_rows <- find_geer_frame_rows(model_frame, data)
+  fit$frame_rows <- get_geer_frame_rows(model_frame, data)
   fit$alpha <- as.numeric(geesolver_fit$alpha)
   fit$phi <- geesolver_fit$phi
   fit$obs_no <- nrow(model_matrix)
   fit$clusters_no <- length(unique(id))
-  cluster_sizes <- vapply(split(repeated, id), length, integer(1))
+  cluster_sizes <- as.integer(vapply(split(repeated, id), length, numeric(1)))
   fit$min_cluster_size <- min(cluster_sizes)
   fit$max_cluster_size <- max(cluster_sizes)
   fit
 }
 
 
-find_geer_frame_rows <- function(model_frame, data) {
+get_geer_frame_rows <- function(model_frame, data) {
   if (!is.data.frame(data)) {
     return(NULL)
   }
@@ -80,14 +80,14 @@ find_geer_frame_rows <- function(model_frame, data) {
 }
 
 
-finalize_geer_fit <- function(fit,
-                              geesolver_fit,
-                              tolerance,
-                              method,
-                              family,
-                              association_structure,
-                              repeated,
-                              fit_function) {
+build_geer_final_fit <- function(fit,
+                                 geesolver_fit,
+                                 tolerance,
+                                 method,
+                                 family,
+                                 association_structure,
+                                 repeated,
+                                 fit_function) {
   fit$fit_function <- fit_function
   fit$converged <- isTRUE(geesolver_fit$criterion[fit$iter] <= tolerance)
   if (method %in% geer_onestep_methods) {
@@ -107,7 +107,7 @@ finalize_geer_fit <- function(fit,
       max(repeated) >= 2L) {
     pairs_matrix <- utils::combn(max(repeated), 2)
     names(fit$alpha) <-
-      paste0("alpha_", pairs_matrix[1, ], ".", pairs_matrix[2, ])
+      paste0("alpha_", pairs_matrix[1L, ], ".", pairs_matrix[2L, ])
   }
   if (association_structure %in% c("toeplitz", "m-dependent")) {
     names(fit$alpha) <- paste0("alpha_lag", seq_along(fit$alpha))

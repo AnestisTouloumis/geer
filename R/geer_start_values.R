@@ -1,10 +1,10 @@
-drop_family_aic <- function(family) {
+build_family_no_aic <- function(family) {
   family$aic <- function(y, n, mu, wt, dev) NA_real_
   family
 }
 
 
-muffle_noninteger_warnings <- function(expr) {
+evaluate_noninteger_quiet <- function(expr) {
   withCallingHandlers(
     expr,
     warning = function(w) {
@@ -13,6 +13,36 @@ muffle_noninteger_warnings <- function(expr) {
       }
     }
   )
+}
+
+
+check_beta_start <- function(beta_start, p) {
+  if (!is.numeric(beta_start) || length(beta_start) != p) {
+    stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
+  }
+  if (any(!is.finite(beta_start))) {
+    stop("'beta_start' must contain only finite values", call. = FALSE)
+  }
+  as.numeric(beta_start)
+}
+
+
+normalize_control_glm <- function(control_glm) {
+  if (!is.list(control_glm)) {
+    stop("'control_glm' must be a list", call. = FALSE)
+  }
+  do.call("brglm_control", control_glm)
+}
+
+
+get_start_type <- function(method) {
+  if (method %in% c("gee", geer_bcgee_methods)) {
+    return("ML")
+  }
+  if (identical(method, "brgee-naive")) {
+    return("AS_mean")
+  }
+  "MPL_Jeffreys"
 }
 
 
@@ -27,31 +57,17 @@ compute_geer_start_values <- function(model_matrix,
                                       control,
                                       control_glm) {
   if (!is.null(beta_start)) {
-    beta_start <- as.numeric(beta_start)
-    p <- ncol(model_matrix)
-    if (length(beta_start) != p) {
-      stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
-    }
-    if (anyNA(beta_start) || any(!is.finite(beta_start))) {
-      stop("'beta_start' must contain only finite values", call. = FALSE)
-    }
-    return(beta_start)
+    return(check_beta_start(beta_start, ncol(model_matrix)))
   }
-  control_glm <- do.call("brglm_control", control_glm)
+  control_glm <- normalize_control_glm(control_glm)
   if (link != "identity" &&
       !(family$family %in% c("quasi", "quasibinomial", "quasipoisson"))) {
-    if (method %in% c("gee", geer_bcgee_methods)) {
-      type <- "ML"
-    } else if (identical(method, "brgee-naive")) {
-      type <- "AS_mean"
-    } else {
-      type <- "MPL_Jeffreys"
-    }
+    type <- get_start_type(method)
     glmfit <- try(
-      muffle_noninteger_warnings(brglmFit(
+      evaluate_noninteger_quiet(brglmFit(
         x = model_matrix,
         y = y,
-        family = drop_family_aic(family),
+        family = build_family_no_aic(family),
         weights = weights,
         offset = offset,
         control = list(
@@ -93,40 +109,26 @@ compute_geer_start_values <- function(model_matrix,
 }
 
 
-compute_geer_binary_start_values <- function(model_matrix,
-                                             y,
-                                             family,
-                                             weights,
-                                             offset,
-                                             method,
-                                             beta_start,
-                                             control_glm,
-                                             tolerance,
-                                             jeffreys_power) {
+compute_binary_start_values <- function(model_matrix,
+                                        y,
+                                        family,
+                                        weights,
+                                        offset,
+                                        method,
+                                        beta_start,
+                                        control_glm,
+                                        tolerance,
+                                        jeffreys_power) {
   if (!is.null(beta_start)) {
-    beta_start <- as.numeric(beta_start)
-    p <- ncol(model_matrix)
-    if (length(beta_start) != p) {
-      stop("'beta_start' must be a numeric vector of length ", p, call. = FALSE)
-    }
-    if (anyNA(beta_start) || any(!is.finite(beta_start))) {
-      stop("'beta_start' must contain only finite values", call. = FALSE)
-    }
-    return(beta_start)
+    return(check_beta_start(beta_start, ncol(model_matrix)))
   }
-  if (method %in% c("gee", geer_bcgee_methods)) {
-    type <- "ML"
-  } else if (identical(method, "brgee-naive")) {
-    type <- "AS_mean"
-  } else {
-    type <- "MPL_Jeffreys"
-  }
-  control_glm <- do.call("brglm_control", control_glm)
+  type <- get_start_type(method)
+  control_glm <- normalize_control_glm(control_glm)
   glmfit <- try(
-    muffle_noninteger_warnings(brglmFit(
+    evaluate_noninteger_quiet(brglmFit(
       x = model_matrix,
       y = y,
-      family = drop_family_aic(family),
+      family = build_family_no_aic(family),
       weights = weights,
       offset = offset,
       control = list(

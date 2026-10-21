@@ -10,8 +10,8 @@
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::add1
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @details
 #' For \code{add1()}, \code{scope} must contain at least one term not in the
@@ -70,6 +70,7 @@ add1.geer <-
            cov_type = "bias-corrected",
            pmethod = c("rao-scott", "satterthwaite"),
            ...) {
+    check_unused_dots(list(...), "add1.geer")
     object <- check_geer_object(object)
     opts <- normalize_geer_test_options(
       test = test[1L],
@@ -104,28 +105,12 @@ add1.geer <-
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
       add1_model <- refit_geer(object, stats::as.formula(paste(". ~ . +", tt)))
-      value <- switch(
+      value <- compute_nested_test(
+        object,
+        add1_model,
         test,
-        wald = compute_wald_test(object, add1_model, cov_type),
-        score = compute_score_test(object, add1_model, cov_type),
-        `working-wald` = compute_working_wald_test(
-          object,
-          add1_model,
-          cov_type,
-          pmethod
-        ),
-        `working-score` = compute_working_score_test(
-          object,
-          add1_model,
-          cov_type,
-          pmethod
-        ),
-        `working-lrt` = compute_working_lrt_test(
-          object,
-          add1_model,
-          cov_type,
-          pmethod
-        )
+        cov_type,
+        pmethod
       )
       ans[i + 1L, ] <- c(
         value$test_df,
@@ -135,7 +120,7 @@ add1.geer <-
       )
     }
     aod <- as.data.frame(ans)
-    test_type <- format_test_label(test)
+    test_type <- build_test_label(test)
     formula_txt <- paste(deparse(object$formula), collapse = " ")
     head <- c(
       paste("Single term additions using", test_type, "test:"),
@@ -160,6 +145,7 @@ drop1.geer <- function(object,
                        cov_type = "bias-corrected",
                        pmethod = c("rao-scott", "satterthwaite"),
                        ...) {
+  check_unused_dots(list(...), "drop1.geer")
   object <- check_geer_object(object)
   opts <- normalize_geer_test_options(
     test = test[1L],
@@ -204,28 +190,12 @@ drop1.geer <- function(object,
     tt <- scope[[i]]
 
     drop1_model <- refit_geer(object, stats::as.formula(paste(". ~ . -", tt)))
-    value <- switch(
+    value <- compute_nested_test(
+      drop1_model,
+      object,
       test,
-      wald = compute_wald_test(drop1_model, object, cov_type),
-      score = compute_score_test(drop1_model, object, cov_type),
-      `working-wald` = compute_working_wald_test(
-        drop1_model,
-        object,
-        cov_type,
-        pmethod
-      ),
-      `working-score` = compute_working_score_test(
-        drop1_model,
-        object,
-        cov_type,
-        pmethod
-      ),
-      `working-lrt` = compute_working_lrt_test(
-        drop1_model,
-        object,
-        cov_type,
-        pmethod
-      )
+      cov_type,
+      pmethod
     )
     ans[i + 1L, ] <- c(
       value$test_df,
@@ -235,7 +205,7 @@ drop1.geer <- function(object,
     )
   }
   aod <- as.data.frame(ans)
-  test_type <- format_test_label(test)
+  test_type <- build_test_label(test)
   formula_txt <- paste(deparse(object$formula), collapse = " ")
   head <- c(
     paste("Single term deletions using", test_type, "test:"),
@@ -257,7 +227,8 @@ drop1.geer <- function(object,
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param ... additional fitted model objects of class \code{"geer"} to be
-#'   included in the comparison.
+#'   included in the comparison, supplied without names. Any other argument
+#'   is an error.
 #' @param test character string specifying the hypothesis test: Wald
 #'   (\code{"wald"}), generalized score (\code{"score"}), modified working Wald
 #'   (\code{"working-wald"}), modified working score (\code{"working-score"}),
@@ -349,12 +320,8 @@ anova.geer <-
     } else {
       (names(dotargs) != "")
     }
-    if (any(named)) {
-      warning("named arguments in '...' are ignored", call. = FALSE)
-    }
-    dotargs <- dotargs[!named]
     is_geer <- vapply(dotargs, function(x) inherits(x, "geer"), logical(1))
-    dotargs <- dotargs[is_geer]
+    check_unused_dots(dotargs[named | !is_geer], "anova.geer")
     if (length(dotargs)) {
       dotargs <- lapply(dotargs, check_geer_object)
       return(compute_anova_geer_list(
@@ -376,8 +343,8 @@ anova.geer <-
     } else {
       ""
     }
-    if (intercept == 1) {
-      object_list[[1]] <- refit_geer(
+    if (intercept == 1L) {
+      object_list[[1L]] <- refit_geer(
         object,
         stats::as.formula(paste0(". ~ 1", offset_part))
       )
@@ -388,11 +355,11 @@ anova.geer <-
         )
       }
     } else {
-      object_list[[1]] <- refit_geer(
+      object_list[[1L]] <- refit_geer(
         object,
-        stats::as.formula(paste0(". ~ -1 + ", terms[1], offset_part))
+        stats::as.formula(paste0(". ~ -1 + ", terms[1L], offset_part))
       )
-      for (i in seq_len(nvars - 1)) {
+      for (i in seq_len(nvars - 1L)) {
         object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
           stats::as.formula(paste(". ~ . + ", terms[i + 1]))
@@ -411,7 +378,7 @@ anova.geer <-
       `Pr(>Chi)` = c(NA_real_, rep(NA_real_, length(resdf) - 1L)),
       check.names = FALSE
     )
-    if (intercept == 1) {
+    if (intercept == 1L) {
       dimnames(table) <- list(
         c("NULL", terms),
         c("Df", "Resid. Df", "Chi", "Pr(>Chi)")
@@ -422,41 +389,17 @@ anova.geer <-
         c("Df", "Resid. Df", "Chi", "Pr(>Chi)")
       )
     }
-    for (i in seq_len(length(object_list) - 1)) {
-      value <- switch(
+    for (i in seq_len(length(object_list) - 1L)) {
+      value <- compute_nested_test(
+        object_list[[i]],
+        object_list[[i + 1]],
         test,
-        wald = compute_wald_test(
-          object_list[[i]],
-          object_list[[i + 1]],
-          cov_type
-        ),
-        score = compute_score_test(
-          object_list[[i]],
-          object_list[[i + 1]],
-          cov_type
-        ),
-        `working-wald` = compute_working_wald_test(
-          object_list[[i]],
-          object_list[[i + 1]],
-          cov_type,
-          pmethod
-        ),
-        `working-score` = compute_working_score_test(
-          object_list[[i]],
-          object_list[[i + 1]],
-          cov_type,
-          pmethod
-        ),
-        `working-lrt` = compute_working_lrt_test(
-          object_list[[i]],
-          object_list[[i + 1]],
-          cov_type,
-          pmethod
-        )
+        cov_type,
+        pmethod
       )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }
-    test_type <- format_test_label(test)
+    test_type <- build_test_label(test)
     title <- paste(
       "Analysis of ", test_type, " Statistic Table",
       "\n\nModel: ", object$family$family,

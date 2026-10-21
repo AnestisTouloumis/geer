@@ -1,36 +1,39 @@
 epilepsy <- test_data$epilepsy
 
-test_that("format_percent returns a character vector with percent suffixes", {
-  out <- format_percent(c(0.025, 0.975), digits = 3)
+test_that("build_percent_labels returns percent-suffixed labels", {
+  out <- build_percent_labels(c(0.025, 0.975), digits = 3)
   expect_type(out, "character")
   expect_length(out, 2L)
   expect_true(all(grepl("%$", out)))
 })
 
-test_that("format_percent warns when probabilities are outside [0, 1] and check = TRUE", {
+test_that("build_percent_labels warns when probabilities are outside [0, 1] and check = TRUE", {
   expect_warning(
-    format_percent(c(-0.1, 0.5, 1.1), check = TRUE),
+    build_percent_labels(c(-0.1, 0.5, 1.1), check = TRUE),
     "outside \\[0, 1\\]"
   )
 })
 
-test_that("format_percent validates its inputs", {
-  expect_error(format_percent("0.5"), "'probs' must be numeric")
-  expect_error(format_percent(0.5, digits = 0), "'digits' must be a positive integer")
-  expect_error(format_percent(0.5, digits = 1.5), "'digits' must be a positive integer")
-  expect_error(format_percent(0.5, check = NA), "'check' must be TRUE or FALSE")
+test_that("build_percent_labels validates its inputs", {
+  expect_error(build_percent_labels("0.5"), "'probs' must be numeric")
+  expect_error(build_percent_labels(0.5, digits = 0), "'digits' must be a positive integer")
+  expect_error(build_percent_labels(0.5, digits = 1.5), "'digits' must be a positive integer")
   expect_error(
-    format_percent(0.5, check = c(TRUE, FALSE)),
+    build_percent_labels(0.5, check = NA),
+    "'check' must be TRUE or FALSE"
+  )
+  expect_error(
+    build_percent_labels(0.5, check = c(TRUE, FALSE)),
     "'check' must be TRUE or FALSE"
   )
 })
 
-test_that("format_test_label returns the expected display labels", {
-  expect_identical(format_test_label("wald"), "Wald")
-  expect_identical(format_test_label("score"), "Score")
-  expect_identical(format_test_label("working-wald"), "Modified Working Wald")
-  expect_identical(format_test_label("working-score"), "Modified Working Score")
-  expect_identical(format_test_label("working-lrt"), "Modified Working LRT")
+test_that("build_test_label returns the expected display labels", {
+  expect_identical(build_test_label("wald"), "Wald")
+  expect_identical(build_test_label("score"), "Score")
+  expect_identical(build_test_label("working-wald"), "Modified Working Wald")
+  expect_identical(build_test_label("working-score"), "Modified Working Score")
+  expect_identical(build_test_label("working-lrt"), "Modified Working LRT")
 })
 
 test_that("scalar check helpers accept valid inputs and reject invalid ones", {
@@ -90,8 +93,8 @@ test_that("predict warns when a prediction variance is negative", {
   expect_true(anyNA(out$se.fit))
 })
 
-test_that("compute_standard_errors_or_na leaves valid variances unchanged", {
-  expect_silent(se <- compute_standard_errors_or_na(c(a = 4, b = 0, c = 9), "x"))
+test_that("compute_se_or_na leaves valid variances unchanged", {
+  expect_silent(se <- compute_se_or_na(c(a = 4, b = 0, c = 9)))
   expect_equal(se, c(a = 2, b = 0, c = 3))
 })
 
@@ -101,7 +104,7 @@ test_that("jackknife covariance is cached on the fit and invalidated by coeffici
   expect_null(fit$cache$jackknife)
   v1 <- vcov(fit, cov_type = "jackknife")
   expect_false(is.null(fit$cache$jackknife))
-  fit$cache$jackknife$covariance[1L, 1L] <- 12345
+  fit$cache$jackknife$value[1L, 1L] <- 12345
   expect_equal(unname(vcov(fit, cov_type = "jackknife")[1L, 1L]), 12345)
   fit2 <- fit
   fit2$coefficients <- fit2$coefficients + 1e-3
@@ -115,7 +118,7 @@ test_that("small-sample covariances are cached on the fit and invalidated by coe
   expect_null(fit$cache$small_sample)
   v1 <- vcov(fit, cov_type = "mancl-derouen")
   expect_false(is.null(fit$cache$small_sample))
-  fit$cache$small_sample$covariances[["mancl-derouen"]][1L, 1L] <- 12345
+  fit$cache$small_sample$value[["mancl-derouen"]][1L, 1L] <- 12345
   expect_equal(unname(vcov(fit, cov_type = "mancl-derouen")[1L, 1L]), 12345)
   fit2 <- fit
   fit2$coefficients <- fit2$coefficients + 1e-3

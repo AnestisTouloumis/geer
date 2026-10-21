@@ -1,6 +1,6 @@
 expect_small_sample_reference <- function(fit) {
   reference <- ref_small_sample_covariances(fit)
-  for (cov_type in geer_small_sample_cov_types) {
+  for (cov_type in geer_ss_cov_types) {
     expect_equal(
       unname(vcov(fit, cov_type = cov_type)),
       unname(reference[[cov_type]]),
@@ -78,7 +78,7 @@ test_that("pooled small-sample covariances stop with an unbalanced design", {
     )
   }
   reference <- ref_small_sample_covariances(fit)
-  for (cov_type in setdiff(geer_small_sample_cov_types, geer_pooled_cov_types)) {
+  for (cov_type in setdiff(geer_ss_cov_types, geer_pooled_cov_types)) {
     expect_equal(
       unname(vcov(fit, cov_type = cov_type)),
       unname(reference[[cov_type]]),

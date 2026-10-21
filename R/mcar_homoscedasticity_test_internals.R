@@ -1,113 +1,9 @@
-check_mcar_homoscedasticity_matrix <- function(x) {
-  if (is.data.frame(x)) {
-    numeric_cols <- vapply(x, is.numeric, logical(1))
-    if (!all(numeric_cols)) {
-      stop(
-        paste0(
-          "all variables supplied to the Jamshidian-Jalal diagnostic must be ",
-          "numeric"
-        ),
-        call. = FALSE
-      )
-    }
-    x <- as.matrix(x)
-  } else if (is.matrix(x)) {
-    if (!is.numeric(x)) {
-      stop(
-        paste0(
-          "the matrix supplied to the Jamshidian-Jalal diagnostic must be ",
-          "numeric"
-        ),
-        call. = FALSE
-      )
-    }
-  } else {
-    stop(
-      paste0(
-        "'object' must be a fitted 'geer' object, numeric matrix, or numeric ",
-        "data frame"
-      ),
-      call. = FALSE
-    )
-  }
-
-  storage.mode(x) <- "double"
-  original_nrow <- nrow(x)
-  if (nrow(x) < 2L) {
-    stop(
-      "the Jamshidian-Jalal diagnostic requires at least two rows",
-      call. = FALSE
-    )
-  }
-  if (ncol(x) < 2L) {
-    stop(
-      paste0(
-        "the Jamshidian-Jalal diagnostic requires at least two variables or ",
-        "repeated measurements"
-      ),
-      call. = FALSE
-    )
-  }
-  if (any(is.infinite(x))) {
-    stop(
-      paste0(
-        "data supplied to the Jamshidian-Jalal diagnostic must not contain ",
-        "infinite values"
-      ),
-      call. = FALSE
-    )
-  }
-
-  row_index <- seq_len(original_nrow)
-  all_missing <- rowSums(!is.na(x)) == 0L
-  if (any(all_missing)) {
-    warning(
-      sprintf(
-        "%d row(s) with no observed values were omitted",
-        sum(all_missing)
-      ),
-      call. = FALSE
-    )
-    x <- x[!all_missing, , drop = FALSE]
-    row_index <- row_index[!all_missing]
-  }
-
-  if (nrow(x) < 2L) {
-    stop(
-      paste0(
-        "the Jamshidian-Jalal diagnostic requires at least two rows with ",
-        "observed data"
-      ),
-      call. = FALSE
-    )
-  }
-
-  observed_no <- colSums(!is.na(x))
-  labels <- colnames(x)
-  if (is.null(labels)) {
-    labels <- as.character(seq_len(ncol(x)))
-  }
-  if (any(observed_no < 2L)) {
-    bad <- which(observed_no < 2L)
-    stop(
-      sprintf(
-        paste0(
-          "the Jamshidian-Jalal diagnostic requires at least two observed ",
-          "values for variable(s) %s"
-        ),
-        paste(labels[bad], collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
-
-  attr(x, "row.index") <- row_index
-  attr(x, "original.nrow") <- original_nrow
-  x
+check_mcar_jj_matrix <- function(x) {
+  check_mcar_matrix(x, "the Jamshidian-Jalal diagnostic")
 }
 
 
-check_mcar_homoscedasticity_imputed <- function(imputed_data, x) {
+check_mcar_jj_imputed <- function(imputed_data, x) {
   if (is.data.frame(imputed_data)) {
     numeric_cols <- vapply(imputed_data, is.numeric, logical(1))
     if (!all(numeric_cols)) {
@@ -171,7 +67,7 @@ compute_mcar_missingness_key <- function(missing) {
 }
 
 
-compute_mcar_pattern_information <- function(x, min_pattern_size) {
+compute_mcar_patterns <- function(x, min_pattern_size) {
   missing <- is.na(x)
   key <- compute_mcar_missingness_key(missing)
   counts <- table(key)
@@ -246,7 +142,7 @@ compute_mcar_pattern_information <- function(x, min_pattern_size) {
 }
 
 
-invert_mcar_covariance_matrix <- function(a, context) {
+compute_mcar_inverse <- function(a, context) {
   out <- tryCatch(
     solve(a),
     error = function(e) NULL
@@ -285,7 +181,7 @@ compute_mcar_covariance_sqrt <- function(sigma, context) {
 }
 
 
-compute_mcar_complete_case_moments <- function(x) {
+compute_mcar_cc_moments <- function(x) {
   complete_data <- x[stats::complete.cases(x), , drop = FALSE]
   n_complete <- nrow(complete_data)
 
@@ -310,7 +206,7 @@ compute_mcar_complete_case_moments <- function(x) {
 }
 
 
-build_mcar_imputation_setup <- function(x, imputation, maxit, tol) {
+build_mcar_imputation_setup <- function(x, imputation, maxiter, tolerance) {
   p <- ncol(x)
   n_complete <- sum(stats::complete.cases(x))
   requested <- imputation
@@ -332,7 +228,7 @@ build_mcar_imputation_setup <- function(x, imputation, maxit, tol) {
   }
 
   if (identical(imputation, "distribution-free")) {
-    moments <- compute_mcar_complete_case_moments(x)
+    moments <- compute_mcar_cc_moments(x)
     out <- list(
       mu = moments$mu,
       sigma = moments$sigma,
@@ -341,7 +237,7 @@ build_mcar_imputation_setup <- function(x, imputation, maxit, tol) {
       converged = NA
     )
   } else {
-    em <- fit_mcar_normal_em(x, maxit = maxit, tol = tol)
+    em <- fit_mcar_normal_em(x, maxiter = maxiter, tolerance = tolerance)
     out <- list(
       mu = em$mu,
       sigma = em$sigma,
@@ -358,7 +254,7 @@ build_mcar_imputation_setup <- function(x, imputation, maxit, tol) {
 }
 
 
-impute_mcar_normal <- function(x, setup) {
+compute_mcar_normal_imputation <- function(x, setup) {
   completed <- x
   missing <- is.na(x)
   pattern_key <- compute_mcar_missingness_key(missing)
@@ -383,7 +279,7 @@ impute_mcar_normal <- function(x, setup) {
 
     sigma_oo <- setup$sigma[observed, observed, drop = FALSE]
     sigma_mo <- setup$sigma[missing_cols, observed, drop = FALSE]
-    regression <- sigma_mo %*% invert_mcar_covariance_matrix(
+    regression <- sigma_mo %*% compute_mcar_inverse(
       sigma_oo,
       "performing normal-theory imputation"
     )
@@ -416,7 +312,7 @@ impute_mcar_normal <- function(x, setup) {
 }
 
 
-impute_mcar_distribution_free <- function(x, setup) {
+compute_mcar_df_imputation <- function(x, setup) {
   complete <- stats::complete.cases(x)
   n_complete <- nrow(setup$residuals)
   incomplete_rows <- which(!complete)
@@ -454,7 +350,7 @@ impute_mcar_distribution_free <- function(x, setup) {
 
     s_oo <- setup$sigma[observed, observed, drop = FALSE]
     a <- setup$sigma[missing_cols, observed, drop = FALSE] %*%
-      invert_mcar_covariance_matrix(
+      compute_mcar_inverse(
         s_oo,
         "performing distribution-free imputation"
       )
@@ -482,11 +378,11 @@ impute_mcar_distribution_free <- function(x, setup) {
 }
 
 
-draw_mcar_imputation <- function(x, setup) {
+compute_mcar_imputation_draw <- function(x, setup) {
   completed <- if (identical(setup$used, "distribution-free")) {
-    impute_mcar_distribution_free(x, setup)
+    compute_mcar_df_imputation(x, setup)
   } else {
-    impute_mcar_normal(x, setup)
+    compute_mcar_normal_imputation(x, setup)
   }
   if (anyNA(completed) || any(!is.finite(completed))) {
     stop(
@@ -498,7 +394,7 @@ draw_mcar_imputation <- function(x, setup) {
 }
 
 
-compute_mcar_neyman_statistics_by_column <- function(u) {
+compute_mcar_neyman_stats <- function(u) {
   z <- 2 * u - 1
   p1 <- z
   p2 <- (3 * z * p1 - 1) / 2
@@ -515,28 +411,30 @@ compute_mcar_neyman_statistics_by_column <- function(u) {
 
 
 compute_mcar_neyman_statistic <- function(x) {
-  compute_mcar_neyman_statistics_by_column(matrix(x, ncol = 1L))
+  compute_mcar_neyman_stats(matrix(x, ncol = 1L))
 }
 
 
-simulate_mcar_neyman_null <- function(n, nrep, block_size = 10000L) {
-  simulated <- numeric(nrep)
+compute_mcar_neyman_null <- function(n, n_replicates, block_size = 10000L) {
+  simulated <- numeric(n_replicates)
   done <- 0L
-  while (done < nrep) {
-    reps <- min(block_size, nrep - done)
+  while (done < n_replicates) {
+    reps <- min(block_size, n_replicates - done)
     u <- matrix(stats::runif(n * reps), nrow = n, ncol = reps)
     simulated[done + seq_len(reps)] <-
-      compute_mcar_neyman_statistics_by_column(u)
+      compute_mcar_neyman_stats(u)
     done <- done + reps
   }
   simulated
 }
 
 
-simulate_mcar_neyman_nulls_by_pattern <- function(group_counts, nrep, n_min) {
+compute_mcar_neyman_nulls <- function(group_counts, n_replicates, n_min) {
   lapply(
     group_counts,
-    function(ni) if (ni < n_min) simulate_mcar_neyman_null(ni, nrep) else NULL
+    function(ni) {
+      if (ni < n_min) compute_mcar_neyman_null(ni, n_replicates) else NULL
+    }
   )
 }
 
@@ -602,7 +500,7 @@ compute_mcar_hawkins_test <- function(
     pooled <- pooled + (length(rows) - 1) * stats::cov(block)
   }
   pooled <- pooled / (n - g)
-  pooled_inverse <- invert_mcar_covariance_matrix(
+  pooled_inverse <- compute_mcar_inverse(
     pooled,
     "calculating the Hawkins statistic"
   )
@@ -679,7 +577,7 @@ compute_mcar_hawkins_test <- function(
 
 geer_mcar_ad_m_grid <- c(1, 2, 3, 4, 6, 8, 10, Inf)
 
-geer_mcar_ad_probabilities <- c(
+geer_mcar_ad_probs <- c(
   0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.025, 0.05,
   0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.925, 0.95,
   0.975, 0.99, 0.9925, 0.995, 0.9975, 0.999, 0.99925, 0.9995, 0.99975,
@@ -740,7 +638,7 @@ compute_mcar_ad_p_value <- function(standardized, m) {
     },
     numeric(1)
   )
-  upper <- 1 - geer_mcar_ad_probabilities
+  upper <- 1 - geer_mcar_ad_probs
   fit <- stats::smooth.spline(quantiles, stats::qlogis(upper), spar = 0.25)
   log_odds <- stats::predict(fit, standardized)$y
 
@@ -752,7 +650,7 @@ compute_mcar_ad_p_value <- function(standardized, m) {
 }
 
 
-compute_mcar_anderson_darling_test <- function(x, group, group_counts) {
+compute_mcar_ad_test <- function(x, group, group_counts) {
   k <- length(group_counts)
   n <- length(x)
   if (k < 2L) {
@@ -841,8 +739,8 @@ compute_mcar_anderson_darling_test <- function(x, group, group_counts) {
 }
 
 
-compute_mcar_nonparametric_test <- function(hawkins, group, group_counts) {
-  compute_mcar_anderson_darling_test(
+compute_mcar_np_test <- function(hawkins, group, group_counts) {
+  compute_mcar_ad_test(
     x = hawkins$f.values,
     group = group,
     group_counts = group_counts
@@ -872,12 +770,12 @@ run_mcar_with_seed <- function(seed, code) {
 }
 
 
-interpret_mcar_homoscedasticity_test <- function(method,
-                                                 hawkins,
-                                                 nonparametric,
-                                                 alpha) {
+build_mcar_interpretation <- function(method,
+                                      hawkins,
+                                      nonparametric,
+                                      sig_level) {
   if (identical(method, "hawkins")) {
-    if (hawkins$p.value <= alpha) {
+    if (hawkins$p.value <= sig_level) {
       return(
         paste0(
           "The modified Hawkins test rejects the joint null of multivariate ",
@@ -900,7 +798,7 @@ interpret_mcar_homoscedasticity_test <- function(method,
   }
 
   if (identical(method, "nonparametric")) {
-    if (nonparametric$p.value <= alpha) {
+    if (nonparametric$p.value <= sig_level) {
       return(
         paste0(
           "The nonparametric Anderson-Darling test rejects homogeneity of the ",
@@ -921,7 +819,7 @@ interpret_mcar_homoscedasticity_test <- function(method,
     )
   }
 
-  if (hawkins$p.value > alpha) {
+  if (hawkins$p.value > sig_level) {
     return(
       paste0(
         "The modified Hawkins test does not reject the joint null of ",
@@ -933,7 +831,7 @@ interpret_mcar_homoscedasticity_test <- function(method,
     )
   }
 
-  if (nonparametric$p.value > alpha) {
+  if (nonparametric$p.value > sig_level) {
     return(
       paste0(
         "The modified Hawkins test rejects but the nonparametric ",

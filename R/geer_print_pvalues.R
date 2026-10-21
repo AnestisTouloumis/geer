@@ -1,11 +1,11 @@
 
-fix_small_pvalue_labels <- function(lines) {
+normalize_pvalue_labels <- function(lines) {
   matches <- gregexpr(" *< ?1e-04", lines)
   replacement <- lapply(regmatches(lines, matches), function(x) {
     vapply(
       x,
       function(label) formatC("<0.0001", width = max(nchar(label), 7L)),
-      character(1L),
+      character(1),
       USE.NAMES = FALSE
     )
   })
@@ -16,7 +16,7 @@ fix_small_pvalue_labels <- function(lines) {
 
 print_with_small_pvalues <- function(print_function) {
   lines <- utils::capture.output(print_function())
-  cat(fix_small_pvalue_labels(lines), sep = "\n")
+  cat(normalize_pvalue_labels(lines), sep = "\n")
   invisible(NULL)
 }
 

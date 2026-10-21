@@ -97,7 +97,7 @@ tidy.geer <- function(x,
   }
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- compute_standard_errors_or_na(diag(vcov_matrix), "tidy.geer")
+  se <- compute_se_or_na(diag(vcov_matrix))
   z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]
@@ -141,8 +141,8 @@ tidy.geer <- function(x,
 #' the conventions of \pkg{broom} (Robinson, Hayes and Couch, 2024).
 #'
 #' @param x a fitted model object of class \code{"geer"}.
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @details
 #' \code{QIC} and \code{CIC} use the robust covariance matrix, as in
@@ -200,6 +200,7 @@ tidy.geer <- function(x,
 #'
 #' @export
 glance.geer <- function(x, ...) {
+  check_unused_dots(list(...), "glance.geer")
   object <- check_geer_object(x)
   crit <- tryCatch(
     compute_criteria(

@@ -11,11 +11,11 @@
 #' @param data optional data frame containing the data used to fit
 #'   \code{object}. Used only when \code{object} is a fitted model object and
 #'   the data cannot be recovered from it. Defaults to \code{NULL}.
-#' @param maxit positive integer giving the maximum number of iterations of the
-#'   EM algorithm used to estimate the multivariate normal mean and covariance
-#'   matrix. Defaults to \code{1000}.
-#' @param tol a single positive finite number giving the relative convergence
-#'   tolerance of the EM algorithm. Defaults to \code{1e-08}.
+#' @param maxiter positive integer giving the maximum number of iterations of
+#'   the EM algorithm used to estimate the multivariate normal mean and
+#'   covariance matrix. Defaults to \code{1000}.
+#' @param tolerance a single positive finite number giving the relative
+#'   convergence tolerance of the EM algorithm. Defaults to \code{1e-08}.
 #' @param reference character string specifying the reference distribution:
 #'   Little's exact F reference when the data are bivariate monotone and the
 #'   chi-squared reference otherwise (\code{"auto"}), or always the chi-squared
@@ -39,7 +39,7 @@
 #' \code{reference = "auto"} this exact reference is used in that case,
 #' provided the identity is reproduced numerically from the EM estimates;
 #' otherwise a warning is issued and the chi-squared reference is used, which
-#' usually indicates that \code{tol} is too loose.
+#' usually indicates that \code{tolerance} is too loose.
 #'
 #' Matrix or data frame input must have at least two rows and two variables,
 #' at least two observed values per variable, at least one jointly observed
@@ -98,14 +98,15 @@
 #' mcar_little_test(x)
 #'
 #' @export
-mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
+mcar_little_test <- function(object, data = NULL, maxiter = 1000L,
+                             tolerance = 1e-8,
                              reference = c("auto", "asymptotic")) {
   data_name <- deparse1(substitute(object))
-  maxit <- check_integer_at_least(maxit, "maxit")
-  if (!is_positive_scalar(tol)) {
-    stop("'tol' must be a positive finite number", call. = FALSE)
+  maxiter <- check_integer_at_least(maxiter, "maxiter")
+  if (!is_positive_scalar(tolerance)) {
+    stop("'tolerance' must be a positive finite number", call. = FALSE)
   }
-  reference <- match.arg(reference)
+  reference <- match_mcar_reference(reference[1L])
 
   if (inherits(object, "geer")) {
     object <- check_geer_object(object)
@@ -122,7 +123,7 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
   }
 
   x <- check_mcar_little_matrix(x)
-  if (anyNA(x) && has_mcar_little_binary_variable(x)) {
+  if (anyNA(x) && is_mcar_little_binary(x)) {
     warning(
       paste0(
         "Little (1988) notes that this MCAR test is most appropriate for ",
@@ -133,7 +134,11 @@ mcar_little_test <- function(object, data = NULL, maxit = 1000L, tol = 1e-8,
     )
   }
 
-  result <- compute_mcar_little_statistic(x, maxit = maxit, tol = tol)
+  result <- compute_mcar_little_statistic(
+    x,
+    maxiter = maxiter,
+    tolerance = tolerance
+  )
   exact <- result$bivariate_exact
   use_exact <- identical(reference, "auto") && !is.null(exact)
 

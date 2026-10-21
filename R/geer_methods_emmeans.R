@@ -88,10 +88,10 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
 }
 
 
-resolve_emmeans_vcov <- function(object,
-                                 vcov.method = "bias-corrected",
-                                 vcov. = NULL,
-                                 ...) {
+get_emmeans_vcov <- function(object,
+                             vcov.method = "bias-corrected",
+                             vcov. = NULL,
+                             ...) {
   if (!is.null(vcov.)) {
     return(emmeans::.my.vcov(object, vcov. = vcov., ...))
   }
@@ -190,7 +190,7 @@ emm_basis.geer <- function(object,
     )
   }
   design_matrix <- design_matrix[, coefficient_names, drop = FALSE]
-  vcov_matrix <- resolve_emmeans_vcov(
+  vcov_matrix <- get_emmeans_vcov(
     object,
     vcov.method = vcov.method,
     vcov. = vcov.,

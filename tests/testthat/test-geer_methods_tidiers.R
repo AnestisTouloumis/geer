@@ -111,3 +111,10 @@ test_that("tidy rejects unused or misspelled arguments", {
     fixed = TRUE
   )
 })
+
+test_that("glance rejects unused arguments", {
+  expect_error(
+    glance(fit_geewa_pois_exch, foo = 1),
+    "glance.geer does not use the argument\\(s\\): 'foo'"
+  )
+})

@@ -207,7 +207,7 @@ test_that("score tests evaluate the small-sample covariances at the smaller mode
   components <- compute_score_components(fit_bin_trt, fit_bin_full)
   index <- check_nested_models(fit_bin_trt, fit_bin_full)$index
   projected <- components$naive_covariance %*% components$score_vector
-  for (cov_type in geer_small_sample_cov_types) {
+  for (cov_type in geer_ss_cov_types) {
     covariance <- reference[[cov_type]][index, index, drop = FALSE]
     expected <- drop(
       crossprod(projected[index], solve(covariance, projected[index]))
@@ -277,14 +277,14 @@ test_that("the fit function is recovered from the call when it is not stored", {
 })
 
 test_that("score tests do not depend on how geewa was called", {
-  reference <- compute_score_test(fit_bin_trt, fit_bin_full)
+  reference <- compute_score_test(fit_bin_trt, fit_bin_full, "bias-corrected")
   fit0 <- fit_bin_trt
   fit1 <- fit_bin_full
   fit0$fit_function <- NULL
   fit1$fit_function <- NULL
   fit0$call[[1L]] <- quote(geer::geewa)
   fit1$call[[1L]] <- quote(geer::geewa)
-  expect_equal(compute_score_test(fit0, fit1), reference)
+  expect_equal(compute_score_test(fit0, fit1, "bias-corrected"), reference)
 })
 
 test_that("is_phi_fixed uses the stored flag rather than parsing the call", {
@@ -428,12 +428,15 @@ test_that("Wald and working Wald tests report singular and negative statistics",
   )
   negative <- fit_bin_full
   negative$naive_covariance <- -negative$naive_covariance
-  expect_warning(
-    res <- compute_working_wald_test(fit_bin_trt, negative, cov_type = "robust"),
-    "the test statistic is negative"
+  expect_error(
+    compute_working_wald_test(
+      fit_bin_trt,
+      negative,
+      cov_type = "robust",
+      pmethod = "rao-scott"
+    ),
+    "working Wald test failed: the test statistic is negative"
   )
-  expect_true(is.na(res$test_stat))
-  expect_true(is.na(res$test_p))
 })
 
 test_that("covariance helpers of the tests validate their inputs", {
@@ -451,25 +454,17 @@ test_that("covariance helpers of the tests validate their inputs", {
   )
 })
 
-test_that("check_test_statistic reports a negative statistic as NA with a warning", {
+test_that("check_test_statistic stops on a negative statistic", {
   expect_equal(check_test_statistic(2.5, "Wald test"), 2.5)
   expect_equal(check_test_statistic(-1e-12, "Wald test"), 0)
-  expect_warning(
-    out <- check_test_statistic(-0.5, "Wald test"),
-    "Wald test: the test statistic is negative"
+  expect_error(
+    check_test_statistic(-0.5, "Wald test"),
+    "Wald test failed: the test statistic is negative"
   )
-  expect_true(is.na(out))
   expect_error(
     check_test_statistic(Inf, "Wald test"),
     "non-finite test statistic"
   )
-})
-
-test_that("build_missing_test_result has an NA statistic and p-value", {
-  res <- build_missing_test_result(2L)
-  expect_true(is.na(res$test_stat))
-  expect_true(is.na(res$test_p))
-  expect_equal(res$test_df, 2L)
 })
 
 test_that("Wald and working Wald statistics match independent quadratic forms", {

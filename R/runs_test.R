@@ -135,8 +135,8 @@ runs_test <- function(object,
                       alternative = c("two.sided", "less", "greater")) {
   caller_env <- parent.frame()
   object <- check_geer_object(object)
-  alternative <- match.arg(alternative)
-  ordering <- resolve_runs_order(object, order_by, env = caller_env)
+  alternative <- match_alternative(alternative[1L])
+  ordering <- get_runs_order(object, order_by, env = caller_env)
   residual_values <-
     stats::residuals(object, type = "working")[ordering$index]
   result <- compute_runs_statistics(residual_values, alternative)

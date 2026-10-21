@@ -6,7 +6,7 @@
 \usage{
 gof_tests(
   object,
-  groups = 10,
+  n_groups = 10L,
   regions,
   by_repeated = TRUE,
   cov_type = "bias-corrected",
@@ -16,7 +16,7 @@ gof_tests(
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
-\item{groups}{a single integer, at least 2, giving the number of groups of
+\item{n_groups}{a single integer, at least 2, giving the number of groups of
 fitted probabilities for the test of Horton et al. (1999). Defaults to
 \code{10}.}
 

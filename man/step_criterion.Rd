@@ -10,7 +10,7 @@ step_criterion(
   direction = c("backward", "forward", "both"),
   criterion = c("QICu", "QIC", "QICC", "AGPC", "SGPC"),
   cov_type = "robust",
-  steps = 1000,
+  steps = 1000L,
   trace = FALSE
 )
 }

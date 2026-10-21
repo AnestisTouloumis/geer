@@ -195,19 +195,19 @@ test_that("mcar_little_test validates inputs", {
     "observed together at least once"
   )
   expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxit = 0),
+    mcar_little_test(matrix(1:12, ncol = 2), maxiter = 0),
     "positive integer"
   )
   expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxit = "10"),
-    "'maxit' must be a positive integer"
+    mcar_little_test(matrix(1:12, ncol = 2), maxiter = "10"),
+    "'maxiter' must be a positive integer"
   )
   expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxit = 1e12),
-    "'maxit' must be a positive integer"
+    mcar_little_test(matrix(1:12, ncol = 2), maxiter = 1e12),
+    "'maxiter' must be a positive integer"
   )
   expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), tol = 0),
+    mcar_little_test(matrix(1:12, ncol = 2), tolerance = 0),
     "positive finite"
   )
   expect_error(
@@ -216,7 +216,7 @@ test_that("mcar_little_test validates inputs", {
   )
   expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), reference = "invalid"),
-    "'arg' should be one of"
+    "'reference' must be one of"
   )
 })
 

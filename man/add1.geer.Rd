@@ -44,8 +44,8 @@ distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
 or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
 tests. Defaults to \code{"rao-scott"}.}
 
-\item{...}{additional arguments passed to or from other methods. Currently
-unused.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 An object of class \code{c("geer_anova", "anova", "data.frame")} with one row

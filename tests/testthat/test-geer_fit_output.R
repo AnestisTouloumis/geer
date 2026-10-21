@@ -13,7 +13,7 @@ finalize_fit <- function(criterion = 1e-8,
                          tolerance = 1e-6,
                          iter = 1L,
                          failure = NULL) {
-  finalize_geer_fit(
+  build_geer_final_fit(
     fit = list(iter = iter, fitted.values = fitted),
     geesolver_fit = list(
       criterion = criterion, alpha = alpha,

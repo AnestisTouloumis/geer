@@ -210,7 +210,7 @@ test_that("a converged odds-ratio fit has positive-definite working covariances 
     fit <- suppressWarnings(ref_fit(d, "gee"))
     if (fit$converged) {
       for (idx in split(seq_along(fit$id), fit$id)) {
-        V <- compute_working_covariance_for_criteria(fit, idx)
+        V <- get_working_covariance(fit, idx)
         expect_gt(min(eigen(V, symmetric = TRUE, only.values = TRUE)$values), 0)
       }
     }

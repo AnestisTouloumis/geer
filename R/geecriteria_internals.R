@@ -14,17 +14,6 @@ compute_criterion_or_na <- function(expr) {
 }
 
 
-geer_criteria_columns <- c(
-  "QIC", "QICHH", "QICC", "CIC", "RJC", "QICu", "EQIC", "GESSC",
-  "GPC", "AGPC", "SGPC", "GHYC", "PAC", "PT", "WR", "RMR"
-)
-
-
-geer_criteria_columns_basic <- c(
-  "QIC", "CIC", "RJC", "QICu", "GESSC", "GPC"
-)
-
-
 normalize_criteria <- function(criteria) {
   if (!is.character(criteria) || length(criteria) < 1L || anyNA(criteria)) {
     stop(
@@ -62,7 +51,7 @@ normalize_criteria <- function(criteria) {
 }
 
 
-compute_n_estimated_association_parameters <- function(object) {
+get_association_count <- function(object) {
   if (object$association_structure %in% c("independence", "fixed")) {
     0L
   } else if (object$association_structure %in% c("exchangeable", "ar1")) {
@@ -84,10 +73,10 @@ compute_qicc <- function(qic, p, association_params_no, clusters_no) {
 }
 
 
-compute_gaussian_pseudolikelihood_criteria <- function(object,
-                                                       gpc,
-                                                       p,
-                                                       association_params_no) {
+compute_gpc_penalized <- function(object,
+                                  gpc,
+                                  p,
+                                  association_params_no) {
   parameter_count <- p + association_params_no
   gaussian_deviance <- object$obs_no * log(2 * pi) - 2 * gpc
   list(
@@ -97,7 +86,7 @@ compute_gaussian_pseudolikelihood_criteria <- function(object,
 }
 
 
-compute_bivariate_covariance_or <- function(row_prob, col_prob, odds_ratio) {
+compute_plackett_covariance <- function(row_prob, col_prob, odds_ratio) {
   tol <- 1e-8
   if (row_prob > 1 - tol || col_prob > 1 - tol ||
       row_prob < tol || col_prob < tol) {
@@ -123,7 +112,7 @@ compute_bivariate_covariance_or <- function(row_prob, col_prob, odds_ratio) {
 }
 
 
-compute_upper_triangular_pair_index <- function(row, col, dimension) {
+get_pair_index <- function(row, col, dimension) {
   as.integer((row - 1L) * (2L * dimension - row) / 2L + (col - row))
 }
 
@@ -148,13 +137,13 @@ compute_working_covariance_or <- function(object, indices) {
         row_time <- col_time
         col_time <- tmp
       }
-      pair_index <- compute_upper_triangular_pair_index(
+      pair_index <- get_pair_index(
         row_time,
         col_time,
         repeated_max
       )
       odds_ratio <- alpha[[pair_index]]
-      covariance <- compute_bivariate_covariance_or(
+      covariance <- compute_plackett_covariance(
         mu[[j]],
         mu[[k]],
         odds_ratio
@@ -186,7 +175,7 @@ compute_working_covariance_cc <- function(object, indices) {
 }
 
 
-compute_working_covariance_for_criteria <- function(object, indices) {
+get_working_covariance <- function(object, indices) {
   if (is_geewa_fit(object)) {
     compute_working_covariance_cc(object, indices)
   } else {
@@ -215,7 +204,7 @@ compute_ghyc_pac <- function(object) {
       tcrossprod(residuals[indices])
     working_sum[repeated, repeated] <-
       working_sum[repeated, repeated, drop = FALSE] +
-      compute_working_covariance_for_criteria(object, indices)
+      get_working_covariance(object, indices)
   }
 
   empirical_mean <- empirical_sum / clusters_no
@@ -248,10 +237,10 @@ compute_ghyc_pac <- function(object) {
 }
 
 
-compute_independence_naive_inverse <- function(object,
-                                               mu = object$fitted.values,
-                                               eta = object$linear.predictors,
-                                               phi = object$phi) {
+compute_independence_info <- function(object,
+                                      mu = object$fitted.values,
+                                      eta = object$linear.predictors,
+                                      phi = object$phi) {
   get_information_matrix_independence(
     object$x,
     object$id,
@@ -302,7 +291,7 @@ compute_quasi_loglikelihood <- function(y,
 }
 
 
-compute_fit_quasi_loglikelihood <- function(object, phi = object$phi) {
+compute_fit_quasi_lik <- function(object, phi = object$phi) {
   compute_quasi_loglikelihood(
     y = object$y,
     mu = object$fitted.values,
@@ -325,7 +314,7 @@ is_phi_fixed <- function(object) {
 }
 
 
-compute_independence_gee_quantities <- function(object) {
+compute_independence_fit <- function(object) {
   glm_control <- stats::glm.control()
   if (!is.null(object$control$maxiter) && is.finite(object$control$maxiter)) {
     glm_control$maxit <- max(
@@ -394,7 +383,7 @@ compute_independence_gee_quantities <- function(object) {
       denominator
     phi <- max(phi, 10 * .Machine$double.eps)
   }
-  naive_inverse <- compute_independence_naive_inverse(
+  naive_inverse <- compute_independence_info(
     object,
     mu = mu,
     eta = eta,
@@ -517,7 +506,7 @@ compute_eqic <- function(object, beta_covariance, k = 1 / 6) {
   log_variance_term <- sum(
     object$prior.weights * log(2 * pi * phi * adjusted_variance)
   )
-  eqic_independence_inverse <- compute_independence_naive_inverse(
+  eqic_independence_inverse <- compute_independence_info(
     object,
     phi = phi
   )
@@ -564,7 +553,7 @@ compute_criteria <- function(object,
   needs_sc_wc <- wanted("GESSC", "GPC", "AGPC", "SGPC")
 
   quasi_loglikelihood <- if (needs_quasi_loglikelihood) {
-    compute_fit_quasi_loglikelihood(object)
+    compute_fit_quasi_lik(object)
   } else {
     NA_real_
   }
@@ -604,12 +593,12 @@ compute_criteria <- function(object,
     NULL
   }
   independence_inverse <- if (needs_covariance) {
-    compute_independence_naive_inverse(object)
+    compute_independence_info(object)
   } else {
     NULL
   }
   p <- length(object$coefficients)
-  association_params_no <- compute_n_estimated_association_parameters(object)
+  association_params_no <- get_association_count(object)
   gessc <- if (wanted("GESSC")) {
     sc_wc_stats[["sc"]] / (object$obs_no - p - association_params_no)
   } else {
@@ -617,7 +606,7 @@ compute_criteria <- function(object,
   }
   gpc <- sc_wc_stats[["gp"]]
   penalized_gpc <- if (wanted("AGPC", "SGPC")) {
-    compute_gaussian_pseudolikelihood_criteria(
+    compute_gpc_penalized(
       object = object,
       gpc = gpc,
       p = p,
@@ -679,7 +668,7 @@ compute_criteria <- function(object,
       list(PT = NA_real_, WR = NA_real_, RMR = NA_real_)
     }
     qichh <- if (!wanted("QICHH")) NA_real_ else compute_criterion_or_na({
-      independence_quantities <- compute_independence_gee_quantities(object)
+      independence_quantities <- compute_independence_fit(object)
       qichh_penalty <- sum(
         independence_quantities$naive_inverse * beta_covariance
       )
@@ -727,7 +716,7 @@ compute_criteria <- function(object,
       GPC = gpc,
       Parameters = p
     )
-    numeric_cols <- geer_criteria_columns_basic
+    numeric_cols <- geer_criteria_basic
   }
   if (!is.null(digits)) {
     digits <- check_nonnegative_integerish(digits, "digits")
@@ -743,7 +732,7 @@ compute_criteria <- function(object,
 
 
 compute_cic <- function(object, cov_type) {
-  independence_inverse <- compute_independence_naive_inverse(object)
+  independence_inverse <- compute_independence_info(object)
   beta_covariance <- stats::vcov(object, cov_type = cov_type)
   sum(independence_inverse * beta_covariance)
 }

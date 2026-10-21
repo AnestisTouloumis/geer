@@ -105,7 +105,7 @@ test_that("the covariate-region test reproduces Barnhart and Williamson", {
 })
 
 test_that("the partition tests equal score tests of the alternative model", {
-  risk <- gof_score_test(fit_agresti, groups = 6)
+  risk <- gof_score_test(fit_agresti, n_groups = 6)
   indicators <- model.matrix(~ 0 + risk$partition)[, -1L]
   colnames(indicators) <- paste0("g", seq_len(ncol(indicators)))
   augmented_data <- cbind(test_data$agresti, indicators)
@@ -119,7 +119,7 @@ test_that("the partition tests equal score tests of the alternative model", {
   )
   restricted <- update(fit_agresti, data = augmented_data)
   expect_equal(
-    unname(gof_score_test(fit_agresti, groups = 6,
+    unname(gof_score_test(fit_agresti, n_groups = 6,
                           cov_type = "robust")$statistic),
     anova(restricted, augmented, test = "score", cov_type = "robust")$Chi[2L],
     tolerance = 1e-8
@@ -262,9 +262,9 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
     fixed = TRUE
   )
   expect_error(
-    gof_score_test(fit_resp_or, partition = "covariates", groups = 5,
+    gof_score_test(fit_resp_or, partition = "covariates", n_groups = 5,
                    regions = ~treatment),
-    "'groups' is used only with partition = \"risk\"",
+    "'n_groups' is used only with partition = \"risk\"",
     fixed = TRUE
   )
   expect_error(

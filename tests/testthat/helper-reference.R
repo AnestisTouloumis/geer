@@ -271,7 +271,7 @@ ref_small_sample_covariances <- function(object) {
   repeated_max <- max(as.integer(object$repeated))
 
   pieces <- lapply(clusters, function(indices) {
-    v_matrix <- geer:::compute_working_covariance_for_criteria(object, indices)
+    v_matrix <- geer:::get_working_covariance(object, indices)
     d_matrix <- d_all[indices, , drop = FALSE]
     list(
       d = d_matrix,
@@ -363,7 +363,7 @@ ref_influence <- function(object) {
   e_all <- object$y - object$fitted.values
   clusters <- split(seq_along(object$id), object$id)
   pieces <- lapply(clusters, function(indices) {
-    v_matrix <- geer:::compute_working_covariance_for_criteria(object, indices)
+    v_matrix <- geer:::get_working_covariance(object, indices)
     d_matrix <- d_all[indices, , drop = FALSE]
     list(v = v_matrix, d = d_matrix, vd = solve(v_matrix, d_matrix),
          e = e_all[indices])
@@ -414,7 +414,7 @@ ref_estimating_equations <- function(object, beta) {
   shifted$fitted.values <- mu
   d_all <- object$x * object$family$mu.eta(eta)
   Reduce(`+`, lapply(split(seq_along(object$id), object$id), function(i) {
-    v_matrix <- geer:::compute_working_covariance_for_criteria(shifted, i)
+    v_matrix <- geer:::get_working_covariance(shifted, i)
     drop(crossprod(d_all[i, , drop = FALSE],
                    solve(v_matrix, object$y[i] - mu[i])))
   }))

@@ -34,23 +34,24 @@
 #' @param min_pattern_size integer, at least 2, giving the minimum number of
 #'   cases for a missingness pattern to be retained. Defaults to \code{7}, as in
 #'   Jamshidian and Jalal (2010) and \pkg{MissMech}.
-#' @param nrep positive integer giving the number of simulated samples for the
-#'   null distribution of the Neyman statistic in patterns with fewer than
-#'   \code{n_min} cases. Defaults to \code{10000}.
+#' @param n_replicates positive integer giving the number of simulated samples
+#'   for the null distribution of the Neyman statistic in patterns with fewer
+#'   than \code{n_min} cases. Defaults to \code{10000}.
 #' @param n_min integer, at least 2, giving the pattern size from which the
 #'   chi-squared reference with four degrees of freedom is used for the Neyman
 #'   statistic. Defaults to \code{30}.
-#' @param alpha a single number strictly between 0 and 1 giving the significance
-#'   level of the rule used with \code{method = "auto"}. Defaults to
-#'   \code{0.05}.
+#' @param sig_level a single number strictly between 0 and 1 giving the
+#'   significance level of the rule used with \code{method = "auto"}. Defaults
+#'   to \code{0.05}.
 #' @param seed \code{NULL} or a single integer giving the random number seed
 #'   used for imputation and for the simulated Neyman p-values. The previous
 #'   random number state is restored on exit, and \code{NULL} uses the current
 #'   random number stream. Defaults to \code{110}.
-#' @param maxit positive integer giving the maximum number of iterations of the
-#'   EM algorithm used for normal-theory imputation. Defaults to \code{1000}.
-#' @param tol a single positive finite number giving the relative convergence
-#'   tolerance of the EM algorithm. Defaults to \code{1e-08}.
+#' @param maxiter positive integer giving the maximum number of iterations of
+#'   the EM algorithm used for normal-theory imputation. Defaults to
+#'   \code{1000}.
+#' @param tolerance a single positive finite number giving the relative
+#'   convergence tolerance of the EM algorithm. Defaults to \code{1e-08}.
 #'
 #' @details
 #' The procedure completes the incomplete data by imputation, groups the cases
@@ -65,9 +66,10 @@
 #' applies a fourth-order Neyman smooth test within each pattern, and combines
 #' the pattern p-values by Fisher's method. For patterns with fewer than
 #' \code{n_min} cases the null distribution of the Neyman statistic is
-#' simulated and the p-value is \eqn{(1 + b)/(nrep + 1)}, where \eqn{b} is the
-#' number of simulated statistics at least as large as the observed one. The
-#' nonparametric test compares the distributions of the transformed distances
+#' simulated and the p-value is \eqn{(1 + b)/(n_replicates + 1)}, where
+#' \eqn{b} is the number of simulated statistics at least as large as the
+#' observed one. The nonparametric test compares the distributions of the
+#' transformed distances
 #' across patterns with the k-sample Anderson-Darling test of Scholz and
 #' Stephens (1987), which is less sensitive to nonnormality. With
 #' \code{method = "auto"} both tests are computed: if the Hawkins test does not
@@ -93,7 +95,7 @@
 #' least \code{n_min} cases. Setting \code{n_min} larger than the largest
 #' pattern simulates the reference for all patterns, as in Jamshidian and Jalal
 #' (2010). This function differs from \pkg{MissMech} in two respects: the
-#' simulated Neyman p-values use \eqn{(1 + b)/(nrep + 1)}, and the
+#' simulated Neyman p-values use \eqn{(1 + b)/(n_replicates + 1)}, and the
 #' Anderson-Darling p-value is interpolated from the simulated quantiles of the
 #' \pkg{kSamples} package (Scholz and Zhu, 2025) instead of the five critical
 #' values of Scholz and Stephens (1987). P-values can therefore differ from
@@ -155,7 +157,7 @@
 #'   used.}
 #' \item{method.requested, selected.test}{the requested diagnostic and the
 #'   test giving the primary result.}
-#' \item{alpha}{the significance level of the rule used with
+#' \item{sig.level}{the significance level of the rule used with
 #'   \code{method = "auto"}.}
 #' \item{interpretation}{a short interpretation of the first imputation.}
 #'
@@ -206,16 +208,16 @@ mcar_homoscedasticity_test <- function(
     n_imputations = 1L,
     imputed_data = NULL,
     min_pattern_size = 7L,
-    nrep = 10000L,
+    n_replicates = 10000L,
     n_min = 30L,
-    alpha = 0.05,
+    sig_level = 0.05,
     seed = 110L,
-    maxit = 1000L,
-    tol = 1e-8) {
+    maxiter = 1000L,
+    tolerance = 1e-8) {
   data_name <- deparse1(substitute(object))
   imputation_supplied <- !missing(imputation)
-  method <- match.arg(method)
-  imputation <- match.arg(imputation)
+  method <- match_mcar_method(method[1L])
+  imputation <- match_mcar_imputation(imputation[1L])
 
   n_imputations <- check_integer_at_least(n_imputations, "n_imputations")
   min_pattern_size <- check_integer_at_least(
@@ -223,9 +225,9 @@ mcar_homoscedasticity_test <- function(
     "min_pattern_size",
     lower = 2L
   )
-  nrep <- check_integer_at_least(nrep, "nrep")
+  n_replicates <- check_integer_at_least(n_replicates, "n_replicates")
   n_min <- check_integer_at_least(n_min, "n_min", lower = 2L)
-  check_probability_open(alpha, "alpha")
+  check_probability_open(sig_level, "sig_level")
   if (!is.null(seed) &&
       (length(seed) != 1L || !is.numeric(seed) || !is.finite(seed) ||
        abs(seed) > .Machine$integer.max || seed != round(seed))) {
@@ -234,9 +236,9 @@ mcar_homoscedasticity_test <- function(
       call. = FALSE
     )
   }
-  maxit <- check_integer_at_least(maxit, "maxit")
-  if (!is_positive_scalar(tol)) {
-    stop("'tol' must be a positive finite number", call. = FALSE)
+  maxiter <- check_integer_at_least(maxiter, "maxiter")
+  if (!is_positive_scalar(tolerance)) {
+    stop("'tolerance' must be a positive finite number", call. = FALSE)
   }
 
   user_imputed <- !is.null(imputed_data)
@@ -266,7 +268,7 @@ mcar_homoscedasticity_test <- function(
     }
     x <- object
   }
-  x <- check_mcar_homoscedasticity_matrix(x)
+  x <- check_mcar_jj_matrix(x)
   if (!anyNA(x)) {
     stop(
       "the Jamshidian-Jalal diagnostic requires missing values",
@@ -274,14 +276,14 @@ mcar_homoscedasticity_test <- function(
     )
   }
   if (user_imputed) {
-    imputed_data <- check_mcar_homoscedasticity_imputed(imputed_data, x)
+    imputed_data <- check_mcar_jj_imputed(imputed_data, x)
   }
 
-  pattern_info <- compute_mcar_pattern_information(
+  pattern_info <- compute_mcar_patterns(
     x,
     min_pattern_size = min_pattern_size
   )
-  x_used <- check_mcar_homoscedasticity_matrix(pattern_info$x)
+  x_used <- check_mcar_jj_matrix(pattern_info$x)
   attr(x_used, "row.index") <- NULL
   attr(x_used, "original.nrow") <- NULL
   if (!anyNA(x_used)) {
@@ -324,19 +326,19 @@ mcar_homoscedasticity_test <- function(
       setup <- build_mcar_imputation_setup(
         x_used,
         imputation = imputation,
-        maxit = maxit,
-        tol = tol
+        maxiter = maxiter,
+        tolerance = tolerance
       )
       completed <- lapply(
         seq_len(n_imputations),
-        function(i) draw_mcar_imputation(x_used, setup)
+        function(i) compute_mcar_imputation_draw(x_used, setup)
       )
     }
 
     neyman_nulls <- if (run_hawkins) {
-      simulate_mcar_neyman_nulls_by_pattern(
+      compute_mcar_neyman_nulls(
         pattern_info$group_counts,
-        nrep = nrep,
+        n_replicates = n_replicates,
         n_min = n_min
       )
     } else {
@@ -355,7 +357,7 @@ mcar_homoscedasticity_test <- function(
         )
         nonparametric <- NULL
         if (run_nonparametric) {
-          nonparametric <- compute_mcar_nonparametric_test(
+          nonparametric <- compute_mcar_np_test(
             hawkins = hawkins,
             group = pattern_info$group,
             group_counts = pattern_info$group_counts
@@ -390,7 +392,7 @@ mcar_homoscedasticity_test <- function(
       "nonparametric MCAR screening diagnostic"
     )
     selected_test <- "nonparametric"
-  } else if (hawkins$p.value > alpha) {
+  } else if (hawkins$p.value > sig_level) {
     statistic <- c("Fisher chi-squared" = hawkins$statistic)
     parameter <- c(df = hawkins$parameter)
     p_value <- hawkins$p.value
@@ -530,12 +532,12 @@ mcar_homoscedasticity_test <- function(
     em.converged = result$setup$converged,
     method.requested = method,
     selected.test = selected_test,
-    alpha = alpha,
-    interpretation = interpret_mcar_homoscedasticity_test(
+    sig.level = sig_level,
+    interpretation = build_mcar_interpretation(
       method = method,
       hawkins = hawkins,
       nonparametric = nonparametric,
-      alpha = alpha
+      sig_level = sig_level
     )
   )
   class(out) <- c("mcar_homoscedasticity_test", "geer_htest", "htest")

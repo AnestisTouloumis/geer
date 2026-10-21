@@ -415,7 +415,7 @@ test_that("mcar_logistic_test validates its covariate formula and odds-ratio str
   expect_error(mcar_logistic_test(fit, formula = treatment ~ age), "one-sided")
   expect_error(mcar_logistic_test(fit, formula = ~ 0 + treatment), "include an intercept")
   expect_error(mcar_logistic_test(fit, formula = "~ treatment"), "one-sided formula")
-  expect_error(mcar_logistic_test(fit, orstr = "ar1"), "should be one of")
+  expect_error(mcar_logistic_test(fit, orstr = "ar1"), "'orstr' must be one of")
   expect_error(mcar_logistic_test(fit, test = "lrt"), "must be one of")
   expect_error(
     mcar_logistic_test(

@@ -322,7 +322,7 @@ test_that("binomial matrix responses are validated", {
       model.frame(cbind(s, f) ~ x, data = data_negative),
       binomial()
     ),
-    "all counts must be non-negative"
+    "all counts must be nonnegative"
   )
 
   data_zero <- data

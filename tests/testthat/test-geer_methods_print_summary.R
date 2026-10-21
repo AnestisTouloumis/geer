@@ -85,3 +85,14 @@ test_that("summary rejects unused or misspelled arguments", {
     fixed = TRUE
   )
 })
+
+test_that("print methods reject unused arguments", {
+  expect_error(
+    print(fit_geewa_pois_exch, digits = 2),
+    "print.geer does not use the argument\\(s\\): 'digits'"
+  )
+  expect_error(
+    print(summary(fit_geewa_pois_exch), digits = 2),
+    "print.summary.geer does not use the argument\\(s\\): 'digits'"
+  )
+})

@@ -768,7 +768,7 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                             const char* method,
                             const arma::vec& alpha_vector) {
   if (maxiter < 0 || step_maxiter < 0) {
-    Rcpp::stop("'maxiter' and 'step_maxiter' must be non-negative integers");
+    Rcpp::stop("'maxiter' and 'step_maxiter' must be nonnegative integers");
   }
   // Non-finite inputs would otherwise only surface later as an opaque
   // factorization failure (and Armadillo's "matrix is not symmetric" notice).

@@ -7,7 +7,7 @@
 gof_score_test(
   object,
   partition = c("risk", "covariates"),
-  groups = 10,
+  n_groups = 10L,
   regions,
   by_repeated = TRUE,
   cov_type = "bias-corrected"
@@ -20,7 +20,7 @@ gof_score_test(
 fitted probabilities (\code{"risk"}) or regions of the covariates
 (\code{"covariates"}). See Details. Defaults to \code{"risk"}.}
 
-\item{groups}{a single integer, at least 2, giving the number of groups of
+\item{n_groups}{a single integer, at least 2, giving the number of groups of
 fitted probabilities for \code{partition = "risk"}. Defaults to \code{10}.}
 
 \item{regions}{for \code{partition = "covariates"}, a one-sided formula
@@ -71,7 +71,7 @@ number of added indicators kept.
 With \code{partition = "risk"} (Horton et al., 1999), the fitted
 probabilities of all observations are divided at their empirical quantiles
 of orders \eqn{0, 1/G, \ldots, 1}{0, 1/G, ..., 1}, where \eqn{G} is
-\code{groups}, into intervals closed on the right. Tied fitted
+\code{n_groups}, into intervals closed on the right. Tied fitted
 probabilities fall into the same group, so the groups may have unequal
 sizes and, with few distinct fitted probabilities, there may be fewer than
 \eqn{G} groups. Implementations of Hosmer-Lemeshow type tests differ in

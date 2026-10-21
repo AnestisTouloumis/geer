@@ -1,4 +1,4 @@
-compute_mcar_normal_initial_parameters <- function(x) {
+compute_mcar_em_start <- function(x) {
   n <- nrow(x)
   p <- ncol(x)
   mu <- colMeans(x, na.rm = TRUE)
@@ -47,10 +47,10 @@ compute_mcar_normal_initial_parameters <- function(x) {
 }
 
 
-fit_mcar_normal_em <- function(x, maxit, tol) {
+fit_mcar_normal_em <- function(x, maxiter, tolerance) {
   n <- nrow(x)
   p <- ncol(x)
-  initial <- compute_mcar_normal_initial_parameters(x)
+  initial <- compute_mcar_em_start(x)
   mu <- initial$mu
   sigma <- initial$sigma
   missing <- is.na(x)
@@ -60,7 +60,7 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
   converged <- FALSE
   iter <- 0L
 
-  for (iter in seq_len(maxit)) {
+  for (iter in seq_len(maxiter)) {
     sum_x <- numeric(p)
     sum_xx <- matrix(0, nrow = p, ncol = p)
 
@@ -144,7 +144,7 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
       )
     }
 
-    if (difference <= tol * parameter_scale) {
+    if (difference <= tolerance * parameter_scale) {
       converged <- TRUE
       break
     }
@@ -157,7 +157,7 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
           "the EM algorithm for normal-theory maximum-likelihood estimation ",
           "did not converge within %d iterations"
         ),
-        maxit
+        maxiter
       ),
       call. = FALSE
     )
@@ -179,7 +179,92 @@ fit_mcar_normal_em <- function(x, maxit, tol) {
 }
 
 
-extract_mcar_matrix <- function(object, data = NULL) {
+check_mcar_matrix <- function(x, test_label) {
+  if (is.data.frame(x)) {
+    if (!all(vapply(x, is.numeric, logical(1)))) {
+      stop(
+        sprintf("all variables supplied to %s must be numeric", test_label),
+        call. = FALSE
+      )
+    }
+    x <- as.matrix(x)
+  } else if (is.matrix(x)) {
+    if (!is.numeric(x)) {
+      stop(
+        sprintf("the matrix supplied to %s must be numeric", test_label),
+        call. = FALSE
+      )
+    }
+  } else {
+    stop(
+      paste0(
+        "'object' must be a fitted 'geer' object, numeric matrix, or numeric ",
+        "data frame"
+      ),
+      call. = FALSE
+    )
+  }
+  storage.mode(x) <- "double"
+  if (ncol(x) < 2L) {
+    stop(
+      sprintf(
+        "%s requires at least two variables or repeated measurements",
+        test_label
+      ),
+      call. = FALSE
+    )
+  }
+  if (any(is.infinite(x))) {
+    stop(
+      sprintf(
+        "data supplied to %s must not contain infinite values",
+        test_label
+      ),
+      call. = FALSE
+    )
+  }
+  original_nrow <- nrow(x)
+  row_index <- seq_len(original_nrow)
+  all_missing <- rowSums(!is.na(x)) == 0L
+  if (any(all_missing)) {
+    warning(
+      sprintf(
+        "%d row(s) with no observed values were omitted",
+        sum(all_missing)
+      ),
+      call. = FALSE
+    )
+    x <- x[!all_missing, , drop = FALSE]
+    row_index <- row_index[!all_missing]
+  }
+  if (nrow(x) < 2L) {
+    stop(
+      sprintf("%s requires at least two rows with observed values", test_label),
+      call. = FALSE
+    )
+  }
+  observed_no <- colSums(!is.na(x))
+  labels <- colnames(x)
+  if (is.null(labels)) {
+    labels <- as.character(seq_len(ncol(x)))
+  }
+  if (any(observed_no < 2L)) {
+    stop(
+      sprintf(
+        "%s requires at least two observed values for variable(s) %s",
+        test_label,
+        paste(labels[observed_no < 2L], collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  attr(x, "row.index") <- row_index
+  attr(x, "original.nrow") <- original_nrow
+  x
+}
+
+
+get_mcar_data <- function(object, data) {
   if (is.null(data)) {
     data <- object$data
   }
@@ -192,6 +277,33 @@ extract_mcar_matrix <- function(object, data = NULL) {
       call. = FALSE
     )
   }
+  data
+}
+
+
+build_mcar_model_frame <- function(mcall, eval_env, formula_env, what) {
+  tryCatch(
+    eval(mcall, envir = eval_env, enclos = formula_env),
+    error = function(e) {
+      stop(
+        sprintf("could not %s: %s", what, conditionMessage(e)),
+        call. = FALSE
+      )
+    }
+  )
+}
+
+
+check_mcar_univariate <- function(response) {
+  if (is.matrix(response) || is.data.frame(response)) {
+    stop("the MCAR tests require a univariate response", call. = FALSE)
+  }
+  invisible(response)
+}
+
+
+extract_mcar_matrix <- function(object, data = NULL) {
+  data <- get_mcar_data(object, data)
 
   mcall <- object$call
   keep <- c("formula", "data", "subset", "id", "repeated", "na.action")
@@ -208,26 +320,15 @@ extract_mcar_matrix <- function(object, data = NULL) {
   }
   eval_env <- new.env(parent = formula_env)
   assign(".geer_mcar_data", data, envir = eval_env)
-  model_frame <- tryCatch(
-    eval(mcall, envir = eval_env, enclos = formula_env),
-    error = function(e) {
-      stop(
-        sprintf(
-          "could not reconstruct the data used by the fit: %s",
-          conditionMessage(e)
-        ),
-        call. = FALSE
-      )
-    }
+  model_frame <- build_mcar_model_frame(
+    mcall,
+    eval_env,
+    formula_env,
+    "reconstruct the data used by the fit"
   )
 
   response <- stats::model.response(model_frame)
-  if (is.matrix(response) || is.data.frame(response)) {
-    stop(
-      "the MCAR tests require a univariate response",
-      call. = FALSE
-    )
-  }
+  check_mcar_univariate(response)
   if (!is.numeric(response)) {
     stop(
       "the MCAR tests require a numeric response",
@@ -235,52 +336,28 @@ extract_mcar_matrix <- function(object, data = NULL) {
     )
   }
 
-  id_raw <- stats::model.extract(model_frame, "id")
-  if (is.null(id_raw)) {
-    stop("'id' could not be recovered from the fitted model", call. = FALSE)
-  }
-  if (anyNA(id_raw)) {
-    stop(
-      "'id' must not contain missing values",
-      call. = FALSE
-    )
-  }
-  id <- as.numeric(factor(id_raw))
-
+  id_repeated <- extract_geer_id_repeated(
+    model_frame,
+    length(response),
+    warn_character = FALSE
+  )
+  id <- id_repeated$id
+  repeated <- id_repeated$repeated
   repeated_raw <- stats::model.extract(model_frame, "repeated")
-  if (is.null(repeated_raw)) {
-    repeated <- stats::ave(id, id, FUN = seq_along)
-    repeated_labels <- as.character(seq_len(max(repeated)))
+  repeated_labels <- if (is.null(repeated_raw)) {
+    as.character(seq_len(max(repeated)))
   } else {
-    if (anyNA(repeated_raw)) {
-      stop(
-        "'repeated' must not contain missing values",
-        call. = FALSE
-      )
-    }
-    repeated_factor <- factor(repeated_raw)
-    repeated <- as.numeric(repeated_factor)
-    repeated_labels <- levels(repeated_factor)
-  }
-
-  if (length(response) != length(id) || length(response) != length(repeated)) {
-    stop(
-      "response, 'id', and 'repeated' must have the same length",
-      call. = FALSE
-    )
-  }
-  if (any(duplicated(data.frame(id = id, repeated = repeated)))) {
-    stop(
-      "'repeated' must identify unique measurements within each 'id'",
-      call. = FALSE
-    )
+    levels(factor(repeated_raw))
   }
 
   response_matrix <- matrix(
     NA_real_,
     nrow = max(id),
     ncol = max(repeated),
-    dimnames = list(levels(factor(id_raw)), repeated_labels)
+    dimnames = list(
+      levels(factor(stats::model.extract(model_frame, "id"))),
+      repeated_labels
+    )
   )
   response_matrix[cbind(id, repeated)] <- as.numeric(response)
   response_matrix

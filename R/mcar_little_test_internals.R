@@ -1,104 +1,36 @@
 check_mcar_little_matrix <- function(x) {
-  if (is.data.frame(x)) {
-    numeric_cols <- vapply(x, is.numeric, logical(1))
-    if (!all(numeric_cols)) {
-      stop(
-        "all variables supplied to Little's MCAR test must be numeric",
-        call. = FALSE
-      )
-    }
-    x <- as.matrix(x)
-  } else if (is.matrix(x)) {
-    if (!is.numeric(x)) {
-      stop(
-        "the matrix supplied to Little's MCAR test must be numeric",
-        call. = FALSE
-      )
-    }
-  } else {
-    stop(
-      "'object' must be a fitted 'geer' object, numeric matrix, or numeric ",
-      "data frame",
-      call. = FALSE
-    )
-  }
-
-  storage.mode(x) <- "double"
-  empty_rows <- rowSums(!is.na(x)) == 0L
-  if (any(empty_rows)) {
-    warning(
-      sprintf(
-        "%d row(s) with no observed values were omitted",
-        sum(empty_rows)
-      ),
-      call. = FALSE
-    )
-    x <- x[!empty_rows, , drop = FALSE]
-  }
-  if (nrow(x) < 2L) {
-    stop("Little's MCAR test requires at least two rows", call. = FALSE)
-  }
-  if (ncol(x) < 2L) {
-    stop(
-      "Little's MCAR test requires at least two variables or repeated ",
-      "measurements",
-      call. = FALSE
-    )
-  }
-  if (any(is.infinite(x))) {
-    stop(
-      "data supplied to Little's MCAR test must not contain infinite values",
-      call. = FALSE
-    )
-  }
-  observed_no <- colSums(!is.na(x))
+  x <- check_mcar_matrix(x, "Little's MCAR test")
   labels <- colnames(x)
   if (is.null(labels)) {
     labels <- as.character(seq_len(ncol(x)))
   }
-  if (any(observed_no < 2L)) {
-    bad <- which(observed_no < 2L)
+  pairs <- utils::combn(ncol(x), 2L)
+  overlap <- vapply(
+    seq_len(ncol(pairs)),
+    function(j) {
+      sum(!is.na(x[, pairs[1L, j]]) & !is.na(x[, pairs[2L, j]]))
+    },
+    numeric(1)
+  )
+  if (any(overlap < 1L)) {
+    bad_pair <- pairs[, which(overlap < 1L)[1L]]
     stop(
       sprintf(
         paste0(
-          "Little's MCAR test requires at least two observed values for ",
-          "variable(s) %s"
+          "Little's MCAR test requires every pair of variables to be ",
+          "observed together at least once; '%s' and '%s' never are"
         ),
-        paste(labels[bad], collapse = ", ")
+        labels[bad_pair[1L]],
+        labels[bad_pair[2L]]
       ),
       call. = FALSE
     )
-  }
-
-  if (ncol(x) > 1L) {
-    pairs <- utils::combn(ncol(x), 2L)
-    overlap <- vapply(
-      seq_len(ncol(pairs)),
-      function(j) {
-        sum(!is.na(x[, pairs[1L, j]]) & !is.na(x[, pairs[2L, j]]))
-      },
-      integer(1)
-    )
-    if (any(overlap < 1L)) {
-      bad_pair <- pairs[, which(overlap < 1L)[1L]]
-      stop(
-        sprintf(
-          paste0(
-            "Little's MCAR test requires every pair of variables to be ",
-            "observed together at least once; '%s' and '%s' never are"
-          ),
-          labels[bad_pair[1L]],
-          labels[bad_pair[2L]]
-        ),
-        call. = FALSE
-      )
-    }
   }
   x
 }
 
 
-compute_mcar_little_bivariate_exact <- function(x) {
+compute_little_exact <- function(x) {
   n <- nrow(x)
   if (ncol(x) != 2L || n <= 2L) {
     return(NULL)
@@ -147,7 +79,7 @@ compute_mcar_little_bivariate_exact <- function(x) {
 }
 
 
-compute_mcar_little_statistic <- function(x, maxit, tol) {
+compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
   missing <- is.na(x)
   n <- nrow(x)
   p <- ncol(x)
@@ -172,7 +104,7 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
     ))
   }
 
-  em <- fit_mcar_normal_em(x, maxit = maxit, tol = tol)
+  em <- fit_mcar_normal_em(x, maxiter = maxiter, tolerance = tolerance)
   sigma_corrected <- (n / (n - 1)) * em$sigma
   statistic <- 0
   df_terms <- 0L
@@ -211,7 +143,7 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
 
   statistic <- as.numeric(statistic)
   asymptotic_p_value <- stats::pchisq(statistic, df = df, lower.tail = FALSE)
-  bivariate_exact <- compute_mcar_little_bivariate_exact(x)
+  bivariate_exact <- compute_little_exact(x)
 
   if (!is.null(bivariate_exact) &&
       !isTRUE(all.equal(
@@ -245,7 +177,7 @@ compute_mcar_little_statistic <- function(x, maxit, tol) {
 }
 
 
-has_mcar_little_binary_variable <- function(x) {
+is_mcar_little_binary <- function(x) {
   any(vapply(
     seq_len(ncol(x)),
     function(j) {

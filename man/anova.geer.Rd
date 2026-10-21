@@ -16,7 +16,8 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{...}{additional fitted model objects of class \code{"geer"} to be
-included in the comparison.}
+included in the comparison, supplied without names. Any other argument
+is an error.}
 
 \item{test}{character string specifying the hypothesis test: Wald
 (\code{"wald"}), generalized score (\code{"score"}), modified working Wald

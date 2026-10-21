@@ -29,7 +29,7 @@ start_values <- function(beta_start = NULL,
 binary_start_values <- function(beta_start = NULL,
                                 method = "gee",
                                 offset = rep(0, nrow(cerebrovascular))) {
-  compute_geer_binary_start_values(
+  compute_binary_start_values(
     model_matrix = model.matrix(ecg ~ period + treatment, data = cerebrovascular),
     y = cerebrovascular$ecg,
     family = binomial(),
@@ -141,10 +141,10 @@ test_that("the starting-value fit does not emit per-observation non-integer warn
   expect_length(bin_or$warnings, 0L)
 })
 
-test_that("muffle_noninteger_warnings keeps every other warning", {
+test_that("evaluate_noninteger_quiet keeps every other warning", {
   seen <- character()
   withCallingHandlers(
-    muffle_noninteger_warnings({
+    evaluate_noninteger_quiet({
       warning("non-integer x = 5.5")
       warning("non-integer #successes in a binomial glm!")
       warning("fitted probabilities numerically 0 or 1 occurred")
@@ -162,9 +162,9 @@ test_that("muffle_noninteger_warnings keeps every other warning", {
   ))
 })
 
-test_that("drop_family_aic only replaces the AIC of the family used for starting values", {
+test_that("build_family_no_aic only replaces the AIC of the family used for starting values", {
   fam <- poisson()
-  fam2 <- drop_family_aic(fam)
+  fam2 <- build_family_no_aic(fam)
   expect_identical(fam2$family, fam$family)
   expect_identical(fam2$link, fam$link)
   expect_identical(fam2$variance, fam$variance)
@@ -184,4 +184,21 @@ test_that("drop_family_aic only replaces the AIC of the family used for starting
     control = list(type = "AS_mean")
   )$coefficients
   expect_identical(b1, b2)
+})
+
+test_that("start value helpers validate beta_start and control_glm", {
+  expect_error(
+    check_beta_start(c("a", "b"), 2L),
+    "'beta_start' must be a numeric vector of length 2"
+  )
+  expect_error(
+    check_beta_start(c(1, Inf), 2L),
+    "'beta_start' must contain only finite values"
+  )
+  expect_identical(check_beta_start(1:2, 2L), c(1, 2))
+  expect_error(normalize_control_glm(5), "'control_glm' must be a list")
+  expect_identical(get_start_type("gee"), "ML")
+  expect_identical(get_start_type("bcgee-robust"), "ML")
+  expect_identical(get_start_type("brgee-naive"), "AS_mean")
+  expect_identical(get_start_type("pgee-jeffreys"), "MPL_Jeffreys")
 })

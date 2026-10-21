@@ -156,7 +156,7 @@ mcar_logistic_test <- function(object,
                                pmethod = c("rao-scott", "satterthwaite"),
                                control = geer_control()) {
   object <- check_geer_object(object)
-  orstr <- match.arg(orstr)
+  orstr <- match_mcar_orstr(orstr[1L])
   opts <- normalize_geer_test_options(
     test = test[1L],
     cov_type = cov_type,
@@ -165,14 +165,9 @@ mcar_logistic_test <- function(object,
   test <- opts$test
   cov_type <- opts$cov_type
   pmethod <- opts$pmethod
-  if (identical(test, "working-lrt") && !identical(orstr, "independence")) {
-    stop(
-      "the modified working LRT requires an independence working structure",
-      call. = FALSE
-    )
-  }
+  check_working_lrt_allowed(test, orstr)
   covariate_formula <- build_mcar_covariate_formula(object, formula)
-  prepared <- reconstruct_mcar_transition_frame(
+  prepared <- build_mcar_transition_frame(
     object,
     formula = covariate_formula,
     data = data
@@ -223,7 +218,7 @@ mcar_logistic_test <- function(object,
         method = paste0(
           "Ridout-style response-history diagnostic for MCAR using binary ",
           "GEE: ",
-          format_test_label(test), " test"
+          build_test_label(test), " test"
         ),
         data.name = paste0(
           "longitudinal response-missingness transitions from fitted geer ",
@@ -409,7 +404,7 @@ mcar_logistic_test <- function(object,
       p.value = response_test$p_value,
       method = paste0(
         "Ridout-style response-history diagnostic for MCAR using binary GEE: ",
-        format_test_label(test), " test"
+        build_test_label(test), " test"
       ),
       data.name = paste0(
         "longitudinal response-missingness transitions from fitted geer object"

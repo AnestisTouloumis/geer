@@ -1,4 +1,4 @@
-compute_small_sample_covariances <- function(
+compute_ss_covariances <- function(
     object,
     fitted_values = object$fitted.values,
     linear_predictors = object$linear.predictors) {
@@ -25,24 +25,12 @@ compute_small_sample_covariances <- function(
 }
 
 
-get_cached_small_sample_covariances <- function(object) {
-  cache <- object$cache
-  if (is.environment(cache)) {
-    stored <- cache$small_sample
-    if (!is.null(stored) &&
-        identical(stored$coefficients, object$coefficients)) {
-      return(stored$covariances)
-    }
-  }
-  covariances <- compute_small_sample_covariances(object)
-  if (is.environment(cache)) {
-    assign(
-      "small_sample",
-      list(coefficients = object$coefficients, covariances = covariances),
-      envir = cache
-    )
-  }
-  covariances
+get_cached_ss_covariances <- function(object) {
+  get_cached_value(
+    object,
+    "small_sample",
+    function() compute_ss_covariances(object)
+  )
 }
 
 

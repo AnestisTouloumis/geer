@@ -39,19 +39,8 @@ build_mcar_covariate_formula <- function(object, formula) {
 
 
 normalize_mcar_response <- function(response, object) {
-  if (is.matrix(response) || is.data.frame(response)) {
-    stop(
-      "the MCAR tests require a univariate response",
-      call. = FALSE
-    )
-  }
-
-  is_binomial_like <-
-    identical(object$family$family, "binomial") ||
-    identical(object$family$family, "quasibinomial") ||
-    (identical(object$family$family, "quasi") &&
-     !is.null(object$family$varfun) &&
-     identical(object$family$varfun, "mu(1-mu)"))
+  check_mcar_univariate(response)
+  is_binomial_like <- is_binomial_like_family(object$family)
 
   if (is_binomial_like && is.factor(response)) {
     if (nlevels(response) != 2L) {
@@ -92,19 +81,8 @@ normalize_mcar_response <- function(response, object) {
 }
 
 
-reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
-  if (is.null(data)) {
-    data <- object$data
-  }
-  if (is.null(data)) {
-    stop(
-      paste0(
-        "the original data are not available in the fitted object; supply ",
-        "them through 'data'"
-      ),
-      call. = FALSE
-    )
-  }
+build_mcar_transition_frame <- function(object, formula, data = NULL) {
+  data <- get_mcar_data(object, data)
 
   object_formula <- stats::formula(object)
   formula_env <- environment(object_formula)
@@ -123,17 +101,11 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
   response_call$na.action <- quote(stats::na.pass)
   response_call$drop.unused.levels <- FALSE
 
-  response_frame <- tryCatch(
-    eval(response_call, envir = eval_env, enclos = formula_env),
-    error = function(e) {
-      stop(
-        sprintf(
-          "could not reconstruct the response used by the fit: %s",
-          conditionMessage(e)
-        ),
-        call. = FALSE
-      )
-    }
+  response_frame <- build_mcar_model_frame(
+    response_call,
+    eval_env,
+    formula_env,
+    "reconstruct the response used by the fit"
   )
   response <- normalize_mcar_response(
     stats::model.response(response_frame),
@@ -161,17 +133,11 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
   mcall$na.action <- quote(stats::na.pass)
   mcall$drop.unused.levels <- TRUE
 
-  model_frame <- tryCatch(
-    eval(mcall, envir = eval_env, enclos = formula_env),
-    error = function(e) {
-      stop(
-        sprintf(
-          "could not construct the risk-set data: %s",
-          conditionMessage(e)
-        ),
-        call. = FALSE
-      )
-    }
+  model_frame <- build_mcar_model_frame(
+    mcall,
+    eval_env,
+    formula_env,
+    "construct the risk-set data"
   )
 
   y <- stats::model.response(model_frame)
@@ -179,43 +145,13 @@ reconstruct_mcar_transition_frame <- function(object, formula, data = NULL) {
     stop("the response could not be reconstructed correctly", call. = FALSE)
   }
 
-  id_raw <- stats::model.extract(model_frame, "id")
-  if (is.null(id_raw)) {
-    stop("'id' could not be recovered from the fitted model", call. = FALSE)
-  }
-  if (anyNA(id_raw)) {
-    stop(
-      "'id' must not contain missing values",
-      call. = FALSE
-    )
-  }
-  id <- as.numeric(factor(id_raw))
-
-  repeated_raw <- stats::model.extract(model_frame, "repeated")
-  if (is.null(repeated_raw)) {
-    repeated <- stats::ave(id, id, FUN = seq_along)
-  } else {
-    if (anyNA(repeated_raw)) {
-      stop(
-        "'repeated' must not contain missing values",
-        call. = FALSE
-      )
-    }
-    repeated <- as.numeric(factor(repeated_raw))
-  }
-
-  if (length(y) != length(id) || length(y) != length(repeated)) {
-    stop(
-      "response, 'id', and 'repeated' must have the same length",
-      call. = FALSE
-    )
-  }
-  if (any(duplicated(data.frame(id = id, repeated = repeated)))) {
-    stop(
-      "'repeated' must identify unique measurements within each 'id'",
-      call. = FALSE
-    )
-  }
+  id_repeated <- extract_geer_id_repeated(
+    model_frame,
+    length(y),
+    warn_character = FALSE
+  )
+  id <- id_repeated$id
+  repeated <- id_repeated$repeated
 
   trms <- stats::terms(analysis_formula, data = model_frame)
   design <- stats::model.matrix(trms, model_frame)
@@ -358,35 +294,13 @@ compute_mcar_nested_test <- function(object0,
                                      test,
                                      cov_type,
                                      pmethod) {
-  value <- switch(
+  value <- compute_nested_test(
+    object0,
+    object1,
     test,
-    wald = compute_wald_test(object0, object1, cov_type),
-    score = compute_score_test(object0, object1, cov_type),
-    `working-wald` = compute_working_wald_test(
-      object0,
-      object1,
-      cov_type,
-      pmethod
-    ),
-    `working-score` = compute_working_score_test(
-      object0,
-      object1,
-      cov_type,
-      pmethod
-    ),
-    `working-lrt` = compute_working_lrt_test(
-      object0,
-      object1,
-      cov_type,
-      pmethod
-    )
+    cov_type,
+    pmethod
   )
-  if (!is.finite(value$test_stat)) {
-    stop(
-      "the test statistic is negative; try another 'cov_type' or 'test'",
-      call. = FALSE
-    )
-  }
   list(
     statistic = value$test_stat,
     df = as.numeric(value$test_df),

@@ -6,9 +6,9 @@
 \usage{
 geer_control(
   tolerance = 1e-06,
-  maxiter = 500,
+  maxiter = 500L,
   or_adding = 0.5,
-  step_maxiter = 10,
+  step_maxiter = 10L,
   step_multiplier = 1,
   jeffreys_power = 0.5
 )

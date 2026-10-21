@@ -8,7 +8,7 @@
 #'
 #' @inheritParams gof_score_test
 #' @inheritParams gof_residual_test
-#' @param groups a single integer, at least 2, giving the number of groups of
+#' @param n_groups a single integer, at least 2, giving the number of groups of
 #'   fitted probabilities for the test of Horton et al. (1999). Defaults to
 #'   \code{10}.
 #' @param regions optional one-sided formula or vector defining covariate
@@ -74,14 +74,14 @@
 #'
 #' @export
 gof_tests <- function(object,
-                      groups = 10,
+                      n_groups = 10L,
                       regions,
                       by_repeated = TRUE,
                       cov_type = "bias-corrected",
                       covariance = c("unstructured", "empirical")) {
   context <- "gof_tests"
   object <- check_geer_object(object)
-  groups <- check_integer_at_least(groups, "groups", lower = 2L)
+  n_groups <- check_integer_at_least(n_groups, "n_groups", lower = 2L)
   cov_type <- check_gof_cov_type(
     match_cov_type(cov_type, default = "bias-corrected"),
     context
@@ -99,7 +99,7 @@ gof_tests <- function(object,
     c(result$test_stat, result$test_df, NA_real_, NA_real_, result$test_p)
   }
   rows <- list()
-  risk <- build_gof_risk_groups(object, groups, context)
+  risk <- build_gof_risk_groups(object, n_groups, context)
   rows[[sprintf("Horton et al., %s", cov_type)]] <- score_row(
     compute_gof_score_test(object, risk, FALSE, cov_type, context)
   )

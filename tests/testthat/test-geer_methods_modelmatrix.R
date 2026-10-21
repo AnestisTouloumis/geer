@@ -11,3 +11,10 @@ test_that("model.matrix returns the stored design matrix without the data", {
   fit$data <- new.env()
   expect_equal(model.matrix(fit), fit_geewa_pois_exch$x)
 })
+
+test_that("model.matrix rejects unused arguments", {
+  expect_error(
+    model.matrix(fit_geewa_pois_exch, foo = 1),
+    "model.matrix.geer does not use the argument\\(s\\): 'foo'"
+  )
+})

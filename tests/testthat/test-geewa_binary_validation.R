@@ -8,7 +8,7 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
       data = cerebrovascular,
       link = "log-log"
     ),
-    "'log-log' link not recognised"
+    "'link' must be one of"
   )
   expect_error(
     geewa_binary(

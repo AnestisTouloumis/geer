@@ -121,18 +121,25 @@ test_that("anova rejects working-lrt for non-independence models", {
   )
 })
 
-test_that("anova silently drops non-geer objects from dots", {
-  out <- anova(fit_null, fit_trt, "not_a_model",
-    test = "wald", cov_type = "robust"
+test_that("anova rejects non-geer and named objects in dots", {
+  expect_error(
+    anova(fit_null, fit_trt, "not_a_model", test = "wald", cov_type = "robust"),
+    "anova.geer does not use the argument\\(s\\): <unnamed>"
   )
-  expect_s3_class(out, "anova")
-  expect_equal(nrow(out), 2L)
+  expect_error(
+    anova(fit_geewa_pois_indep, foo = "bar", test = "wald", cov_type = "robust"),
+    "anova.geer does not use the argument\\(s\\): 'foo'"
+  )
 })
 
-test_that("anova warns about named arguments in dots", {
-  expect_warning(
-    anova(fit_geewa_pois_indep, foo = "bar", test = "wald", cov_type = "robust"),
-    "named arguments"
+test_that("add1 and drop1 reject unused arguments", {
+  expect_error(
+    add1(fit_null, scope = ~ . + treatment, cov.type = "robust"),
+    "add1.geer does not use the argument\\(s\\): 'cov.type'"
+  )
+  expect_error(
+    drop1(fit_trt, tset = "score"),
+    "drop1.geer does not use the argument\\(s\\): 'tset'"
   )
 })
 
@@ -151,21 +158,18 @@ test_that("add1 accepts a scope when the formula was passed as a symbol", {
   expect_true("lnbaseline" %in% rownames(out))
 })
 
-test_that("anova and drop1 report a negative test statistic as NA with a warning", {
+test_that("anova and drop1 stop on a negative test statistic", {
   negative <- fit_geewa_pois_indep
   negative$robust_covariance <- -negative$robust_covariance
   smaller <- update(fit_geewa_pois_indep, . ~ . - lnage)
-  expect_warning(
-    out <- anova(smaller, negative, test = "wald", cov_type = "robust"),
-    "the test statistic is negative"
+  expect_error(
+    anova(smaller, negative, test = "wald", cov_type = "robust"),
+    "Wald test failed: the test statistic is negative"
   )
-  expect_true(is.na(out$Chi[2]))
-  expect_true(is.na(out[["Pr(>Chi)"]][2]))
-  expect_warning(
-    out <- drop1(negative, scope = "lnage", test = "wald", cov_type = "robust"),
-    "the test statistic is negative"
+  expect_error(
+    drop1(negative, scope = "lnage", test = "wald", cov_type = "robust"),
+    "Wald test failed: the test statistic is negative"
   )
-  expect_true(is.na(out[["Chi"]][2]))
 })
 
 test_that("add1 and drop1 pass pmethod to the working tests", {

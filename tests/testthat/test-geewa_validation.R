@@ -238,7 +238,7 @@ test_that("geewa rejects responses outside the support of the family", {
   dat$shifted <- dat$seizures - 5
   expect_error(
     geewa(shifted ~ treatment, family = poisson, data = dat, id = id),
-    "negative values not allowed for the 'Poisson' family",
+    "the response must be nonnegative for the poisson family",
     fixed = TRUE
   )
   expect_error(
@@ -249,22 +249,22 @@ test_that("geewa rejects responses outside the support of the family", {
       id = id,
       beta_start = c(1, 0)
     ),
-    "negative values not allowed for the 'Poisson' family",
+    "the response must be nonnegative for the poisson family",
     fixed = TRUE
   )
   expect_error(
     geewa(shifted ~ treatment, family = quasipoisson, data = dat, id = id),
-    "negative values not allowed for the 'quasiPoisson' family",
+    "the response must be nonnegative for the quasipoisson family",
     fixed = TRUE
   )
   expect_error(
     geewa(seizures ~ treatment, family = Gamma("log"), data = dat, id = id),
-    "non-positive values not allowed for the 'Gamma' family",
+    "the response must be positive for the Gamma family",
     fixed = TRUE
   )
   expect_error(
     geewa(seizures ~ treatment, family = inverse.gaussian, data = dat, id = id),
-    "positive values only are allowed for the 'inverse.gaussian' family",
+    "the response must be positive for the inverse.gaussian family",
     fixed = TRUE
   )
   expect_error(
@@ -274,7 +274,7 @@ test_that("geewa rejects responses outside the support of the family", {
       data = dat,
       id = id
     ),
-    "negative values not allowed for quasi(variance = \"mu\")",
+    "the response must be nonnegative for quasi(variance = \"mu\")",
     fixed = TRUE
   )
   expect_no_error(
@@ -287,5 +287,32 @@ test_that("geewa rejects responses outside the support of the family", {
       data = dat,
       id = id
     )
+  )
+})
+
+test_that("geewa validates a fixed alpha_vector before coercing it", {
+  expect_error(
+    geewa(
+      formula = seizures ~ treatment,
+      family = poisson("log"),
+      data = epilepsy,
+      id = id,
+      repeated = visit,
+      corstr = "fixed",
+      alpha_vector = rep("a", 6L)
+    ),
+    "'alpha_vector' must be a numeric vector"
+  )
+  expect_error(
+    geewa(
+      formula = seizures ~ treatment,
+      family = poisson("log"),
+      data = epilepsy,
+      id = id,
+      repeated = visit,
+      corstr = "fixed",
+      alpha_vector = c(0.1, 0.1, 0.1, 0.1, 0.1, Inf)
+    ),
+    "'alpha_vector' must be finite"
   )
 })

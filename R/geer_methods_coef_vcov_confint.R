@@ -192,10 +192,10 @@ vcov.geer <- function(object, cov_type = "bias-corrected", ...) {
   check_unused_dots(list(...), "vcov.geer")
   object <- check_geer_object(object)
   cov_type <- match_cov_type(cov_type)
-  if (cov_type %in% geer_small_sample_cov_types) {
+  if (cov_type %in% geer_ss_cov_types) {
     return(
       select_small_sample_covariance(
-        covariances = get_cached_small_sample_covariances(object),
+        covariances = get_cached_ss_covariances(object),
         cov_type = cov_type,
         object = object,
         coef_no = object$rank,
@@ -208,7 +208,7 @@ vcov.geer <- function(object, cov_type = "bias-corrected", ...) {
     robust = object$robust_covariance,
     naive = object$naive_covariance,
     `bias-corrected` = object$bias_corrected_covariance,
-    jackknife = get_cached_jackknife_covariance(object),
+    jackknife = get_cached_jackknife_cov(object),
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = object$robust_covariance,
       clusters_no = object$clusters_no,
@@ -317,7 +317,7 @@ confint.geer <- function(object,
   parm <- match_parm(if (missing(parm)) NULL else parm, names(beta))
   conf_probs <- (1 - level) / 2
   conf_probs <- c(conf_probs, 1 - conf_probs)
-  pct <- format_percent(conf_probs, 3)
+  pct <- build_percent_labels(conf_probs, 3)
   percentiles <- stats::qnorm(conf_probs)
   ans <- matrix(
     NA_real_,
@@ -326,7 +326,7 @@ confint.geer <- function(object,
     dimnames = list(parm, pct)
   )
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  standard_errors <- compute_standard_errors_or_stop(
+  standard_errors <- compute_se_or_stop(
     vcov_matrix,
     parm = parm,
     context = "confint.geer"

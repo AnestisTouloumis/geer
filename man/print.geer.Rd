@@ -9,8 +9,8 @@
 \arguments{
 \item{x}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional arguments passed to or from other methods. Currently
-unused.}
+\item{...}{not used. Supplying any argument is an error, so that a misspelled
+argument name is reported rather than silently ignored.}
 }
 \value{
 The input object \code{x} is returned invisibly.

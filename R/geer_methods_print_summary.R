@@ -17,8 +17,8 @@ print_nonconvergence_notice <- function(converged) {
 #' convergence information of a fitted \code{geer} object.
 #'
 #' @param x a fitted model object of class \code{"geer"}.
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @return
 #' The input object \code{x} is returned invisibly.
@@ -39,6 +39,7 @@ print_nonconvergence_notice <- function(converged) {
 #'
 #' @export
 print.geer <- function(x, ...) {
+  check_unused_dots(list(...), "print.geer")
   x <- check_geer_object(x, "x")
   cat("Call:\n")
   print(x$call)
@@ -116,7 +117,7 @@ summary.geer <- function(object,
   check_unused_dots(list(...), "summary.geer")
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- compute_standard_errors_or_na(diag(vcov_matrix), "summary.geer")
+  se <- compute_se_or_na(diag(vcov_matrix))
   z_stat <- rep.int(NA_real_, length(beta))
   pval <- rep.int(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
@@ -160,8 +161,8 @@ summary.geer <- function(object,
 #'
 #' @param x an object of class \code{"summary.geer"}, as returned by
 #'   \code{\link{summary.geer}}.
-#' @param ... additional arguments passed to or from other methods. Currently
-#'   unused.
+#' @param ... not used. Supplying any argument is an error, so that a misspelled
+#'   argument name is reported rather than silently ignored.
 #'
 #' @return
 #' The input object \code{x} is returned invisibly.
@@ -182,6 +183,7 @@ summary.geer <- function(object,
 #'
 #' @export
 print.summary.geer <- function(x, ...) {
+  check_unused_dots(list(...), "print.summary.geer")
   x <- check_summary_geer_object(x)
   cat("\nCall:\n")
   print(x$call)
@@ -208,7 +210,7 @@ print.summary.geer <- function(x, ...) {
   cat("Std. Errors are taken from the", x$cov_type, "covariance matrix.", "\n")
   cat("\nDispersion Parameter:", round(x$phi, digits = 4), "\n")
   cat("\nAssociation Structure:", x$association_structure, "\n")
-  if (length(x$alpha) == 1) {
+  if (length(x$alpha) == 1L) {
     cat("Association Parameter:", round(x$alpha, digits = 4), "\n")
   } else {
     cat("Association Parameters:\n")

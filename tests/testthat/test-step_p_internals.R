@@ -97,7 +97,7 @@ test_that("scope factor helper stops when the scope does not nest the model", {
 })
 
 test_that("step-path initializer stores the initial model state", {
-  out <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 3)
+  out <- build_step_models(fit_resp_full_indep, cov_type = "robust", steps = 3)
   expect_identical(out$steps, 3L)
   expect_length(out$models, 4L)
   expect_identical(out$models_no, 1L)
@@ -107,8 +107,8 @@ test_that("step-path initializer stores the initial model state", {
 })
 
 test_that("append-model helper increments the path correctly", {
-  init <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
-  out <- append_step_model(
+  init <- build_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
+  out <- build_step_history(
     models = init$models,
     models_no = init$models_no,
     change = "- gender",
@@ -126,8 +126,8 @@ test_that("append-model helper increments the path correctly", {
 })
 
 test_that("result helper stores an anova table on the fitted model", {
-  init <- initialize_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
-  out_models <- append_step_model(
+  init <- build_step_models(fit_resp_full_indep, cov_type = "robust", steps = 2)
+  out_models <- build_step_history(
     models = init$models,
     models_no = init$models_no,
     change = "- gender",
@@ -158,12 +158,12 @@ test_that("update-fit helper applies the requested model change for binary and c
     orstr = "independence",
     method = "pgee-jeffreys"
   )
-  out <- update_step_fit(fit_resp_full_indep, "- gender", obs_no = fit_resp_full_indep$obs_no)
+  out <- refit_step_model(fit_resp_full_indep, "- gender", obs_no = fit_resp_full_indep$obs_no)
   expect_s3_class(out, "geer")
   expect_false("gender" %in% attr(terms(out), "term.labels"))
   expect_identical(out$obs_no, fit_resp_full_indep$obs_no)
 
-  updated <- update_step_fit(
+  updated <- refit_step_model(
     fitted_model = fit_geewa_pois_exch,
     change = "- lnage",
     obs_no = fit_geewa_pois_exch$obs_no
@@ -220,10 +220,10 @@ test_that("backward stop helper honors zero-df candidates and threshold logic", 
     check.names = FALSE
   )
   rownames(aod_continue) <- c("<none>", "- x1")
-  expect_false(should_stop_step_backward(aod_zdf, 2L, pvalue = 0.15))
-  expect_true(should_stop_step_backward(aod_stop, 2L, pvalue = 0.15))
-  expect_false(should_stop_step_backward(aod_continue, 2L, pvalue = 0.15))
-  expect_true(should_stop_step_backward(aod_continue, NA_integer_, pvalue = 0.15))
+  expect_false(is_step_backward_done(aod_zdf, 2L, pvalue = 0.15))
+  expect_true(is_step_backward_done(aod_stop, 2L, pvalue = 0.15))
+  expect_false(is_step_backward_done(aod_continue, 2L, pvalue = 0.15))
+  expect_true(is_step_backward_done(aod_continue, NA_integer_, pvalue = 0.15))
 })
 
 test_that("forward selector uses the first minimum p-value", {
@@ -254,9 +254,9 @@ test_that("forward stop helper stops only when the selected p-value is above thr
   rownames(aod_continue) <- c("<none>", "+ x1")
   row_stop <- select_step_row_forward(aod_stop)
   row_continue <- select_step_row_forward(aod_continue)
-  expect_true(should_stop_step_forward(aod_stop, row_stop, pvalue = 0.15))
-  expect_false(should_stop_step_forward(aod_continue, row_continue, pvalue = 0.15))
-  expect_true(should_stop_step_forward(aod_continue, NA_integer_, pvalue = 0.15))
+  expect_true(is_step_forward_done(aod_stop, row_stop, pvalue = 0.15))
+  expect_false(is_step_forward_done(aod_continue, row_continue, pvalue = 0.15))
+  expect_true(is_step_forward_done(aod_continue, NA_integer_, pvalue = 0.15))
 })
 
 test_that("term helper returns the expected values", {

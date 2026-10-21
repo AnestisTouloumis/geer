@@ -7,18 +7,18 @@
 \alias{cooks.distance.geer}
 \title{Leverage and Deletion Diagnostics for a geer Object}
 \usage{
-\method{hatvalues}{geer}(model, level = c("clusters", "observations"), ...)
+\method{hatvalues}{geer}(model, unit = c("clusters", "observations"), ...)
 
 \method{dfbeta}{geer}(
   model,
-  level = c("clusters", "observations"),
+  unit = c("clusters", "observations"),
   method = c("one-step", "exact"),
   ...
 )
 
 \method{dfbetas}{geer}(
   model,
-  level = c("clusters", "observations"),
+  unit = c("clusters", "observations"),
   method = c("one-step", "exact"),
   cov_type = "naive",
   ...
@@ -26,7 +26,7 @@
 
 \method{cooks.distance}{geer}(
   model,
-  level = c("clusters", "observations"),
+  unit = c("clusters", "observations"),
   method = c("one-step", "exact"),
   cov_type = "naive",
   parm,
@@ -36,7 +36,7 @@
 \arguments{
 \item{model}{a fitted model object of class \code{"geer"}.}
 
-\item{level}{character string specifying whether the diagnostics refer to
+\item{unit}{character string specifying whether the diagnostics refer to
 clusters (\code{"clusters"}) or to single observations
 (\code{"observations"}). Defaults to \code{"clusters"}.}
 
@@ -78,8 +78,8 @@ the dispersion, and
 matrix of cluster \eqn{i} is
 \deqn{H_i = D_i \Sigma D_i^\top V_i^{-1}.}{H_i = D_i Sigma D_i' V_i^(-1).}
 \code{hatvalues()} returns the diagonal elements of \eqn{H_i} for
-\code{level = "observations"} and their sum, the trace of \eqn{H_i}, for
-\code{level = "clusters"}. The leverages sum to the number of coefficients.
+\code{unit = "observations"} and their sum, the trace of \eqn{H_i}, for
+\code{unit = "clusters"}. The leverages sum to the number of coefficients.
 
 \code{dfbeta()} returns \eqn{\hat\beta - \hat\beta_{(i)}}{beta - beta_(i)},
 where \eqn{\hat\beta_{(i)}}{beta_(i)} is the estimate without cluster or
@@ -102,7 +102,7 @@ With \code{method = "exact"}, every cluster is deleted in turn and the model
 refitted with the association parameters held at their full-data values,
 as for \code{cov_type = "jackknife"} in \code{\link{vcov.geer}}. The
 refits are computed once and cached on the fit. It is available only for
-\code{level = "clusters"}. The one-step approximation is derived from the
+\code{unit = "clusters"}. The one-step approximation is derived from the
 ordinary generalized estimating equations, so it is available only for
 fits with \code{method = "gee"}; for the other estimation methods, use
 \code{method = "exact"}.
@@ -130,7 +130,7 @@ robust covariance matrix by default.
 }
 \section{Observation order}{
 
-For \code{level = "observations"}, the values follow the internal order of
+For \code{unit = "observations"}, the values follow the internal order of
 the fitted model: the complete cases, sorted by cluster and, within
 cluster, by \code{repeated}. They are named \code{"id(repeated)"} by the
 cluster identifier and the value of \code{repeated}, or the position within
@@ -151,7 +151,7 @@ head(hatvalues(fit))
 head(dfbeta(fit))
 head(dfbetas(fit, cov_type = "robust"))
 head(cooks.distance(fit))
-head(cooks.distance(fit, level = "observations"))
+head(cooks.distance(fit, unit = "observations"))
 head(cooks.distance(fit, parm = "treatmentprogabide"))
 
 }

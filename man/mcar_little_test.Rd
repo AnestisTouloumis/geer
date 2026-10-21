@@ -7,8 +7,8 @@
 mcar_little_test(
   object,
   data = NULL,
-  maxit = 1000L,
-  tol = 1e-08,
+  maxiter = 1000L,
+  tolerance = 1e-08,
   reference = c("auto", "asymptotic")
 )
 }
@@ -21,12 +21,12 @@ variable or repeated measurement. See Details.}
 \code{object}. Used only when \code{object} is a fitted model object and
 the data cannot be recovered from it. Defaults to \code{NULL}.}
 
-\item{maxit}{positive integer giving the maximum number of iterations of the
-EM algorithm used to estimate the multivariate normal mean and covariance
-matrix. Defaults to \code{1000}.}
+\item{maxiter}{positive integer giving the maximum number of iterations of
+the EM algorithm used to estimate the multivariate normal mean and
+covariance matrix. Defaults to \code{1000}.}
 
-\item{tol}{a single positive finite number giving the relative convergence
-tolerance of the EM algorithm. Defaults to \code{1e-08}.}
+\item{tolerance}{a single positive finite number giving the relative
+convergence tolerance of the EM algorithm. Defaults to \code{1e-08}.}
 
 \item{reference}{character string specifying the reference distribution:
 Little's exact F reference when the data are bivariate monotone and the
@@ -77,7 +77,7 @@ When there are two variables, one fully observed, Little shows that
 \code{reference = "auto"} this exact reference is used in that case,
 provided the identity is reproduced numerically from the EM estimates;
 otherwise a warning is issued and the chi-squared reference is used, which
-usually indicates that \code{tol} is too loose.
+usually indicates that \code{tolerance} is too loose.
 
 Matrix or data frame input must have at least two rows and two variables,
 at least two observed values per variable, at least one jointly observed

@@ -1,4 +1,4 @@
-format_percent <- function(probs, digits = 2, check = FALSE) {
+build_percent_labels <- function(probs, digits = 2, check = FALSE) {
   if (!is.numeric(probs)) {
     stop("'probs' must be numeric", call. = FALSE)
   }
@@ -25,7 +25,7 @@ format_percent <- function(probs, digits = 2, check = FALSE) {
 }
 
 
-format_test_label <- function(test) {
+build_test_label <- function(test) {
   out <- switch(
     test,
     wald = "Wald",
@@ -96,9 +96,9 @@ refit_geer <- function(object, formula) {
 }
 
 
-compute_standard_errors_or_stop <- function(vcov_matrix,
-                                            parm = NULL,
-                                            context) {
+compute_se_or_stop <- function(vcov_matrix,
+                               parm = NULL,
+                               context) {
   variances <- diag(vcov_matrix)
   if (!is.null(parm)) {
     variances <- variances[parm]
@@ -136,9 +136,8 @@ compute_standard_errors_or_stop <- function(vcov_matrix,
 }
 
 
-compute_standard_errors_or_na <- function(variances,
-                                          context,
-                                          what = "coefficient") {
+compute_se_or_na <- function(variances,
+                             what = "coefficient") {
   bad <- !is.finite(variances) | variances < 0
   if (any(bad)) {
     labels <- names(variances)
@@ -148,10 +147,9 @@ compute_standard_errors_or_na <- function(variances,
     warning(
       sprintf(
         paste0(
-          "%s: the variance is negative or non-finite for %s %s, so its ",
+          "the variance is negative or non-finite for %s %s, so its ",
           "standard error is set to NA"
         ),
-        context,
         what,
         paste(labels[bad], collapse = ", ")
       ),
@@ -197,7 +195,7 @@ is_balanced_design <- function(object) {
     function(indices) {
       identical(sort(as.integer(object$repeated[indices])), positions)
     },
-    logical(1L)
+    logical(1)
   ))
 }
 
@@ -307,4 +305,43 @@ extract_fit_data_variables <- function(object, variables, enclos, env) {
     return(list(status = "unaligned", values = NULL))
   }
   list(status = "ok", values = lapply(values, function(x) x[ord]))
+}
+
+
+get_cached_value <- function(object, key, compute) {
+  cache <- object$cache
+  if (is.environment(cache)) {
+    stored <- cache[[key]]
+    if (!is.null(stored) &&
+        identical(stored$coefficients, object$coefficients)) {
+      return(stored$value)
+    }
+  }
+  value <- compute()
+  if (is.environment(cache)) {
+    assign(
+      key,
+      list(coefficients = object$coefficients, value = value),
+      envir = cache
+    )
+  }
+  value
+}
+
+
+is_binary_response <- function(y) {
+  !anyNA(y) && all(y == 0 | y == 1)
+}
+
+
+is_degenerate_probability <- function(mu) {
+  !is.finite(mu) | mu <= 0 | mu >= 1
+}
+
+
+get_pass_iterations <- function(pass, control) {
+  if (pass$one_step) {
+    return(list(1L, 1L, 1))
+  }
+  list(control$maxiter, control$step_maxiter, control$step_multiplier)
 }

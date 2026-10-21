@@ -38,7 +38,7 @@ expect_influence_reference <- function(fit) {
   cluster_hat <- vapply(split(reference$hat, fit$id), sum, numeric(1))
   expect_equal(unname(hatvalues(fit)), unname(cluster_hat), tolerance = 1e-10)
   expect_equal(
-    unname(hatvalues(fit, level = "observations")),
+    unname(hatvalues(fit, unit = "observations")),
     reference$hat,
     tolerance = 1e-10
   )
@@ -48,7 +48,7 @@ expect_influence_reference <- function(fit) {
     tolerance = 1e-10
   )
   expect_equal(
-    unname(dfbeta(fit, level = "observations")),
+    unname(dfbeta(fit, unit = "observations")),
     unname(reference$observation_dfbeta),
     tolerance = 1e-10
   )
@@ -74,7 +74,7 @@ test_that("one-step deletion estimates are exact for a gaussian identity fit", {
     tolerance = 1e-6
   )
   expect_true(exists("jackknife_estimates", envir = fit_gaussian_ar1$cache))
-  observation_dfbeta <- dfbeta(fit_gaussian_ar1, level = "observations")
+  observation_dfbeta <- dfbeta(fit_gaussian_ar1, unit = "observations")
   for (j in c(1L, 6L, 80L)) {
     keep <- rep(TRUE, fit_gaussian_ar1$obs_no)
     keep[j] <- FALSE
@@ -88,10 +88,10 @@ test_that("one-step deletion estimates are exact for a gaussian identity fit", {
 })
 
 test_that("dfbetas and cooks.distance use the requested covariance matrix", {
-  dfbeta_matrix <- dfbeta(fit_geewa_pois_exch, level = "observations")
+  dfbeta_matrix <- dfbeta(fit_geewa_pois_exch, unit = "observations")
   robust <- vcov(fit_geewa_pois_exch, cov_type = "robust")
   expect_equal(
-    dfbetas(fit_geewa_pois_exch, level = "observations", cov_type = "robust"),
+    dfbetas(fit_geewa_pois_exch, unit = "observations", cov_type = "robust"),
     sweep(dfbeta_matrix, 2L, sqrt(diag(robust)), `/`),
     tolerance = 1e-10
   )
@@ -100,7 +100,7 @@ test_that("dfbetas and cooks.distance use the requested covariance matrix", {
   expect_equal(
     cooks.distance(
       fit_geewa_pois_exch,
-      level = "observations",
+      unit = "observations",
       cov_type = "robust",
       parm = parm
     ),
@@ -198,7 +198,7 @@ test_that("influence measures are named by the original identifiers", {
   observation_labels <- paste0(
     fit$cluster_labels[fit$id], "(", fit$repeated_labels[fit$repeated], ")"
   )
-  expect_identical(names(hatvalues(fit, level = "observations")),
+  expect_identical(names(hatvalues(fit, unit = "observations")),
                    observation_labels)
   expect_identical(
     names(local_influence(fit, perturbation = "response")),
@@ -209,13 +209,13 @@ test_that("influence measures are named by the original identifiers", {
   legacy$repeated_labels <- NULL
   expect_identical(names(hatvalues(legacy)), as.character(codes))
   expect_identical(
-    names(hatvalues(legacy, level = "observations")),
+    names(hatvalues(legacy, unit = "observations")),
     paste0(fit$id, "(", fit$repeated, ")")
   )
   no_repeated <- update(fit, repeated = NULL)
   expect_null(no_repeated$repeated_labels)
   expect_identical(
-    names(cooks.distance(no_repeated, level = "observations"))[1:2],
+    names(cooks.distance(no_repeated, unit = "observations"))[1:2],
     c("p1(1)", "p1(2)")
   )
 })
@@ -243,7 +243,7 @@ test_that("deletions that leave coefficients inestimable give NA", {
   expect_true(all(is.na(out["1", ])))
   expect_false(anyNA(out[-1L, ]))
   expect_warning(
-    out <- cooks.distance(fit, level = "observations"),
+    out <- cooks.distance(fit, unit = "observations"),
     "deleting observation 1(2) leaves coefficients that cannot be estimated",
     fixed = TRUE
   )
@@ -277,15 +277,15 @@ test_that("influence measures stop for estimators without a one-step form", {
     dfbeta(fit),
     paste0(
       "dfbeta.geer failed: method = \"one-step\" requires a fit with ",
-      "method = \"gee\"; use method = \"exact\" with level = \"clusters\""
+      "method = \"gee\"; use method = \"exact\" with unit = \"clusters\""
     ),
     fixed = TRUE
   )
   expect_error(
-    cooks.distance(fit, level = "observations", method = "exact"),
+    cooks.distance(fit, unit = "observations", method = "exact"),
     paste0(
       "cooks.distance.geer failed: method = \"exact\" is available only for ",
-      "level = \"clusters\""
+      "unit = \"clusters\""
     ),
     fixed = TRUE
   )
@@ -301,8 +301,8 @@ test_that("influence measures stop for estimators without a one-step form", {
 })
 
 test_that("influence measures validate their arguments", {
-  expect_error(hatvalues(fit_geewa_pois_exch, level = "cluster"),
-               "'level' must be one of: clusters, observations")
+  expect_error(hatvalues(fit_geewa_pois_exch, unit = "cluster"),
+               "'unit' must be one of: clusters, observations")
   expect_error(dfbeta(fit_geewa_pois_exch, method = "full"),
                "'method' must be one of: one-step, exact")
   expect_error(cooks.distance(fit_geewa_pois_exch, coefs = "age"),

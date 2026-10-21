@@ -1,4 +1,4 @@
-check_prediction_offset_variables <- function(expression, newdata, source) {
+check_offset_variables <- function(expression, newdata, source) {
   needed <- all.vars(expression)
   absent <- setdiff(needed, names(newdata))
   if (length(absent)) {
@@ -26,7 +26,7 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
   if (length(offset_position)) {
     variable_list <- as.list(attr(pred_terms, "variables"))[-1L]
     for (expression in variable_list[offset_position]) {
-      check_prediction_offset_variables(expression, newdata, "model formula")
+      check_offset_variables(expression, newdata, "model formula")
     }
   }
   mf <- stats::model.frame(
@@ -56,7 +56,7 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
   offset_argument <- rep.int(0, n_obs)
   call_offset <- object$call$offset
   if (!is.null(call_offset)) {
-    check_prediction_offset_variables(call_offset, newdata, "'offset' argument")
+    check_offset_variables(call_offset, newdata, "'offset' argument")
     offset_env <- environment(stats::formula(object))
     offset_from_argument <- tryCatch(
       eval(call_offset, envir = newdata, enclos = offset_env),
@@ -240,9 +240,8 @@ predict.geer <- function(object,
       stop("'object$x' must have column names", call. = FALSE)
     }
     design_matrix <- design_matrix[, coef_names, drop = FALSE]
-    se <- compute_standard_errors_or_na(
+    se <- compute_se_or_na(
       rowSums((design_matrix %*% vcov_matrix) * design_matrix),
-      "predict.geer",
       what = "prediction"
     )
     if (type == "response") {
@@ -295,9 +294,9 @@ predict.geer <- function(object,
   }
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-  se <- compute_standard_errors_or_na(
+  se <- compute_se_or_na(
     rowSums((design_matrix %*% vcov_matrix) * design_matrix),
-    "predict.geer", what = "prediction"
+    what = "prediction"
   )
   if (type == "response") {
     mu_vector <- object$family$linkinv(eta_vector)
@@ -320,7 +319,7 @@ compute_mahalanobis_residuals <- function(object) {
       indices <- cluster_index[[k]]
       cluster_id <- cluster_ids[[k]]
       residual_vector <- object$y[indices] - object$fitted.values[indices]
-      working_covariance <- compute_working_covariance_for_criteria(
+      working_covariance <- get_working_covariance(
         object,
         indices
       )
@@ -470,7 +469,7 @@ residuals.geer <- function(object,
       if (any(!is.finite(dev_contribution)) || any(dev_contribution < 0)) {
         stop(
           paste0(
-            "'deviance' residuals require finite non-negative deviance ",
+            "'deviance' residuals require finite nonnegative deviance ",
             "contributions from the fitted family"
           ),
           call. = FALSE

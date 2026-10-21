@@ -129,7 +129,7 @@ step_criterion <- function(object,
                            criterion = c("QICu", "QIC", "QICC", "AGPC",
                                          "SGPC"),
                            cov_type = "robust",
-                           steps = 1000,
+                           steps = 1000L,
                            trace = FALSE) {
   object <- check_geer_object(object)
   direction <- match_direction_type(direction[1L])

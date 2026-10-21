@@ -107,18 +107,18 @@ test_that("QICHH agrees with QIC for binomial geewa fits with estimated phi", {
   expect_false(isTRUE(all.equal(fit$phi, 1)))
   out <- geecriteria(fit, criteria = c("QIC", "QICHH"), digits = 15)
   expect_equal(out$QICHH, out$QIC, tolerance = 1e-6)
-  quantities <- compute_independence_gee_quantities(fit)
+  quantities <- compute_independence_fit(fit)
   expect_equal(quantities$phi, fit$phi, tolerance = 1e-6)
 
   fit_fixed <- update(fit, phi_fixed = TRUE, phi_value = 1)
   out_fixed <- geecriteria(fit_fixed, criteria = c("QIC", "QICHH"), digits = 15)
   expect_equal(out_fixed$QICHH, out_fixed$QIC, tolerance = 1e-6)
-  expect_identical(compute_independence_gee_quantities(fit_fixed)$phi, 1)
+  expect_identical(compute_independence_fit(fit_fixed)$phi, 1)
 })
 
 test_that("QICHH uses independence estimates in its quasi-likelihood and penalty", {
   object <- fit_geewa_pois_exch
-  quantities <- compute_independence_gee_quantities(object)
+  quantities <- compute_independence_fit(object)
   covariance <- vcov(object, cov_type = "robust")
   penalty <- sum(quantities$naive_inverse * covariance)
   expected <- 2 * (penalty - quantities$quasi_loglikelihood)
@@ -130,7 +130,7 @@ test_that("QICC follows the Hardin-Hilbe finite-cluster correction", {
   object <- fit_geewa_pois_exch
   out <- geecriteria(object, digits = 15)
   p <- length(coef(object))
-  m <- compute_n_estimated_association_parameters(object)
+  m <- get_association_count(object)
   n_clusters <- object$clusters_no
   correction <- 2 * (p + m) * (p + m + 1) /
     (n_clusters - p - m - 1)
@@ -155,21 +155,21 @@ test_that("QICC under independence uses the data's cluster count and design widt
 
 test_that("QICC counts only estimated working-association parameters", {
   expect_equal(
-    compute_n_estimated_association_parameters(list(
+    get_association_count(list(
       association_structure = "independence",
       alpha = 0
     )),
     0L
   )
   expect_equal(
-    compute_n_estimated_association_parameters(list(
+    get_association_count(list(
       association_structure = "fixed",
       alpha = c(0.2, 0.1, 0.3)
     )),
     0L
   )
   expect_equal(
-    compute_n_estimated_association_parameters(list(
+    get_association_count(list(
       association_structure = "exchangeable",
       alpha = 0.2
     )),
@@ -229,7 +229,7 @@ test_that("EQIC uses the adjusted extended quasi-likelihood", {
   log_variance_term <- sum(
     weights * log(2 * pi * phi * mu_adjusted)
   )
-  independence_inverse <- compute_independence_naive_inverse(
+  independence_inverse <- compute_independence_info(
     object,
     phi = phi
   )
@@ -293,7 +293,7 @@ test_that("AGPC and SGPC use the conventional penalized Gaussian pseudo-likeliho
   object <- fit_geewa_pois_exch
   out <- geecriteria(object, digits = 15)
   p <- length(coef(object))
-  q <- compute_n_estimated_association_parameters(object)
+  q <- get_association_count(object)
   gaussian_deviance <- object$obs_no * log(2 * pi) - 2 * out$GPC
   expect_equal(
     out$AGPC,
@@ -311,13 +311,13 @@ test_that("penalized Gaussian pseudo-likelihood does not count fixed association
   object <- fit_geewa_pois_exch
   gpc <- -25
   p <- length(coef(object))
-  base <- compute_gaussian_pseudolikelihood_criteria(
+  base <- compute_gpc_penalized(
     object = object,
     gpc = gpc,
     p = p,
     association_params_no = 0
   )
-  with_one_association_parameter <- compute_gaussian_pseudolikelihood_criteria(
+  with_one_association_parameter <- compute_gpc_penalized(
     object = object,
     gpc = gpc,
     p = p,
@@ -338,11 +338,11 @@ test_that("all complexity penalties count only estimated association parameters"
     alpha_vector = rep(exch$alpha, choose(4L, 2L))
   )
   expect_identical(
-    compute_n_estimated_association_parameters(fixed_fit),
+    get_association_count(fixed_fit),
     0L
   )
   expect_identical(
-    compute_n_estimated_association_parameters(exch),
+    get_association_count(exch),
     1L
   )
 
@@ -561,7 +561,7 @@ test_that("GESSC and GPC are addressed by name, not position", {
   expect_named(stats, c("sc", "gp"))
 
   p <- length(coef(object))
-  m <- compute_n_estimated_association_parameters(object)
+  m <- get_association_count(object)
   out <- geecriteria(object, digits = 15)
   expect_equal(
     out$GESSC,
@@ -575,7 +575,7 @@ test_that("PT, WR and RMR match a direct generalized eigenvalue calculation", {
   object <- fit_geewa_pois_exch
   out <- geecriteria(object, digits = 15)
 
-  omega_i <- compute_independence_naive_inverse(object)
+  omega_i <- compute_independence_info(object)
   covariance <- vcov(object, cov_type = "robust")
   lambda <- sort(Re(eigen(covariance %*% omega_i, only.values = TRUE)$values))
   expect_true(all(lambda > 0))
@@ -653,7 +653,7 @@ test_that("working covariance helper supports correlation GEE", {
   marginal_sd <- sqrt(object$phi * object$family$variance(mu) / weights)
   expected <- correlation[repeated, repeated, drop = FALSE] *
     tcrossprod(marginal_sd)
-  observed <- compute_working_covariance_for_criteria(object, indices)
+  observed <- get_working_covariance(object, indices)
   expect_equal(observed, expected, tolerance = 1e-12)
 })
 
@@ -662,7 +662,7 @@ test_that("odds-ratio pair indexing matches upper-triangular ordering", {
     vapply(
       list(c(1, 2), c(1, 3), c(1, 4), c(2, 3), c(2, 4), c(3, 4)),
       function(pair) {
-        compute_upper_triangular_pair_index(
+        get_pair_index(
           pair[[1L]], pair[[2L]], 4L
         )
       },
@@ -732,13 +732,13 @@ test_that("odds-ratio working covariance matches high-precision values", {
   )
   for (i in seq_len(nrow(cases))) {
     expect_equal(
-      compute_bivariate_covariance_or(cases$p[i], cases$q[i], cases$psi[i]),
+      compute_plackett_covariance(cases$p[i], cases$q[i], cases$psi[i]),
       cases$reference[i],
       tolerance = 1e-12
     )
   }
-  expect_identical(compute_bivariate_covariance_or(0.3, 0.4, 1), 0)
-  expect_identical(compute_bivariate_covariance_or(1e-9, 0.4, 5), 0)
+  expect_identical(compute_plackett_covariance(0.3, 0.4, 1), 0)
+  expect_identical(compute_plackett_covariance(1e-9, 0.4, 5), 0)
 })
 
 test_that("odds-ratio working covariance in R matches the C++ engine", {

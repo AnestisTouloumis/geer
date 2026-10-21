@@ -193,14 +193,14 @@ test_that("jackknife covariance needs two clusters and a known fitting function"
   one_cluster <- fit_geewa_pois_indep
   one_cluster$id[] <- one_cluster$id[1L]
   expect_error(
-    compute_jackknife_delete_estimates(one_cluster),
+    compute_jackknife_deletes(one_cluster),
     "jackknife covariance requires at least two clusters"
   )
   unknown <- fit_geewa_pois_indep
   unknown$fit_function <- NULL
   unknown$call[[1L]] <- quote(some_wrapper)
   expect_error(
-    compute_jackknife_delete_estimates(unknown),
+    compute_jackknife_deletes(unknown),
     "could not determine whether the model was fitted by geewa\\(\\) or geewa_binary\\(\\)"
   )
 })
