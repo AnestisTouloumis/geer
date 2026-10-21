@@ -72,6 +72,8 @@
 #'     under working independence, refitted from the stored data.
 #'   \item \eqn{\mathrm{QICC} = \mathrm{QIC} - 2(p + m)(p + m + 1) /
 #'     (K - p - m - 1)}{QICC = QIC - 2(p + m)(p + m + 1)/(K - p - m - 1)}, and \code{NA} when \eqn{K - p - m - 1 \le 0}{K - p - m - 1 <= 0}.
+#'     This follows equation (4.30) of Hardin and Hilbe (2013); the
+#'     \pkg{geepack} package adds the correction instead.
 #'   \item \code{GESSC} is the error sum of squares weighted by the inverse
 #'     working covariance matrices, divided by \eqn{n^\star - p - m}{n* - p - m}. Without
 #'     this divisor it is the criterion \eqn{SC(R)} of Pardo and Alonso (2019),
