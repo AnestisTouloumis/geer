@@ -91,7 +91,6 @@ arma::mat get_correlation_matrix_unstructured(const arma::vec& alpha_vector,
                                    const arma::uword dimension) {
   arma::mat ans_lt = arma::eye(dimension, dimension);
   if (dimension < 2) {
-    // No off-diagonal elements: trimatl_ind() rejects the -1 diagonal here.
     return ans_lt;
   }
   const arma::uvec lt_indices = arma::trimatl_ind(arma::size(ans_lt), -1);
@@ -102,16 +101,13 @@ arma::mat get_correlation_matrix_unstructured(const arma::vec& alpha_vector,
 
 
 //============================ scalar alpha check ==============================
-// ar1 and exchangeable read alpha_vector[0]; arma::operator[] is unchecked, so
-// an empty vector would be an out-of-bounds read, and NaN passes every
-// range comparison.
 void check_alpha_scalar(const char* correlation_structure,
                         const arma::vec& alpha_vector) {
   if (alpha_vector.n_elem < 1) {
     Rcpp::stop("the %s correlation parameter must be supplied",
                correlation_structure);
   }
-  if (!std::isfinite(alpha_vector[0])) {
+  if (!R_FINITE(alpha_vector[0])) {
     Rcpp::stop("the %s correlation parameter must be finite, not %.6g",
                correlation_structure, alpha_vector[0]);
   }
@@ -122,9 +118,10 @@ void check_alpha_scalar(const char* correlation_structure,
 
 //============================ correlation matrix given rho vector =============
 // [[Rcpp::export]]
-arma::mat get_correlation_matrix(const char* correlation_structure,
+arma::mat get_correlation_matrix_cc(const char* correlation_structure,
                                  const arma::vec& alpha_vector,
                                  const arma::uword dimension) {
+  reset_lu_fallback_warning();
   if (std::strcmp(correlation_structure, "independence") == 0) {
     return get_correlation_matrix_independence(dimension);
   }
@@ -153,7 +150,7 @@ arma::mat get_correlation_matrix(const char* correlation_structure,
     return get_correlation_matrix_exchangeable(alpha_vector, dimension);
   }
   for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
-    if (!std::isfinite(alpha_vector[i])) {
+    if (!R_FINITE(alpha_vector[i])) {
       Rcpp::stop("the %s correlation parameter alpha[%d] must be finite",
                  correlation_structure, static_cast<int>(i + 1));
     }

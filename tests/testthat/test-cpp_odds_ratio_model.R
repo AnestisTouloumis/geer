@@ -109,7 +109,7 @@ test_that("fits are accurate and reach tight tolerance when the working odds rat
   }
 })
 
-test_that("get_marginalized_odds_ratios equals explicit weighted 2x2 tables with the Haldane constant", {
+test_that("get_marginalized_odds_ratios_or equals explicit weighted 2x2 tables with the Haldane constant", {
   withr::local_seed(2)
   times <- rep(list(1:4, c(1, 2, 4), 2:4, c(1, 3, 4)), 15)
   d <- ref_sim("or", times,
@@ -119,7 +119,9 @@ test_that("get_marginalized_odds_ratios equals explicit weighted 2x2 tables with
   ord <- order(d$id, d$tt)
   for (add in c(0.5, 0.1)) {
     for (str in c("unstructured", "exchangeable")) {
-      got <- get_marginalized_odds_ratios(d$y[ord], d$id[ord], d$tt[ord], d$w[ord], add, str)
+      got <- as.numeric(get_marginalized_odds_ratios_or(
+        d$y[ord], d$id[ord], d$tt[ord], d$w[ord], add, str
+      ))
       expect_equal(got,
         or_counts_ref(d$y[ord], d$id[ord], d$tt[ord], d$w[ord], add, 4, str == "exchangeable"),
         tolerance = 1e-12, label = paste(add, str)
@@ -137,8 +139,12 @@ test_that("pairs of visits that are never observed together do not dilute the ex
   id <- c(rep(1:N, each = 2), N + 1:N)
   tt <- c(rep(1:2, N), rep(3L, N))
   o <- order(id, tt)
-  un <- get_marginalized_odds_ratios(y[o], id[o], tt[o], rep(1, length(y)), 0.5, "unstructured")
-  ex <- get_marginalized_odds_ratios(y[o], id[o], tt[o], rep(1, length(y)), 0.5, "exchangeable")
+  un <- as.numeric(get_marginalized_odds_ratios_or(
+    y[o], id[o], tt[o], rep(1, length(y)), 0.5, "unstructured"
+  ))
+  ex <- as.numeric(get_marginalized_odds_ratios_or(
+    y[o], id[o], tt[o], rep(1, length(y)), 0.5, "exchangeable"
+  ))
   expect_equal(un[2:3], c(1, 1))
   expect_equal(ex, rep(un[1], 3), tolerance = 1e-12)
 })

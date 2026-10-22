@@ -16,6 +16,10 @@ arma::mat get_information_matrix_independence(const arma::mat& model_matrix,
                                               const arma::vec& eta_vector,
                                               const double phi,
                                               const arma::vec& weights_vector) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {weights_vector, mu_vector, eta_vector},
+                       model_matrix);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec variance_vector = variance_function(family, mu_vector);
@@ -57,10 +61,13 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
                                               const arma::vec& alpha_vector,
                                               const double phi,
                                               const arma::vec& weights_vector) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector});
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   double sc_criterion = 0.0;
@@ -80,7 +87,6 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
                         phi,
                         correlation_matrix,
                         weights_vector.subvec(first_row, last_row));
-      // One Cholesky factorization gives both s' V^{-1} s and log det(V).
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(
@@ -113,6 +119,9 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
                                               const arma::vec& mu_vector,
                                               const arma::vec& alpha_vector,
                                               const arma::vec& weights_vector) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector});
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   const arma::vec s_vector = y_vector - mu_vector;
@@ -128,14 +137,13 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
       const arma::uword last_row = cluster.end - 1;
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       const arma::mat v_matrix_i =
         get_v_matrix_or(mu_vector.subvec(first_row, last_row),
                         odds_ratios_vector_i,
                         weights_vector.subvec(first_row, last_row));
-      // One Cholesky factorization gives both s' V^{-1} s and log det(V).
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(

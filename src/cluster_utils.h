@@ -5,7 +5,18 @@
 #include <algorithm>
 #include <vector>
 
-struct Cluster { arma::uword start, end; };  // [start, end)
+struct Cluster {
+  arma::uword start;
+  arma::uword end;
+  double id_value;
+};
+
+struct ClusterData {
+  double id_value;
+  arma::mat d_matrix;
+  arma::mat v_matrix;
+  arma::vec residuals;
+};
 
 inline std::vector<Cluster> clusters_from_sorted_id(const arma::vec& id) {
   const arma::uword n = id.n_elem;
@@ -23,12 +34,9 @@ inline std::vector<Cluster> clusters_from_sorted_id(const arma::vec& id) {
   while (s < n) {
     arma::uword e = s + 1;
     while (e < n && id[e] == id[s]) ++e;
-    clusters.push_back({s, e});
+    clusters.push_back({s, e, id[s]});
     s = e;
   }
-  // The observations of a cluster must be contiguous: an id value that
-  // reappears after another id would otherwise be silently split into several
-  // clusters and give a wrong fit.
   if (clusters.size() > 1) {
     std::vector<double> cluster_ids;
     cluster_ids.reserve(clusters.size());

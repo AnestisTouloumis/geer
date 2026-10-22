@@ -109,3 +109,44 @@ test_that("gosho-sato-takeuchi stops when clusters do not exceed coefficients", 
   )
   expect_true(all(is.finite(vcov(fit, cov_type = "pan"))))
 })
+
+test_that("leverage-based covariances stop when a cluster has leverage 1", {
+  withr::local_seed(5)
+  d <- data.frame(
+    id = rep(sprintf("s%02d", 1:12), each = 4),
+    visit = rep(1:4, 12)
+  )
+  d$group <- factor(rep(c("a", rep("b", 5), rep("c", 6)), each = 4))
+  d$x <- rnorm(nrow(d))
+  d$y <- rnorm(nrow(d), d$x)
+  fit <- geewa(
+    formula = y ~ group + x,
+    data = d,
+    id = id,
+    repeated = visit,
+    family = gaussian(link = "identity"),
+    corstr = "exchangeable"
+  )
+  for (cov_type in geer_leverage_cov_types) {
+    expect_error(
+      vcov(fit, cov_type = cov_type),
+      sprintf(
+        paste0(
+          "vcov failed: the %s covariance is undefined because I - H is ",
+          "singular for cluster(s) s01, whose leverage is 1"
+        ),
+        cov_type
+      ),
+      fixed = TRUE
+    )
+  }
+  reference <- ref_small_sample_covariances(fit)
+  for (cov_type in setdiff(geer_ss_cov_types, geer_leverage_cov_types)) {
+    expect_equal(
+      unname(vcov(fit, cov_type = cov_type)),
+      unname(reference[[cov_type]]),
+      tolerance = 1e-10,
+      label = cov_type
+    )
+  }
+})

@@ -513,12 +513,12 @@ check_influence_glmgee <- function(label, ref, fit, id) {
     it("leverages agree", {
       expect_agree(leverage(ref)[clusters, ], hatvalues(fit))
       expect_agree(leverage(ref, level = "observations")[observations, ],
-                   hatvalues(fit, level = "observations"))
+                   hatvalues(fit, unit = "observations"))
     })
     it("one-step dfbeta agrees", {
       expect_agree(dfbeta(ref)[clusters, ], dfbeta(fit))
       expect_agree(dfbeta(ref, level = "observations")[observations, ],
-                   dfbeta(fit, level = "observations"))
+                   dfbeta(fit, unit = "observations"))
     })
     it("Cook's distance agrees", {
       expect_agree(cooks.distance(ref, varest = "model")[clusters, ],
@@ -526,7 +526,7 @@ check_influence_glmgee <- function(label, ref, fit, id) {
       expect_agree(
         cooks.distance(ref, level = "observations",
                        varest = "model")[observations, ],
-        cooks.distance(fit, level = "observations")
+        cooks.distance(fit, unit = "observations")
       )
       expect_agree(
         suppressMessages(

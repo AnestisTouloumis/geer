@@ -643,7 +643,7 @@ test_that("working covariance helper supports correlation GEE", {
   indices <- split(seq_along(object$id), object$id)[[1L]]
   repeated <- as.integer(object$repeated[indices])
   repeated_max <- max(as.integer(object$repeated))
-  correlation <- get_correlation_matrix(
+  correlation <- get_correlation_matrix_cc(
     object$association_structure,
     object$alpha,
     repeated_max

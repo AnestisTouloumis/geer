@@ -93,7 +93,13 @@
 #' bias-corrected estimator is \code{NA} and the other two give an error. The
 #' Pan, Gosho-Sato-Takeuchi, Wang-Long, and Westgate-Burchett estimators pool
 #' the clusters and require a balanced design, in which every cluster observes
-#' each repeated position once: otherwise they give an error.
+#' each repeated position once: otherwise they give an error. The
+#' Kauermann-Carroll, Mancl-DeRouen, Ford-Westgate, Fan-Zhang-Zhang,
+#' Wang-Long, and Westgate-Burchett estimators use
+#' \eqn{(I - H_i)^{-1}}{(I - H_i)^-1} and give an error that names the
+#' clusters with leverage 1, for which \eqn{I - H_i} is singular. All nine
+#' small-sample estimators give an error when the naive covariance is not
+#' positive definite.
 #'
 #' The score-type tests of \code{\link{anova.geer}}, \code{\link{add1.geer}},
 #' \code{\link{drop1.geer}}, \code{\link{step_p}}, and

@@ -49,8 +49,8 @@ get_pearson_residuals <- function(family, y_vector, mu_vector, weights_vector) {
     .Call(`_geer_get_pearson_residuals`, family, y_vector, mu_vector, weights_vector)
 }
 
-get_marginalized_odds_ratios <- function(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure) {
-    .Call(`_geer_get_marginalized_odds_ratios`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
+get_marginalized_odds_ratios_or <- function(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure) {
+    .Call(`_geer_get_marginalized_odds_ratios_or`, response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure)
 }
 
 get_small_sample_covariances_cc <- function(y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, family, mu_vector, eta_vector, correlation_structure, alpha_vector, phi) {
@@ -61,7 +61,7 @@ get_small_sample_covariances_or <- function(y_vector, model_matrix, id_vector, r
     .Call(`_geer_get_small_sample_covariances_or`, y_vector, model_matrix, id_vector, repeated_vector, weights_vector, link, mu_vector, eta_vector, alpha_vector)
 }
 
-get_correlation_matrix <- function(correlation_structure, alpha_vector, dimension) {
-    .Call(`_geer_get_correlation_matrix`, correlation_structure, alpha_vector, dimension)
+get_correlation_matrix_cc <- function(correlation_structure, alpha_vector, dimension) {
+    .Call(`_geer_get_correlation_matrix_cc`, correlation_structure, alpha_vector, dimension)
 }
 

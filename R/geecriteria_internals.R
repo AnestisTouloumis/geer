@@ -164,7 +164,7 @@ compute_working_covariance_cc <- function(object, indices) {
   correlation <- if (identical(object$association_structure, "independence")) {
     diag(repeated_max)
   } else {
-    get_correlation_matrix(
+    get_correlation_matrix_cc(
       object$association_structure,
       object$alpha,
       repeated_max

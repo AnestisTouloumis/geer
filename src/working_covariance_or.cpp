@@ -5,7 +5,7 @@
 
 
 //============================ subject specific odds ratios ====================
-arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
+arma::vec get_subject_specific_odds_ratios_or(const arma::vec& repeated_vector_i,
                                            const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size_i = repeated_vector_i.n_elem;
@@ -33,15 +33,6 @@ arma::vec get_subject_specific_odds_ratios(const arma::vec& repeated_vector_i,
 namespace {
 
 //============================ bivariate distribution ==========================
-// Plackett distribution F(p, q; psi) = P(Y_1 = 1, Y_2 = 1) of two binary
-// variables with marginal means p, q and odds ratio psi. With
-//   f = 1 + (psi - 1) (p + q),  D = f^2 - 4 psi (psi - 1) p q,
-// the textbook form F = (f - sqrt(D)) / (2 (psi - 1)) subtracts two nearly equal
-// numbers (and is 0/0 at psi = 1). Because (f - sqrt(D)) (f + sqrt(D)) =
-// 4 psi (psi - 1) p q, the algebraically identical F = 2 psi p q / (f + sqrt(D))
-// is used whenever f > 0; it is smooth at psi = 1. For f <= 0 (only possible
-// when psi < 1) f - sqrt(D) has no cancellation and the textbook form is used.
-// Means within 1e-8 of 0 or 1 are treated as independent, as before.
 bool is_plackett_boundary(const double row_prob, const double col_prob) {
   const double tol = 1e-8;
   return row_prob > 1.0 - tol || col_prob > 1.0 - tol ||
@@ -68,11 +59,6 @@ double get_bivariate_distribution(const double row_prob,
 
 
 //============================ bivariate covariance ============================
-// Cov(Y_1, Y_2) = F - p q, evaluated without the cancellation in F - p q that
-// makes the difference lose all relative accuracy as psi -> 1. With
-// a = 2 psi - f one has F - p q = p q (a - sqrt(D)) / (f + sqrt(D)), and for
-// a > 0, a - sqrt(D) = (a^2 - D) / (a + sqrt(D)) = 4 psi (psi - 1) (1 - p) (1 - q)
-// / (a + sqrt(D)).
 double get_bivariate_covariance(const double row_prob,
                                 const double col_prob,
                                 const double odds_ratio) {
@@ -240,9 +226,6 @@ arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
                              const arma::vec& weights_vector) {
   const arma::uword cluster_size = mu_vector.n_elem;
   arma::mat result(cluster_size * cluster_size, cluster_size, arma::fill::zeros);
-  // No special case for cluster_size == 1: the -mu terms and the unit diagonal
-  // below are then the only contributions, giving d V / d mu = 1 - 2 mu for
-  // V = mu * (1 - mu), and the pair loop is simply not entered.
   for (arma::uword r = 0; r < cluster_size; ++r) {
     for (arma::uword i = 0; i < cluster_size; ++i) {
       result(r * cluster_size + i, i) = -mu_vector[r];
@@ -268,8 +251,6 @@ arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
   for (arma::uword j = 0; j < cluster_size; ++j) {
     result(j * cluster_size + j, j) += 1.0;
   }
-  // kron(W^(-1/2), W^(-1/2)) is diagonal, with entry w_r^(-1/2) * w_i^(-1/2) at
-  // row r * m + i, so the product is a row scaling.
   const arma::vec weights_sq_inv_vector = 1.0 / arma::sqrt(weights_vector);
   result.each_col() %=
     arma::vectorise(weights_sq_inv_vector * weights_sq_inv_vector.t());

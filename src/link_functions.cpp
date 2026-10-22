@@ -39,8 +39,11 @@ arma::vec inverse_link(LinkCode link_code, const arma::vec& eta_vector) {
   }
   case LinkCode::cloglog: {
     const arma::vec eta_clipped = arma::clamp(eta_vector, -arma::datum::inf, 700.0);
-    return arma::clamp(1.0 - arma::exp(-arma::exp(eta_clipped)),
-                       DBL_EPSILON, 1.0 - DBL_EPSILON);
+    arma::vec result(n);
+    for (arma::uword i = 0; i < n; ++i) {
+      result[i] = -std::expm1(-std::exp(eta_clipped[i]));
+    }
+    return arma::clamp(result, DBL_EPSILON, 1.0 - DBL_EPSILON);
   }
   case LinkCode::identity:
     return eta_vector;
@@ -72,8 +75,10 @@ arma::vec link_derivative_1(LinkCode link_code, const arma::vec& eta_vector) {
   const arma::uword n = eta_vector.n_elem;
   switch (link_code) {
   case LinkCode::logit: {
-    const arma::vec mu = inverse_logit(eta_vector);
-    return arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
+    const arma::vec exp_vector =
+      arma::exp(-arma::abs(arma::clamp(eta_vector, -30.0, 30.0)));
+    return arma::clamp(exp_vector / arma::square(1.0 + exp_vector),
+                       DBL_EPSILON, arma::datum::inf);
   }
   case LinkCode::probit: {
     arma::vec result(n);
@@ -117,7 +122,7 @@ arma::vec link_derivative_2(LinkCode link_code, const arma::vec& eta_vector) {
   switch (link_code) {
   case LinkCode::logit: {
     const arma::vec mu = inverse_logit(eta_vector);
-    const arma::vec me = arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
+    const arma::vec me = link_derivative_1(LinkCode::logit, eta_vector);
     return (1.0 - 2.0 * mu) % me;
   }
   case LinkCode::probit: {
@@ -156,7 +161,7 @@ arma::vec link_derivative_3(LinkCode link_code, const arma::vec& eta_vector) {
   switch (link_code) {
   case LinkCode::logit: {
     const arma::vec mu = inverse_logit(eta_vector);
-    const arma::vec me = arma::clamp(mu % (1.0 - mu), DBL_EPSILON, arma::datum::inf);
+    const arma::vec me = link_derivative_1(LinkCode::logit, eta_vector);
     return me % (1.0 - 6.0 * mu + 6.0 * arma::square(mu));
   }
   case LinkCode::probit: {
@@ -194,7 +199,6 @@ arma::vec link_derivative_3(LinkCode link_code, const arma::vec& eta_vector) {
 //============================ valid eta_vector - arma (enum) =========================
 bool is_valid_eta(LinkCode link_code,
                   const arma::vec& eta_vector) {
-  const double* x = eta_vector.memptr();
   const arma::uword n = eta_vector.n_elem;
   switch (link_code) {
   case LinkCode::logit:
@@ -204,18 +208,18 @@ bool is_valid_eta(LinkCode link_code,
   case LinkCode::identity:
   case LinkCode::log:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!R_FINITE(x[i])) return false;
+      if (!R_FINITE(eta_vector[i])) return false;
     }
     return true;
   case LinkCode::sqrt:
   case LinkCode::inverse_mu_squared:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(R_FINITE(x[i]) && x[i] > 0.0)) return false;
+      if (!(R_FINITE(eta_vector[i]) && eta_vector[i] > 0.0)) return false;
     }
     return true;
   case LinkCode::inverse:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(R_FINITE(x[i]) && x[i] != 0.0)) return false;
+      if (!(R_FINITE(eta_vector[i]) && eta_vector[i] != 0.0)) return false;
     }
     return true;
   }
@@ -227,24 +231,26 @@ bool is_valid_eta(LinkCode link_code,
 //============================ valid mu - arma (enum) ==========================
 bool is_valid_mu(FamilyCode family_code,
                  const arma::vec& mu_vector) {
-  const double* x = mu_vector.memptr();
   const arma::uword n = mu_vector.n_elem;
   switch (family_code) {
   case FamilyCode::gaussian:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!R_FINITE(x[i])) return false;
+      if (!R_FINITE(mu_vector[i])) return false;
     }
     return true;
   case FamilyCode::binomial:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(R_FINITE(x[i]) && x[i] > 0.0 && x[i] < 1.0)) return false;
+      if (!(R_FINITE(mu_vector[i]) && mu_vector[i] > 0.0 &&
+            mu_vector[i] < 1.0)) {
+        return false;
+      }
     }
     return true;
   case FamilyCode::poisson:
   case FamilyCode::gamma:
   case FamilyCode::inverse_gaussian:
     for (arma::uword i = 0; i < n; ++i) {
-      if (!(R_FINITE(x[i]) && x[i] > 0.0)) return false;
+      if (!(R_FINITE(mu_vector[i]) && mu_vector[i] > 0.0)) return false;
     }
     return true;
   }

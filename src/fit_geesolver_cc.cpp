@@ -39,7 +39,7 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
   arma::vec u_vector(params_no, arma::fill::zeros);
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   arma::mat d_matrix_i;
@@ -74,7 +74,7 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_gee_cc");
   const arma::vec update_step =
     solve_chol_or_lu_vec(information_matrix, u_vector,
                          "update_beta_gee_cc: naive information matrix");
@@ -116,7 +116,7 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
     alpha_star_vector + delta_star_vector;
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
@@ -182,7 +182,7 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_naive_cc");
   const arma::vec lambda_vector =
     get_lambda_from_blocks(information_matrix, lambda_matrix);
   const arma::vec update_step =
@@ -232,7 +232,7 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
     alpha_star_vector + delta_star_vector;
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
@@ -316,7 +316,7 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_robust_cc");
   const arma::mat naive_covariance_meat_matrix =
     solve_chol_or_lu_mat(information_matrix, meat_matrix,
                          "update_beta_robust_cc: naive information matrix");
@@ -389,7 +389,7 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
   const arma::vec alpha_star_plus_delta_star_vector =
     alpha_star_vector + delta_star_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
@@ -493,58 +493,12 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
   }
   arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
   arma::vec lambda_vector(params_no, arma::fill::zeros);
-  arma::mat lu_lower, lu_upper, permutation_matrix;
-  // arma::lu() almost always returns true even for singular matrices; the
-  // real singularity signal is a near-zero pivot on the diagonal of U.
-  if (!arma::lu(lu_lower, lu_upper, permutation_matrix,
-                observed_fisher_info_matrix)) {
-    Rcpp::stop("update_beta_empirical_cc: LU factorization failed; the observed Fisher "
-               "information is singular or numerically unstable");
-  }
-  const arma::vec abs_pivots = arma::abs(lu_upper.diag());
-  if (abs_pivots.min() <
-    abs_pivots.max() * arma::datum::eps * static_cast<double>(params_no)) {
-    Rcpp::stop("update_beta_empirical_cc: the observed Fisher information matrix is numerically "
-               "singular; check for collinearity or near-zero cluster variances");
-  }
-  auto solve_observed_fisher_matrix = [&](const arma::mat& rhs_matrix) -> arma::mat {
-    const arma::mat permuted_rhs = permutation_matrix * rhs_matrix;
-    arma::mat lu_forward;
-    if (!arma::solve(lu_forward,
-                     arma::trimatl(lu_lower),
-                     permuted_rhs,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_cc: forward LU solve failed");
-    }
-    arma::mat result;
-    if (!arma::solve(result,
-                     arma::trimatu(lu_upper),
-                     lu_forward,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_cc: backward LU solve failed");
-    }
-    return result;
-  };
-  auto solve_observed_fisher_vector = [&](const arma::vec& rhs_vector) -> arma::vec {
-    const arma::vec permuted_rhs = permutation_matrix * rhs_vector;
-    arma::vec lu_forward;
-    if (!arma::solve(lu_forward,
-                     arma::trimatl(lu_lower),
-                     permuted_rhs,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_cc: forward LU solve failed");
-    }
-    arma::vec result;
-    if (!arma::solve(result,
-                     arma::trimatu(lu_upper),
-                     lu_forward,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_cc: backward LU solve failed");
-    }
-    return result;
-  };
-  const arma::mat fisher_inv_meat = solve_observed_fisher_matrix(meat_matrix);
-  robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t());
+  const CholOrLuFactor fisher_factor(
+    observed_fisher_info_matrix,
+    "update_beta_empirical_cc: observed Fisher information",
+    false);
+  const arma::mat fisher_inv_meat = fisher_factor.solve(meat_matrix);
+  robust_matrix = fisher_factor.solve(arma::mat(fisher_inv_meat.t()));
   for (arma::uword param_idx = 0; param_idx < params_no; ++param_idx) {
     const arma::uword block_start = param_idx * params_no;
     const arma::uword block_end = (param_idx + 1) * params_no - 1;
@@ -553,11 +507,11 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
     const arma::mat second_deriv_block =
       second_derivatives_matrix.rows(block_start, block_end);
     lambda_vector[param_idx] =
-      -(arma::trace(solve_observed_fisher_matrix(partial_deriv_block)) +
+      -(arma::trace(fisher_factor.solve(partial_deriv_block)) +
         0.5 * arma::trace(robust_matrix * second_deriv_block));
   }
   const arma::vec update_step =
-    solve_observed_fisher_vector(u_vector + lambda_vector);
+    fisher_factor.solve(arma::vec(u_vector + lambda_vector));
   return beta_vector + update_step;
 }
 //==============================================================================
@@ -597,7 +551,7 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
     alpha_star_vector + delta_star_vector;
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
@@ -654,7 +608,7 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_jeffreys_cc");
   const arma::mat naive_covariance =
     solve_chol_or_lu_mat(information_matrix,
                          arma::eye(params_no, params_no),
@@ -788,7 +742,7 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const double step_multiplier,
                             const double jeffreys_power,
                             const char* method,
-                            int use_params,
+                            const int use_params,
                             arma::vec alpha_vector,
                             const int alpha_fixed,
                             const char* correlation_structure,
@@ -796,25 +750,22 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             double phi,
                             const int phi_fixed,
                             const int hold_nuisance) {
+  reset_lu_fallback_warning();
   if (maxiter < 0 || step_maxiter < 0) {
     Rcpp::stop("'maxiter' and 'step_maxiter' must be nonnegative integers");
   }
-  // Non-finite inputs would otherwise only surface later as an opaque
-  // factorization failure (and Armadillo's "matrix is not symmetric" notice).
   if (!y_vector.is_finite() || !model_matrix.is_finite() || !offset.is_finite() ||
       !weights_vector.is_finite() || !beta_vector.is_finite()) {
     Rcpp::stop("the response, model matrix, offset, weights and starting values must be finite");
   }
-  if (!std::isfinite(phi) || !(phi > 0.0)) {
+  if (!R_FINITE(phi) || !(phi > 0.0)) {
     Rcpp::stop("'phi' must be a positive finite number");
   }
   const LinkCode link_code = parse_link(link);
   const FamilyCode family_code = parse_family(family);
   const arma::uword params_no = model_matrix.n_cols;
-  use_params = (use_params != 0) ? static_cast<int>(params_no) : 0;
+  const int params_used = (use_params != 0) ? static_cast<int>(params_no) : 0;
   const auto clusters = clusters_from_sorted_id(id_vector);
-  // Iterates are stored in a growable container so that a large maxiter does
-  // not allocate a p x (maxiter + 1) matrix up front.
   std::vector<arma::vec> beta_history;
   beta_history.reserve(static_cast<size_t>(std::min(maxiter, 100)) + 1);
   beta_history.push_back(beta_vector);
@@ -838,25 +789,18 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                           mu_vector,
                           weights_vector);
 
-  // The association and dispersion parameters are estimated at the starting
-  // beta. With hold_nuisance != 0 (second pass of the one-step penalized
-  // estimators) they are then kept at those values, so that the step, the
-  // returned parameters and the covariance matrices all use the same ones.
   if (phi_fixed == 0) {
-    phi = get_phi_hat(pearson_residuals_vector, use_params);
+    phi = get_phi_hat_cc(pearson_residuals_vector, params_used);
   }
   if (alpha_fixed == 0) {
-    alpha_vector = get_alpha_hat(correlation_structure,
+    alpha_vector = get_alpha_hat_cc(correlation_structure,
                                  pearson_residuals_vector,
                                  clusters,
                                  repeated_vector,
                                  phi,
-                                 use_params,
+                                 params_used,
                                  mdependence);
   }
-  // Rebuilds eta, mu, the Pearson residuals, phi and alpha at a given beta with
-  // exactly the calls used for a trial point. It runs only on the failure path,
-  // to restore the state of the last accepted iterate.
   auto refresh_state = [&](const arma::vec& beta) {
     eta_vector = model_matrix * beta + offset;
     mu_vector = inverse_link(link_code, eta_vector);
@@ -866,28 +810,22 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             mu_vector,
                             weights_vector);
     if (phi_fixed == 0 && hold_nuisance == 0) {
-      phi = get_phi_hat(pearson_residuals_vector, use_params);
+      phi = get_phi_hat_cc(pearson_residuals_vector, params_used);
     }
     if (alpha_fixed == 0 && hold_nuisance == 0) {
-      alpha_vector = get_alpha_hat(correlation_structure,
+      alpha_vector = get_alpha_hat_cc(correlation_structure,
                                    pearson_residuals_vector,
                                    clusters,
                                    repeated_vector,
                                    phi,
-                                   use_params,
+                                   params_used,
                                    mdependence);
     }
   };
-  // Empty unless a numerical failure stopped the iterations early.
   std::string failure_message;
-  // Trial values live in separate vectors so that eta_vector, mu_vector, phi
-  // and alpha_vector always describe the most recent *valid* trial point.
   arma::vec eta_trial_vector;
   arma::vec mu_trial_vector;
   for (int i = 1; i < maxiter + 1; ++i) {
-    // The Newton step at the current beta_vector is the one already computed
-    // at the end of the previous outer iteration (same beta, eta, mu, phi and
-    // alpha), so it is only computed from scratch at the first iteration.
     if (i == 1) {
       stepsize_vector =
         update_beta_cc(y_vector,
@@ -911,31 +849,11 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                    "different 'beta_start' values");
       }
     }
-    // Damped Newton continuation: if the full-step candidate does not improve
-    // the convergence criterion relative to the fixed baseline established at
-    // the start of this outer iteration, the step multiplier is halved and a
-    // new Newton direction is computed at the (failed) candidate point itself —
-    // i.e., each retry re-linearizes at the most recent trial point rather than
-    // retrying a smaller multiple of the original direction. The multiplier
-    // shrinks geometrically across retries, and the criterion is always
-    // compared against the same fixed baseline, not against the previous
-    // candidate's criterion value.
     double criterion_inner = arma::norm(stepsize_vector, "inf");
     arma::vec beta_vector_inner = beta_vector;
     arma::vec stepsize_vector_inner = stepsize_vector;
-    // Both are assigned on every path that reaches their later use: a valid
-    // candidate sets them, and an iteration without one leaves the loop first.
     arma::vec beta_vector_new;
     arma::vec beta_vector_new_inner;
-    // Damping may need several attempts before a candidate lands inside the
-    // valid region, so an invalid trial point shrinks the multiplier and
-    // retries rather than aborting. `last_failure` records why the most recent
-    // trial was rejected, so that an exhausted inner loop that never produced
-    // a valid candidate can still report the original diagnostic. A numerical
-    // failure while evaluating a valid trial point (singular matrix, invalid
-    // association parameter, ...) or an inner loop without any valid candidate
-    // ends the iterations: the solver reverts to the last accepted iterate and
-    // reports the reason in `failure`, which the R code turns into a warning.
     bool valid_candidate_found = false;
     bool numerical_failure = false;
     int last_failure = 0;
@@ -963,15 +881,15 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                                 mu_vector,
                                 weights_vector);
         if (phi_fixed == 0 && hold_nuisance == 0) {
-          phi = get_phi_hat(pearson_residuals_vector, use_params);
+          phi = get_phi_hat_cc(pearson_residuals_vector, params_used);
         }
         if (alpha_fixed == 0 && hold_nuisance == 0) {
-          alpha_vector = get_alpha_hat(correlation_structure,
+          alpha_vector = get_alpha_hat_cc(correlation_structure,
                                        pearson_residuals_vector,
                                        clusters,
                                        repeated_vector,
                                        phi,
-                                       use_params,
+                                       params_used,
                                        mdependence);
         }
         stepsize_vector_inner =
@@ -1017,14 +935,9 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
           "every step-halving attempt produced invalid fitted values" :
           "every step-halving attempt produced an invalid linear predictor";
       }
-      // Trial points only replace the working state when they are valid, so the
-      // state needs restoring only if one was swapped in before the failure.
       if (valid_candidate_found) {
         refresh_state(beta_vector);
       }
-      // The failed outer iteration is recorded with an infinite criterion so
-      // that every caller that tests convergence on the last criterion value
-      // sees a non-converged fit; beta_vector keeps the last accepted iterate.
       beta_history.push_back(beta_vector);
       criterion_vector(i - 1) = arma::datum::inf;
       break;
@@ -1032,8 +945,6 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
     criterion_vector(i - 1) = arma::norm(stepsize_vector_inner, "inf");
     beta_vector = beta_vector_new;
     beta_history.push_back(beta_vector);
-    // eta_vector, mu_vector, phi and alpha_vector already correspond to the
-    // accepted candidate, and stepsize_vector_inner is the Newton step there.
     stepsize_vector = stepsize_vector_inner;
     if (criterion_vector(i - 1) <= tolerance) {
       break;

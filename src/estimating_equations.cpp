@@ -5,28 +5,6 @@
 #include "working_covariance_or.h"
 #include <cmath>
 
-namespace {
-void check_estimating_equations_inputs(const arma::vec& y_vector,
-                                                 const arma::mat& model_matrix,
-                                                 const arma::vec& id_vector,
-                                                 const arma::vec& repeated_vector,
-                                                 const arma::vec& weights_vector,
-                                                 const arma::vec& mu_vector,
-                                                 const arma::vec& eta_vector) {
-  const arma::uword n = y_vector.n_elem;
-  if (n == 0) {
-    Rcpp::stop("input vectors must not be empty");
-  }
-  if (model_matrix.n_rows != n) {
-    Rcpp::stop("'model_matrix' must have the same number of rows as 'y_vector'");
-  }
-  if (id_vector.n_elem != n || repeated_vector.n_elem != n ||
-      weights_vector.n_elem != n || mu_vector.n_elem != n ||
-      eta_vector.n_elem != n) {
-    Rcpp::stop("all observation-level inputs must have the same length");
-  }
-}
-}  // namespace
 
 //============================ estimating equations - cc =======================
 // [[Rcpp::export]]
@@ -42,13 +20,11 @@ arma::vec get_estimating_equations_cc(const arma::vec& y_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
                                       const double phi) {
-  check_estimating_equations_inputs(y_vector,
-                                       model_matrix,
-                                       id_vector,
-                                       repeated_vector,
-                                       weights_vector,
-                                       mu_vector,
-                                       eta_vector);
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
 
   if (!R_FINITE(phi) || phi <= 0.0) {
     Rcpp::stop("'phi' must be a positive finite number");
@@ -57,7 +33,7 @@ arma::vec get_estimating_equations_cc(const arma::vec& y_vector,
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
@@ -105,13 +81,11 @@ arma::vec get_estimating_equations_or(const arma::vec& y_vector,
                                       const arma::vec& mu_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
-  check_estimating_equations_inputs(y_vector,
-                                       model_matrix,
-                                       id_vector,
-                                       repeated_vector,
-                                       weights_vector,
-                                       mu_vector,
-                                       eta_vector);
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =
     static_cast<arma::uword>(arma::max(repeated_vector));
@@ -131,7 +105,7 @@ arma::vec get_estimating_equations_or(const arma::vec& y_vector,
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
 
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       const arma::mat v_matrix_i =

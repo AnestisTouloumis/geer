@@ -173,14 +173,14 @@ geewa_binary <- function(formula,
       )
     }
   } else {
-    alpha_vector <- get_marginalized_odds_ratios(
+    alpha_vector <- as.numeric(get_marginalized_odds_ratios_or(
       round(y),
       id,
       repeated,
       weights,
       control$or_adding,
       orstr
-    )
+    ))
   }
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
   fit_pass <- function(beta, pass, previous) {

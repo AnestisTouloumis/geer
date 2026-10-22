@@ -47,7 +47,7 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
       d_matrix_i = model_matrix.rows(first_row, last_row);
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector.subvec(first_row, last_row),
@@ -63,7 +63,7 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_gee_or");
   return beta_vector +
          solve_chol_or_lu_vec(information_matrix, u_vector,
                               "update_beta_gee_or: naive information matrix");
@@ -120,7 +120,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector_i,
@@ -166,7 +166,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_naive_or");
   arma::vec lambda_vector(params_no, arma::fill::zeros);
   for (arma::uword r = 0; r < params_no; ++r) {
     const arma::mat block =
@@ -235,7 +235,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector_i,
@@ -286,7 +286,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_robust_or");
   const arma::mat naive_covariance_meat_matrix =
     solve_chol_or_lu_mat(information_matrix, meat_matrix,
                          "update_beta_robust_or: naive information matrix");
@@ -315,18 +315,6 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
 
 
 //============================ derivative of epsilon - OR ======================
-// Derivative of the matrix eps(mu) = diag(delta* % Z) + dZ/dmu, with
-// Z = V^{-1} s, with respect to the cluster means, for the marginalized
-// odds-ratio working model V = C V0(mu) C, C = W^{-1/2}.
-//
-// Notation (all m x m unless stated): P = V^{-1}, Vt = P C, Q = C P C,
-// q = Vt' s, h_c = G[c, ] - mu + e_c / 2 (columns of H), r_c = Vt h_c,
-// g_c = h_c' q. Since dV0/dmu_c = e_c h_c' + h_c e_c',
-//   dP/dmu_c = -(Vt_c r_c' + r_c Vt_c'),   dVt/dmu_c = (dP/dmu_c) C,
-//   eps_ab   = delta*_a Z_a 1(a = b) - P_ab - Vt_ab g_b - (Vt H)_ab q_b,
-//   dq_b/dmu_c = c_b (-q_c r_cb - g_c Vt_bc) - Vt_cb,
-// and the result differentiates each term of eps_ab by the product rule.
-// Returns an (m*m) x m matrix with entry (a * m + b, c) = d eps_ab / d mu_c.
 arma::mat get_epsilon_derivative_or(const arma::vec& mu_vector,
                                     const arma::vec& s_vector,
                                     const arma::mat& v_matrix_inverse,
@@ -348,11 +336,9 @@ arma::mat get_epsilon_derivative_or(const arma::vec& mu_vector,
   }
   const arma::mat r_matrix = v_tilde * h_matrix;
   const arma::vec g_vector = h_matrix.t() * q_vector;
-  // dP_ab / dmu_c
   auto dp = [&](arma::uword a, arma::uword b, arma::uword c) {
     return -(v_tilde(a, c) * r_matrix(b, c) + r_matrix(a, c) * v_tilde(b, c));
   };
-  // dq_b / dmu_c
   arma::mat dq_matrix(m, m);
   for (arma::uword b = 0; b < m; ++b) {
     for (arma::uword c = 0; c < m; ++c) {
@@ -362,8 +348,6 @@ arma::mat get_epsilon_derivative_or(const arma::vec& mu_vector,
         v_tilde(c, b);
     }
   }
-  // dH_jb / dmu_c = dG[b, j] / dmu_c - 1(j = c), with dG[b, j] / dmu_c stored
-  // at row (b + j * m) of g_matrix_mu.
   arma::mat dg_matrix(m, m);
   for (arma::uword b = 0; b < m; ++b) {
     for (arma::uword c = 0; c < m; ++c) {
@@ -458,7 +442,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       d_matrix_trans_i = d_matrix_i.t();
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector_i,
@@ -486,7 +470,6 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
       observed_fisher_info_matrix -= observed_fisher_info_matrix_i;
       partial_derivatives_matrix +=
         arma::vectorise(observed_fisher_info_matrix_i.t()) * u_vector_i.t();
-      // d eps_ab / d mu_c, stored at row (a * m + b), column c.
       epsilon_matrix_transpose_derivative_i =
         get_epsilon_derivative_or(mu_vector_i,
                                   s_vector_i,
@@ -511,71 +494,25 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
   }
   arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
   arma::vec lambda_vector(params_no, arma::fill::zeros);
-  arma::mat lu_lower, lu_upper, permutation_matrix;
-  // arma::lu() almost always returns true even for singular matrices; the
-  // real singularity signal is a near-zero pivot on the diagonal of U.
-  if (!arma::lu(lu_lower, lu_upper, permutation_matrix,
-                observed_fisher_info_matrix)) {
-    Rcpp::stop("update_beta_empirical_or: LU factorization failed; the observed Fisher "
-               "information is singular or numerically unstable");
-  }
-  const arma::vec abs_pivots = arma::abs(lu_upper.diag());
-  if (abs_pivots.min() <
-    abs_pivots.max() * arma::datum::eps * static_cast<double>(params_no)) {
-    Rcpp::stop("update_beta_empirical_or: the observed Fisher information matrix is numerically "
-               "singular; check for collinearity or near-zero cluster variances");
-  }
-  auto solve_observed_fisher_matrix = [&](const arma::mat& rhs_matrix) -> arma::mat {
-    const arma::mat permuted_rhs = permutation_matrix * rhs_matrix;
-    arma::mat lu_forward;
-    if (!arma::solve(lu_forward,
-                     arma::trimatl(lu_lower),
-                     permuted_rhs,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: forward LU solve failed");
-    }
-    arma::mat result;
-    if (!arma::solve(result,
-                     arma::trimatu(lu_upper),
-                     lu_forward,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: backward LU solve failed");
-    }
-    return result;
-  };
-  auto solve_observed_fisher_vector = [&](const arma::vec& rhs_vector) -> arma::vec {
-    const arma::vec permuted_rhs = permutation_matrix * rhs_vector;
-    arma::vec lu_forward;
-    if (!arma::solve(lu_forward,
-                     arma::trimatl(lu_lower),
-                     permuted_rhs,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: forward LU solve failed");
-    }
-    arma::vec result;
-    if (!arma::solve(result,
-                     arma::trimatu(lu_upper),
-                     lu_forward,
-                     arma::solve_opts::no_approx)) {
-      Rcpp::stop("update_beta_empirical_or: backward LU solve failed");
-    }
-    return result;
-  };
-  const arma::mat fisher_inv_meat = solve_observed_fisher_matrix(meat_matrix);
-  robust_matrix = solve_observed_fisher_matrix(fisher_inv_meat.t());
+  const CholOrLuFactor fisher_factor(
+    observed_fisher_info_matrix,
+    "update_beta_empirical_or: observed Fisher information",
+    false);
+  const arma::mat fisher_inv_meat = fisher_factor.solve(meat_matrix);
+  robust_matrix = fisher_factor.solve(arma::mat(fisher_inv_meat.t()));
   for (arma::uword r = 0; r < params_no; ++r) {
     const arma::mat first_block =
       partial_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
     const arma::mat second_block =
       second_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
     const arma::mat solved_first_block =
-      solve_observed_fisher_matrix(first_block);
+      fisher_factor.solve(first_block);
     lambda_vector[r] =
       -(arma::trace(solved_first_block) +
         0.5 * arma::trace(robust_matrix * second_block));
   }
   const arma::vec update_step =
-    solve_observed_fisher_vector(u_vector + lambda_vector);
+    fisher_factor.solve(arma::vec(u_vector + lambda_vector));
   return beta_vector + update_step;
 }
 //==============================================================================
@@ -623,7 +560,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
       d_matrix_i = model_matrix.rows(first_row, last_row);
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector_i,
@@ -650,7 +587,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                    id_vector[cluster.start], e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "update_beta_jeffreys_or");
   const arma::mat naive_covariance =
     solve_chol_or_lu_mat(information_matrix, arma::eye(params_no, params_no),
                          "update_beta_jeffreys_or: naive information matrix");
@@ -767,12 +704,10 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                             const double jeffreys_power,
                             const char* method,
                             const arma::vec& alpha_vector) {
+  reset_lu_fallback_warning();
   if (maxiter < 0 || step_maxiter < 0) {
     Rcpp::stop("'maxiter' and 'step_maxiter' must be nonnegative integers");
   }
-  // Non-finite inputs would otherwise only surface later as an opaque
-  // factorization failure (and Armadillo's "matrix is not symmetric" notice).
-  // (the response is validated below with a per-observation message)
   if (!model_matrix.is_finite() || !offset.is_finite() ||
       !weights_vector.is_finite() || !beta_vector.is_finite()) {
     Rcpp::stop("the model matrix, offset, weights and starting values must be finite");
@@ -780,10 +715,6 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   const LinkCode link_code = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
   const auto clusters = clusters_from_sorted_id(id_vector);
-  // The odds-ratio parameterization is defined for binary responses. The R
-  // layer accepts 0/1 values and proportions in [0, 1] (with prior weights),
-  // so the solver enforces the same domain instead of silently fitting values
-  // outside it. The negated comparison also rejects NaN.
   for (arma::uword i = 0; i < y_vector.n_elem; ++i) {
     const double y_i = y_vector[i];
     if (!(y_i >= 0.0 && y_i <= 1.0)) {
@@ -791,8 +722,6 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                  static_cast<int>(i + 1), y_i);
     }
   }
-  // Iterates are stored in a growable container so that a large maxiter does
-  // not allocate a p x (maxiter + 1) matrix up front.
   std::vector<arma::vec> beta_history;
   beta_history.reserve(static_cast<size_t>(std::min(maxiter, 100)) + 1);
   beta_history.push_back(beta_vector);
@@ -810,23 +739,14 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
       "the initial fitted values are invalid; supply different 'beta_start' values"
     );
   }
-  // Rebuilds eta and mu at a given beta with exactly the calls used for a trial
-  // point. It runs only on the failure path, to restore the state of the last
-  // accepted iterate.
   auto refresh_state = [&](const arma::vec& beta) {
     eta_vector = model_matrix * beta + offset;
     mu_vector = inverse_link(link_code, eta_vector);
   };
-  // Empty unless a numerical failure stopped the iterations early.
   std::string failure_message;
-  // Trial values live in separate vectors so that eta_vector and mu_vector
-  // always describe the most recent *valid* trial point.
   arma::vec eta_trial_vector;
   arma::vec mu_trial_vector;
   for (int i = 1; i < maxiter + 1; ++i) {
-    // The Newton step at the current beta_vector is the one already computed
-    // at the end of the previous outer iteration (same beta, eta and mu), so
-    // it is only computed from scratch at the first iteration.
     if (i == 1) {
       stepsize_vector =
         update_beta_or(y_vector,
@@ -847,31 +767,11 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                    "different 'beta_start' values");
       }
     }
-    // Damped Newton continuation: if the full-step candidate does not improve
-    // the convergence criterion relative to the fixed baseline established at
-    // the start of this outer iteration, the step multiplier is halved and a
-    // new Newton direction is computed at the (failed) candidate point itself —
-    // i.e., each retry re-linearizes at the most recent trial point rather than
-    // retrying a smaller multiple of the original direction. The multiplier
-    // shrinks geometrically across retries, and the criterion is always
-    // compared against the same fixed baseline, not against the previous
-    // candidate's criterion value.
     double criterion_inner = arma::norm(stepsize_vector, "inf");
     arma::vec beta_vector_inner = beta_vector;
     arma::vec stepsize_vector_inner = stepsize_vector;
-    // Both are assigned on every path that reaches their later use: a valid
-    // candidate sets them, and an iteration without one leaves the loop first.
     arma::vec beta_vector_new;
     arma::vec beta_vector_new_inner;
-    // Damping may need several attempts before a candidate lands inside the
-    // valid region, so an invalid trial point shrinks the multiplier and
-    // retries rather than aborting. `last_failure` records why the most recent
-    // trial was rejected, so that an exhausted inner loop that never produced
-    // a valid candidate can still report the original diagnostic. A numerical
-    // failure while evaluating a valid trial point (singular matrix, invalid
-    // association parameter, ...) or an inner loop without any valid candidate
-    // ends the iterations: the solver reverts to the last accepted iterate and
-    // reports the reason in `failure`, which the R code turns into a warning.
     bool valid_candidate_found = false;
     bool numerical_failure = false;
     int last_failure = 0;
@@ -932,14 +832,9 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
           "every step-halving attempt produced invalid fitted values" :
           "every step-halving attempt produced an invalid linear predictor";
       }
-      // Trial points only replace the working state when they are valid, so the
-      // state needs restoring only if one was swapped in before the failure.
       if (valid_candidate_found) {
         refresh_state(beta_vector);
       }
-      // The failed outer iteration is recorded with an infinite criterion so
-      // that every caller that tests convergence on the last criterion value
-      // sees a non-converged fit; beta_vector keeps the last accepted iterate.
       beta_history.push_back(beta_vector);
       criterion_vector(i - 1) = arma::datum::inf;
       break;
@@ -947,8 +842,6 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
     criterion_vector(i - 1) = arma::norm(stepsize_vector_inner, "inf");
     beta_vector = beta_vector_new;
     beta_history.push_back(beta_vector);
-    // eta_vector and mu_vector already correspond to the accepted candidate,
-    // and stepsize_vector_inner is the Newton step there.
     stepsize_vector = stepsize_vector_inner;
     if (criterion_vector(i - 1) <= tolerance) {
       break;

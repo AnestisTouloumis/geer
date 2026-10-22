@@ -94,7 +94,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_geesolver_cc
-Rcpp::List fit_geesolver_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, arma::vec beta_vector, const arma::vec& offset, const int maxiter, const double tolerance, const int step_maxiter, const double step_multiplier, const double jeffreys_power, const char* method, int use_params, arma::vec alpha_vector, const int alpha_fixed, const char* correlation_structure, const int mdependence, double phi, const int phi_fixed, const int hold_nuisance);
+Rcpp::List fit_geesolver_cc(const arma::vec& y_vector, const arma::mat& model_matrix, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const char* link, const char* family, arma::vec beta_vector, const arma::vec& offset, const int maxiter, const double tolerance, const int step_maxiter, const double step_multiplier, const double jeffreys_power, const char* method, const int use_params, arma::vec alpha_vector, const int alpha_fixed, const char* correlation_structure, const int mdependence, double phi, const int phi_fixed, const int hold_nuisance);
 RcppExport SEXP _geer_fit_geesolver_cc(SEXP y_vectorSEXP, SEXP model_matrixSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP linkSEXP, SEXP familySEXP, SEXP beta_vectorSEXP, SEXP offsetSEXP, SEXP maxiterSEXP, SEXP toleranceSEXP, SEXP step_maxiterSEXP, SEXP step_multiplierSEXP, SEXP jeffreys_powerSEXP, SEXP methodSEXP, SEXP use_paramsSEXP, SEXP alpha_vectorSEXP, SEXP alpha_fixedSEXP, SEXP correlation_structureSEXP, SEXP mdependenceSEXP, SEXP phiSEXP, SEXP phi_fixedSEXP, SEXP hold_nuisanceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -114,7 +114,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type step_multiplier(step_multiplierSEXP);
     Rcpp::traits::input_parameter< const double >::type jeffreys_power(jeffreys_powerSEXP);
     Rcpp::traits::input_parameter< const char* >::type method(methodSEXP);
-    Rcpp::traits::input_parameter< int >::type use_params(use_paramsSEXP);
+    Rcpp::traits::input_parameter< const int >::type use_params(use_paramsSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const int >::type alpha_fixed(alpha_fixedSEXP);
     Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
@@ -259,9 +259,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_marginalized_odds_ratios
-Rcpp::NumericVector get_marginalized_odds_ratios(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double adding_constant, const char* or_structure);
-RcppExport SEXP _geer_get_marginalized_odds_ratios(SEXP response_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP adding_constantSEXP, SEXP or_structureSEXP) {
+// get_marginalized_odds_ratios_or
+arma::vec get_marginalized_odds_ratios_or(const arma::vec& response_vector, const arma::vec& id_vector, const arma::vec& repeated_vector, const arma::vec& weights_vector, const double adding_constant, const char* or_structure);
+RcppExport SEXP _geer_get_marginalized_odds_ratios_or(SEXP response_vectorSEXP, SEXP id_vectorSEXP, SEXP repeated_vectorSEXP, SEXP weights_vectorSEXP, SEXP adding_constantSEXP, SEXP or_structureSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -271,7 +271,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type weights_vector(weights_vectorSEXP);
     Rcpp::traits::input_parameter< const double >::type adding_constant(adding_constantSEXP);
     Rcpp::traits::input_parameter< const char* >::type or_structure(or_structureSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_marginalized_odds_ratios(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure));
+    rcpp_result_gen = Rcpp::wrap(get_marginalized_odds_ratios_or(response_vector, id_vector, repeated_vector, weights_vector, adding_constant, or_structure));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -316,16 +316,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_correlation_matrix
-arma::mat get_correlation_matrix(const char* correlation_structure, const arma::vec& alpha_vector, const arma::uword dimension);
-RcppExport SEXP _geer_get_correlation_matrix(SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
+// get_correlation_matrix_cc
+arma::mat get_correlation_matrix_cc(const char* correlation_structure, const arma::vec& alpha_vector, const arma::uword dimension);
+RcppExport SEXP _geer_get_correlation_matrix_cc(SEXP correlation_structureSEXP, SEXP alpha_vectorSEXP, SEXP dimensionSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char* >::type correlation_structure(correlation_structureSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type alpha_vector(alpha_vectorSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type dimension(dimensionSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_correlation_matrix(correlation_structure, alpha_vector, dimension));
+    rcpp_result_gen = Rcpp::wrap(get_correlation_matrix_cc(correlation_structure, alpha_vector, dimension));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -343,10 +343,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_influence_quantities_cc", (DL_FUNC) &_geer_get_influence_quantities_cc, 12},
     {"_geer_get_influence_quantities_or", (DL_FUNC) &_geer_get_influence_quantities_or, 9},
     {"_geer_get_pearson_residuals", (DL_FUNC) &_geer_get_pearson_residuals, 4},
-    {"_geer_get_marginalized_odds_ratios", (DL_FUNC) &_geer_get_marginalized_odds_ratios, 6},
+    {"_geer_get_marginalized_odds_ratios_or", (DL_FUNC) &_geer_get_marginalized_odds_ratios_or, 6},
     {"_geer_get_small_sample_covariances_cc", (DL_FUNC) &_geer_get_small_sample_covariances_cc, 12},
     {"_geer_get_small_sample_covariances_or", (DL_FUNC) &_geer_get_small_sample_covariances_or, 9},
-    {"_geer_get_correlation_matrix", (DL_FUNC) &_geer_get_correlation_matrix, 3},
+    {"_geer_get_correlation_matrix_cc", (DL_FUNC) &_geer_get_correlation_matrix_cc, 3},
     {NULL, NULL, 0}
 };
 

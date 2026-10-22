@@ -314,7 +314,7 @@ geewa <- function(formula,
       )
     }
     fixed_eigenvalues <- eigen(
-      get_correlation_matrix(corstr, alpha_vector, repeated_max),
+      get_correlation_matrix_cc(corstr, alpha_vector, repeated_max),
       symmetric = TRUE,
       only.values = TRUE
     )$values
@@ -443,7 +443,7 @@ geewa <- function(formula,
   fit$use_p <- use_p
   fit$phi_fixed <- isTRUE(phi_fixed)
   if (!identical(corstr, "independence")) {
-    corr <- get_correlation_matrix(corstr, fit$alpha, max(repeated))
+    corr <- get_correlation_matrix_cc(corstr, fit$alpha, max(repeated))
     eigenvalues <- eigen(corr, symmetric = TRUE, only.values = TRUE)$values
     if (any(eigenvalues <= 0)) {
       warning(

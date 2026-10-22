@@ -17,11 +17,16 @@ compute_ss_covariances <- function(
       get_alpha_or(object)
     )
   }
+  singular_ids <- as.numeric(covariances$singular_clusters)
+  covariances$singular_clusters <- NULL
   coef_names <- names(object$coefficients)
-  lapply(covariances, function(x) {
+  covariances <- lapply(covariances, function(x) {
     dimnames(x) <- list(coef_names, coef_names)
     x
   })
+  attr(covariances, "singular_clusters") <-
+    get_cluster_labels(object)[match(singular_ids, unique(object$id))]
+  covariances
 }
 
 
@@ -61,6 +66,21 @@ select_small_sample_covariance <- function(covariances,
         ),
         context,
         cov_type
+      ),
+      call. = FALSE
+    )
+  }
+  singular_clusters <- attr(covariances, "singular_clusters")
+  if (cov_type %in% geer_leverage_cov_types && length(singular_clusters)) {
+    stop(
+      sprintf(
+        paste0(
+          "%s failed: the %s covariance is undefined because I - H is ",
+          "singular for cluster(s) %s, whose leverage is 1"
+        ),
+        context,
+        cov_type,
+        paste(singular_clusters, collapse = ", ")
       ),
       call. = FALSE
     )

@@ -59,7 +59,7 @@ test_that("a missing association parameter is an R error, never a crash or an un
   skip_on_cran()
   for (cs in c("exchangeable", "ar1")) {
     res <- in_subprocess(sprintf(
-      "r <- tryCatch(geer:::get_correlation_matrix('%s', numeric(0), 3L), error = function(e) paste('R-ERROR:', conditionMessage(e))); cat(if (is.character(r)) r else 'NO-ERROR')", cs
+      "r <- tryCatch(geer:::get_correlation_matrix_cc('%s', numeric(0), 3L), error = function(e) paste('R-ERROR:', conditionMessage(e))); cat(if (is.character(r)) r else 'NO-ERROR')", cs
     ))
     expect_identical(res$status, 0L, label = paste(cs, "process survived"))
     expect_match(res$output, "R-ERROR: .*(alpha|correlation)",
@@ -174,3 +174,36 @@ test_that("the odds-ratio solver rejects responses outside [0, 1]", {
     expect_error(call_or_solver(bad_value), "observation 6 has value")
   }
 })
+
+test_that("an indefinite working covariance warns once per call", {
+  withr::local_seed(1)
+  d <- data.frame(id = rep(1:60, each = 3), visit = rep(1:3, 60))
+  d$x <- rnorm(180)
+  d$y <- rbinom(180, 1, 0.5)
+  fit <- suppressWarnings(geewa_binary(
+    y ~ x,
+    data = d, id = id, repeated = visit, orstr = "fixed",
+    alpha_vector = c(50, 50, 0.02)
+  ))
+  messages <- character()
+  covariances <- withCallingHandlers(
+    get_covariance_matrices_or(
+      fit$y, fit$x, fit$id, fit$repeated, fit$prior.weights, "logit",
+      fit$fitted.values, fit$linear.predictors, get_alpha_or(fit)
+    ),
+    warning = function(w) {
+      messages <<- c(messages, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_identical(
+    messages,
+    paste0(
+      "a symmetric matrix that is not positive definite was solved by LU ",
+      "decomposition; the working covariance or information matrix may be ",
+      "invalid"
+    )
+  )
+  expect_true(all(is.finite(covariances$robust_covariance)))
+})
+

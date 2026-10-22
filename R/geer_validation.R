@@ -42,6 +42,11 @@ geer_ss_cov_types <- c(
   "westgate-burchett"
 )
 
+geer_leverage_cov_types <- c(
+  "kauermann-carroll", "mancl-derouen", "ford-westgate", "fan-zhang-zhang",
+  "wang-long", "westgate-burchett"
+)
+
 geer_pooled_cov_types <- c(
   "pan", "gosho-sato-takeuchi", "wang-long", "westgate-burchett"
 )

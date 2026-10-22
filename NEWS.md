@@ -148,6 +148,9 @@
 * The starting-value fit from `brglm2` emitted one "non-integer" warning per
   observation for Poisson responses and binomial proportions.
 
+* Fitted probabilities near 0 under the `cloglog` link lost relative accuracy
+  through cancellation in the inverse link.
+
 ## Changes
 
 * `anova()`, `add1()`, `drop1()`, and `step_p()` now stop with an error when a
@@ -162,6 +165,18 @@
 * `geewa_binary()` checks `link` against the supported links before building
   the family, and `geewa()` checks that `beta_start`, `alpha_vector`, and
   `control_glm` have the right type before using them.
+
+* The Kauermann-Carroll, Mancl-DeRouen, Ford-Westgate, Fan-Zhang-Zhang,
+  Wang-Long, and Westgate-Burchett covariances now stop with an error that
+  names the clusters with leverage 1, for which I - H is singular, instead of
+  returning a covariance from a numerically singular inverse. The other
+  small-sample covariances remain available for such fits. All small-sample
+  covariances stop when the naive covariance is not positive definite.
+
+* A working covariance or information matrix that is symmetric but not positive
+  definite, such as an odds-ratio working covariance built from incompatible
+  pairwise odds ratios, is still solved by LU decomposition, but now with a
+  warning.
 
 * Default `cov_type` of `geecriteria()` is now `"robust"`.
 

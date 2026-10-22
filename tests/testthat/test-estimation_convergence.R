@@ -184,3 +184,16 @@ test_that("non-finite covariates are rejected before reaching C++", {
   d3$y[5] <- 0.5
   expect_no_error(geewa_binary(y ~ x, data = d3, id = id, beta_start = c(0, 0)))
 })
+
+test_that("cloglog fitted values keep full relative accuracy near zero", {
+  withr::local_seed(3)
+  d <- data.frame(id = rep(1:100, each = 4), x = seq(-4, 4, length.out = 400))
+  d$y <- rbinom(400, 1, binomial("cloglog")$linkinv(-6 + 3.5 * d$x))
+  fit <- suppressWarnings(geewa(
+    y ~ x,
+    family = binomial("cloglog"), data = d, id = id, phi_fixed = TRUE
+  ))
+  reference <- binomial("cloglog")$linkinv(fit$linear.predictors)
+  expect_lt(min(reference), 1e-7)
+  expect_equal(fit$fitted.values / reference, rep(1, 400), tolerance = 1e-12)
+})

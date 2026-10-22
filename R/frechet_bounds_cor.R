@@ -106,7 +106,7 @@ frechet_bounds_cor <- function(object) {
   id <- object$id
   repeated <- as.integer(object$repeated)
   time_max <- max(repeated)
-  cor_mat <- get_correlation_matrix(
+  cor_mat <- get_correlation_matrix_cc(
     object$association_structure,
     object$alpha,
     time_max

@@ -13,7 +13,7 @@ Rcpp::List get_sandwich_covariances(arma::mat& information_matrix,
                                     const double sample_size,
                                     const double obs_no_total,
                                     const arma::uword params_no) {
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "get_sandwich_covariances");
   const arma::mat rhs =
     arma::join_rows(arma::eye(params_no, params_no), meat_matrix);
   const arma::mat solved = solve_chol_or_lu_mat(information_matrix, rhs);
@@ -22,7 +22,7 @@ Rcpp::List get_sandwich_covariances(arma::mat& information_matrix,
                                                              2 * params_no - 1);
   arma::mat robust_matrix =
     solve_chol_or_lu_mat(information_matrix, naive_covariance_meat_matrix.t());
-  symmetrize_if_close(robust_matrix, 1e-10);
+  symmetrize_if_close(robust_matrix, "get_sandwich_covariances");
   if (!(sample_size > static_cast<double>(params_no)) ||
       !(obs_no_total > static_cast<double>(params_no))) {
     arma::mat bc_undefined(params_no, params_no);
@@ -45,7 +45,7 @@ Rcpp::List get_sandwich_covariances(arma::mat& information_matrix,
   if (mbn_xi < 1.0) mbn_xi = 1.0;
   arma::mat bc_matrix =
     mbn_kappa * robust_matrix + mbn_lambda * mbn_xi * naive_covariance;
-  symmetrize_if_close(bc_matrix, 1e-10);
+  symmetrize_if_close(bc_matrix, "get_sandwich_covariances");
   return Rcpp::List::create(
     Rcpp::Named("naive_covariance")  = naive_covariance,
     Rcpp::Named("robust_covariance") = robust_matrix,
@@ -70,6 +70,11 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
                                       const char* correlation_structure,
                                       const arma::vec& alpha_vector,
                                       const double phi) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
   const auto clusters = clusters_from_sorted_id(id_vector);
   const double sample_size = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
@@ -81,7 +86,7 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
   const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   arma::mat d_matrix_i;
   arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
@@ -130,6 +135,11 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
                                       const arma::vec& mu_vector,
                                       const arma::vec& eta_vector,
                                       const arma::vec& alpha_vector) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
   const auto clusters = clusters_from_sorted_id(id_vector);
   const double sample_size = static_cast<double>(clusters.size());
   const arma::uword params_no = model_matrix.n_cols;
@@ -155,7 +165,7 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
       d_matrix_i = model_matrix.rows(first_row, last_row);
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       v_matrix_i = get_v_matrix_or(mu_vector.subvec(first_row, last_row),

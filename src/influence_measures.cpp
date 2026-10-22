@@ -8,15 +8,11 @@
 
 
 namespace {
-constexpr double leverage_tolerance = 1e-8;
 
 
 //============================ per-cluster quantities ==========================
 struct InfluenceCluster {
-  double id_value;
-  arma::mat d_matrix;
-  arma::mat v_matrix;
-  arma::vec residuals;
+  ClusterData data;
   arma::mat sensitivity_matrix;
 };
 //==============================================================================
@@ -34,24 +30,24 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
   for (arma::uword cluster_index = 0; cluster_index < clusters_no; ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword cluster_size = cluster.residuals.n_elem;
+      const arma::uword cluster_size = cluster.data.residuals.n_elem;
       v_inverse_matrices.push_back(
-        solve_chol_or_lu_mat(cluster.v_matrix,
+        solve_chol_or_lu_mat(cluster.data.v_matrix,
                              arma::eye(cluster_size, cluster_size),
                              "get_influence_quantities"));
       information_matrix +=
-        cluster.d_matrix.t() * v_inverse_matrices.back() * cluster.d_matrix;
+        cluster.data.d_matrix.t() * v_inverse_matrices.back() * cluster.data.d_matrix;
       sensitivity_matrix += cluster.sensitivity_matrix;
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities", cluster_index,
-                                   cluster.id_value, e);
+                                   cluster.data.id_value, e);
     }
   }
-  symmetrize_if_close(information_matrix, 1e-10);
+  symmetrize_if_close(information_matrix, "get_influence_quantities");
   arma::mat naive_covariance = solve_chol_or_lu_mat(
     information_matrix, arma::eye(params_no, params_no),
     "get_influence_quantities");
-  symmetrize_if_close(naive_covariance, 1e-10);
+  symmetrize_if_close(naive_covariance, "get_influence_quantities");
   arma::mat naive_root;
   if (!arma::chol(naive_root, naive_covariance)) {
     Rcpp::stop("get_influence_quantities: the naive covariance matrix is not "
@@ -68,9 +64,9 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
   for (arma::uword cluster_index = 0; cluster_index < clusters_no; ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::mat& d_matrix = cluster.d_matrix;
+      const arma::mat& d_matrix = cluster.data.d_matrix;
       const arma::mat& v_inverse_matrix = v_inverse_matrices[cluster_index];
-      const arma::vec& residuals = cluster.residuals;
+      const arma::vec& residuals = cluster.data.residuals;
       const arma::uword cluster_size = residuals.n_elem;
       const arma::uword last_row = first_row + cluster_size - 1;
       const arma::mat v_inverse_d_matrix = v_inverse_matrix * d_matrix;
@@ -78,10 +74,8 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
       const arma::mat scaled_matrix = v_inverse_d_matrix * naive_covariance;
       hat_vector.subvec(first_row, last_row) =
         arma::sum(d_matrix % scaled_matrix, 1);
-      arma::mat cluster_leverage =
-        naive_root * v_inverse_d_matrix.t() * d_matrix * naive_root.t();
-      cluster_leverage = 0.5 * (cluster_leverage + cluster_leverage.t());
-      if (arma::max(arma::eig_sym(cluster_leverage)) > 1.0 - leverage_tolerance) {
+      if (get_max_cluster_leverage(naive_root, v_inverse_d_matrix, d_matrix) >
+          1.0 - leverage_tolerance) {
         cluster_dfbeta.row(cluster_index).fill(NA_REAL);
       } else {
         const arma::mat h_matrix = d_matrix * scaled_matrix.t();
@@ -107,12 +101,12 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
       observation_block.each_col() %= z_vector;
       observation_delta.rows(first_row, last_row) = observation_block;
       arma::mat response_block = v_inverse_d_matrix;
-      response_block.each_col() %= arma::sqrt(arma::diagvec(cluster.v_matrix));
+      response_block.each_col() %= arma::sqrt(arma::diagvec(cluster.data.v_matrix));
       response_delta.rows(first_row, last_row) = response_block;
       first_row = last_row + 1;
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities", cluster_index,
-                                   cluster.id_value, e);
+                                   cluster.data.id_value, e);
     }
   }
   return Rcpp::List::create(
@@ -143,6 +137,11 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
                                        const char* correlation_structure,
                                        const arma::vec& alpha_vector,
                                        const double phi) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
   const LinkCode link_code = parse_link(link);
   const FamilyCode family_code = parse_family(family);
   const auto clusters = clusters_from_sorted_id(id_vector);
@@ -154,7 +153,7 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
   const arma::vec variance_1_vector = variance_derivative_1(family_code, mu_vector);
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
-    get_correlation_matrix(correlation_structure, alpha_vector, repeated_max);
+    get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   std::vector<InfluenceCluster> quantities;
   quantities.reserve(clusters.size());
   for (arma::uword cluster_index = 0; cluster_index < clusters.size(); ++cluster_index) {
@@ -190,11 +189,9 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
           solve_chol_or_lu_mat(v_matrix_i, weighted_x_matrix,
                                "get_influence_quantities_cc") -
         x_matrix_i.t() * curvature_x_matrix;
-      quantities.push_back({id_vector[first_row],
-                            d_matrix_i,
-                            v_matrix_i,
-                            residuals_i,
-                            sensitivity_matrix_i});
+      quantities.push_back(
+        {{cluster.id_value, d_matrix_i, v_matrix_i, residuals_i},
+         sensitivity_matrix_i});
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities_cc", cluster_index,
                                    id_vector[cluster.start], e);
@@ -216,6 +213,11 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
                                        const arma::vec& mu_vector,
                                        const arma::vec& eta_vector,
                                        const arma::vec& alpha_vector) {
+  reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, mu_vector,
+                        eta_vector},
+                       model_matrix);
   const LinkCode link_code = parse_link(link);
   const auto clusters = clusters_from_sorted_id(id_vector);
   const arma::uword repeated_max =
@@ -238,7 +240,7 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
       arma::mat d_matrix_i = x_matrix_i;
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios(repeated_vector.subvec(first_row, last_row),
+        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
       const arma::mat v_matrix_i =
@@ -262,11 +264,9 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
                                d_matrix_i + covariance_change_matrix * d_matrix_i,
                                "get_influence_quantities_or") -
         x_matrix_i.t() * curvature_x_matrix;
-      quantities.push_back({id_vector[first_row],
-                            d_matrix_i,
-                            v_matrix_i,
-                            residuals_i,
-                            sensitivity_matrix_i});
+      quantities.push_back(
+        {{cluster.id_value, d_matrix_i, v_matrix_i, residuals_i},
+         sensitivity_matrix_i});
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities_or", cluster_index,
                                    id_vector[cluster.start], e);

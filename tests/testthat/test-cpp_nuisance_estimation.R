@@ -80,8 +80,8 @@ test_that("estimated phi and alpha reproduce the moment formulas at the fitted m
   }
 })
 
-test_that("get_correlation_matrix builds the documented patterns", {
-  gc <- get_correlation_matrix
+test_that("get_correlation_matrix_cc builds the documented patterns", {
+  gc <- get_correlation_matrix_cc
   expect_equal(gc("exchangeable", 0.3, 4L), ref_corr("exchangeable", 0.3, 4), tolerance = 1e-15)
   expect_equal(gc("ar1", 0.5, 4L), ref_corr("ar1", 0.5, 4), tolerance = 1e-15)
   expect_equal(gc("independence", numeric(0), 3L), diag(3), tolerance = 0)
@@ -94,8 +94,8 @@ test_that("get_correlation_matrix builds the documented patterns", {
   expect_equal(gc("exchangeable", 0.3, 1L), matrix(1), tolerance = 0)
 })
 
-test_that("get_correlation_matrix rejects inadmissible or non-finite parameters", {
-  gc <- get_correlation_matrix
+test_that("get_correlation_matrix_cc rejects inadmissible or non-finite parameters", {
+  gc <- get_correlation_matrix_cc
   expect_error(gc("exchangeable", -0.6, 3L), "must lie in")
   expect_error(gc("exchangeable", 1, 3L), "must lie in")
   expect_error(gc("ar1", 1, 3L), "must lie in")
