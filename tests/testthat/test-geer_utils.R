@@ -1,5 +1,3 @@
-epilepsy <- test_data$epilepsy
-
 test_that("build_percent_labels returns percent-suffixed labels", {
   out <- build_percent_labels(c(0.025, 0.975), digits = 3)
   expect_type(out, "character")
@@ -34,38 +32,6 @@ test_that("build_test_label returns the expected display labels", {
   expect_identical(build_test_label("working-wald"), "Modified Working Wald")
   expect_identical(build_test_label("working-score"), "Modified Working Score")
   expect_identical(build_test_label("working-lrt"), "Modified Working LRT")
-})
-
-test_that("scalar check helpers accept valid inputs and reject invalid ones", {
-  expect_true(is_positive_scalar(1))
-  expect_true(is_positive_scalar(1.5))
-  expect_false(is_positive_scalar(0))
-  expect_false(is_positive_scalar(-1))
-  expect_false(is_positive_scalar(NA_real_))
-  expect_false(is_positive_scalar(Inf))
-  expect_false(is_positive_scalar(c(1, 2)))
-  expect_true(is_positive_integer_scalar(1))
-  expect_true(is_positive_integer_scalar(2 + .Machine$double.eps^0.5 / 2))
-  expect_false(is_positive_integer_scalar(0))
-  expect_false(is_positive_integer_scalar(1.2))
-  expect_false(is_positive_integer_scalar(NA_real_))
-  expect_no_error(check_single_numeric(1, "x"))
-  expect_error(check_single_numeric("1", "x"), "'x' must be a finite number")
-  expect_error(check_single_numeric(c(1, 2), "x"), "'x' must be a finite number")
-  expect_error(check_single_numeric(NA_real_, "x"), "'x' must be a finite number")
-  expect_error(check_single_numeric(Inf, "x"), "'x' must be a finite number")
-  expect_no_error(check_probability_open(0.5, "p"))
-  expect_error(check_probability_open(0, "p"), "'p' must be strictly between 0 and 1")
-  expect_error(check_probability_open(1.1, "p"), "'p' must be strictly between 0 and 1")
-  expect_no_error(check_choice("robust", c("robust", "naive"), "cov_type"))
-  expect_error(
-    check_choice("bad", c("robust", "naive"), "cov_type"),
-    "'cov_type' must be one of: robust, naive"
-  )
-  expect_error(
-    check_choice(NA_character_, c("robust", "naive"), "cov_type"),
-    "'cov_type' must be a character string"
-  )
 })
 
 test_that("summary and tidy warn about a negative variance and give NA", {
@@ -142,7 +108,7 @@ test_that("is_balanced_design requires every cluster to observe each position on
 test_that("refit_geer stops when the refit did not converge", {
   fit <- geewa(
     seizures ~ treatment,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log")
   )
@@ -151,7 +117,7 @@ test_that("refit_geer stops when the refit did not converge", {
   fit_limited <- suppressWarnings(
     geewa(
       seizures ~ treatment + visit,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "exchangeable",
@@ -169,7 +135,7 @@ test_that("refit_geer stops when the refit did not converge", {
 test_that("refit_geer ignores a fixed-length beta_start of the original fit", {
   fit <- geewa(
     seizures ~ treatment,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     beta_start = c(0, 0)

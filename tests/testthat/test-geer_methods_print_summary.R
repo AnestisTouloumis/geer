@@ -1,5 +1,3 @@
-respiratory <- test_data$respiratory
-
 test_that("summary returns a coherent summary object", {
   out <- summary(fit_geewa_pois_exch)
   expect_s3_class(out, "summary.geer")
@@ -40,14 +38,14 @@ test_that("summary handles zero standard errors without crashing", {
 })
 
 test_that("print methods return invisibly", {
-  expect_invisible(print(fit_geewa_pois_exch))
-  expect_invisible(print(summary(fit_geewa_pois_exch)))
+  expect_output(expect_invisible(print(fit_geewa_pois_exch)))
+  expect_output(expect_invisible(print(summary(fit_geewa_pois_exch))))
 })
 
 test_that("print and summary display a notice for a fit that did not converge", {
   res <- collect_warnings(
     geewa(status ~ treatment + baseline,
-      family = binomial(), data = respiratory,
+      family = binomial(), data = test_data$respiratory,
       id = id, repeated = visit, corstr = "ar1", method = "gee",
       control = geer_control(maxiter = 1)
     )
@@ -64,7 +62,7 @@ test_that("print and summary display a notice for a fit that did not converge", 
 test_that("print and summary of a converged fit carry no convergence notice", {
   fit <- collect_warnings(
     geewa(status ~ treatment + baseline,
-      family = binomial(), data = respiratory,
+      family = binomial(), data = test_data$respiratory,
       id = id, repeated = visit, corstr = "exchangeable"
     )
   )$value
@@ -95,4 +93,16 @@ test_that("print methods reject unused arguments", {
     print(summary(fit_geewa_pois_exch), digits = 2),
     "print.summary.geer does not use the argument\\(s\\): 'digits'"
   )
+})
+
+test_that("print.summary.geer shows several association parameters", {
+  fit <- geewa(
+    formula = status ~ treatment,
+    family = binomial(),
+    data = test_data$respiratory,
+    id = id,
+    repeated = visit,
+    corstr = "unstructured"
+  )
+  expect_output(print(summary(fit)), "Association Parameters:", fixed = TRUE)
 })

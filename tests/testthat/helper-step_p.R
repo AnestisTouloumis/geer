@@ -1,3 +1,13 @@
+fit_resp_full_indep <- geewa_binary(
+  formula = status ~ baseline + treatment + gender + visit + age,
+  id = id,
+  repeated = visit,
+  data = test_data$respiratory2,
+  link = "probit",
+  orstr = "independence",
+  method = "pgee-jeffreys"
+)
+
 term_labels <- function(object) {
   attr(terms(formula(object)), "term.labels")
 }

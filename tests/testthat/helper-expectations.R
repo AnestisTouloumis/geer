@@ -1,19 +1,9 @@
 expect_test_result <- function(x) {
-  expect_type(x, "list")
-  expect_true(all(c("test_stat", "test_df", "test_p") %in% names(x)))
-  expect_true(is.numeric(x$test_stat))
-  expect_true(is.numeric(x$test_df))
-  expect_true(is.numeric(x$test_p))
-  expect_length(x$test_stat, 1L)
-  expect_length(x$test_df, 1L)
-  expect_length(x$test_p, 1L)
-  expect_true(is.finite(x$test_stat))
-  expect_true(is.finite(x$test_df))
-  expect_true(is.finite(x$test_p))
-  expect_gte(x$test_stat, 0)
-  expect_gt(x$test_df, 0)
-  expect_gte(x$test_p, 0)
-  expect_lte(x$test_p, 1)
+  values <- unlist(x[c("test_stat", "test_df", "test_p")])
+  expect_length(values, 3L)
+  expect_true(all(is.finite(values)))
+  expect_true(x$test_stat >= 0 && x$test_df > 0)
+  expect_true(x$test_p >= 0 && x$test_p <= 1)
 }
 
 jackknife_delete_estimates_by_refit <- function(fit, data, refit) {
@@ -33,11 +23,19 @@ expect_jackknife_vcov <- function(fit, delete_estimates) {
     crossprod(centered)
   dimnames(expected) <- list(names(coef(fit)), names(coef(fit)))
   observed <- vcov(fit, cov_type = "jackknife")
-  expect_equal(geer:::compute_jackknife_deletes(fit), delete_estimates,
+  expect_equal(compute_jackknife_deletes(fit), delete_estimates,
     tolerance = 1e-7
   )
   expect_equal(observed, expected, tolerance = 1e-7)
   expect_equal(observed, t(observed), tolerance = 1e-12)
+}
+
+expect_published <- function(object, published, digits) {
+  expect_equal(
+    object,
+    published,
+    tolerance = 0.5 * 10^(-digits) / mean(abs(published))
+  )
 }
 
 collect_warnings <- function(expr) {
@@ -50,4 +48,35 @@ collect_warnings <- function(expr) {
     }
   )
   list(value = value, warnings = w)
+}
+
+in_subprocess <- function(code) {
+  dev <- requireNamespace("pkgload", quietly = TRUE) &&
+    isTRUE(pkgload::is_dev_package("geer"))
+  if (dev) {
+    out <- capture.output(
+      eval(parse(text = code), envir = new.env(parent = asNamespace("geer")))
+    )
+    return(list(status = 0L, output = paste(out, collapse = "\n")))
+  }
+  old_libs <- Sys.getenv("R_LIBS", unset = NA)
+  Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
+  restore_libs <- function() {
+    if (is.na(old_libs)) {
+      Sys.unsetenv("R_LIBS")
+    } else {
+      Sys.setenv(R_LIBS = old_libs)
+    }
+  }
+  on.exit(restore_libs(), add = TRUE)
+  out <- suppressWarnings(system2(
+    file.path(R.home("bin"), "Rscript"),
+    c("-e", shQuote(paste0("suppressMessages(library(geer)); ", code))),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  list(
+    status = attr(out, "status") %||% 0L,
+    output = paste(out, collapse = "\n")
+  )
 }

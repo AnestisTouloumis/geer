@@ -1,6 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-respiratory2 <- test_data$respiratory2
-
 test_that("geewa_binary fits a coherent exchangeable logit model", {
   fit <- fit_geewa_bin_exch
   expect_s3_class(fit, "geer")
@@ -18,7 +15,7 @@ test_that("geewa_binary returns a well-formed fitted object on a simple independ
     formula = ecg ~ treatment + factor(period),
     id = id,
     repeated = period,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     link = "logit",
     orstr = "independence",
     method = "gee"
@@ -35,7 +32,7 @@ test_that("geewa_binary fits representative alternative links and association st
   fit_probit <- geewa_binary(
     ecg ~ period + treatment,
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     link = "probit",
     orstr = "independence"
   )
@@ -43,7 +40,7 @@ test_that("geewa_binary fits representative alternative links and association st
     status ~ treatment + baseline,
     id = id,
     repeated = visit,
-    data = respiratory2,
+    data = test_data$respiratory2,
     link = "logit",
     orstr = "unstructured"
   )
@@ -52,7 +49,7 @@ test_that("geewa_binary fits representative alternative links and association st
   expect_equal(fit_probit$family$link, "probit")
   expect_s3_class(fit_unstr, "geer")
   expect_true(fit_unstr$converged)
-  expect_length(fit_unstr$alpha, choose(max(respiratory2$visit), 2))
+  expect_length(fit_unstr$alpha, choose(max(test_data$respiratory2$visit), 2))
 })
 
 test_that("geewa_binary is invariant to row order via internal sorting", {
@@ -61,13 +58,13 @@ test_that("geewa_binary is invariant to row order via internal sorting", {
     ecg ~ treatment + factor(period),
     id = id,
     repeated = period,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     link = "logit",
     orstr = "exchangeable",
     method = "gee"
   )
-  cerebrovascular_shuffled <- cerebrovascular[
-    sample.int(nrow(cerebrovascular)), ,
+  cerebrovascular_shuffled <- test_data$cerebrovascular[
+    sample.int(nrow(test_data$cerebrovascular)), ,
     drop = FALSE
   ]
   fit_2 <- geewa_binary(
@@ -88,7 +85,7 @@ test_that("geewa_binary is invariant to row order via internal sorting", {
 })
 
 test_that("geewa_binary honors subset and na.action and rejects stray arguments", {
-  cer <- cerebrovascular
+  cer <- test_data$cerebrovascular
   cer_sub <- cer[as.numeric(cer$id) <= 40, , drop = FALSE]
   fit_subset <- geewa_binary(
     ecg ~ treatment + factor(period),

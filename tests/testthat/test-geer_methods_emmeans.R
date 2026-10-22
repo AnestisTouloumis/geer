@@ -1,5 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-
 skip_if_no_emmeans <- function() {
   skip_if_not_installed("emmeans", minimum_version = "2.0.0")
 }
@@ -46,14 +44,14 @@ test_that("naive emmeans from an independence geer fit match glm results", {
   fit_geer <- geewa_binary(
     formula = ecg ~ treatment + factor(period),
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     link = "probit",
     orstr = "independence",
     method = "gee"
   )
   fit_glm <- glm(
     formula = ecg ~ treatment + factor(period),
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     family = binomial(link = "probit")
   )
   emm_geer <- emmeans::emmeans(
@@ -89,7 +87,7 @@ test_that("emmeans support honors covariance aliases and custom matrices", {
 
 test_that("emmeans weights use the prior weights in the original row order", {
   skip_if_no_emmeans()
-  dat <- cerebrovascular
+  dat <- test_data$cerebrovascular
   dat$w <- ifelse(dat$period == 1, 1, 3) * ifelse(dat$treatment == "active", 2, 1)
   shuffled <- withr::with_seed(3, dat[sample(nrow(dat)), ])
   fit_weighted <- function(data) {

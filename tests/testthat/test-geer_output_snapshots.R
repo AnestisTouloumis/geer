@@ -1,17 +1,16 @@
 skip_on_cran()
 
-epilepsy <- test_data$epilepsy
 
 fit_full <- geewa(
   seizures ~ treatment + lnbaseline + lnage,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   repeated = visit
 )
 
 fit_reduced <- geewa(
   seizures ~ treatment,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   repeated = visit
 )

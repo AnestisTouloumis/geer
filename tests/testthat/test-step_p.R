@@ -1,21 +1,8 @@
-cerebrovascular <- test_data$cerebrovascular
-respiratory2 <- test_data$respiratory2
-
-fit_resp_full_indep <- geewa_binary(
-  formula = status ~ baseline + treatment + gender + visit + age,
-  id = id,
-  repeated = visit,
-  data = respiratory2,
-  link = "probit",
-  orstr = "independence",
-  method = "pgee-jeffreys"
-)
-
 fit_resp_full_exch <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
   id = id,
   repeated = visit,
-  data = respiratory2,
+  data = test_data$respiratory2,
   link = "probit",
   orstr = "exchangeable",
   method = "pgee-jeffreys"
@@ -25,7 +12,7 @@ fit_resp_lower <- geewa_binary(
   formula = status ~ baseline + treatment,
   id = id,
   repeated = visit,
-  data = respiratory2,
+  data = test_data$respiratory2,
   link = "probit",
   orstr = "independence",
   method = "pgee-jeffreys"
@@ -35,7 +22,7 @@ fit_resp_mid <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit,
   id = id,
   repeated = visit,
-  data = respiratory2,
+  data = test_data$respiratory2,
   link = "probit",
   orstr = "independence",
   method = "pgee-jeffreys"
@@ -47,7 +34,7 @@ fit_bin_full_indep <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -58,7 +45,7 @@ fit_bin_lower <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -260,7 +247,7 @@ test_that("step_p preserves the original data call for downstream update", {
     formula = status ~ (I(treatment == "active") + gender + visit + age + baseline)^2,
     id = id,
     repeated = visit,
-    data = respiratory2,
+    data = test_data$respiratory2,
     link = "probit",
     orstr = "independence",
     method = "pgee-jeffreys"
@@ -347,4 +334,22 @@ test_that("step_p works on a fit with a missing covariate", {
     corstr = "exchangeable"
   )
   expect_equal(coef(selected), coef(reference), tolerance = 1e-10)
+})
+
+test_that("step_p forward selection adds a term that meets p_enter", {
+  fit <- geewa(
+    formula = seizures ~ treatment,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit
+  )
+  out <- step_p(
+    fit,
+    scope = ~ treatment + lnbaseline + lnage,
+    direction = "forward",
+    p_enter = 0.15
+  )
+  expect_true("lnbaseline" %in% term_labels(out))
+  expect_gt(nrow(out$anova), 1L)
 })

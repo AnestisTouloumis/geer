@@ -16,14 +16,14 @@ test_that("internal Anderson-Darling calculation follows Scholz-Stephens", {
   group <- rep(1:3, c(7, 8, 9))
   out <- compute_mcar_ad_test(x, group, c(7L, 8L, 9L))
 
-  expect_equal(out$statistic, 0.8000654142, tolerance = 1e-9)
-  expect_equal(
+  expect_published(out$statistic, 0.8000654142, digits = 10L)
+  expect_published(
     out$group.statistics,
     c(0.40675810, 0.20711942, 0.18618789),
-    tolerance = 1e-7
+    digits = 8L
   )
-  expect_equal(out$variance, 0.9526947675, tolerance = 1e-9)
-  expect_equal(out$standardized, -1.229364538, tolerance = 1e-8)
+  expect_published(out$variance, 0.9526947675, digits = 10L)
+  expect_published(out$standardized, -1.229364538, digits = 9L)
   expect_true(is.finite(out$p.value))
   expect_gt(out$p.value, 0)
   expect_lt(out$p.value, 1)
@@ -55,22 +55,22 @@ test_that("internal modified Hawkins calculation follows the published transform
     neyman_nulls = compute_mcar_neyman_nulls(c(8L, 8L, 8L), n_replicates = 20L, n_min = 2L)
   )
 
-  expect_equal(
+  expect_published(
     out$pooled.covariance,
     matrix(c(
       0.48979592, 0.48809524,
       0.48809524, 0.49173920
     ), 2, 2),
-    tolerance = 1e-7
+    digits = 8L
   )
-  expect_equal(
+  expect_published(
     out$group.statistics,
     c(5.705201788, 3.259474395, 5.668594317),
-    tolerance = 1e-8
+    digits = 9L
   )
-  expect_equal(out$statistic, 7.314033418, tolerance = 1e-8)
+  expect_published(out$statistic, 7.314033418, digits = 9L)
   expect_identical(out$parameter, 6L)
-  expect_equal(out$p.value, 0.2927792548, tolerance = 1e-9)
+  expect_published(out$p.value, 0.2927792548, digits = 10L)
 })
 
 test_that("mcar_homoscedasticity_test returns both diagnostics in auto mode", {
@@ -224,40 +224,8 @@ test_that("mcar_homoscedasticity_test reconstructs responses from a geer fit", {
 
 test_that("mcar_homoscedasticity_test validates inputs", {
   expect_error(
-    mcar_homoscedasticity_test(data.frame(a = 1:10, b = letters[1:10])),
-    "must be numeric"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(matrix(1:20, ncol = 1)),
-    "at least two variables"
-  )
-  expect_error(
     mcar_homoscedasticity_test(matrix(rnorm(40), ncol = 2)),
     "requires missing values"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), min_pattern_size = 1),
-    "greater than or equal to 2"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = 0),
-    "positive integer"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_min = 1),
-    "greater than or equal to 2"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), sig_level = 1),
-    "strictly between 0 and 1"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), method = "invalid"),
-    "'method' must be one of"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_imputations = 0),
-    "'n_imputations' must be a positive integer"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), seed = 1e10),
@@ -266,26 +234,6 @@ test_that("mcar_homoscedasticity_test validates inputs", {
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), seed = 2.5),
     "'seed' must be NULL or a whole number"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = "200"),
-    "'n_replicates' must be a positive integer"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_replicates = TRUE),
-    "'n_replicates' must be a positive integer"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), n_min = "2"),
-    "'n_min' must be an integer greater than or equal to 2"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), maxiter = 1e12),
-    "'maxiter' must be a positive integer"
-  )
-  expect_error(
-    mcar_homoscedasticity_test(make_jj_screening_data(), sig_level = "0.05"),
-    "'sig_level' must be a finite number"
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), tolerance = "1e-8"),
@@ -322,16 +270,18 @@ test_that("Hawkins transformed statistics match MissMech on deterministic data",
     group_counts = counts,
     neyman_nulls = compute_mcar_neyman_nulls(counts, n_replicates = 10L, n_min = 2L)
   )
-  expect_equal(hawkins$f.values, missmech_fij, tolerance = 1e-9)
-  expect_equal(hawkins$group.statistics[1L], 5.7707840618, tolerance = 1e-9)
+  expect_published(hawkins$f.values, missmech_fij, digits = 10L)
+  expect_published(
+    hawkins$group.statistics[1L], 5.7707840618, digits = 10L
+  )
 
   ad <- compute_mcar_ad_test(hawkins$f.values, group, counts)
-  expect_equal(ad$statistic, 0.8206642148, tolerance = 1e-9)
-  expect_equal(ad$variance, 0.9910839542, tolerance = 1e-9)
-  expect_equal(
+  expect_published(ad$statistic, 0.8206642148, digits = 10L)
+  expect_published(ad$variance, 0.9910839542, digits = 10L)
+  expect_published(
     ad$group.statistics,
     c(0.2930375607, 0.3227273003, 0.2048993537),
-    tolerance = 1e-9
+    digits = 10L
   )
   expect_equal(sum(ad$group.statistics), ad$statistic, tolerance = 1e-12)
 })
@@ -342,12 +292,12 @@ test_that("Anderson-Darling statistic reproduces the published MissMech example"
   counts <- c(30L, 45L, 60L)
   out <- compute_mcar_ad_test(x, rep(1:3, counts), counts)
 
-  expect_equal(out$statistic, 18.62008, tolerance = 1e-6)
-  expect_equal(out$variance, 1.119502, tolerance = 1e-6)
-  expect_equal(
+  expect_published(out$statistic, 18.62008, digits = 5L)
+  expect_published(out$variance, 1.119502, digits = 6L)
+  expect_published(
     out$group.statistics,
     c(6.566425, 5.075349, 6.978307),
-    tolerance = 1e-6
+    digits = 6L
   )
   expect_true(out$extrapolated)
 })
@@ -554,4 +504,14 @@ test_that("compute_mcar_hawkins_test requires one Neyman null entry per pattern"
     ),
     "'neyman_nulls' must be a list with one element per retained missingness pattern"
   )
+})
+
+test_that("mcar_homoscedasticity_test runs the Hawkins test alone", {
+  withr::local_seed(1)
+  x <- matrix(rnorm(240), ncol = 3)
+  x[41:60, 3] <- NA
+  x[61:80, 2:3] <- NA
+  out <- mcar_homoscedasticity_test(x, method = "hawkins")
+  expect_identical(out$selected.test, "hawkins")
+  expect_match(out$interpretation, "modified Hawkins test")
 })

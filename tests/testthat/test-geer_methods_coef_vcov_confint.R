@@ -3,7 +3,6 @@ test_that("vcov returns well-formed covariance matrices for every cov_type", {
   standard <- c("robust", "naive", "bias-corrected", "df-adjusted")
   for (cov_type in c(standard, geer_ss_cov_types)) {
     v <- vcov(fit_geewa_pois_exch, cov_type = cov_type)
-    expect_true(is.matrix(v))
     expect_identical(dimnames(v), list(coef_names, coef_names))
     expect_equal(v, t(v), tolerance = 1e-12)
     if (cov_type %in% standard) {

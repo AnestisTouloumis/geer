@@ -1,5 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
 rinse <- test_data$rinse
 
 fit_geewa_gauss_indep <- geewa(
@@ -38,32 +36,32 @@ test_that("geewa fits coherent Poisson independence and exchangeable models", {
   expect_lt(fit_geewa_pois_exch$alpha, 1)
   expect_equal(
     fit_geewa_pois_indep$clusters_no,
-    length(unique(epilepsy$id))
+    length(unique(test_data$epilepsy$id))
   )
   expect_equal(
     fit_geewa_pois_indep$obs_no,
-    nrow(epilepsy)
+    nrow(test_data$epilepsy)
   )
 })
 
 test_that("geewa fits representative non-independence correlation structures", {
   fit_ar1 <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "ar1"
   )
   fit_unstr <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "unstructured"
   )
   fit_mdep <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "m-dependent",
@@ -71,7 +69,7 @@ test_that("geewa fits representative non-independence correlation structures", {
   )
   fit_fixed <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "fixed",
@@ -92,7 +90,7 @@ test_that("geewa fits representative non-independence correlation structures", {
 test_that("geewa respects phi_fixed and phi_value", {
   fit <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "independence",
@@ -106,7 +104,7 @@ test_that("geewa respects phi_fixed and phi_value", {
 test_that("bias-reduced estimates differ from plain GEE estimates", {
   fit_br <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "exchangeable",
@@ -126,14 +124,14 @@ test_that("geewa is invariant to row order via internal sorting", {
   withr::local_seed(1)
   fit_1 <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson(link = "log"),
     corstr = "exchangeable",
     method = "gee"
   )
-  epilepsy_shuffled <- epilepsy[
-    sample.int(nrow(epilepsy)), ,
+  epilepsy_shuffled <- test_data$epilepsy[
+    sample.int(nrow(test_data$epilepsy)), ,
     drop = FALSE
   ]
   fit_2 <- geewa(
@@ -188,7 +186,7 @@ test_that("a fixed working correlation works with the independence-start one-ste
   for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
     fit <- geewa(
       seizures ~ treatment + lnbaseline + lnage,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "fixed",
@@ -202,7 +200,7 @@ test_that("a fixed working correlation works with the independence-start one-ste
 })
 
 test_that("geewa honors subset and na.action and rejects stray arguments", {
-  epi <- epilepsy
+  epi <- test_data$epilepsy
   epi_sub <- epi[as.numeric(epi$id) <= 30, , drop = FALSE]
   fit_subset <- geewa(
     seizures ~ treatment + lnbaseline,
@@ -262,7 +260,7 @@ test_that("geewa honors subset and na.action and rejects stray arguments", {
 })
 
 test_that("one-step penalized methods hold phi at the independence penalized fit", {
-  epi <- epilepsy
+  epi <- test_data$epilepsy
   fit_ind <- geewa(
     seizures ~ treatment + lnbaseline,
     data = epi,
@@ -287,7 +285,7 @@ test_that("one-step penalized methods hold phi at the independence penalized fit
 
 test_that("one-step penalized methods estimate alpha at the independence penalized fit", {
   fit_ind <- geewa(seizures ~ treatment + lnbaseline,
-    data = epilepsy, id = id,
+    data = test_data$epilepsy, id = id,
     family = poisson("log"), corstr = "independence", method = "pgee-jeffreys"
   )
   r <- (fit_ind$y - fitted(fit_ind)) / sqrt(fitted(fit_ind))
@@ -300,7 +298,7 @@ test_that("one-step penalized methods estimate alpha at the independence penaliz
   alpha <- sum(pairs) / ((length(pairs) - p) * phi)
   for (method in c("opgee-jeffreys", "hpgee-jeffreys")) {
     fit_one <- geewa(seizures ~ treatment + lnbaseline,
-      data = epilepsy, id = id,
+      data = test_data$epilepsy, id = id,
       family = poisson("log"), corstr = "exchangeable", method = method
     )
     expect_equal(as.numeric(fit_one$alpha), alpha, tolerance = 1e-10, label = method)
@@ -308,7 +306,7 @@ test_that("one-step penalized methods estimate alpha at the independence penaliz
 })
 
 test_that("the fit stores the row order and residuals accept type = 'response'", {
-  epi <- epilepsy
+  epi <- test_data$epilepsy
   withr::local_seed(2026)
   epi_shuffled <- epi[sample(nrow(epi)), , drop = FALSE]
   fit <- geewa(
@@ -425,7 +423,7 @@ test_that("formula is stored as a formula object when passed as a symbol", {
   user_formula <- seizures ~ treatment + lnbaseline
   fit <- geewa(
     formula = user_formula,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson(link = "log"),
     corstr = "exchangeable",
@@ -439,7 +437,7 @@ test_that("formula is stored as a formula object when passed as a symbol", {
 test_that("fits called as geer::geewa or with phi_fixed in a variable behave the same", {
   qualified <- geer::geewa(
     formula = seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy, id = id, family = poisson(link = "log"),
+    data = test_data$epilepsy, id = id, family = poisson(link = "log"),
     corstr = "exchangeable", method = "gee"
   )
   expect_equal(glance(qualified), glance(fit_geewa_pois_exch))
@@ -450,13 +448,29 @@ test_that("fits called as geer::geewa or with phi_fixed in a variable behave the
   )
   fixed_flag <- TRUE
   direct <- geewa(ecg ~ treatment,
-    data = cerebrovascular, id = id, family = binomial(),
+    data = test_data$cerebrovascular, id = id, family = binomial(),
     phi_fixed = TRUE
   )
   through_variable <- geewa(ecg ~ treatment,
-    data = cerebrovascular, id = id, family = binomial(),
+    data = test_data$cerebrovascular, id = id, family = binomial(),
     phi_fixed = fixed_flag
   )
   expect_equal(glance(through_variable), glance(direct))
   expect_equal(geecriteria(through_variable), geecriteria(direct))
+})
+
+test_that("quasi families give the fit of the matching standard family", {
+  fit_pois <- geewa(
+    formula = seizures ~ treatment + lnbaseline,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit,
+    corstr = "exchangeable"
+  )
+  fit_qp <- update(fit_pois, family = quasipoisson())
+  fit_q <- update(fit_pois, family = quasi(link = "log", variance = "mu"))
+  expect_identical(fit_qp$family$family, "poisson")
+  expect_equal(coef(fit_qp), coef(fit_pois), tolerance = 1e-10)
+  expect_equal(coef(fit_q), coef(fit_pois), tolerance = 1e-10)
 })

@@ -1,5 +1,5 @@
 geecriteria_cols <- function() {
-  c(geer:::geer_criteria_columns, "Parameters")
+  c(geer_criteria_columns, "Parameters")
 }
 
 undefined_geecriteria_cols <- c(

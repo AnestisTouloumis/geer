@@ -1,12 +1,10 @@
-cerebrovascular <- test_data$cerebrovascular
-
 fit_bin_trt <- geewa(
   formula = ecg ~ treatment,
   id = id,
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -17,7 +15,7 @@ fit_bin_period <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -28,7 +26,7 @@ fit_bin_full <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee"
 )
@@ -39,12 +37,10 @@ fit_bin_full_exch <- geewa(
   family = binomial(link = "logit"),
   phi_fixed = TRUE,
   phi_value = 1,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "exchangeable",
   method = "gee"
 )
-
-ctl_tight <- geer_control(tolerance = 1e-12, maxiter = 500)
 
 fixed_null_fit <- function(d, formula) {
   geewa(formula,
@@ -166,11 +162,11 @@ test_that("compute_wald_test returns a valid result for nested models and is ord
 test_that("compute_working_lrt_test returns a valid result and scales both models by the larger model's phi", {
   est_trt <- geewa(ecg ~ treatment,
     id = id, family = binomial(link = "logit"),
-    data = cerebrovascular, corstr = "independence", method = "gee"
+    data = test_data$cerebrovascular, corstr = "independence", method = "gee"
   )
   est_full <- geewa(ecg ~ treatment + factor(period),
     id = id,
-    family = binomial(link = "logit"), data = cerebrovascular,
+    family = binomial(link = "logit"), data = test_data$cerebrovascular,
     corstr = "independence", method = "gee"
   )
   res <- compute_working_lrt_test(est_trt, est_full,
@@ -295,7 +291,7 @@ test_that("is_phi_fixed uses the stored flag rather than parsing the call", {
     family = binomial(link = "logit"),
     phi_fixed = fixed_flag,
     phi_value = 1,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     corstr = "independence",
     method = "gee"
   )
@@ -312,7 +308,7 @@ test_that("check_nested_models rejects fits with different settings", {
     family = binomial(link = "logit"),
     phi_fixed = TRUE,
     phi_value = 1,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     corstr = "independence",
     method = "brgee-robust"
   )
@@ -328,7 +324,7 @@ test_that("check_nested_models rejects fits with different settings", {
     formula = ecg ~ treatment + factor(period),
     id = id,
     family = binomial(link = "logit"),
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     corstr = "independence",
     method = "gee"
   )
@@ -659,4 +655,38 @@ test_that("working LRT with a fixed dispersion agrees with the Wald and score te
   score <- anova(g0, g1, test = "score", cov_type = "naive")$Chi[2]
   expect_lt(abs(lrt - wald), 0.25 * max(1, wald))
   expect_lt(abs(lrt - score), 0.25 * max(1, wald))
+})
+
+test_that("nested comparisons check the dependence order and the nesting", {
+  fit_m1 <- geewa(
+    formula = status ~ treatment,
+    family = binomial(),
+    data = test_data$respiratory,
+    id = id,
+    repeated = visit,
+    corstr = "m-dependent",
+    Mv = 1L
+  )
+  fit_m2 <- update(fit_m1, formula = . ~ . + baseline, Mv = 2L)
+  expect_error(anova(fit_m1, fit_m2), "m-dependent")
+  fit_trt <- geewa(
+    formula = seizures ~ treatment,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit
+  )
+  fit_base <- update(fit_trt, formula = . ~ lnbaseline)
+  expect_error(
+    compute_wald_test(fit_trt, fit_base, cov_type = "robust"),
+    "nested"
+  )
+  fit_both <- update(fit_trt, formula = . ~ . + lnbaseline)
+  out <- anova(
+    fit_trt,
+    fit_both,
+    test = "working-score",
+    cov_type = "df-adjusted"
+  )
+  expect_true(is.finite(out$Chi[2L]))
 })

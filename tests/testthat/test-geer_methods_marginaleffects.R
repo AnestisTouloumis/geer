@@ -1,6 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-
 skip_if_no_marginaleffects <- function() {
   skip_if_not_installed(
     "marginaleffects",
@@ -49,7 +46,7 @@ test_that("marginaleffects low-level methods expose geer components", {
   expect_equal(coef(modified), shifted)
   expect_equal(coef(fit_geewa_pois_exch), marginaleffects::get_coef(fit_geewa_pois_exch))
 
-  newdata <- epilepsy[1:4, , drop = FALSE]
+  newdata <- test_data$epilepsy[1:4, , drop = FALSE]
   original_prediction <- marginaleffects::get_predict(
     fit_geewa_pois_exch,
     newdata = newdata,
@@ -65,7 +62,7 @@ test_that("marginaleffects low-level methods expose geer components", {
 
 test_that("marginaleffects get_predict agrees with predict", {
   skip_if_no_marginaleffects()
-  newdata <- epilepsy[1:6, , drop = FALSE]
+  newdata <- test_data$epilepsy[1:6, , drop = FALSE]
 
   response <- marginaleffects::get_predict(
     fit_geewa_pois_exch,
@@ -92,7 +89,7 @@ test_that("marginaleffects get_predict agrees with predict", {
 
 test_that("marginaleffects predictions work for geer models", {
   skip_if_no_marginaleffects()
-  newdata <- cerebrovascular[1:8, , drop = FALSE]
+  newdata <- test_data$cerebrovascular[1:8, , drop = FALSE]
   out <- marginaleffects::predictions(
     fit_geewa_bin_exch,
     newdata = newdata,

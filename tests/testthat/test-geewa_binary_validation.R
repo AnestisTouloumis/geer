@@ -1,11 +1,9 @@
-cerebrovascular <- test_data$cerebrovascular
-
 test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
   expect_error(
     geewa_binary(
       ecg ~ treatment,
       id = id,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       link = "log-log"
     ),
     "'link' must be one of"
@@ -14,7 +12,7 @@ test_that("geewa_binary rejects unsupported link and odds-ratio structure", {
     geewa_binary(
       ecg ~ treatment,
       id = id,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       link = "logit",
       orstr = "ar1"
     ),
@@ -27,19 +25,19 @@ test_that("geewa_binary validates weights", {
     geewa_binary(
       ecg ~ treatment + factor(period),
       id = id,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       link = "logit",
-      weights = rep.int(1, nrow(cerebrovascular) - 1)
+      weights = rep.int(1, nrow(test_data$cerebrovascular) - 1)
     ),
     "weights"
   )
-  bad_weights <- rep.int(1, nrow(cerebrovascular))
+  bad_weights <- rep.int(1, nrow(test_data$cerebrovascular))
   bad_weights[1] <- 0
   expect_error(
     geewa_binary(
       ecg ~ treatment + factor(period),
       id = id,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       link = "logit",
       weights = bad_weights
     ),
@@ -54,7 +52,7 @@ test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
       ecg ~ treatment + factor(period),
       id = id,
       repeated = period,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       link = "logit",
       orstr = "fixed"
     ),
@@ -63,13 +61,23 @@ test_that("geewa_binary requires alpha_vector for fixed odds-ratio structure", {
   )
 })
 
-test_that("geewa_binary rejects a non-finite beta_start", {
-  cer <- cerebrovascular
+test_that("geewa_binary validates fixed odds ratios", {
+  fit_fixed <- function(alpha_vector) {
+    geewa_binary(
+      formula = ecg ~ treatment,
+      data = test_data$cerebrovascular,
+      id = id,
+      repeated = period,
+      orstr = "fixed",
+      alpha_vector = alpha_vector
+    )
+  }
   expect_error(
-    geewa_binary(ecg ~ treatment,
-      data = cer, id = id, repeated = period,
-      beta_start = c(NA, 0)
-    ),
-    "'beta_start' must contain only finite values"
+    fit_fixed(c(1, 2)),
+    "'alpha_vector' must be a numeric vector of length 1"
+  )
+  expect_error(
+    fit_fixed(-1),
+    "'alpha_vector' must be finite and strictly positive"
   )
 })

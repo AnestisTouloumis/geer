@@ -3,8 +3,6 @@ all_methods <- c(
   "bcgee-naive", "bcgee-empirical", "pgee-jeffreys"
 )
 
-ctl_tight <- geer_control(tolerance = 1e-11, maxiter = 200)
-
 times6 <- list(1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3)
 
 test_that("estimators are equivariant under invertible linear reparametrization of the design", {

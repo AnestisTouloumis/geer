@@ -97,6 +97,30 @@ ref_V <- function(d, mu, idx) {
   }
   V / sqrt(outer(d$w[idx], d$w[idx]))
 }
+ref_fit_covariance <- function(object, indices) {
+  mu <- object$fitted.values[indices]
+  w <- object$prior.weights[indices]
+  tt <- as.integer(object$repeated[indices])
+  tmax <- max(as.integer(object$repeated))
+  structure <- object$association_structure
+  if (identical(object$fit_function, "geewa_binary")) {
+    m <- length(mu)
+    v_matrix <- diag(mu * (1 - mu), m)
+    if (m > 1L && !identical(structure, "independence")) {
+      for (i in 1:(m - 1L)) {
+        for (j in (i + 1L):m) {
+          psi <- object$alpha[ref_pair_pos(tt[i], tt[j], tmax)]
+          v_matrix[i, j] <- v_matrix[j, i] <-
+            ref_plackett(mu[i], mu[j], psi) - mu[i] * mu[j]
+        }
+      }
+    }
+    return(v_matrix / sqrt(outer(w, w)))
+  }
+  r_matrix <- ref_corr(structure, object$alpha, tmax)
+  s <- sqrt(object$phi * object$family$variance(mu) / w)
+  outer(s, s) * r_matrix[tt, tt, drop = FALSE]
+}
 ref_cluster <- function(d, b, idx) {
   X <- d$X[idx, , drop = FALSE]
   eta <- drop(X %*% b)
@@ -214,6 +238,8 @@ ref_lambda <- function(d, method, b = d$beta, a = 0.5) {
   )
 }
 
+times8 <- list(1:3, c(1, 2, 4), 2:4, 1:4, c(1, 4), 3:4, 1:4, 1:3)
+
 ref_times_unbalanced <- c(
   rep(list(1:4), 4), rep(list(c(1, 2, 4)), 3), rep(list(c(2, 3, 4)), 2),
   rep(list(c(1, 3)), 2), rep(list(1:3), 2)
@@ -271,7 +297,7 @@ ref_small_sample_covariances <- function(object) {
   repeated_max <- max(as.integer(object$repeated))
 
   pieces <- lapply(clusters, function(indices) {
-    v_matrix <- geer:::get_working_covariance(object, indices)
+    v_matrix <- ref_fit_covariance(object, indices)
     d_matrix <- d_all[indices, , drop = FALSE]
     list(
       d = d_matrix,
@@ -363,7 +389,7 @@ ref_influence <- function(object) {
   e_all <- object$y - object$fitted.values
   clusters <- split(seq_along(object$id), object$id)
   pieces <- lapply(clusters, function(indices) {
-    v_matrix <- geer:::get_working_covariance(object, indices)
+    v_matrix <- ref_fit_covariance(object, indices)
     d_matrix <- d_all[indices, , drop = FALSE]
     list(v = v_matrix, d = d_matrix, vd = solve(v_matrix, d_matrix),
          e = e_all[indices])
@@ -414,8 +440,125 @@ ref_estimating_equations <- function(object, beta) {
   shifted$fitted.values <- mu
   d_all <- object$x * object$family$mu.eta(eta)
   Reduce(`+`, lapply(split(seq_along(object$id), object$id), function(i) {
-    v_matrix <- geer:::get_working_covariance(shifted, i)
+    v_matrix <- ref_fit_covariance(shifted, i)
     drop(crossprod(d_all[i, , drop = FALSE],
                    solve(v_matrix, object$y[i] - mu[i])))
   }))
+}
+
+ref_gof_residual <- function(fit, statistic, covariance) {
+  mu <- fit$fitted.values
+  r <- fit$y - mu
+  v <- mu * (1 - mu)
+  d_matrix <- fit$x * fit$family$mu.eta(fit$linear.predictors)
+  clusters <- split(seq_along(fit$id), fit$id)
+  n <- length(mu)
+  positions_no <- max(fit$repeated)
+  standardized <- matrix(NA_real_, length(clusters), positions_no)
+  for (k in seq_along(clusters)) {
+    i <- clusters[[k]]
+    standardized[k, fit$repeated[i]] <- r[i] / sqrt(v[i])
+  }
+  pooled <- matrix(0, positions_no, positions_no)
+  for (j in seq_len(positions_no)) {
+    for (l in seq_len(positions_no)) {
+      pooled[j, l] <- mean(standardized[, j] * standardized[, l], na.rm = TRUE)
+    }
+  }
+  v_inverse <- matrix(0, n, n)
+  cov_y <- matrix(0, n, n)
+  for (i in clusters) {
+    v_inverse[i, i] <- solve(ref_fit_covariance(fit, i))
+    positions <- fit$repeated[i]
+    cov_y[i, i] <- if (identical(covariance, "empirical")) {
+      tcrossprod(r[i])
+    } else {
+      diag(sqrt(v[i])) %*% pooled[positions, positions] %*% diag(sqrt(v[i]))
+    }
+  }
+  sensitivity <- crossprod(d_matrix, v_inverse %*% d_matrix)
+  h_matrix <- d_matrix %*% solve(sensitivity, t(d_matrix) %*% v_inverse)
+  if (identical(statistic, "pearson")) {
+    value <- sum(r^2 / v)
+    mean_value <- n
+    weights <- (1 - 2 * mu) / v
+  } else {
+    value <- sum(r^2)
+    mean_value <- sum(v)
+    weights <- 1 - 2 * mu
+  }
+  adjusted <- crossprod(diag(n) - h_matrix, weights)
+  variance <- drop(crossprod(adjusted, cov_y %*% adjusted))
+  z <- (value - mean_value) / sqrt(variance)
+  c(z = z, p = 2 * pnorm(-abs(z)))
+}
+
+ref_pearson <- function(d, b) {
+  mu <- d$lk$linkinv(drop(d$X %*% b))
+  (d$y - mu) * sqrt(d$w / d$family$variance(mu))
+}
+
+ref_alpha <- function(d, r, phi, p, struct, m = 1L) {
+  cl <- ref_clusters(d)
+  n_occ <- d$tmax
+  pairs <- do.call(rbind, lapply(cl, function(idx) {
+    n <- length(idx)
+    if (n < 2) {
+      return(NULL)
+    }
+    jk <- t(combn(n, 2))
+    data.frame(
+      s = d$tt[idx][jk[, 1]], t = d$tt[idx][jk[, 2]],
+      prod = r[idx][jk[, 1]] * r[idx][jk[, 2]]
+    )
+  }))
+  pairs$lag <- pairs$t - pairs$s
+  den <- function(n) (n - p) * phi
+  switch(struct,
+    exchangeable = sum(pairs$prod) / den(nrow(pairs)),
+    ar1 = sum(pairs$prod[pairs$lag == 1]) / den(sum(pairs$lag == 1)),
+    toeplitz = sapply(
+      seq_len(n_occ - 1),
+      function(l) sum(pairs$prod[pairs$lag == l]) / den(sum(pairs$lag == l))
+    ),
+    "m-dependent" = sapply(
+      seq_len(m),
+      function(l) sum(pairs$prod[pairs$lag == l]) / den(sum(pairs$lag == l))
+    ),
+    unstructured = unlist(lapply(1:(n_occ - 1), function(s) {
+      sapply((s + 1):n_occ, function(t) {
+        sel <- pairs$s == s & pairs$t == t
+        sum(pairs$prod[sel]) / den(sum(sel))
+      })
+    }))
+  )
+}
+
+ref_corr_alpha <- function(d) {
+  if (d$struct == "independence") numeric(0) else d$alpha
+}
+
+ref_frechet_cov <- function(p, q) {
+  c(max(0, p + q - 1) - p * q, min(p, q) - p * q)
+}
+
+ref_or_counts <- function(y, id, tt, w, add, n_occ, exchangeable = FALSE) {
+  out <- numeric(0)
+  for (s in 1:(n_occ - 1)) {
+    for (t in (s + 1):n_occ) {
+      n <- matrix(add, 2, 2)
+      for (i in unique(id)) {
+        a <- which(id == i & tt == s)
+        b <- which(id == i & tt == t)
+        if (length(a) == 1 && length(b) == 1) {
+          n[y[a] + 1, y[b] + 1] <- n[
+            y[a] + 1,
+            y[b] + 1
+          ] + min(w[a], w[b])
+        }
+      }
+      out <- c(out, n[1, 1] * n[2, 2] / (n[1, 2] * n[2, 1]))
+    }
+  }
+  if (exchangeable) rep(exp(mean(log(out))), length(out)) else out
 }

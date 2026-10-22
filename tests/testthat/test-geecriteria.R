@@ -1,10 +1,7 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-
 fit_binary_indep <- geewa_binary(
   formula = ecg ~ period * treatment,
   id = id,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   link = "logit",
   orstr = "independence",
   method = "gee"
@@ -15,8 +12,8 @@ fit_binary_exch <- update(
   orstr = "exchangeable"
 )
 
-cerebrovascular_small <- cerebrovascular[
-  seq_len(nrow(cerebrovascular) - 1L), ,
+cerebrovascular_small <- test_data$cerebrovascular[
+  seq_len(nrow(test_data$cerebrovascular) - 1L), ,
   drop = FALSE
 ]
 
@@ -55,7 +52,7 @@ test_that("geecriteria warns when models differ in number of observations", {
 })
 
 test_that("geecriteria rejects invalid inputs", {
-  lm_fit <- lm(seizures ~ treatment, data = epilepsy)
+  lm_fit <- lm(seizures ~ treatment, data = test_data$epilepsy)
   expect_error(
     geecriteria(1),
     regexp = "geer",
@@ -79,10 +76,15 @@ test_that("geecriteria rejects invalid inputs", {
 })
 
 test_that("geecriteria works for representative model and cov_type variants", {
-  expect_geecriteria_table(geecriteria(fit_geewa_bin_exch), n_rows = 1L)
+  finite_columns <- setdiff(geecriteria_cols(), undefined_geecriteria_cols)
+  out <- geecriteria(fit_geewa_bin_exch)
+  expect_true(all(is.finite(as.matrix(out[finite_columns]))))
   for (cov_type in c("robust", "naive", "bias-corrected", "df-adjusted")) {
     out <- geecriteria(fit_geewa_pois_exch, cov_type = cov_type)
-    expect_geecriteria_table(out, n_rows = 1L)
+    expect_true(
+      all(is.finite(as.matrix(out[finite_columns]))),
+      label = cov_type
+    )
   }
 })
 
@@ -100,7 +102,7 @@ test_that("QICHH agrees with QIC for binomial geewa fits with estimated phi", {
   fit <- geewa(
     ecg ~ period * treatment,
     family = binomial("logit"),
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     id = id,
     corstr = "independence"
   )
@@ -141,13 +143,13 @@ test_that("QICC follows the Hardin-Hilbe finite-cluster correction", {
 test_that("QICC under independence uses the data's cluster count and design width", {
   fit_ind <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "independence"
   )
   out <- geecriteria(fit_ind, digits = 15)
-  n_clusters <- length(unique(epilepsy$id))
+  n_clusters <- length(unique(test_data$epilepsy$id))
   p <- 4L
   correction <- 2 * p * (p + 1) / (n_clusters - p - 1)
   expect_equal(out$QICC, out$QIC - correction, tolerance = 1e-10)
@@ -641,20 +643,11 @@ test_that("GHYC and PAC are reported only for balanced designs", {
 test_that("working covariance helper supports correlation GEE", {
   object <- fit_geewa_pois_exch
   indices <- split(seq_along(object$id), object$id)[[1L]]
-  repeated <- as.integer(object$repeated[indices])
-  repeated_max <- max(as.integer(object$repeated))
-  correlation <- get_correlation_matrix_cc(
-    object$association_structure,
-    object$alpha,
-    repeated_max
+  expect_equal(
+    get_working_covariance(object, indices),
+    ref_fit_covariance(object, indices),
+    tolerance = 1e-12
   )
-  mu <- object$fitted.values[indices]
-  weights <- object$prior.weights[indices]
-  marginal_sd <- sqrt(object$phi * object$family$variance(mu) / weights)
-  expected <- correlation[repeated, repeated, drop = FALSE] *
-    tcrossprod(marginal_sd)
-  observed <- get_working_covariance(object, indices)
-  expect_equal(observed, expected, tolerance = 1e-12)
 })
 
 test_that("odds-ratio pair indexing matches upper-triangular ordering", {
@@ -698,7 +691,7 @@ test_that("geecriteria warns when models differ in family or response", {
   fit_pois <- fit_geewa_pois_exch
   fit_gauss <- geewa(
     formula = seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = gaussian(link = "identity"),
     corstr = "exchangeable",

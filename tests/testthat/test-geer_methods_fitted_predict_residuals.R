@@ -1,6 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-
 test_that("predict returns the expected in-sample predictions", {
   expect_equal(
     predict(fit_geewa_pois_exch, type = "response"),
@@ -26,7 +23,7 @@ test_that("predict returns fit and standard errors when requested", {
   expect_length(pred_in$se.fit, fit_geewa_pois_exch$obs_no)
   expect_true(all(is.finite(pred_in$se.fit)))
   expect_true(all(pred_in$se.fit >= 0))
-  newdata_bin <- cerebrovascular[1:8, , drop = FALSE]
+  newdata_bin <- test_data$cerebrovascular[1:8, , drop = FALSE]
   pred_bin <- predict(
     fit_geewa_bin_exch,
     newdata = newdata_bin,
@@ -48,7 +45,7 @@ test_that("predict returns fit and standard errors when requested", {
 })
 
 test_that("predict returns coherent predictions on new count data", {
-  newdata <- epilepsy[1:5, , drop = FALSE]
+  newdata <- test_data$epilepsy[1:5, , drop = FALSE]
   pred_response <- predict(fit_geewa_pois_exch, newdata = newdata, type = "response")
   pred_link <- predict(fit_geewa_pois_exch, newdata = newdata, type = "link")
   pred_link_se <- predict(fit_geewa_pois_exch, newdata = newdata, type = "link", se.fit = TRUE)
@@ -67,7 +64,7 @@ test_that("predict returns coherent predictions on new count data", {
 })
 
 test_that("incomplete rows of newdata give NA without a warning", {
-  newdata <- epilepsy[1:5, , drop = FALSE]
+  newdata <- test_data$epilepsy[1:5, , drop = FALSE]
   newdata$lnage[2L] <- NA
   expect_no_warning(
     pred <- predict(
@@ -90,12 +87,12 @@ test_that("incomplete rows of newdata give NA without a warning", {
 })
 
 test_that("predict handles reordered and extra columns in newdata", {
-  newdata_1 <- epilepsy[
+  newdata_1 <- test_data$epilepsy[
     1:5,
     c("seizures", "treatment", "lnbaseline", "lnage", "id", "visit"),
     drop = FALSE
   ]
-  newdata_2 <- epilepsy[
+  newdata_2 <- test_data$epilepsy[
     1:5,
     c("visit", "id", "lnage", "lnbaseline", "treatment", "seizures"),
     drop = FALSE
@@ -113,7 +110,7 @@ test_that("predict handles reordered and extra columns in newdata", {
 
 test_that("predict validates newdata and prediction type", {
   newdata_missing <- subset(
-    epilepsy[1:5, , drop = FALSE],
+    test_data$epilepsy[1:5, , drop = FALSE],
     select = -lnage
   )
   expect_error(
@@ -140,7 +137,7 @@ test_that("predict validates se.fit and the stored coefficients", {
 })
 
 test_that("predict accepts newdata given as a list", {
-  newdata <- epilepsy[1:6, ]
+  newdata <- test_data$epilepsy[1:6, ]
   expect_equal(
     predict(fit_geewa_pois_exch, newdata = as.list(newdata)),
     predict(fit_geewa_pois_exch, newdata = newdata)
@@ -148,16 +145,16 @@ test_that("predict accepts newdata given as a list", {
 })
 
 test_that("prediction offsets are taken from newdata and must be finite", {
-  log_weeks <- rep(log(2), nrow(epilepsy))
+  log_weeks <- rep(log(2), nrow(test_data$epilepsy))
   fit_formula <- geewa(
     seizures ~ treatment + offset(log_weeks),
-    data = epilepsy, id = id, family = poisson()
+    data = test_data$epilepsy, id = id, family = poisson()
   )
   expect_error(
-    predict(fit_formula, newdata = epilepsy),
+    predict(fit_formula, newdata = test_data$epilepsy),
     "supplied via the model formula are not present in 'newdata'"
   )
-  newdata <- epilepsy[1:4, ]
+  newdata <- test_data$epilepsy[1:4, ]
   newdata$log_weeks <- c(log(2), Inf, log(2), log(2))
   expect_error(
     predict(fit_formula, newdata = newdata),
@@ -165,10 +162,10 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   )
   fit_argument <- geewa(
     seizures ~ treatment,
-    data = epilepsy, id = id, family = poisson(), offset = log_weeks
+    data = test_data$epilepsy, id = id, family = poisson(), offset = log_weeks
   )
   expect_error(
-    predict(fit_argument, newdata = epilepsy),
+    predict(fit_argument, newdata = test_data$epilepsy),
     "supplied via the 'offset' argument are not present in 'newdata'"
   )
   newdata$log_weeks <- c(NA, log(2), log(2), log(2))
@@ -178,9 +175,9 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   )
   fit_scalar <- geewa(
     seizures ~ treatment,
-    data = epilepsy, id = id, family = poisson(), offset = 0.5
+    data = test_data$epilepsy, id = id, family = poisson(), offset = 0.5
   )
-  newdata <- epilepsy[1:4, ]
+  newdata <- test_data$epilepsy[1:4, ]
   expected <- drop(model.matrix(~treatment, newdata) %*% coef(fit_scalar)) + 0.5
   expect_equal(unname(predict(fit_scalar, newdata = newdata)), unname(expected))
 })

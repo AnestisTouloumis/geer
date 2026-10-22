@@ -1,5 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-
 adjusted_residual <- function(d, method, ...) {
   fit <- ref_fit(d, method, ...)
   b <- unname(coef(fit))
@@ -12,8 +10,6 @@ expect_adjusted_equation <- function(d, method, label, ...) {
   expect_true(r$converged, label = paste(label, "converged"))
   expect_lt(max(abs(r$res)), 1e-5 * max(1, max(abs(r$lam))))
 }
-
-times8 <- list(1:3, c(1, 2, 4), 2:4, 1:4, c(1, 4), 3:4, 1:4, 1:3)
 
 cc_methods <- c("brgee-robust", "brgee-naive", "brgee-empirical", "pgee-jeffreys")
 
@@ -32,8 +28,6 @@ joint_binary <- function(mu, lam) {
   }
   list(Y = Y, P = drop(P))
 }
-
-ctl_tight <- geer_control(tolerance = 1e-12, maxiter = 500)
 
 test_that("correlation-based adjustments satisfy the preprint definitions (non-canonical links, weights)", {
   cases <- list(
@@ -156,7 +150,7 @@ test_that("geewa bcgee methods return geer objects and one-step updates match co
     id = id,
     phi_fixed = TRUE,
     phi_value = 1,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     corstr = "independence",
     method = "gee"
   )
@@ -179,7 +173,7 @@ test_that("geewa_binary bcgee methods return geer objects and one-step updates m
     formula = ecg ~ treatment + factor(period),
     link = "logit",
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     orstr = "independence",
     method = "gee"
   )
@@ -198,7 +192,6 @@ test_that("geewa_binary bcgee methods return geer objects and one-step updates m
 })
 
 test_that("bcgee equals the one-step closed form built from the reference Lambda", {
-  times8 <- list(1:3, c(1, 2, 4), 2:4, 1:4, c(1, 4), 3:4, 1:4, 1:3)
   ctl <- geer_control(tolerance = 1e-12, maxiter = 200)
   for (kind in c("cc", "or")) {
     d <- if (kind == "cc") {

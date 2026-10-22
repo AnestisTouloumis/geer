@@ -64,7 +64,6 @@ test_that("jackknife covariance uses full leave-one-cluster refits with fixed co
 })
 
 test_that("jackknife covariance equals the aggregation of independently refitted deletion estimates", {
-  ctl_tight <- geer_control(tolerance = 1e-12, maxiter = 500)
   d <- ref_sim("cc", ref_times_unbalanced, binomial(), "logit", "ar1", 0.5,
     phi = 1.2,
     beta = c(0.3, 0.2, -0.1), seed = 71

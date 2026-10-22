@@ -1,10 +1,7 @@
-cerebrovascular <- test_data$cerebrovascular
-respiratory2 <- test_data$respiratory2
-
 fit_bin_exch_T2 <- geewa(
   formula = ecg ~ treatment + factor(period),
   family = binomial(link = "logit"),
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   id = id,
   corstr = "exchangeable",
   method = "gee"
@@ -13,7 +10,7 @@ fit_bin_exch_T2 <- geewa(
 fit_bin_exch_T4 <- geewa(
   formula = status ~ baseline + treatment,
   family = binomial(link = "logit"),
-  data = respiratory2,
+  data = test_data$respiratory2,
   id = id,
   repeated = visit,
   corstr = "exchangeable",
@@ -23,7 +20,7 @@ fit_bin_exch_T4 <- geewa(
 fit_bin_unstr_T4 <- geewa(
   formula = status ~ baseline + treatment,
   family = binomial(link = "logit"),
-  data = respiratory2,
+  data = test_data$respiratory2,
   id = id,
   repeated = visit,
   corstr = "unstructured",
@@ -33,7 +30,7 @@ fit_bin_unstr_T4 <- geewa(
 fit_bin_ar1_T4 <- geewa(
   formula = status ~ baseline + treatment,
   family = binomial(link = "logit"),
-  data = respiratory2,
+  data = test_data$respiratory2,
   id = id,
   repeated = visit,
   corstr = "ar1",
@@ -150,7 +147,7 @@ test_that("frechet_bounds_cor errors on independence association structure", {
   fit_indep <- geewa(
     formula = ecg ~ treatment + factor(period),
     family = binomial(link = "logit"),
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     id = id,
     corstr = "independence",
     method = "gee"
@@ -194,7 +191,7 @@ test_that("frechet_bounds_cor accepts a quasibinomial fit", {
   fit_quasi <- geewa(
     formula = ecg ~ treatment + factor(period),
     family = quasibinomial(link = "logit"),
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     id = id,
     corstr = "exchangeable",
     method = "gee"

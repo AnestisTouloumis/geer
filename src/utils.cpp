@@ -101,14 +101,6 @@ arma::mat kronecker_sum_same(const arma::mat& x) {
 //==============================================================================
 
 
-//============================ kronecker(x, I) =================================
-arma::mat kronecker_vector_identity(const arma::vec& x) {
-  const arma::uword dimension = x.n_rows;
-  return arma::kron(x, arma::eye(dimension, dimension));
-}
-//==============================================================================
-
-
 //============================ factorize once, solve many ======================
 CholOrLuFactor::CholOrLuFactor(const arma::mat& X,
                                const char* context,

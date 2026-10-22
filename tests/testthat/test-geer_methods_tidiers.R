@@ -118,3 +118,21 @@ test_that("glance rejects unused arguments", {
     "glance.geer does not use the argument\\(s\\): 'foo'"
   )
 })
+
+test_that("tidy validates exponentiate and warns for other links", {
+  fit <- geewa(
+    formula = seizures ~ treatment,
+    family = poisson(link = "sqrt"),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit
+  )
+  expect_error(
+    tidy(fit, exponentiate = NA),
+    "'exponentiate' must be TRUE or FALSE"
+  )
+  expect_warning(
+    tidy(fit, exponentiate = TRUE),
+    "usually meaningful only for log, logit, and cloglog"
+  )
+})

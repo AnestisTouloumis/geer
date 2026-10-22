@@ -117,8 +117,7 @@
 #' stopping criterion was met: with separated binary data or all-zero counts
 #' the estimates can be very large, which is signaled by a warning that fitted
 #' probabilities are numerically 0 or 1, or, for a converged fit, within 1e-12
-#' of 0 or 1, or that fitted rates are numerically 0. A warning is also issued
-#' when the estimated working correlation matrix is not positive definite.
+#' of 0 or 1, or that fitted rates are numerically 0.
 #'
 #' In the bias-reduced and penalized methods the adjustment term is multiplied
 #' by the dispersion parameter, whose estimate tends to 0 under complete
@@ -434,19 +433,6 @@ geewa <- function(formula,
   )
   fit$use_p <- use_p
   fit$phi_fixed <- isTRUE(phi_fixed)
-  if (!identical(corstr, "independence")) {
-    corr <- get_correlation_matrix_cc(corstr, fit$alpha, max(repeated))
-    eigenvalues <- eigen(corr, symmetric = TRUE, only.values = TRUE)$values
-    if (any(eigenvalues <= 0)) {
-      warning(
-        paste0(
-          "geewa: the estimated working correlation matrix is not positive ",
-          "definite"
-        ),
-        call. = FALSE
-      )
-    }
-  }
   fit <- new_geer(fit)
   fit <- validate_geer(fit)
   fit

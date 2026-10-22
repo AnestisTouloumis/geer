@@ -1,7 +1,7 @@
 # core printed outputs remain stable
 
     Call:
-    geewa(formula = seizures ~ treatment + lnbaseline + lnage, data = epilepsy, 
+    geewa(formula = seizures ~ treatment + lnbaseline + lnage, data = test_data$epilepsy, 
         id = id, repeated = visit)
     
     Coefficients:
@@ -15,7 +15,7 @@
 
     
     Call:
-    geewa(formula = seizures ~ treatment + lnbaseline + lnage, data = epilepsy, 
+    geewa(formula = seizures ~ treatment + lnbaseline + lnage, data = test_data$epilepsy, 
         id = id, repeated = visit)
     
     Estimating Method   : gee 

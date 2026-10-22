@@ -155,6 +155,11 @@
   nonfinite for rows of `newdata` with missing covariates. Such rows now give
   `NA` without a warning.
 
+* `mcar_logistic_test()` failed with "the binary GEE missingness model did not
+  converge" when an occasion had no dropouts, as after monotone dropout that
+  ends before the last occasion. Such occasions, and those with no observed
+  responses, are now omitted from the risk set with a warning.
+
 ## Changes
 
 * `anova()`, `add1()`, `drop1()`, and `step_p()` now stop with an error when a

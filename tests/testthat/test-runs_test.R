@@ -1,5 +1,3 @@
-epilepsy <- test_data$epilepsy
-
 count_runs <- function(signs) {
   signs <- signs[signs != 0]
   1L + sum(signs[-1L] != signs[-length(signs)])
@@ -116,11 +114,11 @@ test_that("the Hardin and Hilbe worked example is reproduced one-sided", {
   n <- n_p + n_n
   variance_expected <- 2 * n_p * n_n * (2 * n_p * n_n - n) / (n^2 * (n - 1))
   expect_equal(out$variance_runs, variance_expected, tolerance = 1e-12)
-  expect_equal(out$variance_runs, 19.65, tolerance = 1e-3)
+  expect_published(out$variance_runs, 19.65, digits = 2L)
 
   z <- (44 - out$expected_runs) / sqrt(variance_expected)
-  expect_equal(z, 0.6993, tolerance = 1e-3)
-  expect_equal(pnorm(z, lower.tail = FALSE), 0.2422, tolerance = 1e-3)
+  expect_equal(z, 0.6993, tolerance = 2e-4)
+  expect_published(pnorm(z, lower.tail = FALSE), 0.2422, digits = 4L)
 })
 
 test_that("compute_runs_statistics returns the retained signs it counted", {
@@ -160,7 +158,7 @@ test_that("runs_test can order residuals by a model-matrix covariate", {
 test_that("order_by can name a covariate outside the model matrix", {
   fit <- geewa(
     formula = seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     repeated = visit,
     family = poisson(link = "log"),

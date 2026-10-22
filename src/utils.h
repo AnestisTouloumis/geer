@@ -28,7 +28,6 @@ inline arma::mat vecdiag_right_diag(const arma::vec& v) {
   return result;
 }
 arma::mat kronecker_sum_same(const arma::mat& x);
-arma::mat kronecker_vector_identity(const arma::vec& x);
 class CholOrLuFactor {
  public:
   explicit CholOrLuFactor(const arma::mat& X,

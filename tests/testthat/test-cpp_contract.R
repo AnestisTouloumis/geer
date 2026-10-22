@@ -17,26 +17,6 @@ cc_args <- function(...) {
 
 solve_cc <- function(...) do.call(fit_geesolver_cc, cc_args(...))
 
-in_subprocess <- function(code) {
-  dev <- requireNamespace("pkgload", quietly = TRUE) && isTRUE(pkgload::is_dev_package("geer"))
-  if (dev) {
-    out <- capture.output(eval(parse(text = code), envir = new.env(parent = asNamespace("geer"))))
-    return(list(status = 0L, output = paste(out, collapse = "\n")))
-  }
-  old_libs <- Sys.getenv("R_LIBS", unset = NA)
-  Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
-  on.exit(if (is.na(old_libs)) Sys.unsetenv("R_LIBS") else Sys.setenv(R_LIBS = old_libs),
-    add = TRUE
-  )
-  out <- suppressWarnings(system2(file.path(R.home("bin"), "Rscript"),
-    c("-e", shQuote(paste0("suppressMessages(library(geer)); ", code))),
-    stdout = TRUE, stderr = TRUE
-  ))
-  list(status = attr(out, "status") %||% 0L, output = paste(out, collapse = "\n"))
-}
-
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
 or_solver_x <- c(
   -1.2, 0.3, 0.8, -0.5, 1.1, -0.2, 0.9, -1.4, 0.1, 0.4, -0.7, 1.3,
   -0.9, 0.6, -0.1, 1.5, -0.3, 0.2, -1.1, 0.7, -0.6, 0.0, 1.0, -0.8
@@ -57,22 +37,33 @@ call_or_solver <- function(y) {
 
 test_that("a missing association parameter is an R error, never a crash or an uninitialized read", {
   skip_on_cran()
-  for (cs in c("exchangeable", "ar1")) {
-    res <- in_subprocess(sprintf(
-      "r <- tryCatch(geer:::get_correlation_matrix_cc('%s', numeric(0), 3L), error = function(e) paste('R-ERROR:', conditionMessage(e))); cat(if (is.character(r)) r else 'NO-ERROR')", cs
-    ))
-    expect_identical(res$status, 0L, label = paste(cs, "process survived"))
-    expect_match(res$output, "R-ERROR: .*(alpha|correlation)",
-      label = paste(cs, "raised an R error naming the parameter")
+  res <- in_subprocess("
+    report <- function(label, expr) {
+      r <- tryCatch(
+        expr,
+        error = function(e) paste('R-ERROR:', conditionMessage(e))
+      )
+      cat(label, if (is.character(r)) r else 'NO-ERROR', '| ')
+    }
+    gc <- geer:::get_correlation_matrix_cc
+    report('exchangeable', gc('exchangeable', numeric(0), 3L))
+    report('ar1', gc('ar1', numeric(0), 3L))
+    withr::local_seed(1)
+    y <- rbinom(30, 1, .5)
+    X <- cbind(1, rnorm(30))
+    report('solver', geer:::fit_geesolver_cc(
+      y, X, rep(1:10, each = 3), rep(1:3, 10), rep(1, 30), 'logit',
+      'binomial', c(0, 0), rep(0, 30), 50L, 1e-10, 10L, 1, .5, 'gee', 1L,
+      numeric(0), 1L, 'exchangeable', 1L, 1, 1L, 0L
+    ))")
+  expect_identical(res$status, 0L)
+  for (label in c("exchangeable", "ar1", "solver")) {
+    expect_match(
+      res$output,
+      paste0(label, " R-ERROR: [^|]*(alpha|correlation)"),
+      label = label
     )
   }
-  res <- in_subprocess("
-    withr::local_seed(1); y <- rbinom(30, 1, .5); X <- cbind(1, rnorm(30))
-    r <- tryCatch(geer:::fit_geesolver_cc(y, X, rep(1:10, each = 3), rep(1:3, 10), rep(1, 30), 'logit', 'binomial',
-        c(0, 0), rep(0, 30), 50L, 1e-10, 10L, 1, .5, 'gee', 1L, numeric(0), 1L, 'exchangeable', 1L, 1, 1L, 0L),
-        error = function(e) paste('R-ERROR:', conditionMessage(e))); cat(if (is.character(r)) r else 'NO-ERROR')")
-  expect_identical(res$status, 0L)
-  expect_match(res$output, "R-ERROR: .*(alpha|correlation)")
 })
 
 test_that("observations of a cluster must be contiguous: interleaved ids are rejected", {

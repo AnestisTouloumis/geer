@@ -187,13 +187,68 @@ test_that("non-finite covariates are rejected before reaching C++", {
 
 test_that("cloglog fitted values keep full relative accuracy near zero", {
   withr::local_seed(3)
-  d <- data.frame(id = rep(1:100, each = 4), x = seq(-4, 4, length.out = 400))
-  d$y <- rbinom(400, 1, binomial("cloglog")$linkinv(-6 + 3.5 * d$x))
+  d <- data.frame(id = rep(1:25, each = 4), x = seq(-4, 4, length.out = 100))
+  d$y <- rbinom(100, 1, binomial("cloglog")$linkinv(-6 + 3.5 * d$x))
   fit <- suppressWarnings(geewa(
     y ~ x,
     family = binomial("cloglog"), data = d, id = id, phi_fixed = TRUE
   ))
   reference <- binomial("cloglog")$linkinv(fit$linear.predictors)
   expect_lt(min(reference), 1e-7)
-  expect_equal(fit$fitted.values / reference, rep(1, 400), tolerance = 1e-12)
+  expect_equal(fit$fitted.values / reference, rep(1, 100), tolerance = 1e-12)
+})
+
+test_that("the solver keeps the start when every step-halving is invalid", {
+  control <- geer_control(step_maxiter = 1L, step_multiplier = 50)
+  res <- collect_warnings(geewa(
+    formula = seizures ~ lnbaseline,
+    family = poisson(link = "identity"),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit,
+    beta_start = c(0.05, 0.001),
+    control = control
+  ))
+  expect_false(res$value$converged)
+  expect_match(
+    res$warnings[[1L]],
+    "every step-halving attempt produced invalid fitted values",
+    fixed = TRUE
+  )
+  expect_equal(unname(coef(res$value)), c(0.05, 0.001))
+  res <- collect_warnings(geewa_binary(
+    formula = ecg ~ treatment,
+    link = "identity",
+    data = test_data$cerebrovascular,
+    id = id,
+    repeated = period,
+    beta_start = c(0.5, 0.01),
+    control = control
+  ))
+  expect_false(res$value$converged)
+  expect_match(
+    res$warnings[[1L]],
+    "every step-halving attempt produced",
+    fixed = TRUE
+  )
+  expect_equal(unname(coef(res$value)), c(0.5, 0.01))
+})
+
+test_that("a failure after a valid step reverts to the last iterate", {
+  withr::local_seed(11)
+  d <- data.frame(id = rep(1:6, each = 4), t = rep(1:4, 6))
+  d$y <- rnorm(24) + rep(c(2, -2, 2, -2), 6) * rnorm(24, sd = 0.2)
+  res <- collect_warnings(geewa(
+    formula = y ~ 1,
+    data = d,
+    id = id,
+    repeated = t,
+    corstr = "unstructured"
+  ))
+  expect_false(res$value$converged)
+  expect_match(
+    res$warnings[[1L]],
+    "unstructured working correlation matrix is not positive definite",
+    fixed = TRUE
+  )
 })

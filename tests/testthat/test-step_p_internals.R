@@ -1,15 +1,3 @@
-respiratory2 <- test_data$respiratory2
-
-fit_resp_full_indep <- geewa_binary(
-  formula = status ~ baseline + treatment + gender + visit + age,
-  id = id,
-  repeated = visit,
-  data = respiratory2,
-  link = "probit",
-  orstr = "independence",
-  method = "pgee-jeffreys"
-)
-
 test_that("scope validator accepts valid specifications", {
   scope_formula <- ~ baseline + treatment
   scope_char <- "~ baseline + treatment"
@@ -149,15 +137,6 @@ test_that("result helper stores an anova table on the fitted model", {
 })
 
 test_that("update-fit helper applies the requested model change for binary and count models", {
-  fit_resp_full_indep <- geewa_binary(
-    formula = status ~ baseline + treatment + gender + visit + age,
-    id = id,
-    repeated = visit,
-    data = respiratory2,
-    link = "probit",
-    orstr = "independence",
-    method = "pgee-jeffreys"
-  )
   out <- refit_step_model(fit_resp_full_indep, "- gender", obs_no = fit_resp_full_indep$obs_no)
   expect_s3_class(out, "geer")
   expect_false("gender" %in% attr(terms(out), "term.labels"))

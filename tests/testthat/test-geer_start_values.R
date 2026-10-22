@@ -1,22 +1,21 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-respiratory <- test_data$respiratory
-
 start_model_matrix <- function() {
-  model.matrix(seizures ~ treatment + lnbaseline + lnage, data = epilepsy)
+  model.matrix(
+    seizures ~ treatment + lnbaseline + lnage,
+    data = test_data$epilepsy
+  )
 }
 
 start_values <- function(beta_start = NULL,
                          family = poisson(),
                          link = "log",
                          method = "gee",
-                         y = epilepsy$seizures,
-                         offset = rep(0, nrow(epilepsy))) {
+                         y = test_data$epilepsy$seizures,
+                         offset = rep(0, nrow(test_data$epilepsy))) {
   compute_geer_start_values(
     model_matrix = start_model_matrix(),
     y = y,
     family = family,
-    weights = rep(1, nrow(epilepsy)),
+    weights = rep(1, nrow(test_data$epilepsy)),
     offset = offset,
     method = method,
     link = link,
@@ -26,14 +25,16 @@ start_values <- function(beta_start = NULL,
   )
 }
 
-binary_start_values <- function(beta_start = NULL,
-                                method = "gee",
-                                offset = rep(0, nrow(cerebrovascular))) {
+binary_start_values <- function(
+    beta_start = NULL,
+    method = "gee",
+    offset = rep(0, nrow(test_data$cerebrovascular))) {
+  cer <- test_data$cerebrovascular
   compute_binary_start_values(
-    model_matrix = model.matrix(ecg ~ period + treatment, data = cerebrovascular),
-    y = cerebrovascular$ecg,
+    model_matrix = model.matrix(ecg ~ period + treatment, data = cer),
+    y = cer$ecg,
     family = binomial(),
-    weights = rep(1, nrow(cerebrovascular)),
+    weights = rep(1, nrow(cer)),
     offset = offset,
     method = method,
     beta_start = beta_start,
@@ -63,7 +64,7 @@ test_that("starting values for the GEE method are the maximum-likelihood fit", {
   reference <- glm(
     seizures ~ treatment + lnbaseline + lnage,
     family = poisson(),
-    data = epilepsy
+    data = test_data$epilepsy
   )
 
   out <- start_values()
@@ -74,7 +75,7 @@ test_that("starting values for the GEE method are the maximum-likelihood fit", {
 test_that("quasi families and the identity link start from stats::glm.fit", {
   reference <- lm(
     seizures ~ treatment + lnbaseline + lnage,
-    data = epilepsy
+    data = test_data$epilepsy
   )
 
   out <- start_values(family = gaussian(), link = "identity")
@@ -96,7 +97,7 @@ test_that("every estimation method yields finite starting values", {
 })
 
 test_that("failure to compute starting values asks for beta_start", {
-  bad_offset <- rep(Inf, nrow(epilepsy))
+  bad_offset <- rep(Inf, nrow(test_data$epilepsy))
   expect_error(
     start_values(offset = bad_offset),
     "starting values could not be computed; supply 'beta_start'"
@@ -110,7 +111,7 @@ test_that("failure to compute starting values asks for beta_start", {
     "starting values could not be computed; supply 'beta_start'"
   )
   expect_error(
-    binary_start_values(offset = rep(Inf, nrow(cerebrovascular))),
+    binary_start_values(offset = rep(Inf, nrow(test_data$cerebrovascular))),
     "starting values could not be computed; supply 'beta_start'"
   )
 })
@@ -118,7 +119,7 @@ test_that("failure to compute starting values asks for beta_start", {
 test_that("the starting-value fit does not emit per-observation non-integer warnings", {
   pois <- collect_warnings(
     geewa(seizures ~ treatment + lnbaseline,
-      family = poisson(), data = epilepsy,
+      family = poisson(), data = test_data$epilepsy,
       id = id, corstr = "exchangeable"
     )
   )
@@ -126,7 +127,7 @@ test_that("the starting-value fit does not emit per-observation non-integer warn
   expect_length(pois$warnings, 0L)
   bin <- collect_warnings(
     geewa(status ~ treatment + baseline,
-      family = binomial(), data = respiratory,
+      family = binomial(), data = test_data$respiratory,
       id = id, repeated = visit, corstr = "exchangeable"
     )
   )
@@ -134,7 +135,7 @@ test_that("the starting-value fit does not emit per-observation non-integer warn
   expect_length(bin$warnings, 0L)
   bin_or <- collect_warnings(
     geewa_binary(status ~ treatment + baseline,
-      data = respiratory,
+      data = test_data$respiratory,
       id = id, repeated = visit, orstr = "exchangeable"
     )
   )
@@ -170,8 +171,8 @@ test_that("build_family_no_aic only replaces the AIC of the family used for star
   expect_identical(fam2$variance, fam$variance)
   expect_identical(fam2$linkinv, fam$linkinv)
   expect_true(is.na(fam2$aic(1, 1, 1, 1, 0)))
-  x <- model.matrix(~ treatment + lnbaseline, epilepsy)
-  y <- epilepsy$seizures
+  x <- model.matrix(~ treatment + lnbaseline, test_data$epilepsy)
+  y <- test_data$epilepsy$seizures
   w <- rep(1, length(y))
   b1 <- suppressWarnings(brglm2::brglmFit(
     x = x, y = y, family = fam, weights = w,

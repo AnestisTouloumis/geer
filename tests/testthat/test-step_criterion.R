@@ -1,10 +1,8 @@
-respiratory2 <- test_data$respiratory2
-
 fit_resp_main <- geewa_binary(
   formula = status ~ baseline + treatment + gender + visit + age,
   id = id,
   repeated = visit,
-  data = respiratory2,
+  data = test_data$respiratory2,
   link = "probit",
   orstr = "exchangeable",
   method = "pgee-jeffreys"

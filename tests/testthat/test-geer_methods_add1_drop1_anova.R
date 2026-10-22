@@ -1,8 +1,6 @@
-epilepsy <- test_data$epilepsy
-
 fit_null <- geewa(
   formula = seizures ~ 1,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   family = poisson(link = "log"),
   corstr = "independence",
@@ -11,7 +9,7 @@ fit_null <- geewa(
 
 fit_trt <- geewa(
   formula = seizures ~ treatment,
-  data = epilepsy,
+  data = test_data$epilepsy,
   id = id,
   family = poisson(link = "log"),
   corstr = "independence",
@@ -147,7 +145,7 @@ test_that("add1 accepts a scope when the formula was passed as a symbol", {
   user_formula <- seizures ~ treatment
   fit <- geewa(
     formula = user_formula,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson(link = "log"),
     corstr = "exchangeable",
@@ -174,7 +172,7 @@ test_that("anova and drop1 stop on a negative test statistic", {
 
 test_that("add1 and drop1 pass pmethod to the working tests", {
   larger <- geewa(seizures ~ lnbaseline + factor(visit),
-    data = epilepsy, id = id,
+    data = test_data$epilepsy, id = id,
     repeated = visit, family = poisson(), corstr = "exchangeable"
   )
   smaller <- update(larger, . ~ . - factor(visit))
@@ -199,7 +197,7 @@ test_that("add1 and drop1 pass pmethod to the working tests", {
 })
 
 test_that("refits keep the rows of a fit with a missing covariate", {
-  dat <- epilepsy
+  dat <- test_data$epilepsy
   dat$lnage[1:8] <- NA
   dat <- dat[c(seq(2, nrow(dat), by = 2), seq(1, nrow(dat), by = 2)), ]
   fit <- geewa(
@@ -244,11 +242,12 @@ test_that("refits work for a fit made inside a function", {
   fit_in_function <- function(form, dat) {
     geewa(form, family = poisson, data = dat, id = id, repeated = visit)
   }
-  fit <- fit_in_function(model_formula, epilepsy[epilepsy$visit < 4, ])
+  early_visits <- test_data$epilepsy[test_data$epilepsy$visit < 4, ]
+  fit <- fit_in_function(model_formula, early_visits)
   fit_reduced <- geewa(
     seizures ~ treatment + lnbaseline,
     family = poisson,
-    data = epilepsy[epilepsy$visit < 4, ],
+    data = early_visits,
     id = id,
     repeated = visit
   )
@@ -261,29 +260,62 @@ test_that("refits work for a fit made inside a function", {
 })
 
 test_that("refits keep the user-facing call and the original subset rows", {
-  weights <- rep(c(1, 2), length.out = nrow(epilepsy))
+  weights <- rep(c(1, 2), length.out = nrow(test_data$epilepsy))
   fit <- geewa(
     seizures ~ treatment + lnbaseline + lnage,
     family = poisson,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     repeated = visit,
     weights = weights,
     subset = visit > 1
   )
   refit <- refit_geer(fit, . ~ . - lnage)
-  expect_identical(refit$call$data, quote(epilepsy))
+  expect_identical(refit$call$data, quote(test_data$epilepsy))
   expect_identical(refit$call$subset, quote(visit > 1))
   expect_identical(refit$obs_no, fit$obs_no)
   expect_identical(refit$frame_rows, fit$frame_rows)
   reference <- geewa(
     seizures ~ treatment + lnbaseline,
     family = poisson,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     repeated = visit,
     weights = weights,
     subset = visit > 1
   )
   expect_equal(coef(refit), coef(reference), tolerance = 1e-10)
+})
+
+test_that("anova of a model without intercept tests the terms sequentially", {
+  fit <- geewa(
+    formula = seizures ~ 0 + treatment + lnbaseline,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit
+  )
+  tab <- anova(fit)
+  expect_identical(rownames(tab), c("treatment", "lnbaseline"))
+  smaller <- update(fit, formula = . ~ . - lnbaseline)
+  expect_equal(
+    tab["lnbaseline", "Chi"],
+    anova(smaller, fit)$Chi[2L],
+    tolerance = 1e-10
+  )
+})
+
+test_that("drop1 accepts a formula scope", {
+  fit <- geewa(
+    formula = seizures ~ treatment + lnbaseline + lnage,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit
+  )
+  expect_equal(drop1(fit, scope = ~lnage), drop1(fit, scope = "lnage"))
+  expect_error(
+    drop1(fit, scope = ~visit),
+    "'scope' must contain only terms of the model"
+  )
 })

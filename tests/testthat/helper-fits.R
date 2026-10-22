@@ -1,3 +1,5 @@
+ctl_tight <- geer_control(tolerance = 1e-12, maxiter = 500)
+
 fit_geewa_pois_indep <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
   data = test_data$epilepsy,

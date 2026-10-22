@@ -1,6 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-
 fit_inputs_data <- data.frame(
   id = rep(1:3, each = 2),
   t = rep(1:2, times = 3),
@@ -12,7 +9,7 @@ fit_or_offset_formula <- geewa_binary(
   formula = ecg ~ treatment + offset(period),
   link = "logit",
   id = id,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   orstr = "independence",
   method = "gee"
 )
@@ -22,7 +19,7 @@ fit_or_offset_argument <- geewa_binary(
   link = "logit",
   id = id,
   offset = period,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   orstr = "independence",
   method = "gee"
 )
@@ -31,7 +28,7 @@ fit_cc_offset_formula <- geewa(
   formula = ecg ~ treatment + offset(period),
   family = binomial(link = "logit"),
   id = id,
-  data = cerebrovascular,
+  data = test_data$cerebrovascular,
   corstr = "independence",
   method = "gee",
   phi_fixed = TRUE,
@@ -121,7 +118,7 @@ test_that("build_geer_design_matrix keeps a one-column design as a matrix", {
 test_that("a one-column design keeps its column name and assign attribute", {
   fit_no_intercept <- geewa(
     seizures ~ 0 + lnbaseline,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "independence"
@@ -131,7 +128,7 @@ test_that("a one-column design keeps its column name and assign attribute", {
 
   fit_intercept_only <- geewa(
     seizures ~ 1,
-    data = epilepsy,
+    data = test_data$epilepsy,
     id = id,
     family = poisson("log"),
     corstr = "independence"
@@ -509,7 +506,7 @@ test_that("geewa and geewa_binary agree for the same offset specification under 
 })
 
 test_that("predict uses offset supplied via the offset argument with newdata", {
-  nd <- cerebrovascular[1:8, , drop = FALSE]
+  nd <- test_data$cerebrovascular[1:8, , drop = FALSE]
   pred_formula <- predict(
     fit_or_offset_formula,
     newdata = nd,
@@ -539,7 +536,7 @@ test_that("sequential anova keeps a formula offset in the null model", {
     formula = ecg ~ 1 + offset(period),
     family = binomial(link = "logit"),
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     corstr = "independence",
     method = "gee",
     phi_fixed = TRUE,
@@ -555,15 +552,15 @@ test_that("a scalar offset is recycled and equals the equivalent vector offset",
     ecg ~ treatment,
     family = binomial(link = "logit"),
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     offset = 0.5
   )
   fit_vector <- geewa(
     ecg ~ treatment,
     family = binomial(link = "logit"),
     id = id,
-    data = cerebrovascular,
-    offset = rep(0.5, nrow(cerebrovascular))
+    data = test_data$cerebrovascular,
+    offset = rep(0.5, nrow(test_data$cerebrovascular))
   )
   expect_equal(coef(fit_scalar), coef(fit_vector), tolerance = 1e-8)
   expect_true(all(fit_scalar$call$offset == 0.5))
@@ -571,7 +568,7 @@ test_that("a scalar offset is recycled and equals the equivalent vector offset",
     ecg ~ treatment,
     family = binomial(link = "logit"),
     id = id,
-    data = cerebrovascular,
+    data = test_data$cerebrovascular,
     offset = 0.5,
     subset = as.numeric(id) <= 40
   )

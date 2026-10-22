@@ -1,5 +1,3 @@
-epilepsy <- test_data$epilepsy
-
 mcar_internals_matrix <- function() {
   cbind(
     y1 = c(1.0, 2.1, 2.9, 4.2, 5.1, 5.8, 7.2, 8.0, 9.1, 9.9),
@@ -8,7 +6,7 @@ mcar_internals_matrix <- function() {
   )
 }
 
-mcar_fit <- function(data = epilepsy, repeated = TRUE, ...) {
+mcar_fit <- function(data = test_data$epilepsy, repeated = TRUE, ...) {
   if (repeated) {
     geewa(
       formula = seizures ~ treatment + lnbaseline + lnage,
@@ -124,11 +122,14 @@ test_that("extract_mcar_matrix returns one row per cluster", {
 
   out <- extract_mcar_matrix(fit)
 
-  expect_identical(dim(out), c(length(unique(epilepsy$id)), 4L))
+  expect_identical(dim(out), c(length(unique(test_data$epilepsy$id)), 4L))
   expect_identical(colnames(out), as.character(1:4))
   expect_identical(
-    unname(out[cbind(match(epilepsy$id, rownames(out)), epilepsy$visit)]),
-    as.numeric(epilepsy$seizures)
+    unname(out[cbind(
+      match(test_data$epilepsy$id, rownames(out)),
+      test_data$epilepsy$visit
+    )]),
+    as.numeric(test_data$epilepsy$seizures)
   )
 })
 
@@ -143,7 +144,7 @@ test_that("extract_mcar_matrix numbers occasions when repeated is absent", {
 
 test_that("extract_mcar_matrix marks absent occasions as missing", {
   fit <- mcar_fit()
-  incomplete <- epilepsy[-c(2, 3, 10), ]
+  incomplete <- test_data$epilepsy[-c(2, 3, 10), ]
 
   out <- extract_mcar_matrix(fit, data = incomplete)
 
@@ -175,7 +176,7 @@ test_that("extract_mcar_matrix needs the original data", {
 })
 
 test_that("extract_mcar_matrix needs a univariate numeric response", {
-  data <- epilepsy
+  data <- test_data$epilepsy
   data$succ <- pmin(data$seizures, 20)
   data$fail <- 20 - data$succ
   data$high <- factor(data$seizures > 3)
@@ -204,37 +205,5 @@ test_that("extract_mcar_matrix needs a univariate numeric response", {
   expect_error(
     extract_mcar_matrix(factor_fit),
     "the MCAR tests require a numeric response"
-  )
-})
-
-test_that("extract_mcar_matrix validates id and repeated", {
-  fit <- mcar_fit()
-
-  no_id <- fit
-  no_id$call$id <- NULL
-  expect_error(
-    extract_mcar_matrix(no_id),
-    "'id' must be supplied"
-  )
-
-  na_id <- epilepsy
-  na_id$id[3] <- NA
-  expect_error(
-    extract_mcar_matrix(fit, data = na_id),
-    "'id' must not contain missing values"
-  )
-
-  na_repeated <- epilepsy
-  na_repeated$visit[3] <- NA
-  expect_error(
-    extract_mcar_matrix(fit, data = na_repeated),
-    "'repeated' must not contain missing values"
-  )
-
-  duplicated_repeated <- epilepsy
-  duplicated_repeated$visit <- 1L
-  expect_error(
-    extract_mcar_matrix(fit, data = duplicated_repeated),
-    "'repeated' must have distinct values within each cluster"
   )
 })

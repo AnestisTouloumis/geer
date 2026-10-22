@@ -117,3 +117,52 @@ test_that("check_working_lrt_allowed requires independence", {
     "requires an independence working structure"
   )
 })
+
+test_that("check_integer_at_least accepts integers and rejects anything else", {
+  expect_identical(check_integer_at_least(3, "n"), 3L)
+  for (x in list(0, "10", 1e12)) {
+    expect_error(
+      check_integer_at_least(x, "n"),
+      "'n' must be a positive integer"
+    )
+  }
+  expect_error(
+    check_integer_at_least(1, "n", lower = 2L),
+    "'n' must be an integer greater than or equal to 2"
+  )
+})
+
+test_that("scalar check helpers accept valid inputs and reject invalid ones", {
+  expect_true(is_positive_scalar(1))
+  expect_true(is_positive_scalar(1.5))
+  expect_false(is_positive_scalar(0))
+  expect_false(is_positive_scalar(-1))
+  expect_false(is_positive_scalar(NA_real_))
+  expect_false(is_positive_scalar(Inf))
+  expect_false(is_positive_scalar(c(1, 2)))
+  expect_true(is_positive_integer_scalar(1))
+  expect_true(is_positive_integer_scalar(2 + .Machine$double.eps^0.5 / 2))
+  expect_false(is_positive_integer_scalar(0))
+  expect_false(is_positive_integer_scalar(1.2))
+  expect_false(is_positive_integer_scalar(NA_real_))
+  expect_no_error(check_single_numeric(1, "x"))
+  for (x in list("1", c(1, 2), NA_real_, Inf)) {
+    expect_error(check_single_numeric(x, "x"), "'x' must be a finite number")
+  }
+  expect_no_error(check_probability_open(0.5, "p"))
+  for (p in c(0, 1.1)) {
+    expect_error(
+      check_probability_open(p, "p"),
+      "'p' must be strictly between 0 and 1"
+    )
+  }
+  expect_no_error(check_choice("robust", c("robust", "naive"), "cov_type"))
+  expect_error(
+    check_choice("bad", c("robust", "naive"), "cov_type"),
+    "'cov_type' must be one of: robust, naive"
+  )
+  expect_error(
+    check_choice(NA_character_, c("robust", "naive"), "cov_type"),
+    "'cov_type' must be a character string"
+  )
+})

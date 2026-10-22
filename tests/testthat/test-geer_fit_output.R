@@ -1,7 +1,3 @@
-cerebrovascular <- test_data$cerebrovascular
-epilepsy <- test_data$epilepsy
-respiratory <- test_data$respiratory
-
 finalize_fit <- function(criterion = 1e-8,
                          fitted = c(0.2, 0.5, 0.8, 0.3, 0.6, 0.7),
                          method = "gee",
@@ -158,7 +154,7 @@ test_that("a converged fit with fitted probabilities near 0 or 1 warns about sep
   expect_true(any(grepl("within 1e-12 of 0 or 1", res_or$warnings, fixed = TRUE)))
   ok <- collect_warnings(
     geewa(status ~ treatment + baseline,
-      family = binomial(), data = respiratory,
+      family = binomial(), data = test_data$respiratory,
       id = id, repeated = visit, corstr = "exchangeable", method = "brgee-robust"
     )
   )
@@ -169,7 +165,7 @@ test_that("a non-converging fit warns through the public interface", {
   expect_warning(
     fit <- geewa(
       formula = seizures ~ treatment + lnbaseline + lnage,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson(link = "log"),
       corstr = "exchangeable",
@@ -184,7 +180,7 @@ test_that("a non-converging fit warns through the public interface", {
   expect_warning(
     geewa_binary(
       formula = ecg ~ period + treatment,
-      data = cerebrovascular,
+      data = test_data$cerebrovascular,
       id = id,
       link = "logit",
       orstr = "exchangeable",

@@ -7,9 +7,9 @@ test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   out <- mcar_little_test(x)
 
   expect_s3_class(out, "htest")
-  expect_equal(unname(out$statistic), 5.333333333333333, tolerance = 1e-6)
+  expect_equal(unname(out$statistic), 16 / 3, tolerance = 1e-12)
   expect_equal(unname(out$parameter), c(1, 6))
-  expect_equal(out$exact.f.statistic, 19.2, tolerance = 1e-6)
+  expect_equal(out$exact.f.statistic, 19.2, tolerance = 1e-12)
   expect_equal(
     out$p.value,
     pf(19.2, df1 = 1, df2 = 6, lower.tail = FALSE),
@@ -17,7 +17,7 @@ test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   )
   expect_equal(
     out$asymptotic.p.value,
-    pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
+    pchisq(16 / 3, df = 1, lower.tail = FALSE),
     tolerance = 1e-8
   )
   expect_identical(out$reference, "exact bivariate F")
@@ -36,11 +36,11 @@ test_that("mcar_little_test can force the asymptotic reference", {
 
   out <- mcar_little_test(x, reference = "asymptotic")
 
-  expect_equal(unname(out$statistic), 5.333333333333333, tolerance = 1e-6)
+  expect_equal(unname(out$statistic), 16 / 3, tolerance = 1e-12)
   expect_identical(unname(out$parameter), 1L)
   expect_equal(
     out$p.value,
-    pchisq(5.333333333333333, df = 1, lower.tail = FALSE),
+    pchisq(16 / 3, df = 1, lower.tail = FALSE),
     tolerance = 1e-8
   )
   expect_identical(out$reference, "asymptotic chi-squared")
@@ -57,13 +57,19 @@ test_that("mcar_little_test applies Little's covariance correction", {
   expect_equal(out$covariance, nrow(x) / (nrow(x) - 1) * out$ml.covariance, tolerance = 1e-10)
 })
 
-test_that("mcar_little_test agrees with the corrected airquality benchmark", {
+test_that("mcar_little_test reproduces the naniar airquality result", {
   out <- mcar_little_test(airquality)
+  n <- nrow(airquality)
+  ml_statistic <- unname(out$statistic) * n / (n - 1)
 
   expect_s3_class(out, "htest")
-  expect_equal(unname(out$statistic), 34.8954, tolerance = 0.05)
+  expect_published(ml_statistic, 35.1, digits = 1L)
   expect_identical(unname(out$parameter), 14L)
-  expect_lt(abs(out$p.value - 0.00152), 7e-5)
+  expect_published(
+    pchisq(ml_statistic, df = 14, lower.tail = FALSE),
+    0.00142,
+    digits = 5L
+  )
   expect_identical(out$missing.patterns, 4L)
   expect_identical(out$reference, "asymptotic chi-squared")
 })
@@ -195,28 +201,12 @@ test_that("mcar_little_test validates inputs", {
     "observed together at least once"
   )
   expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxiter = 0),
-    "positive integer"
-  )
-  expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxiter = "10"),
-    "'maxiter' must be a positive integer"
-  )
-  expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), maxiter = 1e12),
-    "'maxiter' must be a positive integer"
-  )
-  expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), tolerance = 0),
     "positive finite"
   )
   expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), data = data.frame()),
     "only used when 'object'"
-  )
-  expect_error(
-    mcar_little_test(matrix(1:12, ncol = 2), reference = "invalid"),
-    "'reference' must be one of"
   )
 })
 

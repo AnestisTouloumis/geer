@@ -1,10 +1,8 @@
-epilepsy <- test_data$epilepsy
-
 test_that("geewa rejects unsupported correlation structures and methods", {
   expect_error(
     geewa(
       seizures ~ treatment,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "compound"
@@ -14,7 +12,7 @@ test_that("geewa rejects unsupported correlation structures and methods", {
   expect_error(
     geewa(
       seizures ~ treatment,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       method = "em-gee"
@@ -27,7 +25,7 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
   expect_error(
     geewa(
       seizures ~ treatment,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "m-dependent",
@@ -38,7 +36,7 @@ test_that("geewa validates m-dependent and fixed-correlation arguments", {
   expect_error(
     geewa(
       seizures ~ treatment,
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       family = poisson("log"),
       corstr = "fixed"
@@ -136,7 +134,7 @@ test_that("extract_geer_response_weights treats quasibinomial factor responses l
 })
 
 test_that("geewa rejects non-finite beta_start and names aliased columns", {
-  epi <- epilepsy
+  epi <- test_data$epilepsy
   expect_error(
     geewa(seizures ~ treatment + lnbaseline,
       data = epi, id = id,
@@ -166,7 +164,7 @@ test_that("geewa rejects non-finite beta_start and names aliased columns", {
 })
 
 test_that("geewa rejects factor, character and multi-column responses for non-binomial families", {
-  epi <- epilepsy
+  epi <- test_data$epilepsy
   epi$seizures_factor <- factor(epi$seizures)
   epi$seizures_character <- as.character(epi$seizures)
   expect_error(
@@ -193,7 +191,7 @@ test_that("geewa rejects factor, character and multi-column responses for non-bi
 })
 
 test_that("character repeated values are sorted alphabetically with a warning", {
-  dat <- epilepsy
+  dat <- test_data$epilepsy
   visit_code <- c(1, 2, 10, 11)[as.integer(factor(dat$visit))]
   dat$visit_numeric <- visit_code
   dat$visit_character <- as.character(visit_code)
@@ -234,7 +232,7 @@ test_that("character repeated values are sorted alphabetically with a warning", 
 })
 
 test_that("geewa rejects responses outside the support of the family", {
-  dat <- epilepsy
+  dat <- test_data$epilepsy
   dat$shifted <- dat$seizures - 5
   expect_error(
     geewa(shifted ~ treatment, family = poisson, data = dat, id = id),
@@ -295,7 +293,7 @@ test_that("geewa validates a fixed alpha_vector before coercing it", {
     geewa(
       formula = seizures ~ treatment,
       family = poisson("log"),
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       repeated = visit,
       corstr = "fixed",
@@ -307,12 +305,34 @@ test_that("geewa validates a fixed alpha_vector before coercing it", {
     geewa(
       formula = seizures ~ treatment,
       family = poisson("log"),
-      data = epilepsy,
+      data = test_data$epilepsy,
       id = id,
       repeated = visit,
       corstr = "fixed",
       alpha_vector = c(0.1, 0.1, 0.1, 0.1, 0.1, Inf)
     ),
     "'alpha_vector' must be finite"
+  )
+})
+
+test_that("geewa validates a fixed working correlation", {
+  fit_fixed <- function(alpha_vector) {
+    geewa(
+      formula = seizures ~ treatment,
+      family = poisson(),
+      data = test_data$epilepsy,
+      id = id,
+      repeated = visit,
+      corstr = "fixed",
+      alpha_vector = alpha_vector
+    )
+  }
+  expect_error(
+    fit_fixed(c(0.1, 0.1)),
+    "'alpha_vector' must be a numeric vector of length 6"
+  )
+  expect_error(
+    fit_fixed(c(0.9, 0.9, -0.9, 0.9, -0.9, 0.9)),
+    "fixed working correlation matrix is not positive definite"
   )
 })

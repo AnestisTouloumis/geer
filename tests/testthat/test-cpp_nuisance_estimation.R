@@ -1,46 +1,3 @@
-pearson_ref <- function(d, b) {
-  mu <- d$lk$linkinv(drop(d$X %*% b))
-  (d$y - mu) * sqrt(d$w / d$family$variance(mu))
-}
-
-alpha_ref <- function(d, r, phi, p, struct, m = 1L) {
-  cl <- ref_clusters(d)
-  n_occ <- d$tmax
-  pairs <- do.call(rbind, lapply(cl, function(idx) {
-    n <- length(idx)
-    if (n < 2) {
-      return(NULL)
-    }
-    jk <- t(combn(n, 2))
-    data.frame(
-      s = d$tt[idx][jk[, 1]], t = d$tt[idx][jk[, 2]],
-      prod = r[idx][jk[, 1]] * r[idx][jk[, 2]]
-    )
-  }))
-  pairs$lag <- pairs$t - pairs$s
-  den <- function(n) (n - p) * phi
-  switch(struct,
-    exchangeable = sum(pairs$prod) / den(nrow(pairs)),
-    ar1 = sum(pairs$prod[pairs$lag == 1]) / den(sum(pairs$lag == 1)),
-    toeplitz = sapply(
-      seq_len(n_occ - 1),
-      function(l) sum(pairs$prod[pairs$lag == l]) / den(sum(pairs$lag == l))
-    ),
-    "m-dependent" = sapply(
-      seq_len(m),
-      function(l) sum(pairs$prod[pairs$lag == l]) / den(sum(pairs$lag == l))
-    ),
-    unstructured = unlist(lapply(1:(n_occ - 1), function(s) {
-      sapply((s + 1):n_occ, function(t) {
-        sel <- pairs$s == s & pairs$t == t
-        sum(pairs$prod[sel]) / den(sum(sel))
-      })
-    }))
-  )
-}
-
-times8 <- list(1:3, c(1, 2, 4), 2:4, 1:4, c(1, 4), 3:4, 1:4, 1:3)
-
 test_that("get_pearson_residuals equals (y - mu) sqrt(w / V(mu)) for every variance function", {
   withr::local_seed(1)
   y <- runif(8, 0.1, 0.9)
@@ -68,11 +25,11 @@ test_that("estimated phi and alpha reproduce the moment formulas at the fitted m
         corstr = struct, Mv = Mv, control = ctl
       )
       b <- unname(coef(fit))
-      r <- pearson_ref(d, b)
+      r <- ref_pearson(d, b)
       p <- length(b)
       phi <- sum(r^2) / (length(r) - p)
       expect_equal(fit$phi, phi, tolerance = 1e-8, label = paste(cf[[1]]$family, struct, "phi"))
-      expect_equal(as.vector(fit$alpha), alpha_ref(d, r, phi, p, struct, Mv),
+      expect_equal(as.vector(fit$alpha), ref_alpha(d, r, phi, p, struct, Mv),
         tolerance = 1e-8,
         label = paste(cf[[1]]$family, struct, "alpha")
       )

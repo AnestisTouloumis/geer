@@ -15,16 +15,6 @@ or_ee <- function(d, b) {
   ))
 }
 
-ref_corr_alpha <- function(d) {
-  if (d$struct == "independence") {
-    return(numeric(0))
-  }
-  if (d$struct %in% c("exchangeable", "ar1")) {
-    return(d$alpha)
-  }
-  d$alpha
-}
-
 test_that("get_estimating_equations_cc equals the textbook sum of D' V^-1 (y - mu)", {
   cfg <- list(
     list(binomial(), "logit", "exchangeable", 0.3, 1),

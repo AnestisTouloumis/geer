@@ -1,7 +1,5 @@
-epilepsy <- test_data$epilepsy
-
 runs_order_data <- function() {
-  data <- epilepsy
+  data <- test_data$epilepsy
   data$date <- as.Date("2020-01-01") + 7 * data$visit
   data$label <- c("first", "second", "third", "fourth")[data$visit]
   data$late <- data$visit > 2
@@ -69,7 +67,7 @@ test_that("extract_runs_order_variable falls back to the supplied environment", 
 
   key <- extract_runs_order_variable(fit, "visit", env = environment())
 
-  expect_equal(key, as.numeric(epilepsy$visit))
+  expect_equal(key, as.numeric(test_data$epilepsy$visit))
 })
 
 test_that("extract_runs_order_variable returns numeric keys for common types", {
