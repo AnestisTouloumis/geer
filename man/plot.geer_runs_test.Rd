@@ -77,7 +77,7 @@ fit <- geewa(
   corstr = "exchangeable"
 )
 plot(runs_test(fit))
-plot(runs_test(fit, order_by = "fitted"), ylim = c(-2, 2))
+plot(runs_test(fit, order_by = "lnage"))
 
 }
 \references{

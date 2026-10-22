@@ -66,8 +66,6 @@ fit <- geewa_binary(
 )
 head(residuals(fit))
 head(residuals(fit, type = "pearson"))
-head(residuals(fit, type = "deviance"))
-head(residuals(fit, type = "mahalanobis"))
 
 }
 \references{

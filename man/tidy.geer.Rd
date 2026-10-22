@@ -61,7 +61,6 @@ fit <- geewa(
 )
 tidy(fit)
 tidy(fit, conf.int = TRUE, exponentiate = TRUE)
-tidy(fit, cov_type = "robust")
 
 }
 \references{

@@ -49,7 +49,6 @@
 #'   )
 #'   emmeans::emmeans(fit, ~ treatment)
 #'   emmeans::emmeans(fit, ~ treatment, type = "response")
-#'   emmeans::emmeans(fit, ~ treatment, vcov.method = "naive")
 #' }
 #'
 #' @name emmeans-support

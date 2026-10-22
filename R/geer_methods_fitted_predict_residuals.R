@@ -201,7 +201,6 @@ fitted.geer <- function(object, ...) {
 #'   repeated = period,
 #'   orstr = "exchangeable"
 #' )
-#' head(predict(fit))
 #' head(predict(fit, type = "response"))
 #'
 #' ## Predictions for new data, with standard errors
@@ -432,8 +431,6 @@ compute_mahalanobis_residuals <- function(object) {
 #' )
 #' head(residuals(fit))
 #' head(residuals(fit, type = "pearson"))
-#' head(residuals(fit, type = "deviance"))
-#' head(residuals(fit, type = "mahalanobis"))
 #'
 #' @export
 residuals.geer <- function(object,

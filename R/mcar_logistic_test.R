@@ -64,7 +64,11 @@
 #' published definitions.
 #'
 #' Under monotone dropout each cluster contributes up to its first missing
-#' response. With intermittent missingness a warning is issued, because the
+#' response. An occasion with no dropouts, or with no observed responses, in
+#' the risk set has an occasion effect that cannot be estimated, so it is
+#' omitted with a warning; its transitions carry no information about
+#' \eqn{\gamma}{gamma} and \eqn{\delta}{delta} in the limit. With
+#' intermittent missingness a warning is issued, because the
 #' result is then a local transition diagnostic rather than a dropout test.
 #' Covariates in \code{formula} must be fully observed, and measurement rows
 #' that are absent from the data cannot be detected: when no response is
@@ -258,6 +262,11 @@ mcar_logistic_test <- function(object,
       call. = FALSE
     )
   }
+  prepared <- normalize_mcar_risk_set(prepared)
+  missing_no <- as.integer(sum(prepared$missing == 1L))
+  observed_no <- as.integer(sum(prepared$missing == 0L))
+  transition_no <- as.integer(length(prepared$missing))
+  cluster_no <- as.integer(length(unique(prepared$id)))
   if (cluster_no < 2L) {
     stop(
       "the missingness model requires at least two independent clusters",

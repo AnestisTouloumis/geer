@@ -69,7 +69,6 @@ if (requireNamespace("marginaleffects", quietly = TRUE)) {
   )
   marginaleffects::avg_predictions(fit)
   marginaleffects::avg_comparisons(fit, variables = "treatment")
-  marginaleffects::avg_predictions(fit, vcov = "robust")
 }
 
 }

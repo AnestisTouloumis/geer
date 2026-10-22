@@ -141,18 +141,17 @@ the cluster if \code{repeated} was not supplied.
 data("epilepsy", package = "geer")
 fit <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
   data = epilepsy,
   id = id,
   repeated = visit,
-  family = poisson(link = "log"),
   corstr = "exchangeable"
 )
 head(hatvalues(fit))
 head(dfbeta(fit))
-head(dfbetas(fit, cov_type = "robust"))
+head(dfbetas(fit))
 head(cooks.distance(fit))
 head(cooks.distance(fit, unit = "observations"))
-head(cooks.distance(fit, parm = "treatmentprogabide"))
 
 }
 \references{

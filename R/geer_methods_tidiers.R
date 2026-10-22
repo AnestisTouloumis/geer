@@ -60,7 +60,6 @@ generics::glance
 #' )
 #' tidy(fit)
 #' tidy(fit, conf.int = TRUE, exponentiate = TRUE)
-#' tidy(fit, cov_type = "robust")
 #'
 #' @export
 tidy.geer <- function(x,
@@ -193,10 +192,6 @@ tidy.geer <- function(x,
 #'   corstr = "exchangeable"
 #' )
 #' glance(fit)
-#'
-#' ## Compare working correlation structures
-#' fit_ar1 <- update(fit, corstr = "ar1")
-#' rbind(glance(fit), glance(fit_ar1))
 #'
 #' @export
 glance.geer <- function(x, ...) {

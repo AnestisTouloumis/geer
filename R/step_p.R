@@ -57,7 +57,6 @@
 #'   \code{\link{geewa_binary}}.
 #'
 #' @examples
-#' \donttest{
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", ]
 #' fit <- geewa_binary(
@@ -71,6 +70,7 @@
 #' ## Backward elimination
 #' step_p(fit, p_remove = 0.10)
 #'
+#' \donttest{
 #' ## Bidirectional selection within a scope
 #' step_p(
 #'   fit,

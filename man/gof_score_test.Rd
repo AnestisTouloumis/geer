@@ -131,12 +131,6 @@ fit <- geewa_binary(
 )
 gof_score_test(fit)
 gof_score_test(fit, partition = "covariates", regions = ~treatment)
-gof_score_test(
-  fit,
-  partition = "covariates",
-  regions = ~treatment,
-  cov_type = "robust"
-)
 
 }
 \references{

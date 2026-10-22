@@ -75,7 +75,6 @@ fit <- geewa_binary(
   repeated = period,
   orstr = "exchangeable"
 )
-head(predict(fit))
 head(predict(fit, type = "response"))
 
 ## Predictions for new data, with standard errors

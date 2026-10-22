@@ -133,12 +133,6 @@
 #' )
 #' gof_score_test(fit)
 #' gof_score_test(fit, partition = "covariates", regions = ~treatment)
-#' gof_score_test(
-#'   fit,
-#'   partition = "covariates",
-#'   regions = ~treatment,
-#'   cov_type = "robust"
-#' )
 #'
 #' @export
 gof_score_test <- function(object,

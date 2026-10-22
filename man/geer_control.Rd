@@ -49,15 +49,6 @@ and \code{\link{geewa_binary}}.
 ## Default control parameters
 geer_control()
 
-## Tighter tolerance and fewer iterations
-geer_control(tolerance = 1e-08, maxiter = 200)
-
-## Larger continuity correction for the odds-ratio estimates
-geer_control(or_adding = 1)
-
-## Weaker Jeffreys-type penalty
-geer_control(jeffreys_power = 0.1)
-
 ## Damped steps, useful when the algorithm diverges
 geer_control(step_multiplier = 0.5)
 

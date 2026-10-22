@@ -126,8 +126,6 @@
 #' )
 #' runs_test(fit)
 #' runs_test(fit, order_by = "fitted")
-#' runs_test(fit, order_by = "lnage")
-#' runs_test(fit, alternative = "less")
 #'
 #' @export
 runs_test <- function(object,

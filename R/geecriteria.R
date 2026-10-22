@@ -194,7 +194,6 @@
 #'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
-#' geecriteria(fit)
 #'
 #' ## Compare working correlation structures
 #' fit_ind <- update(fit, corstr = "independence")
@@ -202,11 +201,7 @@
 #' geecriteria(fit_ind, fit, fit_ar1)
 #'
 #' ## Selected criteria, in the order requested
-#' geecriteria(fit_ind, fit, fit_ar1, criteria = c("cic", "QIC"))
-#'
-#' ## Compare estimation methods
-#' fit_br <- update(fit, method = "brgee-robust")
-#' geecriteria(fit, fit_br)
+#' geecriteria(fit_ind, fit, fit_ar1, criteria = c("CIC", "QIC"))
 #'
 #' @export
 geecriteria <- function(object,

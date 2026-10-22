@@ -71,26 +71,13 @@
 #'   data = cholecystectomy,
 #'   id = id,
 #'   repeated = time,
-#'   orstr = "independence",
-#'   method = "gee"
+#'   orstr = "exchangeable"
 #' )
 #' summary(fit)
 #'
-#' ## Bias-reduced and bias-corrected GEE
-#' fit_br <- update(fit, method = "brgee-robust")
-#' summary(fit_br)
-#' fit_bc <- update(fit, method = "bcgee-robust")
-#' summary(fit_bc, cov_type = "robust")
-#'
-#' \donttest{
-#' ## Jeffreys-type penalized GEE with an exchangeable odds-ratio structure
-#' fit_pgee <- update(fit, orstr = "exchangeable", method = "pgee-jeffreys")
+#' ## Jeffreys-type penalized GEE
+#' fit_pgee <- update(fit, method = "pgee-jeffreys")
 #' summary(fit_pgee)
-#'
-#' ## Probit link
-#' fit_probit <- update(fit, link = "probit")
-#' summary(fit_probit)
-#' }
 #'
 #' @export
 geewa_binary <- function(formula,

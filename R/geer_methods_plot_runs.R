@@ -60,7 +60,7 @@
 #'   corstr = "exchangeable"
 #' )
 #' plot(runs_test(fit))
-#' plot(runs_test(fit, order_by = "fitted"), ylim = c(-2, 2))
+#' plot(runs_test(fit, order_by = "lnage"))
 #'
 #' @export
 plot.geer_runs_test <- function(x,

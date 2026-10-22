@@ -211,23 +211,13 @@
 #'   data = epilepsy,
 #'   id = id,
 #'   repeated = visit,
-#'   corstr = "exchangeable",
-#'   method = "gee"
+#'   corstr = "exchangeable"
 #' )
 #' summary(fit)
 #'
-#' ## Bias-reduced and bias-corrected GEE
+#' ## Bias-reduced GEE
 #' fit_br <- update(fit, method = "brgee-robust")
 #' summary(fit_br)
-#' fit_bc <- update(fit, method = "bcgee-robust")
-#' summary(fit_bc, cov_type = "robust")
-#'
-#' \donttest{
-#' ## Jeffreys-type penalized GEE with a weaker penalty
-#' fit_pgee <- update(fit, method = "pgee-jeffreys",
-#'                    control = geer_control(jeffreys_power = 0.1))
-#' summary(fit_pgee)
-#' }
 #'
 #' @export
 geewa <- function(formula,

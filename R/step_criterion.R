@@ -96,7 +96,6 @@
 #'   \code{\link{geewa_binary}}.
 #'
 #' @examples
-#' \donttest{
 #' data("respiratory", package = "geer")
 #' respiratory2 <- respiratory[respiratory$center == "C2", ]
 #' fit <- geewa_binary(
@@ -120,7 +119,6 @@
 #'   direction = "both",
 #'   criterion = "QIC"
 #' )
-#' }
 #'
 #' @export
 step_criterion <- function(object,

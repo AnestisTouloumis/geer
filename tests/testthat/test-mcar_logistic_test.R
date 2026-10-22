@@ -543,3 +543,66 @@ test_that("mcar_logistic_test warns when dropout is recorded by absent rows", {
   expect_no_warning(out_full <- mcar_logistic_test(fit_full))
   expect_gt(out_full$missing, 0L)
 })
+
+test_that("occasions without dropouts are omitted from the risk set", {
+  dat <- make_mcar_dropout_data()
+  observed_at_4 <- dat$id[dat$visit == 4L & !is.na(dat$y)]
+  last <- dat$visit == 5L & dat$id %in% observed_at_4
+  dat$y[last] <- dat$y_complete[last]
+  fit <- geewa(
+    formula = y ~ treatment + age,
+    family = gaussian(),
+    data = dat,
+    id = id,
+    repeated = visit
+  )
+  expect_warning(
+    out <- mcar_logistic_test(fit, formula = ~ treatment + age),
+    paste0(
+      "occasion(s) 5 were omitted from the risk set because they have no ",
+      "dropouts or no observed responses"
+    ),
+    fixed = TRUE
+  )
+  risk <- make_direct_dropout_risk_set(dat)
+  expect_warning(
+    reference <- stats::glm(
+      missing ~ factor(visit) + treatment + age + lag_response,
+      family = stats::binomial(),
+      data = risk,
+      control = stats::glm.control(epsilon = 1e-14, maxit = 100L)
+    ),
+    "fitted probabilities numerically 0 or 1 occurred",
+    fixed = TRUE
+  )
+  terms <- c("treatment", "age", "lag_response")
+  estimates <- out$coefficients$estimate[match(terms, out$coefficients$term)]
+  expect_equal(estimates, unname(coef(reference)[terms]), tolerance = 1e-6)
+  expect_identical(out$transitions, sum(risk$visit != 5L))
+})
+
+test_that("a risk set without an estimable occasion is an error", {
+  dat <- data.frame(
+    id = rep(seq_len(10L), each = 3L),
+    visit = rep(seq_len(3L), times = 10L),
+    x = rep(c(0, 1), each = 15L)
+  )
+  dat$y <- dat$visit + dat$x + rep(seq(-1, 1, length.out = 10L), each = 3L)
+  dat$y[dat$visit == 3L] <- NA_real_
+  fit <- geewa(
+    formula = y ~ x,
+    family = gaussian(),
+    data = dat,
+    id = id,
+    repeated = visit
+  )
+  expect_error(
+    mcar_logistic_test(fit, formula = ~ x),
+    paste0(
+      "every occasion has either no dropouts or no observed responses in ",
+      "the risk set"
+    ),
+    fixed = TRUE
+  )
+})
+

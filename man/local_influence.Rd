@@ -111,16 +111,14 @@ was not supplied.
 data("epilepsy", package = "geer")
 fit <- geewa(
   formula = seizures ~ treatment + lnbaseline + lnage,
+  family = poisson(link = "log"),
   data = epilepsy,
   id = id,
   repeated = visit,
-  family = poisson(link = "log"),
   corstr = "exchangeable"
 )
 head(local_influence(fit))
 head(local_influence(fit, type = "local"))
-head(local_influence(fit, perturbation = "response"))
-head(local_influence(fit, parm = "treatmentprogabide"))
 
 }
 \references{

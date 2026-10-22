@@ -147,7 +147,6 @@ fit <- geewa_binary(
   orstr = "exchangeable"
 )
 vcov(fit)
-vcov(fit, cov_type = "robust")
 vcov(fit, cov_type = "kauermann-carroll")
 
 }

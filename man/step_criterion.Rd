@@ -102,7 +102,6 @@ boundary. Refits of such candidates warn about fitted probabilities or
 rates near the boundary. See \code{\link{geecriteria}}.
 }
 \examples{
-\donttest{
 data("respiratory", package = "geer")
 respiratory2 <- respiratory[respiratory$center == "C2", ]
 fit <- geewa_binary(
@@ -126,7 +125,6 @@ step_criterion(
   direction = "both",
   criterion = "QIC"
 )
-}
 
 }
 \references{

@@ -93,6 +93,17 @@
 #'   \code{\link{geewa_binary}}.
 #'
 #' @examples
+#' data("depression", package = "geer")
+#' fit <- geewa(
+#'   formula = score ~ treatment + visit,
+#'   data = depression,
+#'   id = id,
+#'   repeated = visit,
+#'   corstr = "exchangeable"
+#' )
+#' mcar_little_test(fit)
+#'
+#' ## Matrix or data frame input
 #' x <- data.frame(
 #'   visit1 = c(2.1, 4.3, 3.2, 5.8, 7.1, 6.4, 8.2, 9.5, 10.1, 11.3),
 #'   visit2 = c(1.5, 3.8, 2.9, 6.2, NA, 5.1, 8.9, NA, 9.4, 12.0),
