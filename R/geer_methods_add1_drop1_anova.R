@@ -10,6 +10,9 @@
 #'
 #' @inheritParams anova.geer
 #' @inheritParams stats::add1
+#' @param scope a formula giving the terms to be considered for adding or
+#'   dropping. Required for \code{add1()}. For \code{drop1()}, if missing,
+#'   every term whose deletion respects marginality is considered.
 #' @param ... not used. Supplying any argument is an error, so that a misspelled
 #'   argument name is reported rather than silently ignored.
 #'

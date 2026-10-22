@@ -183,8 +183,8 @@
 #' treatments A and B reduced bacilli abundance compared with placebo.
 #'
 #' @source
-#' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}. Iowa
-#' State University Press, Ames.
+#' Snedecor, G.W. and Cochran, W.G. (1967) \emph{Statistical Methods}, 6th
+#' Edition. Iowa State University Press, Ames.
 #'
 #' @examples
 #' data("leprosy", package = "geer")
@@ -208,8 +208,8 @@
 #'   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 #'   \item{baseline}{binary indicator of baseline respiratory status,
 #'     0 = poor and 1 = good.}
-#'   \item{age}{numeric age in years recorded at baseline.}
 #'   \item{gender}{factor with levels \code{female} and \code{male}.}
+#'   \item{age}{numeric age in years recorded at baseline.}
 #'   \item{center}{factor with levels \code{C1} and \code{C2}.}
 #' }
 #'
@@ -222,7 +222,7 @@
 #'
 #' @source
 #' Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
-#' Analysis using the SAS System}. SAS Institute, Cary.
+#' Analysis Using the SAS System}. SAS Institute, Cary.
 #'
 #' @examples
 #' data("respiratory", package = "geer")

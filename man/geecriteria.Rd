@@ -203,8 +203,8 @@ working correlation structures in generalized estimating equation analysis
 of longitudinal binary data. \emph{Statistics in Medicine}, \bold{28},
 2338--2355.
 
-Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-Equations using the new R package glmtoolbox. \emph{The R Journal},
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+equations using the new R package glmtoolbox. \emph{The R Journal},
 \bold{15}, 105--133.
 
 Wang, Y.G. and Hin, L.Y. (2010) Modeling strategies in longitudinal data

@@ -59,7 +59,7 @@ The table contains the deciles-of-risk test of Horton et al. (1999) with
 \code{regions} is supplied, and the Pearson and unweighted sum of squares
 tests of Pan (2002) with \code{covariance}. The tests have power against
 different departures from the model (Evans and Li, 2005), so they
-complement each other, and a single non-significant test is weak evidence
+complement each other, and a single nonsignificant test is weak evidence
 of fit.
 }
 \examples{

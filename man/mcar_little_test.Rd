@@ -34,8 +34,11 @@ chi-squared reference otherwise (\code{"auto"}), or always the chi-squared
 reference (\code{"asymptotic"}). Defaults to \code{"auto"}.}
 }
 \value{
-An object of class \code{c("geer_htest", "htest")}. In addition to the
-standard components, the object contains:
+An object of class \code{c("geer_htest", "htest")}. The standard
+components hold Little's statistic \eqn{d^2} (\code{statistic}) and the
+degrees of freedom of its reference distribution (\code{parameter}):
+\code{df} for the chi-squared reference, or \code{df1} and \code{df2} for
+the exact F reference. In addition, the object contains:
 \item{missing.patterns}{the number of distinct missing-data patterns.}
 \item{n}{the number of independent rows or clusters tested.}
 \item{variables}{the number of variables or repeated measurements tested.}

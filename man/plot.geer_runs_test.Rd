@@ -34,7 +34,7 @@ successive runs. Defaults to
 \code{grDevices::palette.colors(4L, "Okabe-Ito")}.}
 
 \item{pch}{plotting symbol, passed to \code{\link[graphics]{points}}.
-Defaults to \code{1L}.}
+Defaults to \code{1}.}
 
 \item{cex}{symbol size, passed to \code{\link[graphics]{points}}. Defaults to
 \code{NULL}, which shrinks the symbols for long sequences.}

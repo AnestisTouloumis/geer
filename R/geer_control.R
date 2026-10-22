@@ -29,8 +29,7 @@
 #'
 #' @references
 #' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-#' with an odds-ratio parameterization. \emph{arXiv preprint}.
-#' \doi{10.48550/arXiv.2606.16058}
+#' with an odds-ratio parameterization. \emph{arXiv preprint} arXiv:2606.16058.
 #'
 #' @seealso \code{\link{geewa}}, \code{\link{geewa_binary}}.
 #'

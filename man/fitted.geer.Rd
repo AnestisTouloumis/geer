@@ -25,7 +25,7 @@ Extracts the fitted mean values on the response scale from a fitted
 The values follow the internal order of the fitted model: the complete
 cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
 data were already in this order and had no missing values, assigning the
-values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+values to the data, as in \code{data$f <- fitted(fit)}, misaligns the
 rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
 the same order and can be used to align them.
 }

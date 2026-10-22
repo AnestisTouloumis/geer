@@ -25,10 +25,10 @@
 #'
 #' @return
 #' These methods return objects in the formats required internally by
-#' \pkg{marginaleffects}: a named coefficient vector, a modified \code{geer}
-#' object, a named covariance matrix (or \code{NULL} when
-#' \code{vcov = FALSE}), a model data frame, or a data frame with columns
-#' \code{rowid} and \code{estimate}.
+#' \pkg{marginaleffects}: a model data frame, a named coefficient vector, a
+#' modified \code{geer} object, a named covariance matrix (or \code{NULL} when
+#' \code{vcov = FALSE}), or a data frame with columns \code{rowid} and
+#' \code{estimate}, respectively.
 #'
 #' @seealso \code{\link{predict.geer}}, \code{\link{vcov.geer}},
 #'   \code{\link{coef.geer}}.

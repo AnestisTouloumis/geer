@@ -3,7 +3,7 @@
 #'
 #' @description
 #' Performs the nonparametric Wald-Wolfowitz runs test proposed by Chang
-#' (2000) for detecting non-random patterns in residuals from a fitted
+#' (2000) for detecting nonrandom patterns in residuals from a fitted
 #' generalized estimating equation model.
 #'
 #' @param object a fitted model object of class \code{"geer"}.

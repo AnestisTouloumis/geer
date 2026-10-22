@@ -104,17 +104,17 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
 #' @param ... not used. Supplying any argument is an error, so that a misspelled
 #'   argument name is reported rather than silently ignored.
 #'
-#' @return
-#' A numeric vector of fitted means, one per observation used in the fit, in
-#' the order given under Observation order.
-#'
 #' @section Observation order:
 #' The values follow the internal order of the fitted model: the complete
 #' cases, sorted by cluster and, within cluster, by \code{repeated}. Unless the
 #' data were already in this order and had no missing values, assigning the
-#' values to the data, as in \code{data$r <- residuals(fit)}, misaligns the
+#' values to the data, as in \code{data$f <- fitted(fit)}, misaligns the
 #' rows without warning. \code{fit$id} and \code{fit$repeated} are stored in
 #' the same order and can be used to align them.
+#'
+#' @return
+#' A numeric vector of fitted means, one per observation used in the fit, in
+#' the order given under Observation order.
 #'
 #' @seealso \code{\link{residuals.geer}}, \code{\link{predict.geer}}.
 #'
@@ -167,8 +167,17 @@ fitted.geer <- function(object, ...) {
 #' The linear predictor is computed from the model matrix of \code{newdata},
 #' or of the fitted data, and the offset, and transformed by the inverse link
 #' for \code{type = "response"}. Standard errors are obtained by the delta
-#' method. When \code{newdata} is supplied and the model has an offset, the
+#' method. A prediction whose variance is negative or not finite under the
+#' selected estimator gets a standard error of \code{NA}, with a warning. When
+#' \code{newdata} is supplied and the model has an offset, the
 #' variables of the offset must be in \code{newdata}.
+#'
+#' @section Observation order:
+#' With \code{newdata}, the predictions follow its rows, and rows with missing
+#' values give \code{NA}. Without it, they follow the internal order of the
+#' fitted model: the complete cases, sorted by cluster and, within cluster, by
+#' \code{repeated}. To obtain predictions in the order of the data, supply the
+#' data as \code{newdata}.
 #'
 #' @return
 #' For \code{se.fit = FALSE}, a numeric vector of predictions. For
@@ -177,13 +186,6 @@ fitted.geer <- function(object, ...) {
 #' \item{se.fit}{their standard errors.}
 #' With \code{newdata}, the results are named by its row names; otherwise they
 #' are unnamed.
-#'
-#' @section Observation order:
-#' With \code{newdata}, the predictions follow its rows, and rows with missing
-#' values give \code{NA}. Without it, they follow the internal order of the
-#' fitted model: the complete cases, sorted by cluster and, within cluster, by
-#' \code{repeated}. To obtain predictions in the order of the data, supply the
-#' data as \code{newdata}.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{residuals.geer}},
 #'   \code{\link{geewa}}, \code{\link{geewa_binary}},
@@ -294,8 +296,12 @@ predict.geer <- function(object,
   }
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   vcov_matrix <- vcov_matrix[coef_names, coef_names, drop = FALSE]
-  se <- compute_se_or_na(
-    rowSums((design_matrix %*% vcov_matrix) * design_matrix),
+  variances <- rowSums((design_matrix %*% vcov_matrix) * design_matrix)
+  complete_rows <- !is.na(eta_vector)
+  se <- rep.int(NA_real_, length(eta_vector))
+  names(se) <- names(eta_vector)
+  se[complete_rows] <- compute_se_or_na(
+    variances[complete_rows],
     what = "prediction"
   )
   if (type == "response") {
@@ -406,8 +412,8 @@ compute_mahalanobis_residuals <- function(object) {
 #' cluster, named by the cluster identifier.
 #'
 #' @references
-#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-#' Equations using the new R package glmtoolbox. \emph{The R Journal},
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+#' equations using the new R package glmtoolbox. \emph{The R Journal},
 #' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{fitted.geer}}, \code{\link{predict.geer}},

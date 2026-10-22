@@ -66,6 +66,29 @@ test_that("predict returns coherent predictions on new count data", {
   expect_true(all(pred_link_se$se.fit >= 0))
 })
 
+test_that("incomplete rows of newdata give NA without a warning", {
+  newdata <- epilepsy[1:5, , drop = FALSE]
+  newdata$lnage[2L] <- NA
+  expect_no_warning(
+    pred <- predict(
+      fit_geewa_pois_exch,
+      newdata = newdata,
+      type = "response",
+      se.fit = TRUE
+    )
+  )
+  expect_true(is.na(pred$fit[2L]))
+  expect_true(is.na(pred$se.fit[2L]))
+  complete <- predict(
+    fit_geewa_pois_exch,
+    newdata = newdata[-2L, ],
+    type = "response",
+    se.fit = TRUE
+  )
+  expect_equal(pred$fit[-2L], complete$fit, tolerance = 1e-10)
+  expect_equal(pred$se.fit[-2L], complete$se.fit, tolerance = 1e-10)
+})
+
 test_that("predict handles reordered and extra columns in newdata", {
   newdata_1 <- epilepsy[
     1:5,

@@ -60,7 +60,7 @@
 #' (1998), a warning is issued when a region has fewer than 10 clusters, when
 #' more than 25\% of the regions have fewer than 25 clusters, or when a
 #' region, or with \code{by_repeated = TRUE} a region by position cell, has no
-#' events or no non-events.
+#' events or no nonevents.
 #'
 #' With \code{cov_type = "naive"}, the statistic is the model-based statistic
 #' \eqn{Q} of Barnhart and Williamson (1998), with the dispersion parameter of

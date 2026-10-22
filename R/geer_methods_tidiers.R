@@ -33,8 +33,8 @@ generics::glance
 #' A data frame, a tibble if \pkg{tibble} is installed, with columns:
 #' \item{term}{the name of the coefficient.}
 #' \item{estimate}{the estimate, exponentiated if \code{exponentiate = TRUE}.}
-#' \item{std.error}{the standard error, on the original scale.}
-#' \item{statistic}{the Wald z-statistic, on the original scale.}
+#' \item{std.error}{the standard error of the coefficient, not exponentiated.}
+#' \item{statistic}{the Wald z-statistic of the coefficient.}
 #' \item{p.value}{the two-sided p-value.}
 #' \item{conf.low, conf.high}{the confidence limits, if
 #'   \code{conf.int = TRUE}.}

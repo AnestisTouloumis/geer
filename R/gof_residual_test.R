@@ -19,15 +19,17 @@
 #' @details
 #' With fitted probabilities \eqn{\hat\mu_{ij}}{mu_ij}, the statistics are
 #' \deqn{G = \sum_{i,j} \frac{(y_{ij} - \hat\mu_{ij})^2}{\hat\mu_{ij}(1 -
-#' \hat\mu_{ij})}, \qquad U = \sum_{i,j} (y_{ij} - \hat\mu_{ij})^2,}{G =
-#' sum_ij (y_ij - mu_ij)^2/(mu_ij (1 - mu_ij)),   U = sum_ij (y_ij - mu_ij)^2,}
+#' \hat\mu_{ij})}, \qquad U = \sum_{i,j} (y_{ij} - \hat\mu_{ij})^2,}{
+#' G = sum_ij (y_ij - mu_ij)^2/(mu_ij (1 - mu_ij)), U = sum_ij (y_ij - mu_ij)^2,
+#' }
 #' with approximate means \eqn{N}, the number of observations, and
 #' \eqn{\sum_{i,j} \hat\mu_{ij}(1 - \hat\mu_{ij})}{sum_ij mu_ij (1 - mu_ij)}.
 #' Their approximate variances are \eqn{c^\top (I - H)\,\mathrm{cov}(Y)\,(I -
 #' H)^\top c}{c' (I - H) cov(Y) (I - H)' c}, where \eqn{c} has elements
-#' \eqn{(1 - 2\hat\mu_{ij})/(\hat\mu_{ij}(1 - \hat\mu_{ij}))}{(1 - 2 mu_ij)/
-#' (mu_ij (1 - mu_ij))} for \eqn{G} and \eqn{1 - 2\hat\mu_{ij}}{1 - 2 mu_ij}
-#' for \eqn{U}, and \eqn{H = D (\sum_i D_i^\top V_i^{-1} D_i)^{-1} D^\top
+#' \eqn{(1 - 2\hat\mu_{ij})/(\hat\mu_{ij}(1 - \hat\mu_{ij}))}{
+#' (1 - 2 mu_ij)/(mu_ij (1 - mu_ij))} for \eqn{G} and
+#' \eqn{1 - 2\hat\mu_{ij}}{1 - 2 mu_ij} for \eqn{U}, and
+#' \eqn{H = D (\sum_i D_i^\top V_i^{-1} D_i)^{-1} D^\top
 #' V^{-1}}{H = D (sum_i D_i' V_i^(-1) D_i)^(-1) D' V^(-1)} is the leverage
 #' matrix of \code{\link{hatvalues.geer}}. The standardized statistic is
 #' compared with the standard normal distribution, and the p-value is

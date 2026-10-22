@@ -2,7 +2,7 @@
 % Please edit documentation in R/step_criterion.R
 \name{step_criterion}
 \alias{step_criterion}
-\title{Stepwise Model Selection by an Information Criterion}
+\title{Stepwise Model Selection for geer Objects by an Information Criterion}
 \usage{
 step_criterion(
   object,
@@ -144,8 +144,8 @@ Equations}, 2nd Edition. Chapman and Hall/CRC, Boca Raton.
 Pan, W. (2001) Akaike's information criterion in generalized estimating
 equations. \emph{Biometrics}, \bold{57}, 120--125.
 
-Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-Equations using the new R package glmtoolbox. \emph{The R Journal},
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+equations using the new R package glmtoolbox. \emph{The R Journal},
 \bold{15}, 105--133.
 }
 \seealso{

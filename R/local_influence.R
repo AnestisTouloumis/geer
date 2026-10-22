@@ -98,8 +98,8 @@
 #' Lesaffre, E. and Verbeke, G. (1998) Local influence in linear mixed models.
 #' \emph{Biometrics}, \bold{54}, 570--582.
 #'
-#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-#' Equations using the new R package glmtoolbox. \emph{The R Journal},
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+#' equations using the new R package glmtoolbox. \emph{The R Journal},
 #' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{cooks.distance.geer}}, \code{\link{hatvalues.geer}},

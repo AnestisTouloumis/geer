@@ -71,8 +71,8 @@ head(residuals(fit, type = "mahalanobis"))
 
 }
 \references{
-Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-Equations using the new R package glmtoolbox. \emph{The R Journal},
+Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+equations using the new R package glmtoolbox. \emph{The R Journal},
 \bold{15}, 105--133.
 }
 \seealso{

@@ -1,5 +1,5 @@
 #' @title
-#' Stepwise Model Selection by Hypothesis Testing
+#' Stepwise Model Selection for geer Objects by Hypothesis Testing
 #'
 #' @description
 #' Performs stepwise model selection for a fitted \code{geer} object using

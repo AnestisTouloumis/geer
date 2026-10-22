@@ -2,7 +2,7 @@
 % Please edit documentation in R/step_p.R
 \name{step_p}
 \alias{step_p}
-\title{Stepwise Model Selection by Hypothesis Testing}
+\title{Stepwise Model Selection for geer Objects by Hypothesis Testing}
 \usage{
 step_p(
   object,

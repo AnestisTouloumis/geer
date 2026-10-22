@@ -10,10 +10,11 @@
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param formula optional one-sided formula of fully observed covariates of
 #'   missingness, for example \code{~ treatment + age}. The previous response is
-#'   added automatically and must not be included. Terms aliased with the
-#'   occasion effects are dropped and reported in \code{dropped_covariates}.
-#'   Defaults to \code{NULL}, which uses the right-hand side of the mean model
-#'   of \code{object}.
+#'   added automatically and must not be included. Columns aliased with the
+#'   occasion effects or with earlier covariate columns are dropped and
+#'   reported in \code{dropped_covariates}, and an error is given if the
+#'   previous response then has no estimable effect. Defaults to \code{NULL},
+#'   which uses the right-hand side of the mean model of \code{object}.
 #' @param data optional data frame containing the data used to fit
 #'   \code{object}. Used only when \code{object} is a fitted model object and
 #'   the data cannot be recovered from it. Defaults to \code{NULL}.
@@ -73,8 +74,10 @@
 #' out dependence on unobserved responses.
 #'
 #' @return
-#' An object of class \code{c("geer_htest", "htest")}. In addition to the
-#' standard components, the object contains:
+#' An object of class \code{c("geer_htest", "htest")}. The standard
+#' components hold the statistic of the response-history test
+#' (\code{statistic}) and its degrees of freedom (\code{parameter}). In
+#' addition, the object contains:
 #' \item{tests}{a data frame containing the response-history, covariate, and
 #'   overall tests using the selected procedure.}
 #' \item{coefficients}{the coefficient table of the binary GEE missingness
@@ -97,7 +100,7 @@
 #' @references
 #' Fitzmaurice, G.M., Heath, A.F. and Clifford, P. (1996) Logistic regression
 #' models for binary panel data with attrition. \emph{Journal of the Royal
-#' Statistical Society: Series A}, \bold{159}, 249--263.
+#' Statistical Society, Series A}, \bold{159}, 249--263.
 #'
 #' Ridout, M.S. (1991) Testing for random dropouts in repeated measurement
 #' data. \emph{Biometrics}, \bold{47}, 1617--1619.

@@ -1,5 +1,5 @@
 #' @title
-#' Stepwise Model Selection by an Information Criterion
+#' Stepwise Model Selection for geer Objects by an Information Criterion
 #'
 #' @description
 #' Performs stepwise model selection for a fitted \code{geer} object, moving at
@@ -87,8 +87,8 @@
 #' Pan, W. (2001) Akaike's information criterion in generalized estimating
 #' equations. \emph{Biometrics}, \bold{57}, 120--125.
 #'
-#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-#' Equations using the new R package glmtoolbox. \emph{The R Journal},
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+#' equations using the new R package glmtoolbox. \emph{The R Journal},
 #' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{step_p}}, \code{\link{geecriteria}},

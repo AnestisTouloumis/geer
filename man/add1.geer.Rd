@@ -27,7 +27,8 @@
 \item{object}{a fitted model object of class \code{"geer"}.}
 
 \item{scope}{a formula giving the terms to be considered for adding or
-    dropping.}
+dropping. Required for \code{add1()}. For \code{drop1()}, if missing,
+every term whose deletion respects marginality is considered.}
 
 \item{test}{character string specifying the hypothesis test: Wald
 (\code{"wald"}), generalized score (\code{"score"}), modified working Wald

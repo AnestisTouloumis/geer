@@ -103,6 +103,34 @@
 #' products of Pearson residuals at consecutive \code{repeated} values, pooled
 #' over clusters, so it can differ from the estimates of other packages.
 #'
+#' @section Convergence and separation:
+#' For the two-stage methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
+#' \code{"hpgee-jeffreys"}), \code{alpha} and \code{phi} are estimated once at
+#' the first-stage estimate and held fixed in the correction step, and
+#' \code{converged} is \code{TRUE} unless the correction step fails, in which
+#' case the first-stage estimates are returned with a warning. If the first
+#' stage does not converge, the two-stage methods give an error.
+#'
+#' If \code{converged} is \code{FALSE}, the results are those of the last
+#' accepted iteration and should not be interpreted; printing the fit or its
+#' summary then displays a notice. \code{converged = TRUE} only means that the
+#' stopping criterion was met: with separated binary data or all-zero counts
+#' the estimates can be very large, which is signaled by a warning that fitted
+#' probabilities are numerically 0 or 1, or, for a converged fit, within 1e-12
+#' of 0 or 1, or that fitted rates are numerically 0. A warning is also issued
+#' when the estimated working correlation matrix is not positive definite.
+#'
+#' In the bias-reduced and penalized methods the adjustment term is multiplied
+#' by the dispersion parameter, whose estimate tends to 0 under complete
+#' separation, so with the default estimated dispersion no method protects
+#' against infinite estimates. For binary responses with separation or rare
+#' events, use \code{phi_fixed = TRUE} or \code{\link{geewa_binary}}. Then
+#' \code{"brgee-naive"} and the Jeffreys-penalized methods
+#' (\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
+#' \code{"hpgee-jeffreys"}) keep the estimates finite under separation.
+#' \code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
+#' bias-corrected methods fail because they start from the ordinary GEE fit.
+#'
 #' @return
 #' An object of class \code{"geer"}, a list with components:
 #' \item{coefficients}{a named vector of estimated regression coefficients.}
@@ -149,8 +177,9 @@
 #' \item{robust_covariance}{the sandwich (robust) covariance matrix.}
 #' \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
 #' \item{association_structure}{the name of the working association structure.}
-#' \item{alpha}{the estimated or fixed working association parameters, 0 under
-#'       independence.}
+#' \item{alpha}{the estimated or fixed working association parameters:
+#'       correlations for \code{geewa} fits, 0 under independence, and odds
+#'       ratios for \code{\link{geewa_binary}} fits, 1 under independence.}
 #' \item{phi}{the estimated or fixed dispersion parameter, 1 for
 #'       \code{\link{geewa_binary}} fits.}
 #' \item{obs_no}{the number of observations used in fitting.}
@@ -159,42 +188,15 @@
 #' \item{max_cluster_size}{the maximum cluster size.}
 #' Other components are for internal use.
 #'
-#' @section Convergence and separation:
-#' For the two-stage methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
-#' \code{"hpgee-jeffreys"}), \code{alpha} and \code{phi} are estimated once at
-#' the first-stage estimate and held fixed in the correction step, and
-#' \code{converged} is \code{TRUE} unless the correction step fails, in which
-#' case the first-stage estimates are returned with a warning.
-#'
-#' If \code{converged} is \code{FALSE}, the results are those of the last
-#' accepted iteration and should not be interpreted; \code{print()} and
-#' \code{summary()} then show a warning. \code{converged = TRUE} only means
-#' that the stopping criterion was met: with separated binary data or all-zero
-#' counts the estimates can be very large, which is signaled by a warning that
-#' fitted probabilities are within 1e-12 of 0 or 1 or that fitted rates are 0.
-#'
-#' In the bias-reduced and penalized methods the adjustment term is multiplied
-#' by the dispersion parameter, whose estimate tends to 0 under complete
-#' separation, so with the default estimated dispersion no method protects
-#' against infinite estimates. For binary responses with separation or rare
-#' events, use \code{phi_fixed = TRUE} or \code{\link{geewa_binary}}. Then
-#' \code{"brgee-naive"} and the Jeffreys-penalized methods
-#' (\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
-#' \code{"hpgee-jeffreys"}) keep the estimates finite under separation.
-#' \code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
-#' bias-corrected methods fail because they start from the ordinary GEE fit.
-#'
 #' @references
 #' Liang, K.Y. and Zeger, S.L. (1986) Longitudinal data analysis using
 #' generalized linear models. \emph{Biometrika}, \bold{73}, 13--22.
 #'
 #' Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
-#' with odds-ratio extensions. \emph{arXiv preprint}.
-#' \doi{10.48550/arXiv.2606.16043}
+#' with odds-ratio extensions. \emph{arXiv preprint} arXiv:2606.16043.
 #'
 #' Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-#' with an odds-ratio parameterization. \emph{arXiv preprint}.
-#' \doi{10.48550/arXiv.2606.16058}
+#' with an odds-ratio parameterization. \emph{arXiv preprint} arXiv:2606.16058.
 #'
 #' @seealso \code{\link{geewa_binary}}, \code{\link{geer_control}},
 #'   \code{\link{summary.geer}}, \code{\link{vcov.geer}},

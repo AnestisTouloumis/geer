@@ -127,8 +127,8 @@ patterns, a consequence of MCAR, by the procedure of Jamshidian and Jalal
 The procedure completes the incomplete data by imputation, groups the cases
 by their original missingness pattern, and tests whether the completed data
 have a common covariance matrix across patterns. Patterns with fewer than
-\code{min_pattern_size} cases are omitted; at least two patterns, one of
-them with missing values, must remain.
+\code{min_pattern_size} cases are omitted with a warning; at least two
+patterns, one of them with missing values, must remain.
 
 Two tests are available. The modified Hawkins test (Hawkins, 1981)
 transforms the within-pattern Mahalanobis distances to variables that are
@@ -214,7 +214,7 @@ Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity, normality,
 and missing completely at random for incomplete multivariate data.
 \emph{Psychometrika}, \bold{75}, 649--674.
 
-Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package for
+Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: an R package for
 testing homoscedasticity, multivariate normality, and missing completely at
 random (MCAR). \emph{Journal of Statistical Software}, \bold{56}, 1--31.
 

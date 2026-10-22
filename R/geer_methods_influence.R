@@ -47,7 +47,7 @@
 #' \deqn{\Sigma D_i^\top V_i^{-1} (I - H_i)^{-1} (y_i - \hat\mu_i),}{Sigma
 #' D_i' V_i^(-1) (I - H_i)^(-1) (y_i - mu_i),}
 #' as in equation (4.66) of Hardin and Hilbe (2013). For observation \eqn{j}
-#' of cluster \eqn{i}, the step uses the residual, the derivative and the
+#' of cluster \eqn{i}, the step uses the residual, the derivative, and the
 #' variance of \eqn{y_{ij}}{y_ij} conditional on the remaining observations of
 #' the cluster under the working covariance matrix. This differs from equation
 #' (4.67) of Hardin and Hilbe (2013), which ignores the correlation with the
@@ -75,10 +75,10 @@
 #' error of the coefficient from \code{vcov(model, cov_type = cov_type)}.
 #' \code{cooks.distance()} returns
 #' \deqn{\frac{1}{q} (\hat\beta - \hat\beta_{(i)})^\top \hat V^{-1}
-#' (\hat\beta - \hat\beta_{(i)}),}{(1/q) (beta - beta_(i))' V^(-1) (beta -
-#' beta_(i)),}
+#' (\hat\beta - \hat\beta_{(i)}),}{
+#' (1/q) (beta - beta_(i))' V^(-1) (beta - beta_(i)),}
 #' where the coefficients are restricted to those in \code{parm}, \eqn{q} is
-#' their number and \eqn{\hat V}{V} their covariance matrix from
+#' their number, and \eqn{\hat V}{V} is their covariance matrix from
 #' \code{vcov(model, cov_type = cov_type)}. With the default
 #' \code{cov_type = "naive"} and all coefficients, this is equation (4.68) of
 #' Hardin and Hilbe (2013) for clusters, and the corresponding measure of
@@ -107,8 +107,8 @@
 #' Preisser, J.S. and Qaqish, B.F. (1996) Deletion diagnostics for generalised
 #' estimating equations. \emph{Biometrika}, \bold{83}, 551--562.
 #'
-#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized Estimating
-#' Equations using the new R package glmtoolbox. \emph{The R Journal},
+#' Vanegas, L.H., Rondon, L.M. and Paula, G.A. (2023) Generalized estimating
+#' equations using the new R package glmtoolbox. \emph{The R Journal},
 #' \bold{15}, 105--133.
 #'
 #' @seealso \code{\link{local_influence}}, \code{\link{residuals.geer}},

@@ -46,7 +46,7 @@ components hold \eqn{Z} (\code{statistic}), \eqn{n_p} and \eqn{n_n}
 }
 \description{
 Performs the nonparametric Wald-Wolfowitz runs test proposed by Chang
-(2000) for detecting non-random patterns in residuals from a fitted
+(2000) for detecting nonrandom patterns in residuals from a fitted
 generalized estimating equation model.
 }
 \details{

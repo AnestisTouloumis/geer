@@ -10,16 +10,16 @@
 * Added nine small-sample sandwich estimators to `cov_type`, those of
   Kauermann and Carroll (2001), Mancl and DeRouen (2001), Ford and Westgate
   (2017), Fay and Graubard (2001), Fan, Zhang and Zhang (2013), Pan (2001),
-  Gosho, Sato and Takeuchi (2014), Wang and Long (2011) and Westgate and
+  Gosho, Sato and Takeuchi (2014), Wang and Long (2011), and Westgate and
   Burchett (2016), for `geewa()` and `geewa_binary()` fits with any family and
   link. They are available wherever `cov_type` is accepted, including the score
   tests, where they are evaluated at the fit of the smaller model.
 
 * Added `step_criterion()`, stepwise model selection that moves to the
-  addition or deletion with the smallest QICu, QIC, QICC, AGPC or SGPC. The
+  addition or deletion with the smallest QICu, QIC, QICC, AGPC, or SGPC. The
   candidate table of every step is returned, and printed with `trace = TRUE`.
 
-* Added `hatvalues()`, `dfbeta()`, `dfbetas()` and `cooks.distance()` methods,
+* Added `hatvalues()`, `dfbeta()`, `dfbetas()`, and `cooks.distance()` methods,
   for clusters or single observations, with the one-step deletion estimates of
   Preisser and Qaqish (1996) or, for clusters, exact refits without each
   cluster. The one-step estimates for an observation condition on the rest of
@@ -46,10 +46,10 @@
   diagnostics by `"id(repeated)"`.
 
 * Added optional support for the `marginaleffects` package (predictions,
-  comparisons and slopes).
+  comparisons, and slopes).
 
 * Expanded `geecriteria()` with `QICHH`, `QICC`, `EQIC`, `GHYC`, `PAC`, `AGPC`,
-  `SGPC` and the eigenvalue-based `PT`, `WR` and `RMR` of Jang (2011), and a
+  `SGPC`, and the eigenvalue-based `PT`, `WR`, and `RMR` of Jang (2011), and a
   `criteria` argument to select which are computed.
 
 * Added `runs_test()`, the Wald-Wolfowitz runs test of residual signs (Chang,
@@ -84,11 +84,11 @@
   1990). Results change when the dispersion is estimated.
 
 * The inverse-Gaussian quasi-log-likelihood had the wrong sign, affecting `QIC`,
-  `QICu` and the working LRT for `inverse.gaussian` fits.
+  `QICu`, and the working LRT for `inverse.gaussian` fits.
 
-* P-values of the Wald, score and working tests were computed as `1 - pchisq()`
-  and were exactly 0 for large statistics (above about 70 on one degree of
-  freedom). They now use the upper tail.
+* P-values of the Wald, score, and working tests were computed as
+  `1 - pchisq()` and were exactly 0 for large statistics (above about 70 on one
+  degree of freedom). They now use the upper tail.
 
 * The bias-corrected covariance (Morel, Bokossa and Neerchal, 2003) is `NA`,
   with a warning, when the number of clusters does not exceed the number of
@@ -109,7 +109,7 @@
 
 * Fits called as `geer::geewa(...)`, or with `phi_fixed` passed as a variable,
   were treated as odds-ratio fits or as having an estimated dispersion in tests,
-  `geecriteria()`, `glance()` and `frechet_bounds_cor()`.
+  `geecriteria()`, `glance()`, and `frechet_bounds_cor()`.
 
 * A scalar `offset` failed with a `model.frame()` error and is now recycled.
 
@@ -117,11 +117,11 @@
   single observation.
 
 * A negative test statistic (possible with the bias-corrected covariance in
-  small samples) aborted `anova()`, `add1()`, `drop1()` and `step_p()`. It now
+  small samples) aborted `anova()`, `add1()`, `drop1()`, and `step_p()`. It now
   gives `NA` with a warning.
 
-* Refits in `add1()`, `drop1()`, `anova()` and `step_p()` reused a `beta_start`
-  of the wrong length.
+* Refits in `add1()`, `drop1()`, `anova()`, and `step_p()` reused a
+  `beta_start` of the wrong length.
 
 * `emmeans` support passed prior weights in the wrong row order for unsorted
   data.
@@ -130,17 +130,17 @@
   name.
 
 * `geecriteria()` used the whole deparsed fitted object as the row name of a
-  model supplied through `do.call()`. Such models are now labelled `Model 1`,
-  `Model 2` and so on.
+  model supplied through `do.call()`. Such models are now labeled `Model 1`,
+  `Model 2`, and so on.
 
-* `anova()` with one model, `add1()`, `drop1()` and `step_p()` failed when the
+* `anova()` with one model, `add1()`, `drop1()`, and `step_p()` failed when the
   fit had omitted rows with missing values in a variable that a refit did not
   use, or when the data were not visible from the formula environment (for
   example a fit made inside a function). Refits now use the stored data and the
   rows of the original fit.
 
 * `geewa()` did not check that the response lies in the support of the family.
-  Negative responses for the Poisson-type families and non-positive responses
+  Negative responses for the Poisson-type families and nonpositive responses
   for `Gamma` and `inverse.gaussian` gave a misleading starting-value error, or
   were fitted when `beta_start` was supplied. They now give the errors of
   `glm()`.
@@ -150,6 +150,10 @@
 
 * Fitted probabilities near 0 under the `cloglog` link lost relative accuracy
   through cancellation in the inverse link.
+
+* `predict()` with `se.fit = TRUE` warned that the variance was negative or
+  nonfinite for rows of `newdata` with missing covariates. Such rows now give
+  `NA` without a warning.
 
 ## Changes
 
@@ -183,7 +187,7 @@
 * `cov_type` is validated in the same way by every function, requires an exact
   name, and its default is shown as a single value in the usage. Abbreviations
   such as `cov_type = "rob"`, which `vcov()`, `confint()`, `summary()`,
-  `predict()` and `tidy()` accepted before, are now an error.
+  `predict()`, and `tidy()` accepted before, are now an error.
 
 * Deviance residuals are now divided by the square root of the dispersion, as in
   `glmtoolbox`.
@@ -198,13 +202,13 @@
 
 * A numerical failure during the iterations no longer aborts the fit: the last
   accepted iterate is returned with a warning and `converged = FALSE`.
-  Non-finite Newton steps are treated the same way.
+  Nonfinite Newton steps are treated the same way.
 
-* Refits in `anova()`, `add1()`, `drop1()` and `step_p()` stop when they do not
-  converge.
+* Refits in `anova()`, `add1()`, `drop1()`, and `step_p()` stop when they do
+  not converge.
 
 * Nested comparisons stop when the fits differ in fitting function, method,
-  dispersion handling or other settings. `anova()` with several models still
+  dispersion handling, or other settings. `anova()` with several models still
   omits, with a warning, a model with a different association structure.
 
 * `geewa()` and `geewa_binary()` gain `subset` and `na.action`.
@@ -214,11 +218,11 @@
 * `step_multiplier` in `geer_control()` may be any positive number, and values
   below 1 damp the step.
 
-* Clearer errors for a factor, character or matrix response with non-binomial
+* Clearer errors for a factor, character, or matrix response with nonbinomial
   families, `beta_start` with `NA`, rank deficiency (naming the columns), an
-  empty model matrix and numerical failures in the C++ code.
+  empty model matrix, and numerical failures in the C++ code.
 
-* Small dispersion estimates are no longer rejected, only zero or non-finite
+* Small dispersion estimates are no longer rejected, only zero or nonfinite
   ones.
 
 * Standard errors from a negative variance are `NA` with a warning.
@@ -230,12 +234,12 @@
 * `geecriteria()` warns when models differ in family or response.
 
 * `summary()` and `tidy()` stop on unused or misspelled arguments, as `vcov()`,
-  `confint()` and the other methods already did.
+  `confint()`, and the other methods already did.
 
 * A character `repeated` variable gives a warning, because its values are
   ordered alphabetically (for example `"10"` before `"2"`).
 
-* `glance()` computes only `QIC`, `QICu` and `CIC`.
+* `glance()` computes only `QIC`, `QICu`, and `CIC`.
 
 * P-values below 0.0001 are printed as `<0.0001`.
 

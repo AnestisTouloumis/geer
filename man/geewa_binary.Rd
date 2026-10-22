@@ -141,8 +141,9 @@ An object of class \code{"geer"}, a list with components:
 \item{robust_covariance}{the sandwich (robust) covariance matrix.}
 \item{bias_corrected_covariance}{the bias-corrected covariance matrix.}
 \item{association_structure}{the name of the working association structure.}
-\item{alpha}{the estimated or fixed working association parameters, 0 under
-      independence.}
+\item{alpha}{the estimated or fixed working association parameters:
+      correlations for \code{geewa} fits, 0 under independence, and odds
+      ratios for \code{\link{geewa_binary}} fits, 1 under independence.}
 \item{phi}{the estimated or fixed dispersion parameter, 1 for
       \code{\link{geewa_binary}} fits.}
 \item{obs_no}{the number of observations used in fitting.}
@@ -174,12 +175,14 @@ so they are the same in both stages of the two-stage methods.
 For the two-stage methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
 \code{"hpgee-jeffreys"}), \code{converged} is \code{TRUE} unless the
 correction step fails, in which case the first-stage estimates are returned
-with a warning. If \code{converged} is \code{FALSE}, the results are those
+with a warning. If the first stage does not converge, the two-stage methods
+give an error. If \code{converged} is \code{FALSE}, the results are those
 of the last accepted iteration and should not be interpreted.
 \code{converged = TRUE} only means that the stopping criterion was met: with
 separated data the estimates can be very large, which is signaled by a
-warning that fitted probabilities are within 1e-12 of 0 or 1. Because the
-dispersion is fixed, \code{"brgee-naive"} and the Jeffreys-penalized methods
+warning that fitted probabilities are numerically 0 or 1, or, for a
+converged fit, within 1e-12 of 0 or 1. Because the dispersion is fixed,
+\code{"brgee-naive"} and the Jeffreys-penalized methods
 (\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
 \code{"hpgee-jeffreys"}) keep the estimates finite under separation.
 \code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
@@ -218,12 +221,10 @@ summary(fit_probit)
 }
 \references{
 Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating equations,
-with odds-ratio extensions. \emph{arXiv preprint}.
-\doi{10.48550/arXiv.2606.16043}
+with odds-ratio extensions. \emph{arXiv preprint} arXiv:2606.16043.
 
 Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary data
-with an odds-ratio parameterization. \emph{arXiv preprint}.
-\doi{10.48550/arXiv.2606.16058}
+with an odds-ratio parameterization. \emph{arXiv preprint} arXiv:2606.16058.
 }
 \seealso{
 \code{\link{geewa}}, \code{\link{geer_control}},
