@@ -51,10 +51,6 @@ fit <- geewa(
 )
 glance(fit)
 
-## Compare working correlation structures
-fit_ar1 <- update(fit, corstr = "ar1")
-rbind(glance(fit), glance(fit_ar1))
-
 }
 \references{
 Hin, L.Y. and Wang, Y.G. (2009) Working-correlation-structure

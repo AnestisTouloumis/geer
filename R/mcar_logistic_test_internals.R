@@ -152,6 +152,10 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
   )
   id <- id_repeated$id
   repeated <- id_repeated$repeated
+  repeated_values <- stats::model.extract(model_frame, "repeated")
+  if (is.null(repeated_values)) {
+    repeated_values <- repeated
+  }
 
   trms <- stats::terms(analysis_formula, data = model_frame)
   design <- stats::model.matrix(trms, model_frame)
@@ -175,6 +179,7 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
   y <- as.numeric(y[ord])
   id <- id[ord]
   repeated <- repeated[ord]
+  repeated_values <- repeated_values[ord]
   covariates <- covariates[ord, , drop = FALSE]
 
   current_index <- integer(0)
@@ -218,10 +223,52 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
     id = id[current_index],
     repeated = repeated[current_index],
     occasion = repeated[current_index],
+    occasion_label = as.character(repeated_values[current_index]),
     covariates = covariates[current_index, , drop = FALSE],
     intermittent = intermittent,
     incomplete_clusters = incomplete_clusters
   )
+}
+
+
+normalize_mcar_risk_set <- function(prepared) {
+  events <- tapply(prepared$missing, prepared$occasion, sum)
+  totals <- tapply(prepared$missing, prepared$occasion, length)
+  degenerate <- as.numeric(names(events))[events == 0L | events == totals]
+  if (!length(degenerate)) {
+    return(prepared)
+  }
+  keep <- !(prepared$occasion %in% degenerate)
+  if (!any(keep)) {
+    stop(
+      paste0(
+        "every occasion has either no dropouts or no observed responses in ",
+        "the risk set; the missingness model cannot be fitted"
+      ),
+      call. = FALSE
+    )
+  }
+  omitted <- !keep
+  labels <- unique(
+    prepared$occasion_label[omitted][order(prepared$occasion[omitted])]
+  )
+  warning(
+    sprintf(
+      paste0(
+        "occasion(s) %s were omitted from the risk set because they have no ",
+        "dropouts or no observed responses, so their occasion effects cannot ",
+        "be estimated"
+      ),
+      paste(labels, collapse = ", ")
+    ),
+    call. = FALSE
+  )
+  for (component in c("missing", "lag_response", "id", "repeated",
+                      "occasion", "occasion_label")) {
+    prepared[[component]] <- prepared[[component]][keep]
+  }
+  prepared$covariates <- prepared$covariates[keep, , drop = FALSE]
+  prepared
 }
 
 

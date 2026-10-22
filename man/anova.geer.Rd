@@ -84,7 +84,7 @@ fit <- geewa_binary(
 anova(fit)
 
 ## Comparison of nested models
-fit_null <- update(fit, . ~ . - treatment)
+fit_null <- update(fit, formula = . ~ . - treatment)
 anova(fit_null, fit, test = "score")
 
 }
