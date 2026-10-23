@@ -113,6 +113,7 @@ check_nested_models <- function(object0, object1) {
   if (length(setdiff(nms_small, nms_big)) != 0L) {
     stop("models must be nested", call. = FALSE)
   }
+  check_nested_designs(smaller_model, larger_model)
   index <- match(setdiff(nms_big, nms_small), nms_big)
   if (anyNA(index) || !length(index)) {
     stop("models must be nested", call. = FALSE)
@@ -122,6 +123,25 @@ check_nested_models <- function(object0, object1) {
     object1 = larger_model,
     index = index
   )
+}
+
+
+check_nested_designs <- function(smaller_model, larger_model) {
+  shared <- names(smaller_model$coefficients)
+  design <- cbind(
+    larger_model$x[, shared, drop = FALSE],
+    smaller_model$x
+  )
+  scales <- vapply(
+    seq_len(ncol(design)),
+    function(index) max(abs(design[, index])),
+    numeric(1)
+  )
+  if (any(!is.finite(design)) || any(scales == 0) ||
+        qr(sweep(design, 2L, scales, `/`))$rank != length(shared)) {
+    stop("models must be nested", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 

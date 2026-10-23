@@ -110,6 +110,8 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance, reference) {
     tolerance = tolerance,
     context = "mcar_little_test"
   )
+  normalized_x <- em$normalized$values
+  normalized_sigma <- (n / (n - 1)) * em$normalized_sigma
   sigma_corrected <- (n / (n - 1)) * em$sigma
   statistic <- 0
   df_terms <- 0L
@@ -118,9 +120,9 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance, reference) {
     observed <- which(!missing[rows[1L], ])
     df_terms <- df_terms + length(observed)
 
-    pattern_mean <- colMeans(x[rows, observed, drop = FALSE])
-    difference <- pattern_mean - em$mu[observed]
-    sigma_observed <- sigma_corrected[observed, observed, drop = FALSE]
+    pattern_mean <- colMeans(normalized_x[rows, observed, drop = FALSE])
+    difference <- pattern_mean - em$normalized_mu[observed]
+    sigma_observed <- normalized_sigma[observed, observed, drop = FALSE]
     chol_factor <- tryCatch(chol(sigma_observed), error = function(e) NULL)
     if (is.null(chol_factor)) {
       stop(
@@ -148,7 +150,7 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance, reference) {
 
   statistic <- as.numeric(statistic)
   asymptotic_p_value <- stats::pchisq(statistic, df = df, lower.tail = FALSE)
-  bivariate_exact <- compute_little_exact(x)
+  bivariate_exact <- compute_little_exact(normalized_x)
 
   if (!is.null(bivariate_exact) &&
       !isTRUE(all.equal(

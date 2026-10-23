@@ -44,6 +44,11 @@
 #' where \eqn{S_{22}}{S_22} is the block of the other coefficients
 #' (Cook, 1986).
 #'
+#' Rank-deficient perturbation matrices retain the contribution of every
+#' coefficient column to the curvature operator. If the perturbation matrix
+#' has zero rank, the direction of maximum curvature is undefined, and
+#' \code{type = "local"} gives an error.
+#'
 #' With \code{perturbation = "cluster-weights"}, the contribution of cluster
 #' \eqn{i} to the estimating equations is multiplied by
 #' \eqn{\omega_i}{omega_i}. With \code{"observation-weights"}, the

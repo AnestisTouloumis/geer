@@ -329,6 +329,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// get_plackett_covariance_or
+arma::vec get_plackett_covariance_or(const double row_prob, const double col_prob, const double odds_ratio);
+RcppExport SEXP _geer_get_plackett_covariance_or(SEXP row_probSEXP, SEXP col_probSEXP, SEXP odds_ratioSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double >::type row_prob(row_probSEXP);
+    Rcpp::traits::input_parameter< const double >::type col_prob(col_probSEXP);
+    Rcpp::traits::input_parameter< const double >::type odds_ratio(odds_ratioSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_plackett_covariance_or(row_prob, col_prob, odds_ratio));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_covariance_matrices_cc", (DL_FUNC) &_geer_get_covariance_matrices_cc, 12},
@@ -347,6 +360,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_geer_get_small_sample_covariances_cc", (DL_FUNC) &_geer_get_small_sample_covariances_cc, 12},
     {"_geer_get_small_sample_covariances_or", (DL_FUNC) &_geer_get_small_sample_covariances_or, 9},
     {"_geer_get_correlation_matrix_cc", (DL_FUNC) &_geer_get_correlation_matrix_cc, 3},
+    {"_geer_get_plackett_covariance_or", (DL_FUNC) &_geer_get_plackett_covariance_or, 3},
     {NULL, NULL, 0}
 };
 

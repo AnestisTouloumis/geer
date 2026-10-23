@@ -733,7 +733,6 @@ test_that("odds-ratio working covariance matches high-precision values", {
     )
   }
   expect_identical(compute_plackett_covariance(0.3, 0.4, 1), 0)
-  expect_identical(compute_plackett_covariance(1e-9, 0.4, 5), 0)
 })
 
 test_that("odds-ratio working covariance in R matches the C++ engine", {

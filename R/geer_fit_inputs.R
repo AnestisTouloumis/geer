@@ -18,7 +18,34 @@ build_geer_model_frame <- function(model_call, env = parent.frame()) {
     }
   }
   model_call <- normalize_geer_scalar_offset(model_call, env, enclos)
-  eval(model_call, envir = env, enclos = enclos)
+  default_repeated <- is.null(model_call$repeated) && !is.null(model_call$id)
+  if (default_repeated) {
+    model_call <- normalize_default_repeated(model_call, env, enclos)
+  }
+  model_frame <- eval(model_call, envir = env, enclos = enclos)
+  attr(model_frame, "geer_default_repeated") <- default_repeated
+  model_frame
+}
+
+
+normalize_default_repeated <- function(model_call, env, enclos) {
+  data <- if (is.null(model_call$data)) {
+    NULL
+  } else {
+    eval(model_call$data, envir = env, enclos = enclos)
+  }
+  id <- eval(model_call$id, envir = data, enclos = enclos)
+  model_call$repeated <- stats::ave(seq_along(id), id, FUN = seq_along)
+  model_call
+}
+
+
+extract_repeated_labels <- function(model_frame) {
+  if (isTRUE(attr(model_frame, "geer_default_repeated"))) {
+    return(NULL)
+  }
+  raw <- stats::model.extract(model_frame, "repeated")
+  if (is.null(raw)) NULL else levels(factor(raw))
 }
 
 
@@ -349,7 +376,11 @@ extract_geer_id_repeated <- function(model_frame, y_length) {
         call. = FALSE
       )
     }
-    repeated <- as.numeric(factor(repeated))
+    repeated <- if (isTRUE(attr(model_frame, "geer_default_repeated"))) {
+      as.numeric(repeated)
+    } else {
+      as.numeric(factor(repeated))
+    }
   }
   if (length(repeated) != y_length) {
     stop(

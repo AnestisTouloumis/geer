@@ -238,3 +238,34 @@ test_that("extract_mcar_matrix needs a univariate numeric response", {
     "the MCAR tests require a numeric response"
   )
 })
+
+test_that("EM agrees with the monotone normal MLE in different units", {
+  x <- test_data$mcar_monotone
+  expected <- compute_reference_monotone(x)
+  for (scales in list(c(1, 1), c(1e-5, 1e-5), c(1e-4, 1e4), c(-2, 0.5))) {
+    centers_list <- if (all(scales == 1)) {
+      list(c(0, 0), c(1e8, -1e8))
+    } else {
+      list(c(0, 0))
+    }
+    for (centers in centers_list) {
+      transformed <- sweep(sweep(x, 2L, scales, `*`), 2L, centers, `+`)
+      out <- fit_mcar_normal_em(transformed, 5000L, 1e-12,
+                                "mcar_little_test")
+      recovered <- (out$mu - centers) / scales
+      expected_mu <- expected$mu
+      if (any(centers != 0)) {
+        reference <- compute_reference_monotone(
+          sweep(sweep(transformed, 2L, centers, `-`), 2L, scales, `/`)
+        )
+        expected_mu <- reference$mu
+      } else {
+        reference <- expected
+      }
+      expect_equal(out$sigma / tcrossprod(scales), reference$sigma,
+                   tolerance = 1e-6, ignore_attr = TRUE)
+      expect_equal(recovered, expected_mu, tolerance = 1e-6,
+                   ignore_attr = TRUE)
+    }
+  }
+})

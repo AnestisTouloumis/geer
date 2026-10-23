@@ -139,3 +139,62 @@ test_that("bias reduction handles strong negative association", {
   )
   expect_true(fit$converged)
 })
+
+test_that("rare-event covariances retain Plackett association", {
+  for (probability in c(1e-12, 1e-9, 1 - 1e-9)) {
+    expected <- ref_plackett(
+      min(probability, 1 - probability),
+      min(probability, 1 - probability), 1e12
+    ) - min(probability, 1 - probability)^2
+    covariance <- or_V(rep(probability, 2L), 1e12)[1L, 2L]
+    expect_equal(covariance / expected, 1, tolerance = 1e-6)
+    expect_equal(
+      compute_plackett_covariance(probability, probability, 1e12),
+      covariance, tolerance = 1e-12
+    )
+  }
+})
+
+test_that("extreme finite odds ratios have finite limiting covariances", {
+  for (odds_ratio in c(1e-200, 1e200)) {
+    bounds <- ref_frechet_cov(0.3, 0.6)
+    expected <- bounds[if (odds_ratio < 1) 1L else 2L]
+    expect_equal(or_V(c(0.3, 0.6), odds_ratio)[1L, 2L], expected,
+                 tolerance = 1e-12)
+    expect_equal(compute_plackett_covariance(0.3, 0.6, odds_ratio),
+                 expected, tolerance = 1e-12)
+    root <- sqrt(odds_ratio)
+    expect_equal(compute_plackett_covariance(0.5, 0.5, odds_ratio),
+                 (root - 1) / (4 * (root + 1)), tolerance = 1e-12)
+  }
+  score <- as.numeric(get_estimating_equations_or(
+    c(0, 1), diag(2L), c(1, 1), c(1, 2), c(1, 1),
+    "identity", c(0.3, 0.6), c(0.3, 0.6), 1e200
+  ))
+  expect_equal(score, c(-10 / 3, 10 / 3), tolerance = 1e-6)
+})
+
+test_that("rare-event covariance derivatives match an independent Jacobian", {
+  probabilities <- c(1e-9, 2e-9)
+  beta <- qlogis(probabilities)
+  response <- c(0, 1)
+  quantities <- get_influence_quantities_or(
+    response, diag(2L), c(1, 1), c(1, 2), c(1, 1), "logit",
+    probabilities, beta, 1e12
+  )
+  expected <- -ref_jac(function(value) {
+    compute_reference_or_score(value, response, 1e12)
+  }, beta)
+  expect_equal(quantities$sensitivity, expected, tolerance = 1e-6)
+})
+
+test_that("Plackett covariance preserves degenerate probability boundaries", {
+  for (probability in c(0, 1)) {
+    expect_identical(
+      compute_plackett_covariance(probability, 0.4, 5), 0
+    )
+    expect_identical(
+      compute_plackett_covariance(0.4, probability, 5), 0
+    )
+  }
+})

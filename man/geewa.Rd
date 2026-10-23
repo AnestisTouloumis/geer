@@ -49,7 +49,9 @@ within each cluster. Its values must be unique within each cluster. They
 are replaced by their rank among the sorted distinct values, or by the
 level number for a factor, so only their order matters and not their
 spacing. A character variable gives an error, since it has no natural
-order. If omitted, the row order within each cluster is used.}
+order. If omitted, positions are assigned from the row order within each
+cluster in the original input, before subsetting and missing-value removal.
+Retained observations keep these positions, including gaps.}
 
 \item{control}{list of control parameters as returned by
 \code{\link{geer_control}}. Defaults to \code{geer_control(...)}.}
@@ -92,9 +94,10 @@ and working correlation parameters. Defaults to \code{TRUE}.}
 
 \item{alpha_vector}{numeric vector of working correlation parameters for
 \code{corstr = "fixed"}, of length \code{choose(T, 2)}, where \eqn{T} is
-the number of distinct \code{repeated} values, giving a positive definite
-correlation matrix. Ignored for other structures. Defaults to
-\code{NULL}.}
+the number of distinct supplied \code{repeated} values, or the largest
+retained original position if \code{repeated} is omitted. The parameters
+must give a positive definite correlation matrix. Ignored for other
+structures. Defaults to \code{NULL}.}
 
 \item{phi_fixed}{logical indicating whether the dispersion parameter is
 fixed at \code{phi_value}. Defaults to \code{FALSE}.}
@@ -195,8 +198,27 @@ The estimation methods are:
     independence.}
 }
 
-Observations are sorted by \code{id} and \code{repeated}, and both are
-recoded to consecutive integers. The quasi families are mapped to the
+With adjustment \eqn{A} added to the estimating equations \eqn{U}, the
+bias-corrected methods use the plus scoring step
+\eqn{\hat\beta_{BC} = \hat\beta_{GEE} + H^{-1} A}.
+Here \eqn{H} is the working information for the naive and robust methods,
+and \eqn{-\partial U/\partial\beta^\top}{-dU/d beta'} for the empirical
+method. This differs from the printed minus sign with positive working
+information in Touloumis (2026a, Equation 6, Algorithm 1, and the robust and
+naive formulas in Section 2.5). The plus sign agrees with the adjusted
+equation \eqn{U + A = 0} and, under independent Bernoulli sampling with the
+logit link, the one-step Firth adjustment.
+
+For the empirical method, the paper defines \eqn{j = DU}, so its outer
+minus sign is equivalent to the plus step with \eqn{H = -j}. The first
+contraction in its Equation (10) must also change sign to reproduce the
+implemented adjustment under that definition of \eqn{j}. The second
+contraction is unchanged.
+
+Observations are sorted by \code{id} and \code{repeated}. The cluster
+identifiers and supplied \code{repeated} values are recoded to consecutive
+integers. Implicit positions retain gaps after subsetting or missing-value
+removal. The quasi families are mapped to the
 corresponding standard families: \code{quasibinomial} to \code{binomial},
 \code{quasipoisson} to \code{poisson}, and \code{quasi} with variance
 \code{"constant"}, \code{"mu(1-mu)"}, \code{"mu"}, \code{"mu^2"}, or

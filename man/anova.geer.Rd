@@ -61,6 +61,13 @@ jackknife covariance of the larger model. The small-sample estimators of
 \code{\link{vcov.geer}}, such as \code{"kauermann-carroll"}, are evaluated
 at the same fitted means, which extends their published definitions.
 
+Nesting requires the smaller model matrix and the columns of the larger
+model matrix with the same coefficient names to span the same space.
+Consequently, setting the remaining coefficients to zero recovers the
+smaller mean model. Matching coefficient names alone are insufficient.
+Rescaling or changing the basis of the shared columns is allowed when it
+preserves this space.
+
 With several models, the fits must use the same data and each consecutive
 pair must be nested. A model whose working association structure differs
 from that of the first model is omitted with a warning, and any other

@@ -723,3 +723,20 @@ test_that("nested comparisons check the dependence order and the nesting", {
   )
   expect_true(is.finite(out$Chi[2L]))
 })
+
+test_that("nesting requires the shared design spaces to agree", {
+  data <- test_data$nested_design
+  fit <- geewa(formula = y ~ x, data = data, id = id, phi_fixed = TRUE)
+  rescaled <- geewa(formula = y ~ x + z,
+                    data = transform(data, x = 2 * x), id = id,
+                    phi_fixed = TRUE)
+  expect_no_error(check_nested_models(fit, rescaled))
+  mixed <- geewa(formula = y ~ x + z,
+                 data = transform(data, x = x + z), id = id,
+                 phi_fixed = TRUE)
+  expect_error(check_nested_models(fit, mixed))
+  data$x <- c(2, 1, 0, 3, 1, 4, 3, 0, 1, 2, 1, 2)
+  different <- geewa(formula = y ~ x + z, data = data, id = id,
+                     phi_fixed = TRUE)
+  expect_error(check_nested_models(fit, different))
+})

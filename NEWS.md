@@ -74,6 +74,23 @@
 
 ## Bug fixes
 
+* Preserved Plackett association near probability boundaries and avoided
+  overflow for extreme finite odds ratios, including covariance derivatives.
+
+* Corrected the local influence direction for rank-deficient perturbations.
+  A zero-rank perturbation now gives an error for the local direction.
+
+* Corrected Anderson-Darling counts for ties at the pooled maximum and
+  rejected samples with only one distinct transformed value.
+
+* Centered and scaled normal-theory MCAR EM calculations to stabilize
+  estimation under translations and changes of measurement units.
+
+* Required agreement of shared design spaces in nested-model comparisons.
+
+* Assigned implicit repeated positions before subsetting and missing-value
+  removal, preserving gaps in fitting and MCAR data reconstruction.
+
 * The heading of the `step_p()` table split long formulas over several pieces
   joined by runs of spaces. Formulas are now printed on one line.
 
@@ -169,6 +186,11 @@
   responses, are now omitted from the risk set with a warning.
 
 ## Changes
+
+* Reconciled the scoring signs of the bias-corrected estimators with
+  Touloumis (2026a), including the empirical sensitivity convention and the
+  first contraction of its empirical adjustment. Numerical bias correction
+  is unchanged.
 
 * `add1()`, `drop1()`, `model.matrix()`, `glance()`, and the `print()` methods
   for fits and their summaries now reject unused arguments. `anova()` rejects

@@ -64,3 +64,26 @@ test_that("local influence validates its arguments", {
   expect_error(local_influence(fit_geewa_pois_exch, type = "max"),
                "'type' must be one of: total, local")
 })
+
+test_that("rank-deficient perturbations retain all coefficient columns", {
+  fit <- geewa(formula = y ~ x + z, data = test_data$influence_deficient,
+               id = id, phi_fixed = TRUE)
+  design <- model.matrix(fit)
+  delta <- rowsum(design * (fit$y - fitted(fit)), group = fit$id)
+  expect_lt(qr(delta)$rank, ncol(delta))
+  curvature <- delta %*% solve(crossprod(design)) %*% t(delta)
+  decomposition <- eigen(curvature, symmetric = TRUE)
+  expected <- abs(decomposition$vectors[
+    , which.max(abs(decomposition$values))
+  ])
+  expect_equal(unname(local_influence(fit, type = "local")), expected,
+               tolerance = 1e-6)
+})
+
+test_that("a zero perturbation matrix has no local direction", {
+  expect_error(
+    compute_local_direction(matrix(0, 3L, 2L), diag(2L)),
+    "local_influence failed: the perturbation matrix has zero rank",
+    fixed = TRUE
+  )
+})

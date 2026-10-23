@@ -65,3 +65,7 @@ get_correlation_matrix_cc <- function(correlation_structure, alpha_vector, dimen
     .Call(`_geer_get_correlation_matrix_cc`, correlation_structure, alpha_vector, dimension)
 }
 
+get_plackett_covariance_or <- function(row_prob, col_prob, odds_ratio) {
+    .Call(`_geer_get_plackett_covariance_or`, row_prob, col_prob, odds_ratio)
+}
+

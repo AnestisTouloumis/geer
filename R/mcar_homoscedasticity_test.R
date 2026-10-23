@@ -89,6 +89,16 @@
 #' \code{imputed_data} is intended for matrix or data frame input, since the
 #' matrix reconstructed from a fitted model object is not returned.
 #'
+#' Normal-theory EM estimation is performed after centering and scaling each
+#' variable using its observed values. Convergence and singularity checks use
+#' these normalized coordinates, and returned moments are transformed back to
+#' the original units. This is a numerical reparameterization of the same
+#' normal likelihood, rather than a change to the statistical method.
+#'
+#' The Anderson-Darling statistic counts ties over the complete pooled support
+#' before excluding the maximum support point from the sum. If all transformed
+#' values coincide, this test is undefined, and an error is given.
+#'
 #' The implementation follows \pkg{MissMech} (Jamshidian, Jalal and Jansen,
 #' 2014), which differs from Jamshidian and Jalal (2010) in that one imputation
 #' method serves both tests, normal-theory imputation replaces

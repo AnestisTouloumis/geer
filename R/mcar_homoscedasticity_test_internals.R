@@ -689,18 +689,27 @@ compute_mcar_ad_test <- function(x, group, group_counts) {
   x_grouped <- x[ordered_groups]
   cumulative_counts <- c(0L, cumsum(group_counts))
 
-  x_sort <- sort(x_grouped)[seq_len(n - 1L)]
-  distinct_index <- which(!duplicated(x_sort))
-  counts <- c(distinct_index, length(x_sort) + 1L) - c(0L, distinct_index)
-  h_j <- counts[seq.int(2L, length(distinct_index) + 1L)]
+  support <- sort(unique(x_grouped))
+  if (length(support) < 2L) {
+    stop(
+      paste0(
+        "mcar_homoscedasticity_test failed: the Anderson-Darling test ",
+        "requires at least two distinct transformed values"
+      ),
+      call. = FALSE
+    )
+  }
+  support_index <- match(x_grouped, support)
+  support_no <- length(support)
+  retained <- seq_len(support_no - 1L)
+  h_j <- tabulate(support_index, nbins = support_no)[retained]
   h_n <- cumsum(h_j)
-  z_j <- x_sort[distinct_index]
 
   ad_group <- numeric(k)
   for (i in seq_len(k)) {
     idx <- seq.int(cumulative_counts[i] + 1L, cumulative_counts[i + 1L])
-    f_ij <- rowSums(outer(z_j, x_grouped[idx], FUN = "=="))
-    m_ij <- cumsum(f_ij)
+    f_ij <- tabulate(support_index[idx], nbins = support_no)
+    m_ij <- cumsum(f_ij)[retained]
     numerator <- (n * m_ij - group_counts[i] * h_n)^2
     denominator <- h_n * (n - h_n)
     ad_group[i] <- sum(h_j * numerator / denominator) / group_counts[i]

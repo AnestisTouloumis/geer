@@ -54,6 +54,27 @@ test_data <- local({
     leprosy = load_geer_data("leprosy"),
     respiratory = respiratory,
     respiratory2 = build_respiratory2_data(respiratory),
-    rinse = load_geer_data("rinse")
+    rinse = load_geer_data("rinse"),
+    influence_deficient = data.frame(
+      id = rep(1:6, each = 4L),
+      x = rep(c(-2, -1, 1, 2, -3, 0, 1, 2, 1, 0, -1, 3), 2L),
+      z = rep(c(1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0), 2L),
+      y = rep(c(1, 2, -1, 0, 2, -2, 0, 3, 1, 0, 2, -2), 2L)
+    ),
+    mcar_monotone = cbind(1:8, c(2, 1, 4, 2, 7, 5, NA, NA)),
+    nested_design = data.frame(
+      id = 1:12, x = rep(-1:1, 4L), z = rep(c(-1, 1), 6L),
+      y = c(2, 0, 1, 0, 1, 3, 1, 4, 0, 2, 2, 1)
+    ),
+    correction_sign = data.frame(
+      id = 1:10, y = c(1, 1, rep(0, 8L)),
+      offset = seq(-1, 1, length.out = 10L)
+    ),
+    repeated_gaps = data.frame(
+      id = rep(1:4, each = 3L), visit = rep(1:3, 4L),
+      y = c(1, NA, 3, 2, 4, 1, 1, 3, 2, 4, 2, 5),
+      offset = rep(c(0.1, 0.2, -0.1), 4L),
+      weight = rep(c(1, 2, 3), 4L)
+    )
   )
 })

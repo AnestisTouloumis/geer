@@ -521,3 +521,18 @@ test_that("mcar_homoscedasticity_test runs the Hawkins test alone", {
   expect_identical(out$selected.test, "hawkins")
   expect_match(out$interpretation, "modified Hawkins test")
 })
+
+test_that("AD counts every observation tied at the maximum", {
+  group <- rep(1:2, each = 3L)
+  for (x in list(c(1, 2, 3, 4, 5, 6), c(1, 2, 3, 4, 6, 6),
+                 c(1, 1, 2, 2, 3, 3))) {
+    expect_equal(compute_mcar_ad_test(x, group, c(3, 3))$statistic,
+                 compute_reference_ad(x, group), tolerance = 1e-12)
+  }
+})
+
+test_that("AD rejects a sample with no distinct support points", {
+  expect_error(compute_mcar_ad_test(rep(1, 6L), rep(1:2, each = 3L),
+                                    c(3, 3)),
+               "at least two distinct", fixed = TRUE)
+})

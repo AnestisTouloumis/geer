@@ -17,16 +17,25 @@
 #'   \code{"fixed"}. Defaults to \code{"independence"}.
 #' @param alpha_vector numeric vector of strictly positive, finite odds ratios
 #'   for \code{orstr = "fixed"}, of length \code{choose(T, 2)}, where \eqn{T} is
-#'   the number of distinct \code{repeated} values. Ignored for other
-#'   structures. Defaults to \code{NULL}.
+#'   the number of distinct supplied \code{repeated} values, or the largest
+#'   retained original position if \code{repeated} is omitted. Ignored for
+#'   other structures. Defaults to \code{NULL}.
 #'
 #' @details
 #' The estimation methods are described in \code{\link{geewa}}. The marginal
 #' mean model uses the binomial family with the given \code{link}, the working
-#' odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables (see
+#' odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables
+#' (see
 #' \code{or_adding} in \code{\link{geer_control}}), and the dispersion
 #' parameter is fixed at 1. Observations are sorted by \code{id} and
-#' \code{repeated}, and both are recoded to consecutive integers.
+#' \code{repeated}. The cluster identifiers and supplied \code{repeated}
+#' values are recoded to consecutive integers. Implicit positions retain gaps
+#' after subsetting or missing-value removal.
+#'
+#' The Plackett covariance and its derivatives are evaluated using scaled
+#' expressions for all strictly interior probabilities and positive finite
+#' odds ratios. Probabilities close to 0 or 1 retain their working association.
+#' This numerical reformulation does not change the model in Touloumis (2026a).
 #'
 #' @inherit geewa return
 #'

@@ -594,3 +594,35 @@ test_that("refits for anova, add1, drop1 and step_p keep a formula offset", {
   expect_s3_class(out_drop, "anova")
   expect_true(all(is.finite(out_drop[["CIC"]])))
 })
+
+test_that("implicit occasions precede omission and subsetting", {
+  data <- test_data$repeated_gaps
+  fit <- geewa(formula = y ~ 1, data = data, id = id,
+               corstr = "fixed", weights = weight, offset = offset,
+               alpha_vector = c(0.2, 0.3, 0.4), phi_fixed = TRUE)
+  explicit <- geewa(formula = y ~ 1, data = data, id = id,
+                    repeated = visit, corstr = "fixed", weights = weight,
+                    offset = offset, alpha_vector = c(0.2, 0.3, 0.4),
+                    phi_fixed = TRUE)
+  expect_equal(fit$repeated, explicit$repeated, tolerance = 1e-12)
+  expect_equal(coef(fit), coef(explicit), tolerance = 1e-12)
+  expect_null(fit$repeated_labels)
+  reconstructed <- extract_mcar_matrix(fit)
+  expect_true(is.na(reconstructed[1L, 2L]))
+  expect_equal(unname(reconstructed[, c(1L, 3L)]),
+               matrix(data$y[data$visit != 2L], 4L, byrow = TRUE),
+               tolerance = 1e-12)
+  subset_fit <- geewa(formula = y ~ 1, data = data, id = id,
+                      corstr = "fixed", alpha_vector = c(0.2, 0.3, 0.4),
+                      phi_fixed = TRUE, subset = visit != 2L)
+  expect_equal(subset_fit$repeated, rep(c(1, 3), 4L), tolerance = 1e-12)
+  expect_identical(colnames(extract_mcar_matrix(subset_fit)),
+                   as.character(1:3))
+  data$y <- as.numeric(data$y > 2)
+  binary <- geewa_binary(formula = y ~ 1, data = data, id = id,
+                         orstr = "fixed", alpha_vector = c(2, 3, 4),
+                         subset = visit != 2L)
+  expect_equal(binary$repeated, rep(c(1, 3), 4L), tolerance = 1e-12)
+  expect_equal(update(binary, formula = . ~ .)$repeated, binary$repeated,
+               tolerance = 1e-12)
+})

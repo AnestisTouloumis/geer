@@ -55,7 +55,51 @@ compute_mcar_em_start <- function(x, context) {
 }
 
 
+normalize_mcar_em_data <- function(x, context) {
+  centers <- numeric(ncol(x))
+  scales <- numeric(ncol(x))
+  for (index in seq_len(ncol(x))) {
+    values <- x[!is.na(x[, index]), index]
+    if (!length(values) || any(!is.finite(values))) {
+      stop(
+        paste0(
+          context, " failed: the initial covariance matrix for ",
+          "normal-theory EM estimation is singular"
+        ),
+        call. = FALSE
+      )
+    }
+    centers[index] <- values[1L]
+    centered <- values - centers[index]
+    spread <- max(abs(centered))
+    if (!is.finite(spread) || spread == 0) {
+      stop(
+        paste0(
+          context, " failed: the normal-theory maximum-likelihood ",
+          "covariance matrix is singular or nearly singular"
+        ),
+        call. = FALSE
+      )
+    }
+    unit_values <- centered / spread
+    scales[index] <- spread * sqrt(mean(
+      (unit_values - mean(unit_values))^2
+    ))
+    if (!is.finite(scales[index]) || scales[index] <= 0) {
+      stop(
+        paste0(context, " failed: the data scale cannot be represented"),
+        call. = FALSE
+      )
+    }
+  }
+  values <- sweep(sweep(x, 2L, centers, `-`), 2L, scales, `/`)
+  list(values = values, centers = centers, scales = scales)
+}
+
+
 fit_mcar_normal_em <- function(x, maxiter, tolerance, context) {
+  normalized <- normalize_mcar_em_data(x, context)
+  x <- normalized$values
   n <- nrow(x)
   p <- ncol(x)
   initial <- compute_mcar_em_start(x, context)
@@ -193,7 +237,22 @@ fit_mcar_normal_em <- function(x, maxiter, tolerance, context) {
     )
   }
 
-  list(mu = mu, sigma = sigma, iterations = iter, converged = converged)
+  normalized_mu <- mu
+  normalized_sigma <- sigma
+  mu <- normalized$centers + normalized$scales * mu
+  sigma <- sigma * tcrossprod(normalized$scales)
+  if (any(!is.finite(mu)) || any(!is.finite(sigma)) ||
+        any(diag(sigma) <= 0)) {
+    stop(
+      paste0(context, " failed: the rescaled moments cannot be represented"),
+      call. = FALSE
+    )
+  }
+  list(
+    mu = mu, sigma = sigma, iterations = iter, converged = converged,
+    normalized = normalized, normalized_mu = normalized_mu,
+    normalized_sigma = normalized_sigma
+  )
 }
 
 
@@ -301,7 +360,11 @@ get_mcar_data <- function(object, data) {
 
 build_mcar_model_frame <- function(mcall, eval_env, formula_env, what) {
   tryCatch(
-    eval(mcall, envir = eval_env, enclos = formula_env),
+    if (is.null(mcall$id)) {
+      eval(mcall, envir = eval_env, enclos = formula_env)
+    } else {
+      build_geer_model_frame(mcall, env = eval_env)
+    },
     error = function(e) {
       stop(
         sprintf("could not %s: %s", what, conditionMessage(e)),
@@ -357,11 +420,9 @@ extract_mcar_matrix <- function(object, data = NULL) {
   id_repeated <- extract_geer_id_repeated(model_frame, length(response))
   id <- id_repeated$id
   repeated <- id_repeated$repeated
-  repeated_raw <- stats::model.extract(model_frame, "repeated")
-  repeated_labels <- if (is.null(repeated_raw)) {
-    as.character(seq_len(max(repeated)))
-  } else {
-    levels(factor(repeated_raw))
+  repeated_labels <- extract_repeated_labels(model_frame)
+  if (is.null(repeated_labels)) {
+    repeated_labels <- as.character(seq_len(max(repeated)))
   }
 
   response_matrix <- matrix(

@@ -87,28 +87,7 @@ compute_gpc_penalized <- function(object,
 
 
 compute_plackett_covariance <- function(row_prob, col_prob, odds_ratio) {
-  tol <- 1e-8
-  if (row_prob > 1 - tol || col_prob > 1 - tol ||
-      row_prob < tol || col_prob < tol) {
-    return(0)
-  }
-  ans_independence <- row_prob * col_prob
-  eps <- odds_ratio - 1
-  f_value <- 1 + eps * (row_prob + col_prob)
-  root_value <- sqrt(
-    max(0, f_value^2 - 4 * odds_ratio * eps * ans_independence)
-  )
-  if (f_value > 0) {
-    a_value <- 2 * odds_ratio - f_value
-    numerator <- if (a_value > 0) {
-      4 * odds_ratio * eps * (1 - row_prob) * (1 - col_prob) /
-        (a_value + root_value)
-    } else {
-      a_value - root_value
-    }
-    return(ans_independence * numerator / (f_value + root_value))
-  }
-  (f_value - root_value) / (2 * eps) - ans_independence
+  as.numeric(get_plackett_covariance_or(row_prob, col_prob, odds_ratio))
 }
 
 

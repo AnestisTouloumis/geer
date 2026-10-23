@@ -32,58 +32,84 @@ arma::vec get_subject_specific_odds_ratios_or(const arma::vec& repeated_vector_i
 
 namespace {
 
-//============================ bivariate distribution ==========================
-bool is_plackett_boundary(const double row_prob, const double col_prob) {
-  const double tol = 1e-8;
-  return row_prob > 1.0 - tol || col_prob > 1.0 - tol ||
-         row_prob < tol || col_prob < tol;
-}
+struct PlackettPair {
+  double row_prob;
+  double col_prob;
+  double row_complement;
+  double col_complement;
+  double reciprocal;
+  double departure;
+  double root;
+  bool complemented;
+};
 
-double get_bivariate_distribution(const double row_prob,
+PlackettPair compute_plackett_pair(const double row_prob,
                                   const double col_prob,
                                   const double odds_ratio) {
-  const double ans_independence = row_prob * col_prob;
-  if (is_plackett_boundary(row_prob, col_prob)) {
-    return ans_independence;
+  if (!(R_FINITE(row_prob) && row_prob >= 0.0 && row_prob <= 1.0)) {
+    Rcpp::stop("'row_prob' must lie between 0 and 1, inclusive");
   }
-  const double eps = odds_ratio - 1.0;
-  const double f_value = 1.0 + eps * (row_prob + col_prob);
-  const double root_value =
-    std::sqrt(std::max(0.0, f_value * f_value - 4.0 * odds_ratio * eps * ans_independence));
-  if (f_value > 0.0) {
-    return 2.0 * odds_ratio * ans_independence / (f_value + root_value);
+  if (!(R_FINITE(col_prob) && col_prob >= 0.0 && col_prob <= 1.0)) {
+    Rcpp::stop("'col_prob' must lie between 0 and 1, inclusive");
   }
-  return (f_value - root_value) / (2.0 * eps);
+  if (!(R_FINITE(odds_ratio) && odds_ratio > 0.0)) {
+    Rcpp::stop("'odds_ratio' must be a positive finite number");
+  }
+  const bool complemented = odds_ratio < 1.0;
+  const double reciprocal = complemented ? odds_ratio : 1.0 / odds_ratio;
+  const double departure = complemented ? 1.0 - odds_ratio :
+    (odds_ratio - 1.0) / odds_ratio;
+  const double col = complemented ? 1.0 - col_prob : col_prob;
+  const double col_complement = complemented ? col_prob : 1.0 - col_prob;
+  const double row_complement = 1.0 - row_prob;
+  const double root = std::hypot(
+    departure * (row_prob - col),
+    std::sqrt(reciprocal) * std::sqrt(
+      2.0 * departure *
+        (row_prob * col_complement + col * row_complement) + reciprocal));
+  if (!(R_FINITE(root) && root > 0.0)) {
+    Rcpp::stop("compute_plackett_pair failed: the discriminant is not "
+               "a representable positive value");
+  }
+  return {row_prob, col, row_complement, col_complement,
+          reciprocal, departure, root, complemented};
 }
-//==============================================================================
 
-
-//============================ bivariate covariance ============================
 double get_bivariate_covariance(const double row_prob,
                                 const double col_prob,
                                 const double odds_ratio) {
-  if (is_plackett_boundary(row_prob, col_prob)) {
+  const auto pair = compute_plackett_pair(row_prob, col_prob, odds_ratio);
+  if (row_prob == 0.0 || row_prob == 1.0 ||
+      col_prob == 0.0 || col_prob == 1.0) {
     return 0.0;
   }
-  const double ans_independence = row_prob * col_prob;
-  const double eps = odds_ratio - 1.0;
-  const double f_value = 1.0 + eps * (row_prob + col_prob);
-  const double root_value =
-    std::sqrt(std::max(0.0, f_value * f_value - 4.0 * odds_ratio * eps * ans_independence));
-  if (f_value > 0.0) {
-    const double a_value = 2.0 * odds_ratio - f_value;
-    const double numerator = a_value > 0.0 ?
-      4.0 * odds_ratio * eps * (1.0 - row_prob) * (1.0 - col_prob) /
-        (a_value + root_value) :
-      a_value - root_value;
-    return ans_independence * numerator / (f_value + root_value);
+  const double first = pair.reciprocal + pair.departure *
+    (pair.row_prob + pair.col_prob) + pair.root;
+  const double second = pair.reciprocal + pair.departure *
+    (pair.row_complement + pair.col_complement) + pair.root;
+  const double covariance = (pair.row_prob / first) * pair.col_prob *
+    (4.0 * pair.departure * (pair.row_complement / second) *
+     pair.col_complement);
+  if (!R_FINITE(covariance)) {
+    Rcpp::stop("get_bivariate_covariance failed: the covariance is not finite");
   }
-  return (f_value - root_value) / (2.0 * eps) - ans_independence;
+  return pair.complemented ? -covariance : covariance;
 }
-//==============================================================================
 
 
 }  // namespace
+
+//============================ covariance for R callers ========================
+// [[Rcpp::export]]
+arma::vec get_plackett_covariance_or(const double row_prob,
+                                    const double col_prob,
+                                    const double odds_ratio) {
+  arma::vec result(1);
+  result[0] = get_bivariate_covariance(row_prob, col_prob, odds_ratio);
+  return result;
+}
+//==============================================================================
+
 
 //============================ v matrix ========================================
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,
@@ -96,7 +122,8 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
     for (arma::uword i = 0; i + 1 < cluster_size; ++i) {
       for (arma::uword j = i + 1; j < cluster_size; ++j) {
         result(i, j) =
-          get_bivariate_covariance(mu_vector[i], mu_vector[j], odds_ratios_vector[k]);
+          get_bivariate_covariance(mu_vector[i], mu_vector[j],
+                                   odds_ratios_vector[k]);
         ++k;
       }
     }
@@ -111,52 +138,50 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
 
 namespace {
 
-//============================ first derivative wrt row probability ============
 double get_bivariate_distribution_d_mu_row(const double row_prob,
-                                        const double col_prob,
-                                        const double odds_ratio) {
-  const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
-  const double num =
-    row_prob + col_prob - odds_ratio * (row_prob - col_prob) - 1.0;
-  const double den =
-    f_value - 2.0 * (odds_ratio - 1.0) * biv_dis;
-  return 0.5 * (1.0 + num / den);
+                                          const double col_prob,
+                                          const double odds_ratio) {
+  const auto pair = compute_plackett_pair(row_prob, col_prob, odds_ratio);
+  const double numerator = -pair.departure * (pair.row_prob - pair.col_prob) +
+    pair.reciprocal * (2.0 * pair.col_prob - 1.0);
+  const double direction = pair.complemented ? -1.0 : 1.0;
+  const double signed_numerator = direction * numerator;
+  if (signed_numerator >= 0.0) {
+    return 0.5 * (1.0 + signed_numerator / pair.root);
+  }
+  return 2.0 * (pair.reciprocal / pair.root) *
+    (pair.col_prob / (pair.root - signed_numerator)) * pair.col_complement;
 }
-//==============================================================================
 
-
-//============================ second derivative wrt row probability ===========
 double get_bivariate_distribution_d2_mu_row(const double row_prob,
-                                         const double col_prob,
-                                         const double odds_ratio) {
-  const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
-  const double num =
-    2.0 * odds_ratio * (odds_ratio - 1.0) * col_prob * (col_prob - 1.0);
-  const double den =
-    std::pow(f_value - 2.0 * (odds_ratio - 1.0) * biv_dis, 3.0);
-  return num / den;
-}
-//==============================================================================
-
-
-//============================ second derivative wrt row-col probabilities =====
-double get_bivariate_distribution_d2_mu_row_col(const double row_prob,
                                            const double col_prob,
                                            const double odds_ratio) {
-  const double f_value = 1.0 - (1.0 - odds_ratio) * (row_prob + col_prob);
-  const double biv_dis =
-    get_bivariate_distribution(row_prob, col_prob, odds_ratio);
-  const double num =
-    (f_value - 2.0 * (odds_ratio - 1.0) * row_prob * col_prob) * odds_ratio;
-  const double den =
-    std::pow(f_value - 2.0 * (odds_ratio - 1.0) * biv_dis, 3.0);
-  return num / den;
+  const auto pair = compute_plackett_pair(row_prob, col_prob, odds_ratio);
+  const double derivative = -2.0 * pair.departure *
+    (pair.reciprocal / pair.root) * (pair.col_prob / pair.root) *
+    (pair.col_complement / pair.root);
+  if (!R_FINITE(derivative)) {
+    Rcpp::stop("get_bivariate_distribution_d2_mu_row failed: the derivative "
+               "is not finite");
+  }
+  return pair.complemented ? -derivative : derivative;
 }
-//==============================================================================
+
+double get_bivariate_distribution_d2_mu_row_col(const double row_prob,
+                                               const double col_prob,
+                                               const double odds_ratio) {
+  const auto pair = compute_plackett_pair(row_prob, col_prob, odds_ratio);
+  const double numerator = pair.reciprocal + pair.departure *
+    (pair.row_prob * pair.col_complement +
+     pair.col_prob * pair.row_complement);
+  const double derivative = (pair.reciprocal / pair.root) *
+    (numerator / pair.root) / pair.root;
+  if (!R_FINITE(derivative)) {
+    Rcpp::stop("get_bivariate_distribution_d2_mu_row_col failed: the "
+               "derivative is not finite");
+  }
+  return derivative;
+}
 
 
 }  // namespace
@@ -202,7 +227,8 @@ arma::mat get_g_matrix_mu_or(const arma::vec& mu_vector,
           const arma::uword smaller_index = std::min(i, r);
           const arma::uword larger_index = std::max(i, r);
           const arma::uword k =
-            upper_triangular_pair_index(smaller_index, larger_index, cluster_size);
+            upper_triangular_pair_index(smaller_index, larger_index,
+                                      cluster_size);
           result(r * cluster_size + i, r) =
             get_bivariate_distribution_d2_mu_row_col(mu_vector[i],
                                                 mu_vector[r],
@@ -235,7 +261,8 @@ arma::mat get_v_matrix_mu_or(const arma::vec& mu_vector,
         const arma::uword smaller_index = std::min(i, r);
         const arma::uword larger_index = std::max(i, r);
         const arma::uword k =
-          upper_triangular_pair_index(smaller_index, larger_index, cluster_size);
+          upper_triangular_pair_index(smaller_index, larger_index,
+                                      cluster_size);
 
         result(r * cluster_size + i, i) +=
           get_bivariate_distribution_d_mu_row(mu_vector[i],

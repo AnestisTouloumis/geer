@@ -199,8 +199,14 @@ compute_local_influence_matrix <- function(sensitivity, parm) {
 compute_local_direction <- function(delta_matrix, inverse_matrix) {
   decomposition <- qr(delta_matrix)
   rank <- decomposition$rank
-  pivot <- decomposition$pivot[seq_len(rank)]
-  r_matrix <- qr.R(decomposition)[seq_len(rank), seq_len(rank), drop = FALSE]
+  if (rank == 0L) {
+    stop(
+      "local_influence failed: the perturbation matrix has zero rank",
+      call. = FALSE
+    )
+  }
+  pivot <- decomposition$pivot
+  r_matrix <- qr.R(decomposition)[seq_len(rank), , drop = FALSE]
   curvature <- r_matrix %*% inverse_matrix[pivot, pivot, drop = FALSE] %*%
     t(r_matrix)
   eigen_decomposition <- eigen(

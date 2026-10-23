@@ -44,7 +44,9 @@ within each cluster. Its values must be unique within each cluster. They
 are replaced by their rank among the sorted distinct values, or by the
 level number for a factor, so only their order matters and not their
 spacing. A character variable gives an error, since it has no natural
-order. If omitted, the row order within each cluster is used.}
+order. If omitted, positions are assigned from the row order within each
+cluster in the original input, before subsetting and missing-value removal.
+Retained observations keep these positions, including gaps.}
 
 \item{control}{list of control parameters as returned by
 \code{\link{geer_control}}. Defaults to \code{geer_control(...)}.}
@@ -79,8 +81,9 @@ added to any \code{offset()} terms in \code{formula}.}
 
 \item{alpha_vector}{numeric vector of strictly positive, finite odds ratios
 for \code{orstr = "fixed"}, of length \code{choose(T, 2)}, where \eqn{T} is
-the number of distinct \code{repeated} values. Ignored for other
-structures. Defaults to \code{NULL}.}
+the number of distinct supplied \code{repeated} values, or the largest
+retained original position if \code{repeated} is omitted. Ignored for
+other structures. Defaults to \code{NULL}.}
 
 \item{subset}{optional vector specifying a subset of observations to be used
 in the fit, evaluated in \code{data} as in
@@ -160,10 +163,18 @@ bias-reduced, bias-corrected, or Jeffreys-type penalized GEE.
 \details{
 The estimation methods are described in \code{\link{geewa}}. The marginal
 mean model uses the binomial family with the given \code{link}, the working
-odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables (see
+odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables
+(see
 \code{or_adding} in \code{\link{geer_control}}), and the dispersion
 parameter is fixed at 1. Observations are sorted by \code{id} and
-\code{repeated}, and both are recoded to consecutive integers.
+\code{repeated}. The cluster identifiers and supplied \code{repeated}
+values are recoded to consecutive integers. Implicit positions retain gaps
+after subsetting or missing-value removal.
+
+The Plackett covariance and its derivatives are evaluated using scaled
+expressions for all strictly interior probabilities and positive finite
+odds ratios. Probabilities close to 0 or 1 retain their working association.
+This numerical reformulation does not change the model in Touloumis (2026a).
 }
 \section{Convergence and separation}{
 

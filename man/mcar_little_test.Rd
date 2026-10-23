@@ -65,18 +65,24 @@ missing completely at random (MCAR).
 \details{
 Let the rows be grouped into missing-data patterns. For pattern \eqn{r},
 let \eqn{n_r} be its number of rows, \eqn{p_r} the number of observed
-variables, and \eqn{\bar y_r}{ybar_r} their mean vector. With \eqn{\hat\mu}{mu} and
-\eqn{\hat\Sigma}{Sigma} the maximum likelihood estimates of the common mean vector
+variables, and \eqn{\bar y_r}{ybar_r} their mean vector. With
+\eqn{\hat\mu}{mu} and
+\eqn{\hat\Sigma}{Sigma} the maximum likelihood estimates of the common
+mean vector
 and covariance matrix under a multivariate normal model, obtained by the EM
-algorithm, and \eqn{\widetilde\Sigma = n\hat\Sigma/(n - 1)}{Sigma~ = n Sigma/(n - 1)}, Little's
+algorithm, and \eqn{\widetilde\Sigma = n\hat\Sigma/(n - 1)}{Sigma~ = n
+Sigma/(n - 1)}, Little's
 statistic is
 \deqn{d^2 = \sum_r n_r (\bar y_r - \hat\mu_r)^\top
-\widetilde\Sigma_r^{-1}(\bar y_r - \hat\mu_r),}{d^2 = sum_r n_r (ybar_r - mu_r)' Sigma~_r^(-1) (ybar_r - mu_r),}
-which under MCAR is asymptotically chi-squared with \eqn{\sum_r p_r - p}{sum_r p_r - p}
+\widetilde\Sigma_r^{-1}(\bar y_r - \hat\mu_r),}{d^2 = sum_r n_r (ybar_r -
+mu_r)' Sigma~_r^(-1) (ybar_r - mu_r),}
+which under MCAR is asymptotically chi-squared with \eqn{\sum_r p_r -
+p}{sum_r p_r - p}
 degrees of freedom, where \eqn{p} is the number of variables.
 
 When there are two variables, one fully observed, Little shows that
-\eqn{d^2 = (n - 1)F/(n - 2 + F)} with \eqn{F \sim F_{1, n-2}}{F ~ F(1, n - 2)}. With
+\eqn{d^2 = (n - 1)F/(n - 2 + F)} with \eqn{F \sim F_{1, n-2}}{F ~ F(1, n -
+2)}. With
 \code{reference = "auto"} this exact reference is used in that case,
 provided the identity is reproduced numerically from the EM estimates;
 otherwise an error is given, which usually indicates that \code{tolerance}
@@ -84,13 +90,22 @@ is too loose, and \code{reference = "asymptotic"} uses the chi-squared
 reference. If the EM algorithm does not converge within \code{maxiter}
 iterations, an error is given.
 
+Normal-theory EM estimation is performed after centering and scaling each
+variable using its observed values. Convergence and singularity checks use
+these normalized coordinates, and returned moments are transformed back to
+the original units. This is a numerical reparameterization of the same
+normal likelihood, rather than a change to the statistical method.
+Little's statistic and exact-reference checks also use normalized
+coordinates.
+
 Matrix or data frame input must have at least two rows and two variables,
 at least two observed values per variable, at least one jointly observed
 value for every pair of variables, and no infinite values. Rows with no
 observed values belong to no pattern and are removed with a warning. For a
 fitted model object, the response is arranged with one row per cluster and
 one column per \code{repeated} index; if \code{repeated} was not supplied
-when fitting, the row order within each cluster defines the occasions.
+when fitting, the original row order within each cluster defines the
+occasions before subsetting and missing-value removal.
 
 The test assumes a multivariate normal model and is most appropriate for
 quantitative variables (Little, 1988), so a warning is issued for binary

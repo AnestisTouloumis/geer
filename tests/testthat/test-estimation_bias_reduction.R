@@ -362,3 +362,34 @@ test_that("pgee-jeffreys under a non-canonical link maximizes l + 1/2 log|X'WX| 
     expect_equal(unname(coef(f)), o$par, tolerance = 1e-5)
   }
 })
+
+test_that("one-step naive bias correction has the Firth scoring sign", {
+  data <- test_data$correction_sign
+  probability <- mean(data$y)
+  expected <- qlogis(probability) + (0.5 - probability) /
+    (nrow(data) * probability * (1 - probability))
+  fits <- list(
+    geewa(formula = y ~ 1, family = binomial(), data = data, id = id,
+          method = "bcgee-naive", phi_fixed = TRUE),
+    geewa_binary(formula = y ~ 1, data = data, id = id,
+                 method = "bcgee-naive")
+  )
+  for (fit in fits) {
+    expect_equal(unname(coef(fit)), expected, tolerance = 1e-6)
+  }
+})
+
+test_that("empirical bias correction uses the negative score Jacobian", {
+  data <- test_data$correction_sign
+  reference <- compute_reference_empirical(data$y, data$offset)
+  fits <- list(
+    geewa(formula = y ~ 1, family = binomial(), data = data, id = id,
+          method = "bcgee-empirical", offset = offset, phi_fixed = TRUE),
+    geewa_binary(formula = y ~ 1, data = data, id = id,
+                 method = "bcgee-empirical", offset = offset)
+  )
+  for (fit in fits) {
+    expect_equal(unname(coef(fit)), reference$corrected, tolerance = 1e-6)
+  }
+  expect_gt(abs(reference$corrected - reference$printed), 0.1)
+})

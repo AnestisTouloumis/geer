@@ -229,3 +229,14 @@ test_that("rows with no observed values are removed before testing", {
   )
   expect_identical(out$missing.patterns, reference$missing.patterns)
 })
+
+test_that("Little's statistic is invariant to location and units", {
+  x <- test_data$mcar_monotone
+  for (transformed in list(x, x + 1e8, x * 1e-5,
+                           sweep(x, 2L, c(1e-4, 1e4), `*`))) {
+    result <- mcar_little_test(transformed)
+    expect_equal(unname(result$statistic), 4, tolerance = 1e-6)
+    expect_equal(result$p.value, stats::pf(8, 1, 6, lower.tail = FALSE),
+                 tolerance = 1e-12)
+  }
+})

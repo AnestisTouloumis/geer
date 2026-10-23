@@ -1,5 +1,6 @@
 ## geer
 devtools::document()
+devtools::build_readme()
 devtools::test()
 devtools::check()
 

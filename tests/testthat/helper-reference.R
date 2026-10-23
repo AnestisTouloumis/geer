@@ -562,3 +562,63 @@ ref_or_counts <- function(y, id, tt, w, add, n_occ, exchangeable = FALSE) {
   }
   if (exchangeable) rep(exp(mean(log(out))), length(out)) else out
 }
+
+compute_reference_ad <- function(x, group) {
+  n <- length(x)
+  support <- sort(unique(x))
+  support <- support[-length(support)]
+  counts <- vapply(support, function(value) sum(x == value), numeric(1))
+  total <- vapply(support, function(value) sum(x <= value), numeric(1))
+  sum(vapply(unique(group), function(index) {
+    size <- sum(group == index)
+    cumulative <- vapply(support, function(value) {
+      sum(x[group == index] <= value)
+    }, numeric(1))
+    sum(counts * (n * cumulative - size * total)^2 /
+          (total * (n - total))) / size
+  }, numeric(1))) / n
+}
+
+compute_reference_monotone <- function(x) {
+  observed <- !is.na(x[, 2L])
+  design <- cbind(1, x[observed, 1L])
+  coefficients <- solve(crossprod(design),
+                        crossprod(design, x[observed, 2L]))
+  residuals <- x[observed, 2L] - drop(design %*% coefficients)
+  variance <- mean((x[, 1L] - mean(x[, 1L]))^2)
+  slope <- coefficients[2L]
+  list(
+    mu = c(mean(x[, 1L]), coefficients[1L] + slope * mean(x[, 1L])),
+    sigma = matrix(c(variance, slope * variance, slope * variance,
+                     mean(residuals^2) + slope^2 * variance), 2L)
+  )
+}
+
+compute_reference_or_score <- function(beta, response, odds_ratio) {
+  probabilities <- plogis(beta)
+  covariance <- diag(probabilities * (1 - probabilities))
+  joint <- ref_plackett(probabilities[1L], probabilities[2L], odds_ratio)
+  covariance[1L, 2L] <- covariance[2L, 1L] <-
+    joint - prod(probabilities)
+  probabilities * (1 - probabilities) *
+    drop(solve(covariance, response - probabilities))
+}
+
+compute_reference_empirical <- function(response, offset) {
+  beta <- uniroot(function(value) {
+    sum(response - plogis(value + offset))
+  }, c(-20, 20), tol = 1e-12)$root
+  probabilities <- plogis(beta + offset)
+  residuals <- response - probabilities
+  variances <- probabilities * (1 - probabilities)
+  information <- sum(variances)
+  first <- -sum(variances * residuals)
+  second <- -sum(variances * (1 - 2 * probabilities))
+  meat <- sum(residuals^2)
+  adjustment <- -(first / information +
+                    0.5 * meat * second / information^2)
+  printed <- first / information -
+    0.5 * meat * second / information^2
+  list(beta = beta, corrected = beta + adjustment / information,
+       printed = beta + printed / information)
+}
