@@ -52,7 +52,7 @@ The linear predictor is computed from the model matrix of \code{newdata},
 or of the fitted data, and the offset, and transformed by the inverse link
 for \code{type = "response"}. Standard errors are obtained by the delta
 method. A prediction whose variance is negative or not finite under the
-selected estimator gets a standard error of \code{NA}, with a warning. When
+selected estimator gives an error. When
 \code{newdata} is supplied and the model has an offset, the
 variables of the offset must be in \code{newdata}.
 }

@@ -1,4 +1,4 @@
-compute_mcar_em_start <- function(x) {
+compute_mcar_em_start <- function(x, context) {
   n <- nrow(x)
   p <- ncol(x)
   mu <- colMeans(x, na.rm = TRUE)
@@ -16,9 +16,13 @@ compute_mcar_em_start <- function(x) {
 
   if (anyNA(mu) || !all(is.finite(sigma))) {
     stop(
-      paste0(
-        "initial covariance matrix for normal-theory EM estimation is ",
-        "singular; check for collinear or nearly constant variables"
+      sprintf(
+        paste0(
+          "%s failed: the initial covariance matrix for normal-theory EM ",
+          "estimation is singular; check for collinear or nearly constant ",
+          "variables"
+        ),
+        context
       ),
       call. = FALSE
     )
@@ -34,9 +38,13 @@ compute_mcar_em_start <- function(x) {
     attempts <- attempts + 1L
     if (attempts > 12L) {
       stop(
-        paste0(
-          "initial covariance matrix for normal-theory EM estimation is ",
-          "singular; check for collinear or nearly constant variables"
+        sprintf(
+          paste0(
+            "%s failed: the initial covariance matrix for normal-theory EM ",
+            "estimation is singular; check for collinear or nearly constant ",
+            "variables"
+          ),
+          context
         ),
         call. = FALSE
       )
@@ -47,10 +55,10 @@ compute_mcar_em_start <- function(x) {
 }
 
 
-fit_mcar_normal_em <- function(x, maxiter, tolerance) {
+fit_mcar_normal_em <- function(x, maxiter, tolerance, context) {
   n <- nrow(x)
   p <- ncol(x)
-  initial <- compute_mcar_em_start(x)
+  initial <- compute_mcar_em_start(x, context)
   mu <- initial$mu
   sigma <- initial$sigma
   missing <- is.na(x)
@@ -88,9 +96,12 @@ fit_mcar_normal_em <- function(x, maxiter, tolerance) {
         solve(sigma_oo),
         error = function(e) {
           stop(
-            paste0(
-              "the observed-data covariance matrix became singular during ",
-              "normal-theory EM estimation"
+            sprintf(
+              paste0(
+                "%s failed: the observed-data covariance matrix became ",
+                "singular during normal-theory EM estimation"
+              ),
+              context
             ),
             call. = FALSE
           )
@@ -136,9 +147,12 @@ fit_mcar_normal_em <- function(x, maxiter, tolerance) {
 
     if (!all(is.finite(mu)) || !all(is.finite(sigma))) {
       stop(
-        paste0(
-          "normal-theory maximum-likelihood estimation produced non-finite ",
-          "values"
+        sprintf(
+          paste0(
+            "%s failed: normal-theory maximum-likelihood estimation produced ",
+            "non-finite values"
+          ),
+          context
         ),
         call. = FALSE
       )
@@ -151,12 +165,13 @@ fit_mcar_normal_em <- function(x, maxiter, tolerance) {
   }
 
   if (!converged) {
-    warning(
+    stop(
       sprintf(
         paste0(
-          "the EM algorithm for normal-theory maximum-likelihood estimation ",
-          "did not converge within %d iterations"
+          "%s failed: the EM algorithm did not converge within %d iterations; ",
+          "increase 'maxiter'"
         ),
+        context,
         maxiter
       ),
       call. = FALSE
@@ -167,9 +182,12 @@ fit_mcar_normal_em <- function(x, maxiter, tolerance) {
   scale <- max(1, max(abs(eigenvalues)))
   if (any(eigenvalues <= sqrt(.Machine$double.eps) * scale)) {
     stop(
-      paste0(
-        "the normal-theory maximum-likelihood covariance matrix is singular ",
-        "or nearly singular"
+      sprintf(
+        paste0(
+          "%s failed: the normal-theory maximum-likelihood covariance matrix ",
+          "is singular or nearly singular"
+        ),
+        context
       ),
       call. = FALSE
     )
@@ -336,11 +354,7 @@ extract_mcar_matrix <- function(object, data = NULL) {
     )
   }
 
-  id_repeated <- extract_geer_id_repeated(
-    model_frame,
-    length(response),
-    warn_character = FALSE
-  )
+  id_repeated <- extract_geer_id_repeated(model_frame, length(response))
   id <- id_repeated$id
   repeated <- id_repeated$repeated
   repeated_raw <- stats::model.extract(model_frame, "repeated")

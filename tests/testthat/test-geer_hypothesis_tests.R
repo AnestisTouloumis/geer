@@ -124,7 +124,14 @@ test_that("compute_chisq_mixture keeps extreme p-values above zero", {
 test_that("compute_chisq_mixture rejects invalid inputs", {
   expect_error(compute_chisq_mixture(c(1, 2), NA_real_), "test_stat")
   expect_error(compute_chisq_mixture(numeric(), 1), "non-empty")
-  expect_error(compute_chisq_mixture(c(0, 0), 1), "invalid eigenvalues")
+  expect_error(
+    compute_chisq_mixture(c(0, 0), 1, "rao-scott", "anova.geer"),
+    paste0(
+      "anova.geer failed: the weights of the chi-squared mixture are not ",
+      "finite and positive"
+    ),
+    fixed = TRUE
+  )
 })
 
 test_that("compute_score_components returns expected matrix components for nested geewa fits", {
@@ -269,7 +276,11 @@ test_that("the fit function is recovered from the call when it is not stored", {
   expect_identical(get_geer_fit_function(fit), "geewa_binary")
   fit$call[[1L]] <- quote(some_wrapper)
   expect_true(is.na(get_geer_fit_function(fit)))
-  expect_error(is_geewa_fit(fit), "cannot determine whether the model was fitted")
+  expect_error(
+    is_geewa_fit(fit),
+    "'object' must be a geewa() or geewa_binary() fit",
+    fixed = TRUE
+  )
 })
 
 test_that("score tests do not depend on how geewa was called", {
@@ -414,13 +425,20 @@ test_that("Wald and working Wald tests report singular and negative statistics",
   singular <- fit_bin_full
   singular$robust_covariance[] <- 0
   expect_error(
-    compute_wald_test(fit_bin_trt, singular, cov_type = "robust"),
-    "Wald test failed: the covariance matrix is singular or invalid"
+    compute_wald_test(fit_bin_trt, singular, "robust", "anova.geer"),
+    "anova.geer failed: the covariance matrix of the Wald test is singular",
+    fixed = TRUE
   )
   singular$naive_covariance[] <- 0
   expect_error(
-    compute_working_wald_test(fit_bin_trt, singular, cov_type = "robust"),
-    "naive covariance matrix is singular or invalid"
+    compute_working_wald_test(
+      fit_bin_trt, singular, "robust", "rao-scott", "anova.geer"
+    ),
+    paste0(
+      "anova.geer failed: the naive covariance matrix of the working Wald ",
+      "test is singular"
+    ),
+    fixed = TRUE
   )
   negative <- fit_bin_full
   negative$naive_covariance <- -negative$naive_covariance
@@ -429,37 +447,52 @@ test_that("Wald and working Wald tests report singular and negative statistics",
       fit_bin_trt,
       negative,
       cov_type = "robust",
-      pmethod = "rao-scott"
+      pmethod = "rao-scott",
+      context = "anova.geer"
     ),
-    "working Wald test failed: the test statistic is negative"
+    "anova.geer failed: the working Wald test statistic is negative"
   )
 })
 
 test_that("covariance helpers of the tests validate their inputs", {
   expect_error(
-    compute_df_adjusted_covariance(diag(2), NA_real_, 2L, "Test"),
-    "Test failed: invalid clusters_no"
+    compute_df_adjusted_covariance(diag(2), NA_real_, 2L, "vcov.geer"),
+    "vcov.geer failed: the number of clusters is not a positive integer",
+    fixed = TRUE
   )
   expect_error(
-    compute_df_adjusted_covariance(diag(2), 2, 2L, "Test"),
+    compute_df_adjusted_covariance(diag(2), 2, 2L, "vcov.geer"),
     "requires more clusters than coefficients"
   )
   expect_error(
-    compute_mixture_eigenvalues(matrix(0, 2, 2), diag(2), "Test"),
-    "Test failed: could not compute eigenvalues"
+    compute_mixture_eigenvalues(
+      matrix(0, 2, 2), diag(2), "anova.geer", "working LRT"
+    ),
+    paste0(
+      "anova.geer failed: the eigenvalues of the working LRT weight matrix ",
+      "could not be computed"
+    ),
+    fixed = TRUE
+  )
+  expect_error(
+    check_test_index(integer(0), "anova.geer"),
+    "anova.geer failed: the models have no coefficients to test",
+    fixed = TRUE
   )
 })
 
 test_that("check_test_statistic stops on a negative statistic", {
-  expect_equal(check_test_statistic(2.5, "Wald test"), 2.5)
-  expect_equal(check_test_statistic(-1e-12, "Wald test"), 0)
+  expect_equal(check_test_statistic(2.5, "anova.geer", "Wald test"), 2.5)
+  expect_equal(check_test_statistic(-1e-12, "anova.geer", "Wald test"), 0)
   expect_error(
-    check_test_statistic(-0.5, "Wald test"),
-    "Wald test failed: the test statistic is negative"
+    check_test_statistic(-0.5, "anova.geer", "Wald test"),
+    "anova.geer failed: the Wald test statistic is negative (-0.5)",
+    fixed = TRUE
   )
   expect_error(
-    check_test_statistic(Inf, "Wald test"),
-    "non-finite test statistic"
+    check_test_statistic(Inf, "drop1.geer", "score test"),
+    "drop1.geer failed: the score test statistic is not finite",
+    fixed = TRUE
   )
 })
 

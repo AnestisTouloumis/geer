@@ -69,7 +69,7 @@ test_that("pooled small-sample covariances stop with an unbalanced design", {
       vcov(fit, cov_type = cov_type),
       sprintf(
         paste0(
-          "vcov failed: the %s covariance requires a balanced design, in ",
+          "vcov.geer failed: the %s covariance requires a balanced design, in ",
           "which every cluster observes each repeated position once"
         ),
         cov_type
@@ -102,7 +102,7 @@ test_that("gosho-sato-takeuchi stops when clusters do not exceed coefficients", 
   expect_error(
     vcov(fit, cov_type = "gosho-sato-takeuchi"),
     paste0(
-      "vcov failed: the gosho-sato-takeuchi covariance requires more ",
+      "vcov.geer failed: the gosho-sato-takeuchi covariance requires more ",
       "clusters than coefficients"
     ),
     fixed = TRUE
@@ -132,7 +132,7 @@ test_that("leverage-based covariances stop when a cluster has leverage 1", {
       vcov(fit, cov_type = cov_type),
       sprintf(
         paste0(
-          "vcov failed: the %s covariance is undefined because I - H is ",
+          "vcov.geer failed: the %s covariance is undefined because I - H is ",
           "singular for cluster(s) s01, whose leverage is 1"
         ),
         cov_type

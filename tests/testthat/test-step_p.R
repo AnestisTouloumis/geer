@@ -285,10 +285,11 @@ test_that("build_step_model_key identifies a model by its terms and intercept", 
   expect_true(grepl("^1\\|", key_full))
 })
 
-test_that("step_p warns when direction = 'forward' has no scope", {
-  expect_warning(
+test_that("step_p requires a scope for direction = 'forward'", {
+  expect_error(
     step_p(fit_resp_full_indep, direction = "forward"),
-    "no 'scope' was supplied"
+    "'scope' must be supplied for direction = \"forward\"",
+    fixed = TRUE
   )
 })
 

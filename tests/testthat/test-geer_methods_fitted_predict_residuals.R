@@ -152,13 +152,21 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   )
   expect_error(
     predict(fit_formula, newdata = test_data$epilepsy),
-    "supplied via the model formula are not present in 'newdata'"
+    paste0(
+      "'newdata' must contain the variable(s) 'log_weeks' used in the ",
+      "offset of the model formula"
+    ),
+    fixed = TRUE
   )
   newdata <- test_data$epilepsy[1:4, ]
   newdata$log_weeks <- c(log(2), Inf, log(2), log(2))
   expect_error(
     predict(fit_formula, newdata = newdata),
-    "formula-based prediction offset must be a finite numeric vector"
+    paste0(
+      "the offset in the model formula must have one finite value per row ",
+      "of 'newdata'"
+    ),
+    fixed = TRUE
   )
   fit_argument <- geewa(
     seizures ~ treatment,
@@ -166,12 +174,17 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   )
   expect_error(
     predict(fit_argument, newdata = test_data$epilepsy),
-    "supplied via the 'offset' argument are not present in 'newdata'"
+    paste0(
+      "'newdata' must contain the variable(s) 'log_weeks' used in the ",
+      "'offset' argument"
+    ),
+    fixed = TRUE
   )
   newdata$log_weeks <- c(NA, log(2), log(2), log(2))
   expect_error(
     predict(fit_argument, newdata = newdata),
-    "prediction offset supplied via the 'offset' argument must be a finite"
+    "'offset' must have one finite value per row of 'newdata'",
+    fixed = TRUE
   )
   fit_scalar <- geewa(
     seizures ~ treatment,
@@ -180,6 +193,12 @@ test_that("prediction offsets are taken from newdata and must be finite", {
   newdata <- test_data$epilepsy[1:4, ]
   expected <- drop(model.matrix(~treatment, newdata) %*% coef(fit_scalar)) + 0.5
   expect_equal(unname(predict(fit_scalar, newdata = newdata)), unname(expected))
+  rm(log_weeks)
+  expect_error(
+    predict(fit_formula, newdata = test_data$epilepsy[1:4, ]),
+    "'newdata' must contain the variable(s) 'log_weeks'",
+    fixed = TRUE
+  )
 })
 
 test_that("Mahalanobis residuals of odds-ratio fits are finite and nonnegative", {

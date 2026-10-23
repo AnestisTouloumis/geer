@@ -146,7 +146,7 @@ test_that("an ordering variable must align with the stored observations", {
 
   expect_error(
     extract_runs_order_variable(fit, "visit"),
-    "cannot be aligned with the observations stored in the fitted model"
+    "must align with the observations stored in the fitted model"
   )
 })
 

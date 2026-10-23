@@ -80,8 +80,10 @@
 #'
 #' Distribution-free imputation, in the spirit of Srivastava and Dolatabadi
 #' (2009), requires at least 10, and at least \eqn{2p}, complete cases among the
-#' retained rows, where \eqn{p} is the number of variables; otherwise
-#' normal-theory imputation is used with a warning. Because normal-theory
+#' retained rows, where \eqn{p} is the number of variables; otherwise an error
+#' is given, and \code{imputation = "normal"} must be requested. If the EM
+#' algorithm of normal-theory imputation does not converge within
+#' \code{maxiter} iterations, an error is given. Because normal-theory
 #' imputation can inflate the size of the nonparametric test for nonnormal data,
 #' requesting it with \code{method} other than \code{"hawkins"} gives a warning.
 #' \code{imputed_data} is intended for matrix or data frame input, since the
@@ -262,7 +264,7 @@ mcar_homoscedasticity_test <- function(
   } else {
     if (!is.null(data)) {
       stop(
-        "'data' is only used when 'object' is a fitted 'geer' object",
+        "'data' must not be supplied unless 'object' is a fitted 'geer' object",
         call. = FALSE
       )
     }

@@ -52,15 +52,23 @@ test_that("run_geer_estimation_passes reproduces the pass schedule per method", 
 
 test_that("check_geer_first_pass stops only on non-convergence", {
   fit <- list(criterion = c(1, 1e-10, 0), beta_mat = matrix(0, 2, 3))
-  expect_silent(check_geer_first_pass(fit, "bcgee-naive", 1e-6))
+  expect_silent(check_geer_first_pass(fit, "bcgee-naive", 1e-6, "geewa"))
   bad <- list(criterion = c(1, 0.5, 0), beta_mat = matrix(0, 2, 3))
   expect_error(
-    check_geer_first_pass(bad, "bcgee-naive", 1e-6),
-    "bias-corrected estimator is undefined"
+    check_geer_first_pass(bad, "bcgee-naive", 1e-6, "geewa"),
+    paste0(
+      "geewa failed: the bcgee-naive estimator is undefined because its ",
+      "first-stage GEE fit did not converge"
+    ),
+    fixed = TRUE
   )
   expect_error(
-    check_geer_first_pass(bad, "hpgee-jeffreys", 1e-6),
-    "hpgee-jeffreys estimator is undefined"
+    check_geer_first_pass(bad, "hpgee-jeffreys", 1e-6, "geewa_binary"),
+    paste0(
+      "geewa_binary failed: the hpgee-jeffreys estimator is undefined ",
+      "because its first-stage independence pgee-jeffreys fit did not converge"
+    ),
+    fixed = TRUE
   )
 })
 
@@ -81,11 +89,11 @@ test_that("check_geer_first_pass reports the solver failure reason", {
     failure = "singular matrix"
   )
   expect_error(
-    check_geer_first_pass(bad, "bcgee-naive", 1e-6),
+    check_geer_first_pass(bad, "bcgee-naive", 1e-6, "geewa"),
     "did not converge: singular matrix"
   )
   expect_error(
-    check_geer_first_pass(bad, "opgee-jeffreys", 1e-6),
+    check_geer_first_pass(bad, "opgee-jeffreys", 1e-6, "geewa"),
     "did not converge: singular matrix"
   )
 })

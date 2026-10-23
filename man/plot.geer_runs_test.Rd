@@ -64,7 +64,7 @@ ordering, and the default subtitle the number of runs, its null
 expectation, and the p-value. At least three colors are needed, because
 with two the color would simply repeat the sign. Cluster boundaries are
 meaningful only under the natural ordering, and requesting them otherwise
-gives a warning.
+gives an error.
 }
 \examples{
 data("epilepsy", package = "geer")

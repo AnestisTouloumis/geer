@@ -321,9 +321,7 @@ extract_geer_response_weights <- function(model_frame, family) {
 }
 
 
-extract_geer_id_repeated <- function(model_frame,
-                                     y_length,
-                                     warn_character = TRUE) {
+extract_geer_id_repeated <- function(model_frame, y_length) {
   id_raw <- stats::model.extract(model_frame, "id")
   if (is.null(id_raw)) {
     stop("'id' must be supplied", call. = FALSE)
@@ -342,12 +340,11 @@ extract_geer_id_repeated <- function(model_frame,
     if (anyNA(repeated)) {
       stop("'repeated' must not contain missing values", call. = FALSE)
     }
-    if (warn_character && is.character(repeated)) {
-      warning(
+    if (is.character(repeated)) {
+      stop(
         paste0(
-          "'repeated' is a character vector and is sorted alphabetically ",
-          "(\"10\" before \"2\"); use a numeric or factor variable to set the ",
-          "order"
+          "'repeated' must be numeric or a factor; a character vector has no ",
+          "natural order"
         ),
         call. = FALSE
       )

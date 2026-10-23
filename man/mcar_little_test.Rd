@@ -79,8 +79,10 @@ When there are two variables, one fully observed, Little shows that
 \eqn{d^2 = (n - 1)F/(n - 2 + F)} with \eqn{F \sim F_{1, n-2}}{F ~ F(1, n - 2)}. With
 \code{reference = "auto"} this exact reference is used in that case,
 provided the identity is reproduced numerically from the EM estimates;
-otherwise a warning is issued and the chi-squared reference is used, which
-usually indicates that \code{tolerance} is too loose.
+otherwise an error is given, which usually indicates that \code{tolerance}
+is too loose, and \code{reference = "asymptotic"} uses the chi-squared
+reference. If the EM algorithm does not converge within \code{maxiter}
+iterations, an error is given.
 
 Matrix or data frame input must have at least two rows and two variables,
 at least two observed values per variable, at least one jointly observed

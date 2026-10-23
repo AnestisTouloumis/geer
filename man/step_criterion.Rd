@@ -20,7 +20,8 @@ step_criterion(
 \item{scope}{optional formula, or list with components \code{upper} and
 \code{lower} (both formulas), defining the range of models examined in the
 stepwise search. See Details. If omitted, the search is restricted to the
-terms of the initial model.}
+terms of the initial model; it must be supplied for
+\code{direction = "forward"}.}
 
 \item{direction}{character string specifying the direction of the search:
 \code{"backward"}, \code{"forward"}, or \code{"both"}. Defaults to

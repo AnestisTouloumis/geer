@@ -83,9 +83,9 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
     stop(
       sprintf(
         paste0(
-          "'order_by' variable '%s' cannot be aligned: including it changes ",
-          "the number of complete cases; supply an aligned numeric vector ",
-          "instead"
+          "'order_by' variable '%s' must align with the observations used to ",
+          "fit the model, but including it changes the number of complete ",
+          "cases; supply an aligned numeric vector instead"
         ),
         name
       ),
@@ -96,9 +96,8 @@ extract_runs_order_variable <- function(object, name, env = parent.frame()) {
     stop(
       sprintf(
         paste0(
-          "'order_by' variable '%s' cannot be aligned with the observations ",
-          "stored in the fitted model; supply an aligned numeric vector ",
-          "instead"
+          "'order_by' variable '%s' must align with the observations stored ",
+          "in the fitted model; supply an aligned numeric vector instead"
         ),
         name
       ),
@@ -148,7 +147,10 @@ compute_runs_statistics <- function(residual_values, alternative) {
   negative_no <- sum(signs < 0)
   if (positive_no == 0L || negative_no == 0L) {
     stop(
-      "the runs test requires at least one positive and one negative residual",
+      paste0(
+        "runs_test failed: the runs test requires at least one positive and ",
+        "one negative residual"
+      ),
       call. = FALSE
     )
   }
@@ -167,7 +169,10 @@ compute_runs_statistics <- function(residual_values, alternative) {
 
   if (!is.finite(variance_runs) || variance_runs <= 0) {
     stop(
-      "the runs-test variance is not positive for this residual sign sequence",
+      paste0(
+        "runs_test failed: the runs-test variance is not positive for this ",
+        "residual sign sequence"
+      ),
       call. = FALSE
     )
   }

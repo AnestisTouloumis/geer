@@ -11,7 +11,8 @@
 #' @param scope optional formula, or list with components \code{upper} and
 #'   \code{lower} (both formulas), defining the range of models examined in the
 #'   stepwise search. See Details. If omitted, the search is restricted to the
-#'   terms of the initial model.
+#'   terms of the initial model; it must be supplied for
+#'   \code{direction = "forward"}.
 #' @param direction character string specifying the direction of the search:
 #'   \code{"backward"}, \code{"forward"}, or \code{"both"}. Defaults to
 #'   \code{"backward"}.
@@ -125,11 +126,8 @@ step_p <- function(object,
   pmethod <- opts$pmethod
   scope_value <- if (missing(scope)) NULL else scope
   if (is.null(scope_value) && identical(direction, "forward")) {
-    warning(
-      paste0(
-        "no 'scope' was supplied for direction = \"forward\", so the initial ",
-        "model is returned unchanged"
-      ),
+    stop(
+      "'scope' must be supplied for direction = \"forward\"",
       call. = FALSE
     )
   }

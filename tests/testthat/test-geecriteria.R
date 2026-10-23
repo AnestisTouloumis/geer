@@ -43,11 +43,11 @@ test_that("geecriteria returns the expected structure for single and multiple mo
   )
 })
 
-test_that("geecriteria warns when models differ in number of observations", {
-  expect_warning(
+test_that("geecriteria stops when models differ in number of observations", {
+  expect_error(
     geecriteria(fit_binary_indep, fit_binary_small),
-    regexp = "differ in the number of observations",
-    ignore.case = TRUE
+    "models must be fitted to the same observations",
+    fixed = TRUE
   )
 })
 
@@ -687,7 +687,7 @@ test_that("the quasi-log-likelihood differs from its value at mu = y by minus ha
   }
 })
 
-test_that("geecriteria warns when models differ in family or response", {
+test_that("geecriteria stops when models differ in family or response", {
   fit_pois <- fit_geewa_pois_exch
   fit_gauss <- geewa(
     formula = seizures ~ treatment + lnbaseline + lnage,
@@ -697,15 +697,17 @@ test_that("geecriteria warns when models differ in family or response", {
     corstr = "exchangeable",
     method = "gee"
   )
-  expect_warning(
+  expect_error(
     geecriteria(fit_pois, fit_gauss),
-    "models differ in the family"
+    "models differ in the family (poisson, gaussian)",
+    fixed = TRUE
   )
   fit_other_y <- fit_pois
   fit_other_y$y <- fit_other_y$y + 1
-  expect_warning(
+  expect_error(
     geecriteria(fit_pois, fit_other_y),
-    "models differ in the response"
+    "models differ in the response",
+    fixed = TRUE
   )
   expect_no_warning(geecriteria(fit_pois, fit_pois))
 })

@@ -22,9 +22,8 @@
 #'   within each cluster. Its values must be unique within each cluster. They
 #'   are replaced by their rank among the sorted distinct values, or by the
 #'   level number for a factor, so only their order matters and not their
-#'   spacing. A character variable is sorted alphabetically, so \code{"10"}
-#'   precedes \code{"2"}, and gives a warning. If omitted, the row order within
-#'   each cluster is used.
+#'   spacing. A character variable gives an error, since it has no natural
+#'   order. If omitted, the row order within each cluster is used.
 #' @param control list of control parameters as returned by
 #'   \code{\link{geer_control}}. Defaults to \code{geer_control(...)}.
 #' @param corstr character string specifying the working correlation structure:
@@ -398,7 +397,7 @@ geewa <- function(formula,
     method = method,
     beta_start = beta_zero,
     check_first = function(fit, method) {
-      check_geer_first_pass(fit, method, tolerance)
+      check_geer_first_pass(fit, method, tolerance, "geewa")
     }
   )
   fit <- build_geer_output(

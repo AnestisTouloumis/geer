@@ -182,11 +182,11 @@ test_that("step_criterion stops at the step limit or without a forward scope", {
   out <- step_criterion(fit_resp_main, steps = 0)
   expect_identical(nrow(out$anova), 1L)
   expect_equal(coef(out), coef(fit_resp_main))
-  expect_warning(
-    out <- step_criterion(fit_resp_small, direction = "forward"),
-    "no 'scope' was supplied"
+  expect_error(
+    step_criterion(fit_resp_small, direction = "forward"),
+    "'scope' must be supplied for direction = \"forward\"",
+    fixed = TRUE
   )
-  expect_identical(nrow(out$anova), 1L)
 })
 
 test_that("step_criterion stops when the initial criterion is unavailable", {

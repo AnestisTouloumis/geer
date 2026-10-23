@@ -188,7 +188,7 @@ test_that("exact deletion errors name the calling function", {
   ))
   expect_error(
     dfbeta(fit, method = "exact"),
-    "dfbeta.geer requires at least two clusters",
+    "dfbeta.geer failed: the jackknife requires at least two clusters",
     fixed = TRUE
   )
 })
@@ -198,25 +198,20 @@ test_that("influence measures stop for estimators without a one-step form", {
   expect_error(
     dfbeta(fit),
     paste0(
-      "dfbeta.geer failed: method = \"one-step\" requires a fit with ",
-      "method = \"gee\"; use method = \"exact\" with unit = \"clusters\""
-    ),
-    fixed = TRUE
-  )
-  expect_error(
-    cooks.distance(fit, unit = "observations", method = "exact"),
-    paste0(
-      "cooks.distance.geer failed: method = \"exact\" is available only for ",
+      "'object' must be a fit with method = \"gee\" for ",
+      "method = \"one-step\"; use method = \"exact\" with ",
       "unit = \"clusters\""
     ),
     fixed = TRUE
   )
   expect_error(
+    cooks.distance(fit, unit = "observations", method = "exact"),
+    "'method' must be \"one-step\" when unit = \"observations\"",
+    fixed = TRUE
+  )
+  expect_error(
     local_influence(fit),
-    paste0(
-      "local_influence failed: local influence requires a fit with ",
-      "method = \"gee\""
-    ),
+    "'object' must be a fit with method = \"gee\"",
     fixed = TRUE
   )
   expect_length(hatvalues(fit), fit$clusters_no)

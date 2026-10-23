@@ -45,7 +45,10 @@ normalize_mcar_response <- function(response, object) {
   if (is_binomial_like && is.factor(response)) {
     if (nlevels(response) != 2L) {
       stop(
-        "a binomial factor response must have exactly two levels",
+        paste0(
+          "for binomial-type models, a factor response must have exactly two ",
+          "levels"
+        ),
         call. = FALSE
       )
     }
@@ -58,7 +61,10 @@ normalize_mcar_response <- function(response, object) {
     lev <- levels(factor(observed))
     if (length(lev) != 2L) {
       stop(
-        "a binomial character response must have exactly two levels",
+        paste0(
+          "for binomial-type models, a character response must have exactly ",
+          "two distinct values"
+        ),
         call. = FALSE
       )
     }
@@ -145,11 +151,7 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
     stop("the response could not be reconstructed correctly", call. = FALSE)
   }
 
-  id_repeated <- extract_geer_id_repeated(
-    model_frame,
-    length(y),
-    warn_character = FALSE
-  )
+  id_repeated <- extract_geer_id_repeated(model_frame, length(y))
   id <- id_repeated$id
   repeated <- id_repeated$repeated
   repeated_values <- stats::model.extract(model_frame, "repeated")
@@ -242,8 +244,9 @@ normalize_mcar_risk_set <- function(prepared) {
   if (!any(keep)) {
     stop(
       paste0(
-        "every occasion has either no dropouts or no observed responses in ",
-        "the risk set; the missingness model cannot be fitted"
+        "mcar_logistic_test failed: every occasion has either no dropouts ",
+        "or no observed responses in the risk set; the missingness model ",
+        "cannot be fitted"
       ),
       call. = FALSE
     )
@@ -299,8 +302,8 @@ select_mcar_covariates <- function(covariates, occasion, lag_response) {
   if (qr(lag_candidate)$rank <= rank_base) {
     stop(
       paste0(
-        "the previous response has no estimable effect after adjustment for ",
-        "occasion and the supplied covariates"
+        "mcar_logistic_test failed: the previous response has no estimable ",
+        "effect after adjustment for occasion and the supplied covariates"
       ),
       call. = FALSE
     )
@@ -330,7 +333,13 @@ fit_mcar_binary_model <- function(formula, analysis_data, orstr, control) {
     method = "gee"
   )
   if (!isTRUE(fit$converged)) {
-    stop("the binary GEE missingness model did not converge", call. = FALSE)
+    stop(
+      paste0(
+        "mcar_logistic_test failed: the binary GEE fit of the missingness ",
+        "model did not converge"
+      ),
+      call. = FALSE
+    )
   }
   fit
 }
@@ -346,7 +355,8 @@ compute_mcar_nested_test <- function(object0,
     object1,
     test,
     cov_type,
-    pmethod
+    pmethod,
+    "mcar_logistic_test"
   )
   list(
     statistic = value$test_stat,

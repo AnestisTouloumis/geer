@@ -100,8 +100,8 @@ name in the \pkg{geessbin} package, which standardizes by
 \eqn{\mu(1 - \mu)}{mu (1 - mu)}.
 
 The bias-corrected, degrees-of-freedom adjusted, and Gosho-Sato-Takeuchi
-estimators require more clusters than regression parameters: otherwise the
-bias-corrected estimator is \code{NA} and the other two give an error. The
+estimators require more clusters than regression parameters: otherwise they
+give an error. The
 Pan, Gosho-Sato-Takeuchi, Wang-Long, and Westgate-Burchett estimators pool
 the clusters and require a balanced design, in which every cluster observes
 each repeated position once: otherwise they give an error. The

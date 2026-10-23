@@ -1,19 +1,5 @@
-check_geer_fit_function <- function(object) {
-  fit_function <- get_geer_fit_function(object)
-  if (!is.na(fit_function)) {
-    return(fit_function)
-  }
-  stop(
-    paste0(
-      "jackknife covariance could not determine whether the model was fitted ",
-      "by geewa() or geewa_binary()"
-    ),
-    call. = FALSE
-  )
-}
-
-
-select_jackknife_pair_subset <- function(alpha, full_max, subset_max) {
+select_jackknife_pair_subset <- function(alpha, full_max, subset_max,
+                                         context) {
   if (subset_max < 2L) {
     return(numeric(0))
   }
@@ -27,7 +13,13 @@ select_jackknife_pair_subset <- function(alpha, full_max, subset_max) {
   indices <- match(subset_keys, full_keys)
   if (anyNA(indices) || length(alpha) != length(full_keys)) {
     stop(
-      "jackknife covariance failed to map the fitted association parameters",
+      sprintf(
+        paste0(
+          "%s failed: the fitted association parameters could not be mapped ",
+          "to the remaining repeated positions"
+        ),
+        context
+      ),
       call. = FALSE
     )
   }
@@ -35,14 +27,14 @@ select_jackknife_pair_subset <- function(alpha, full_max, subset_max) {
 }
 
 
-compute_jackknife_alpha_cc <- function(object, repeated) {
+compute_jackknife_alpha_cc <- function(object, repeated, context) {
   structure <- object$association_structure
   alpha <- as.numeric(object$alpha)
   subset_max <- max(repeated)
   full_max <- max(object$repeated)
 
   if (structure %in% c("unstructured", "fixed")) {
-    return(select_jackknife_pair_subset(alpha, full_max, subset_max))
+    return(select_jackknife_pair_subset(alpha, full_max, subset_max, context))
   }
   if (structure %in% c("toeplitz", "m-dependent")) {
     keep <- min(length(alpha), max(subset_max - 1L, 0L))
@@ -52,14 +44,15 @@ compute_jackknife_alpha_cc <- function(object, repeated) {
 }
 
 
-compute_jackknife_alpha_or <- function(object, repeated) {
+compute_jackknife_alpha_or <- function(object, repeated, context) {
   if (identical(object$association_structure, "independence")) {
     return(rep.int(1, choose(max(repeated), 2L)))
   }
   select_jackknife_pair_subset(
     alpha = object$alpha,
     full_max = max(object$repeated),
-    subset_max = max(repeated)
+    subset_max = max(repeated),
+    context = context
   )
 }
 
@@ -77,21 +70,18 @@ check_jackknife_convergence <- function(fit,
                                         tolerance,
                                         cluster_label,
                                         stage = NULL,
-                                        context = "jackknife covariance") {
+                                        context = "vcov.geer") {
   criterion <- get_jackknife_criterion(fit)
   if (!is.finite(criterion) || criterion > tolerance) {
-    stage_text <- if (is.null(stage)) "" else paste0(" during ", stage)
+    fit_text <- if (is.null(stage)) "the fit" else stage
     reason <- get_solver_failure(fit)
     reason_text <- if (nzchar(reason)) paste0(" (", reason, ")") else ""
     stop(
       sprintf(
-        paste0(
-          "%s failed for cluster '%s'%s: leave-one-cluster ",
-          "fit did not converge%s"
-        ),
+        "%s failed: %s without cluster '%s' did not converge%s",
         context,
+        fit_text,
         cluster_label,
-        stage_text,
         reason_text
       ),
       call. = FALSE
@@ -103,12 +93,12 @@ check_jackknife_convergence <- function(fit,
 
 check_jackknife_solver_failure <- function(fit,
                                            cluster_label,
-                                           context = "jackknife covariance") {
+                                           context = "vcov.geer") {
   reason <- get_solver_failure(fit)
   if (nzchar(reason)) {
     stop(
       sprintf(
-        "%s failed for cluster '%s': %s",
+        "%s failed: the fit without cluster '%s' stopped: %s",
         context,
         cluster_label,
         reason
@@ -152,10 +142,7 @@ run_jackknife_passes <- function(fit_pass,
   if (length(beta) != coef_no || any(!is.finite(beta))) {
     stop(
       sprintf(
-        paste0(
-          "%s failed for cluster '%s': invalid ",
-          "leave-one-cluster coefficient estimate"
-        ),
+        "%s failed: the fit without cluster '%s' gave non-finite coefficients",
         context,
         cluster_label
       ),
@@ -169,7 +156,7 @@ run_jackknife_passes <- function(fit_pass,
 refit_jackknife_cc <- function(object,
                                keep,
                                cluster_label,
-                               context = "jackknife covariance") {
+                               context = "vcov.geer") {
   y <- object$y[keep]
   x <- object$x[keep, , drop = FALSE]
   id <- as.numeric(factor(object$id[keep]))
@@ -178,7 +165,7 @@ refit_jackknife_cc <- function(object,
   offset <- object$offset[keep]
   control <- object$control
   tolerance <- control$tolerance
-  alpha <- compute_jackknife_alpha_cc(object, repeated)
+  alpha <- compute_jackknife_alpha_cc(object, repeated, context)
   alpha_fixed <- 1L
   mdependence <- if (identical(object$association_structure, "m-dependent")) {
     length(alpha)
@@ -227,7 +214,7 @@ refit_jackknife_cc <- function(object,
 refit_jackknife_or <- function(object,
                                keep,
                                cluster_label,
-                               context = "jackknife covariance") {
+                               context = "vcov.geer") {
   y <- object$y[keep]
   x <- object$x[keep, , drop = FALSE]
   id <- as.numeric(factor(object$id[keep]))
@@ -236,7 +223,7 @@ refit_jackknife_or <- function(object,
   offset <- object$offset[keep]
   control <- object$control
   tolerance <- control$tolerance
-  alpha <- compute_jackknife_alpha_or(object, repeated)
+  alpha <- compute_jackknife_alpha_or(object, repeated, context)
   alpha_independence <- rep.int(1, choose(max(repeated), 2L))
 
   fit_pass <- function(beta, pass, previous) {
@@ -261,14 +248,20 @@ refit_jackknife_or <- function(object,
 
 compute_jackknife_deletes <- function(
     object,
-    context = "jackknife covariance",
+    context = "vcov.geer",
     skip = NULL) {
   object <- check_geer_object(object)
   cluster_indices <- split(seq_along(object$id), object$id)
   cluster_labels <- get_cluster_labels(object)
   n_clusters <- length(cluster_indices)
   if (n_clusters < 2L) {
-    stop(sprintf("%s requires at least two clusters", context), call. = FALSE)
+    stop(
+      sprintf(
+        "%s failed: the jackknife requires at least two clusters",
+        context
+      ),
+      call. = FALSE
+    )
   }
   if (is.null(skip)) {
     skip <- rep.int(FALSE, n_clusters)
@@ -280,7 +273,7 @@ compute_jackknife_deletes <- function(
     ncol = p,
     dimnames = list(cluster_labels, names(object$coefficients))
   )
-  fit_origin <- check_geer_fit_function(object)
+  fit_origin <- if (is_geewa_fit(object)) "geewa" else "geewa_binary"
 
   for (i in which(!skip)) {
     keep <- rep.int(TRUE, length(object$id))
@@ -296,7 +289,7 @@ compute_jackknife_deletes <- function(
 
 
 get_cached_jackknife_estimates <- function(object,
-                                           context = "jackknife covariance") {
+                                           context = "vcov.geer") {
   get_cached_value(
     object,
     "jackknife_estimates",

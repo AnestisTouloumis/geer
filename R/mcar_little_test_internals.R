@@ -79,7 +79,7 @@ compute_little_exact <- function(x) {
 }
 
 
-compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
+compute_mcar_little_statistic <- function(x, maxiter, tolerance, reference) {
   missing <- is.na(x)
   n <- nrow(x)
   p <- ncol(x)
@@ -104,7 +104,12 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
     ))
   }
 
-  em <- fit_mcar_normal_em(x, maxiter = maxiter, tolerance = tolerance)
+  em <- fit_mcar_normal_em(
+    x,
+    maxiter = maxiter,
+    tolerance = tolerance,
+    context = "mcar_little_test"
+  )
   sigma_corrected <- (n / (n - 1)) * em$sigma
   statistic <- 0
   df_terms <- 0L
@@ -120,8 +125,8 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
     if (is.null(chol_factor)) {
       stop(
         paste0(
-          "a covariance submatrix required for Little's MCAR statistic is not ",
-          "positive definite"
+          "mcar_little_test failed: a covariance submatrix required for ",
+          "Little's MCAR statistic is not positive definite"
         ),
         call. = FALSE
       )
@@ -134,8 +139,8 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
   if (df <= 0L) {
     stop(
       paste0(
-        "Little's MCAR test has non-positive degrees of freedom for this ",
-        "missing-data pattern"
+        "mcar_little_test failed: Little's MCAR test has non-positive ",
+        "degrees of freedom for this missing-data pattern"
       ),
       call. = FALSE
     )
@@ -152,13 +157,16 @@ compute_mcar_little_statistic <- function(x, maxiter, tolerance) {
         tolerance = 1e-6,
         check.attributes = FALSE
       ))) {
-    warning(
-      paste0(
-        "the bivariate monotone small-sample identity in Little (1988) was ",
-        "not reproduced to numerical tolerance; using the asymptotic reference"
-      ),
-      call. = FALSE
-    )
+    if (identical(reference, "auto")) {
+      stop(
+        paste0(
+          "mcar_little_test failed: the small-sample identity of Little ",
+          "(1988) is not reproduced numerically; use reference = ",
+          "\"asymptotic\""
+        ),
+        call. = FALSE
+      )
+    }
     bivariate_exact <- NULL
   }
 

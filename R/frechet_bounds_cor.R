@@ -94,8 +94,8 @@ frechet_bounds_cor <- function(object) {
     stop(
       sprintf(
         paste0(
-          "the Frechet bounds are undefined: %d of %d fitted probabilities ",
-          "are 0 or 1, which suggests separation"
+          "frechet_bounds_cor failed: the Frechet bounds are undefined: %d ",
+          "of %d fitted probabilities are 0 or 1, which suggests separation"
         ),
         sum(degenerate),
         length(mu)

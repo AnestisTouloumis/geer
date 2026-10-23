@@ -54,9 +54,9 @@
 #' \code{cov_type} affects \code{QIC}, \code{QICHH}, \code{QICC}, \code{CIC},
 #' \code{RJC}, \code{EQIC}, \code{PT}, \code{WR}, and \code{RMR}; with
 #' \code{cov_type = "jackknife"} each model is refitted once per cluster. A
-#' criterion that cannot be evaluated for a fit is \code{NA}. A warning is
-#' issued when the models differ in the number of observations, the family, or
-#' the response values, because the criteria are then not comparable.
+#' criterion that cannot be evaluated for a fit is \code{NA}. The models must
+#' have the same number of observations, family, and response values, because
+#' the criteria are otherwise not comparable.
 #'
 #' Let \eqn{K} be the number of clusters, \eqn{n^\star}{n*} the number of
 #' observations, \eqn{p} the number of regression parameters, \eqn{m} the
@@ -228,13 +228,7 @@ geecriteria <- function(object,
   if (sum(!is.na(obs_no)) > 1L) {
     ref_obs <- obs_no[which(!is.na(obs_no))[1L]]
     if (any(obs_no[!is.na(obs_no)] != ref_obs)) {
-      warning(
-        paste0(
-          "models differ in the number of observations; the criteria may not ",
-          "be comparable"
-        ),
-        call. = FALSE
-      )
+      stop("models must be fitted to the same observations", call. = FALSE)
     }
   }
   check_criteria_comparability(models)

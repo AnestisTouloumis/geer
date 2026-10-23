@@ -117,7 +117,7 @@ summary.geer <- function(object,
   check_unused_dots(list(...), "summary.geer")
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- compute_se_or_na(diag(vcov_matrix))
+  se <- compute_se_or_stop(diag(vcov_matrix), context = "summary.geer")
   z_stat <- rep.int(NA_real_, length(beta))
   pval <- rep.int(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0

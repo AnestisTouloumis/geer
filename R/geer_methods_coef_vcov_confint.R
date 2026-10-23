@@ -89,8 +89,8 @@
 #' \eqn{\mu(1 - \mu)}{mu (1 - mu)}.
 #'
 #' The bias-corrected, degrees-of-freedom adjusted, and Gosho-Sato-Takeuchi
-#' estimators require more clusters than regression parameters: otherwise the
-#' bias-corrected estimator is \code{NA} and the other two give an error. The
+#' estimators require more clusters than regression parameters: otherwise they
+#' give an error. The
 #' Pan, Gosho-Sato-Takeuchi, Wang-Long, and Westgate-Burchett estimators pool
 #' the clusters and require a balanced design, in which every cluster observes
 #' each repeated position once: otherwise they give an error. The
@@ -204,7 +204,7 @@ vcov.geer <- function(object, cov_type = "bias-corrected", ...) {
         cov_type = cov_type,
         object = object,
         coef_no = object$rank,
-        context = "vcov"
+        context = "vcov.geer"
       )
     )
   }
@@ -212,13 +212,20 @@ vcov.geer <- function(object, cov_type = "bias-corrected", ...) {
     cov_type,
     robust = object$robust_covariance,
     naive = object$naive_covariance,
-    `bias-corrected` = object$bias_corrected_covariance,
+    `bias-corrected` = {
+      check_bc_covariance(
+        object$clusters_no,
+        length(object$coefficients),
+        "vcov.geer"
+      )
+      object$bias_corrected_covariance
+    },
     jackknife = get_cached_jackknife_cov(object),
     `df-adjusted` = compute_df_adjusted_covariance(
       robust_covariance = object$robust_covariance,
       clusters_no = object$clusters_no,
       coef_no = object$rank,
-      context = "vcov"
+      context = "vcov.geer"
     )
   )
 }
@@ -332,8 +339,7 @@ confint.geer <- function(object,
   )
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
   standard_errors <- compute_se_or_stop(
-    vcov_matrix,
-    parm = parm,
+    diag(vcov_matrix)[parm],
     context = "confint.geer"
   )
   ans[] <- beta[parm] + standard_errors %o% percentiles

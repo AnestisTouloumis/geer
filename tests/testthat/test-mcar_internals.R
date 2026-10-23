@@ -35,7 +35,7 @@ test_that("initial parameters use available-case means and a valid covariance", 
   x <- mcar_internals_matrix()
   x[c(2, 5), 2] <- NA
 
-  out <- compute_mcar_em_start(x)
+  out <- compute_mcar_em_start(x, "mcar_little_test")
 
   expect_equal(out$mu, colMeans(x, na.rm = TRUE))
   expect_true(isSymmetric(out$sigma))
@@ -50,7 +50,7 @@ test_that("initial parameters use available-case means and a valid covariance", 
 test_that("initial parameters add a ridge to a singular covariance", {
   x <- cbind(a = as.numeric(1:6), b = 2 * as.numeric(1:6))
 
-  out <- compute_mcar_em_start(x)
+  out <- compute_mcar_em_start(x, "mcar_little_test")
 
   expect_true(all(is.finite(out$sigma)))
   expect_no_error(chol(out$sigma))
@@ -60,15 +60,24 @@ test_that("initial parameters fail when a variable has no observed values", {
   x <- cbind(a = c(1, 2, 3, 4), b = NA_real_)
 
   expect_error(
-    compute_mcar_em_start(x),
-    "initial covariance matrix for normal-theory EM estimation is singular"
+    compute_mcar_em_start(x, "mcar_little_test"),
+    paste0(
+      "mcar_little_test failed: the initial covariance matrix for ",
+      "normal-theory EM estimation is singular"
+    ),
+    fixed = TRUE
   )
 })
 
 test_that("EM reproduces the complete-data maximum-likelihood estimates", {
   x <- mcar_internals_matrix()
 
-  out <- fit_mcar_normal_em(x, maxiter = 100L, tolerance = 1e-10)
+  out <- fit_mcar_normal_em(
+    x,
+    maxiter = 100L,
+    tolerance = 1e-10,
+    context = "mcar_little_test"
+  )
 
   expect_true(out$converged)
   expect_equal(out$mu, colMeans(x), tolerance = 1e-8)
@@ -86,25 +95,42 @@ test_that("EM ignores rows with no observed values", {
   x[9, 3] <- NA
   with_empty_row <- rbind(x, c(NA_real_, NA_real_, NA_real_))
 
-  reference <- fit_mcar_normal_em(x, maxiter = 5000L, tolerance = 1e-12)
-  out <- fit_mcar_normal_em(with_empty_row, maxiter = 5000L, tolerance = 1e-12)
+  reference <- fit_mcar_normal_em(
+    x,
+    maxiter = 5000L,
+    tolerance = 1e-12,
+    context = "mcar_little_test"
+  )
+  out <- fit_mcar_normal_em(
+    with_empty_row,
+    maxiter = 5000L,
+    tolerance = 1e-12,
+    context = "mcar_little_test"
+  )
 
   expect_true(out$converged)
   expect_equal(out$mu, reference$mu, tolerance = 1e-6)
   expect_equal(out$sigma, reference$sigma, tolerance = 1e-6)
 })
 
-test_that("EM warns when the iteration limit is reached", {
+test_that("EM stops when the iteration limit is reached", {
   x <- mcar_internals_matrix()
   x[c(3, 7), 2] <- NA
   x[9, 3] <- NA
 
-  expect_warning(
-    out <- fit_mcar_normal_em(x, maxiter = 1L, tolerance = 1e-14),
-    "did not converge within 1 iterations"
+  expect_error(
+    fit_mcar_normal_em(
+      x,
+      maxiter = 1L,
+      tolerance = 1e-14,
+      context = "mcar_homoscedasticity_test"
+    ),
+    paste0(
+      "mcar_homoscedasticity_test failed: the EM algorithm did not converge ",
+      "within 1 iterations; increase 'maxiter'"
+    ),
+    fixed = TRUE
   )
-  expect_false(out$converged)
-  expect_identical(out$iterations, 1L)
 })
 
 test_that("EM rejects a singular maximum-likelihood covariance", {
@@ -112,7 +138,12 @@ test_that("EM rejects a singular maximum-likelihood covariance", {
   x[, 3] <- x[, 1] + x[, 2]
 
   expect_error(
-    fit_mcar_normal_em(x, maxiter = 100L, tolerance = 1e-10),
+    fit_mcar_normal_em(
+      x,
+      maxiter = 100L,
+      tolerance = 1e-10,
+      context = "mcar_little_test"
+    ),
     "singular or nearly singular"
   )
 })

@@ -66,7 +66,7 @@ extract_formula_offset_terms <- function(object) {
 }
 
 
-refit_geer <- function(object, formula) {
+refit_geer <- function(object, formula, context) {
   refit_call <- stats::update(object, formula. = formula, evaluate = FALSE)
   refit_call$beta_start <- NULL
   env <- environment(object$formula)
@@ -86,9 +86,12 @@ refit_geer <- function(object, formula) {
   refit$call <- refit_call
   if (isFALSE(refit$converged)) {
     stop(
-      "the refit with formula '",
-      paste(deparse(formula, width.cutoff = 500L), collapse = " "),
-      "' did not converge; the test cannot be computed",
+      sprintf(
+        "%s failed: the fit of '%s' did not converge",
+        context,
+        paste(deparse(stats::formula(refit), width.cutoff = 500L),
+              collapse = " ")
+      ),
       call. = FALSE
     )
   }
@@ -96,16 +99,13 @@ refit_geer <- function(object, formula) {
 }
 
 
-compute_se_or_stop <- function(vcov_matrix,
-                               parm = NULL,
-                               context) {
-  variances <- diag(vcov_matrix)
-  if (!is.null(parm)) {
-    variances <- variances[parm]
-  }
+compute_se_or_stop <- function(variances, context, what = NULL) {
   labels <- names(variances)
   if (is.null(labels)) {
     labels <- as.character(seq_along(variances))
+  }
+  if (!is.null(what)) {
+    labels <- paste(what, labels)
   }
   invalid <- !is.finite(variances)
   if (any(invalid)) {
@@ -133,33 +133,6 @@ compute_se_or_stop <- function(vcov_matrix,
     )
   }
   sqrt(variances)
-}
-
-
-compute_se_or_na <- function(variances,
-                             what = "coefficient") {
-  bad <- !is.finite(variances) | variances < 0
-  if (any(bad)) {
-    labels <- names(variances)
-    if (is.null(labels)) {
-      labels <- as.character(seq_along(variances))
-    }
-    warning(
-      sprintf(
-        paste0(
-          "the variance is negative or non-finite for %s %s, so its ",
-          "standard error is set to NA"
-        ),
-        what,
-        paste(labels[bad], collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
-  se <- rep.int(NA_real_, length(variances))
-  se[!bad] <- sqrt(variances[!bad])
-  names(se) <- names(variances)
-  se
 }
 
 
@@ -260,11 +233,7 @@ get_fit_frame_order <- function(object, fit_frame) {
       is.null(object$repeated)) {
     return(NULL)
   }
-  id_repeated <- extract_geer_id_repeated(
-    fit_frame,
-    nrow(fit_frame),
-    warn_character = FALSE
-  )
+  id_repeated <- extract_geer_id_repeated(fit_frame, nrow(fit_frame))
   ord <- order(id_repeated$id, id_repeated$repeated)
   aligned <- isTRUE(all.equal(
     as.numeric(id_repeated$id[ord]),

@@ -127,21 +127,27 @@ test_that("nonparametric mode does not run the Neyman uniformity test", {
   expect_equal(out$p.value, out$nonparametric$p.value)
 })
 
-test_that("distribution-free imputation falls back to normal imputation when needed", {
+test_that("distribution-free imputation stops with too few complete cases", {
   withr::local_seed(490)
   x <- matrix(rnorm(72), nrow = 24, ncol = 3)
   x[9:16, 3] <- NA_real_
   x[17:24, 2:3] <- NA_real_
 
-  expect_warning(
-    out <- mcar_homoscedasticity_test(
-      x,
-      method = "nonparametric",
-      seed = 10L
+  expect_error(
+    mcar_homoscedasticity_test(x, method = "nonparametric", seed = 10L),
+    paste0(
+      "mcar_homoscedasticity_test failed: distribution-free imputation ",
+      "requires at least 10 complete cases, but only 8 are available; use ",
+      "imputation = \"normal\""
     ),
-    "requires at least 10 complete cases but only 8 are available"
+    fixed = TRUE
   )
-  expect_identical(out$imputation.requested, "distribution-free")
+  out <- suppressWarnings(mcar_homoscedasticity_test(
+    x,
+    method = "nonparametric",
+    imputation = "normal",
+    seed = 10L
+  ))
   expect_identical(out$imputation.used, "normal")
   expect_equal(out$complete.cases, 8L)
 })
@@ -241,7 +247,7 @@ test_that("mcar_homoscedasticity_test validates inputs", {
   )
   expect_error(
     mcar_homoscedasticity_test(make_jj_screening_data(), data = data.frame()),
-    "'data' is only used when 'object' is a fitted 'geer' object"
+    "'data' must not be supplied unless 'object' is a fitted 'geer' object"
   )
 })
 

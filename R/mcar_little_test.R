@@ -38,8 +38,10 @@
 #' \eqn{d^2 = (n - 1)F/(n - 2 + F)} with \eqn{F \sim F_{1, n-2}}{F ~ F(1, n - 2)}. With
 #' \code{reference = "auto"} this exact reference is used in that case,
 #' provided the identity is reproduced numerically from the EM estimates;
-#' otherwise a warning is issued and the chi-squared reference is used, which
-#' usually indicates that \code{tolerance} is too loose.
+#' otherwise an error is given, which usually indicates that \code{tolerance}
+#' is too loose, and \code{reference = "asymptotic"} uses the chi-squared
+#' reference. If the EM algorithm does not converge within \code{maxiter}
+#' iterations, an error is given.
 #'
 #' Matrix or data frame input must have at least two rows and two variables,
 #' at least two observed values per variable, at least one jointly observed
@@ -129,7 +131,7 @@ mcar_little_test <- function(object, data = NULL, maxiter = 1000L,
   } else {
     if (!is.null(data)) {
       stop(
-        "'data' is only used when 'object' is a fitted 'geer' object",
+        "'data' must not be supplied unless 'object' is a fitted 'geer' object",
         call. = FALSE
       )
     }
@@ -151,7 +153,8 @@ mcar_little_test <- function(object, data = NULL, maxiter = 1000L,
   result <- compute_mcar_little_statistic(
     x,
     maxiter = maxiter,
-    tolerance = tolerance
+    tolerance = tolerance,
+    reference = reference
   )
   exact <- result$bivariate_exact
   use_exact <- identical(reference, "auto") && !is.null(exact)

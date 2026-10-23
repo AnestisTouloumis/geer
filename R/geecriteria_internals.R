@@ -748,9 +748,9 @@ check_criteria_comparability <- function(models) {
     character(1)
   )
   if (length(unique(family_names)) > 1L) {
-    warning(
+    stop(
       sprintf(
-        "models differ in the family (%s); the criteria are not comparable",
+        "models differ in the family (%s)",
         paste(unique(family_names), collapse = ", ")
       ),
       call. = FALSE
@@ -766,10 +766,7 @@ check_criteria_comparability <- function(models) {
       logical(1)
     )
     if (!all(same_response)) {
-      warning(
-        "models differ in the response; the criteria are not comparable",
-        call. = FALSE
-      )
+      stop("models differ in the response", call. = FALSE)
     }
   }
   invisible(NULL)

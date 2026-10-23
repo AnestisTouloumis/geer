@@ -103,7 +103,7 @@ compute_geer_start_values <- function(model_matrix,
     return(glmfit$coefficients)
   }
   stop(
-    "starting values could not be computed; supply 'beta_start'",
+    "geewa failed: starting values could not be computed; supply 'beta_start'",
     call. = FALSE
   )
 }
@@ -147,7 +147,10 @@ compute_binary_start_values <- function(model_matrix,
     return(glmfit$coefficients)
   }
   stop(
-    "starting values could not be computed; supply 'beta_start'",
+    paste0(
+      "geewa_binary failed: starting values could not be computed; supply ",
+      "'beta_start'"
+    ),
     call. = FALSE
   )
 }

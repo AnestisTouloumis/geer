@@ -48,9 +48,8 @@ observation, containing the variables in \code{formula}, \code{id},
 within each cluster. Its values must be unique within each cluster. They
 are replaced by their rank among the sorted distinct values, or by the
 level number for a factor, so only their order matters and not their
-spacing. A character variable is sorted alphabetically, so \code{"10"}
-precedes \code{"2"}, and gives a warning. If omitted, the row order within
-each cluster is used.}
+spacing. A character variable gives an error, since it has no natural
+order. If omitted, the row order within each cluster is used.}
 
 \item{control}{list of control parameters as returned by
 \code{\link{geer_control}}. Defaults to \code{geer_control(...)}.}

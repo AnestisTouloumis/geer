@@ -16,7 +16,7 @@ new_geer <- function(x) {
   missing_components <- setdiff(geer_fit_components, names(x))
   if (length(missing_components) > 0L) {
     stop(
-      "'x' is missing required component(s): ",
+      "'x' must contain the component(s): ",
       paste(missing_components, collapse = ", "),
       call. = FALSE
     )
@@ -43,7 +43,7 @@ validate_geer <- function(x) {
   if (length(missing_components) > 0L) {
     stop(
       sprintf(
-        "invalid 'geer' object: missing required component(s): %s",
+        "'x' must contain the component(s): %s",
         paste(missing_components, collapse = ", ")
       ),
       call. = FALSE
@@ -91,7 +91,7 @@ validate_geer <- function(x) {
     }
     if (x$obs_no != n_obs) {
       stop(
-        "'obs_no' is inconsistent with observation-level components",
+        "'obs_no' must equal the number of observations",
         call. = FALSE
       )
     }
@@ -193,7 +193,10 @@ validate_geer <- function(x) {
       stop("'clusters_no' must be a positive integer", call. = FALSE)
     }
     if (length(unique(x$id)) != x$clusters_no) {
-      stop("'clusters_no' is inconsistent with 'id'", call. = FALSE)
+      stop(
+        "'clusters_no' must equal the number of distinct 'id' values",
+        call. = FALSE
+      )
     }
   }
   if ("min_cluster_size" %in% names(x)) {
@@ -220,7 +223,10 @@ validate_geer <- function(x) {
   }
   if (all(c("min_cluster_size", "max_cluster_size") %in% names(x))) {
     if (x$min_cluster_size > x$max_cluster_size) {
-      stop("'min_cluster_size' cannot exceed 'max_cluster_size'", call. = FALSE)
+      stop(
+        "'min_cluster_size' must not exceed 'max_cluster_size'",
+        call. = FALSE
+      )
     }
   }
   cov_fields <- c(

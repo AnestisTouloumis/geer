@@ -107,13 +107,18 @@ add1.geer <-
     ans[1L, 2L] <- compute_cic(object, cov_type)
     for (i in seq_len(ns)) {
       tt <- scope[[i]]
-      add1_model <- refit_geer(object, stats::as.formula(paste(". ~ . +", tt)))
+      add1_model <- refit_geer(
+        object,
+        stats::as.formula(paste(". ~ . +", tt)),
+        "add1.geer"
+      )
       value <- compute_nested_test(
         object,
         add1_model,
         test,
         cov_type,
-        pmethod
+        pmethod,
+        "add1.geer"
       )
       ans[i + 1L, ] <- c(
         value$test_df,
@@ -192,13 +197,18 @@ drop1.geer <- function(object,
   for (i in seq_len(ns)) {
     tt <- scope[[i]]
 
-    drop1_model <- refit_geer(object, stats::as.formula(paste(". ~ . -", tt)))
+    drop1_model <- refit_geer(
+      object,
+      stats::as.formula(paste(". ~ . -", tt)),
+      "drop1.geer"
+    )
     value <- compute_nested_test(
       drop1_model,
       object,
       test,
       cov_type,
-      pmethod
+      pmethod,
+      "drop1.geer"
     )
     ans[i + 1L, ] <- c(
       value$test_df,
@@ -349,23 +359,27 @@ anova.geer <-
     if (intercept == 1L) {
       object_list[[1L]] <- refit_geer(
         object,
-        stats::as.formula(paste0(". ~ 1", offset_part))
+        stats::as.formula(paste0(". ~ 1", offset_part)),
+        "anova.geer"
       )
       for (i in seq_len(nvars)) {
         object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
-          stats::as.formula(paste(". ~ . + ", terms[i]))
+          stats::as.formula(paste(". ~ . + ", terms[i])),
+          "anova.geer"
         )
       }
     } else {
       object_list[[1L]] <- refit_geer(
         object,
-        stats::as.formula(paste0(". ~ -1 + ", terms[1L], offset_part))
+        stats::as.formula(paste0(". ~ -1 + ", terms[1L], offset_part)),
+        "anova.geer"
       )
       for (i in seq_len(nvars - 1L)) {
         object_list[[i + 1]] <- refit_geer(
           object_list[[i]],
-          stats::as.formula(paste(". ~ . + ", terms[i + 1]))
+          stats::as.formula(paste(". ~ . + ", terms[i + 1])),
+          "anova.geer"
         )
       }
     }
@@ -398,7 +412,8 @@ anova.geer <-
         object_list[[i + 1]],
         test,
         cov_type,
-        pmethod
+        pmethod,
+        "anova.geer"
       )
       table[i + 1, -2] <- c(value$test_df, value$test_stat, value$test_p)
     }

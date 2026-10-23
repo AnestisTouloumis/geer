@@ -348,7 +348,11 @@ test_that("mcar_logistic_test passes control to the binary GEE fits", {
       formula = ~ treatment + age,
       orstr = "exchangeable", control = geer_control(maxiter = 1, tolerance = 1e-15)
     )),
-    "the binary GEE missingness model did not converge"
+    paste0(
+      "mcar_logistic_test failed: the binary GEE fit of the missingness ",
+      "model did not converge"
+    ),
+    fixed = TRUE
   )
 })
 
@@ -442,7 +446,7 @@ test_that("normalize_mcar_response codes two-level binary responses as 0/1", {
   )
   expect_error(
     normalize_mcar_response(c("a", "b", "c"), binomial_fit),
-    "character response must have exactly two levels"
+    "character response must have exactly two distinct values"
   )
   expect_error(
     normalize_mcar_response(factor(c("a", "b")), list(family = gaussian())),

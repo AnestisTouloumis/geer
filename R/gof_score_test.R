@@ -146,22 +146,24 @@ gof_score_test <- function(object,
   object <- check_geer_object(object)
   partition <- match_gof_partition(partition[1L])
   cov_type <- check_gof_cov_type(
-    match_cov_type(cov_type, default = "bias-corrected"),
-    context
+    match_cov_type(cov_type, default = "bias-corrected")
   )
   check_gof_by_repeated(by_repeated)
   risk <- identical(partition, "risk")
   if (risk && (!missing(regions) || !missing(by_repeated))) {
     stop(
       paste0(
-        "'regions' and 'by_repeated' are used only with ",
+        "'regions' and 'by_repeated' must not be supplied unless ",
         "partition = \"covariates\""
       ),
       call. = FALSE
     )
   }
   if (!risk && !missing(n_groups)) {
-    stop("'n_groups' is used only with partition = \"risk\"", call. = FALSE)
+    stop(
+      "'n_groups' must not be supplied unless partition = \"risk\"",
+      call. = FALSE
+    )
   }
   if (!risk && missing(regions)) {
     stop(
@@ -182,8 +184,7 @@ gof_score_test <- function(object,
     partition_factor <- build_gof_regions(
       object,
       regions,
-      env = parent.frame(),
-      context = context
+      env = parent.frame()
     )
     check_gof_regions(object, partition_factor, by_repeated)
     method <- "Barnhart-Williamson goodness-of-fit test (covariate regions)"

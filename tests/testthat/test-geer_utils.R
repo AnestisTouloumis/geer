@@ -34,33 +34,38 @@ test_that("build_test_label returns the expected display labels", {
   expect_identical(build_test_label("working-lrt"), "Modified Working LRT")
 })
 
-test_that("summary and tidy warn about a negative variance and give NA", {
+test_that("summary, tidy, and confint stop on a negative variance", {
   fit <- fit_geewa_pois_exch
   fit$bias_corrected_covariance[2L, 2L] <- -1
-  expect_warning(
-    out <- summary(fit),
-    "variance is negative or non-finite for coefficient"
+  message_text <- paste0(
+    " failed: negative variance for treatmentprogabide; the covariance ",
+    "estimator is not positive semi-definite, so no standard error is ",
+    "available"
   )
-  expect_true(is.na(out$coefficients[2L, "Std. Error"]))
-  expect_false(anyNA(out$coefficients[-2L, "Std. Error"]))
-  expect_warning(td <- tidy(fit), "variance is negative or non-finite")
-  expect_true(is.na(td$std.error[2L]))
-  expect_error(confint(fit), "negative variance")
+  expect_error(summary(fit), paste0("summary.geer", message_text), fixed = TRUE)
+  expect_error(tidy(fit), paste0("tidy.geer", message_text), fixed = TRUE)
+  expect_error(confint(fit), paste0("confint.geer", message_text), fixed = TRUE)
 })
 
-test_that("predict warns when a prediction variance is negative", {
+test_that("predict stops when a prediction variance is negative", {
   fit <- fit_geewa_pois_exch
   p <- ncol(fit$x)
   fit$bias_corrected_covariance[] <- -diag(p)
-  expect_warning(
-    out <- predict(fit, se.fit = TRUE),
-    "variance is negative or non-finite"
+  expect_error(
+    predict(fit, se.fit = TRUE),
+    "predict.geer failed: negative variance for prediction 1, ",
+    fixed = TRUE
   )
-  expect_true(anyNA(out$se.fit))
+  fit$bias_corrected_covariance[] <- NA_real_
+  expect_error(
+    predict(fit, newdata = test_data$epilepsy[1:2, ], se.fit = TRUE),
+    "predict.geer failed: non-finite variance for prediction 1, prediction 2",
+    fixed = TRUE
+  )
 })
 
-test_that("compute_se_or_na leaves valid variances unchanged", {
-  expect_silent(se <- compute_se_or_na(c(a = 4, b = 0, c = 9)))
+test_that("compute_se_or_stop leaves valid variances unchanged", {
+  expect_silent(se <- compute_se_or_stop(c(a = 4, b = 0, c = 9), "vcov.geer"))
   expect_equal(se, c(a = 2, b = 0, c = 3))
 })
 
@@ -112,7 +117,7 @@ test_that("refit_geer stops when the refit did not converge", {
     id = id,
     family = poisson("log")
   )
-  fit_ok <- refit_geer(fit, . ~ . + lnbaseline)
+  fit_ok <- refit_geer(fit, . ~ . + lnbaseline, "add1.geer")
   expect_s3_class(fit_ok, "geer")
   fit_limited <- suppressWarnings(
     geewa(
@@ -127,8 +132,12 @@ test_that("refit_geer stops when the refit did not converge", {
   )
   expect_false(fit_limited$converged)
   expect_error(
-    suppressWarnings(refit_geer(fit_limited, . ~ . + lnbaseline)),
-    "did not converge"
+    suppressWarnings(refit_geer(fit_limited, . ~ . + lnbaseline, "add1.geer")),
+    paste0(
+      "add1.geer failed: the fit of 'seizures ~ treatment + visit + ",
+      "lnbaseline' did not converge"
+    ),
+    fixed = TRUE
   )
 })
 
@@ -140,6 +149,6 @@ test_that("refit_geer ignores a fixed-length beta_start of the original fit", {
     family = poisson("log"),
     beta_start = c(0, 0)
   )
-  refit <- refit_geer(fit, . ~ . + lnbaseline)
+  refit <- refit_geer(fit, . ~ . + lnbaseline, "add1.geer")
   expect_length(coef(refit), 3L)
 })

@@ -4,11 +4,7 @@ check_offset_variables <- function(expression, newdata, source) {
   if (length(absent)) {
     stop(
       sprintf(
-        paste0(
-          "prediction offset variable(s) %s supplied via the %s are not ",
-          "present in 'newdata'; they must be supplied in 'newdata' rather ",
-          "than taken from the environment in which the model was fitted"
-        ),
+        "'newdata' must contain the variable(s) %s used %s",
         paste(sprintf("'%s'", absent), collapse = ", "),
         source
       ),
@@ -19,16 +15,30 @@ check_offset_variables <- function(expression, newdata, source) {
 }
 
 
-evaluate_prediction_offset <- function(object, newdata, n_obs) {
-  offset_formula <- rep.int(0, n_obs)
+check_prediction_offsets <- function(object, newdata) {
   pred_terms <- stats::delete.response(object$terms)
   offset_position <- attr(pred_terms, "offset")
   if (length(offset_position)) {
     variable_list <- as.list(attr(pred_terms, "variables"))[-1L]
     for (expression in variable_list[offset_position]) {
-      check_offset_variables(expression, newdata, "model formula")
+      check_offset_variables(
+        expression,
+        newdata,
+        "in the offset of the model formula"
+      )
     }
   }
+  call_offset <- object$call$offset
+  if (!is.null(call_offset)) {
+    check_offset_variables(call_offset, newdata, "in the 'offset' argument")
+  }
+  invisible(NULL)
+}
+
+
+evaluate_prediction_offset <- function(object, newdata, n_obs) {
+  offset_formula <- rep.int(0, n_obs)
+  pred_terms <- stats::delete.response(object$terms)
   mf <- stats::model.frame(
     pred_terms,
     newdata,
@@ -45,8 +55,8 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
         any(!is.finite(offset_from_formula))) {
       stop(
         paste0(
-          "formula-based prediction offset must be a finite numeric vector ",
-          "of the correct length"
+          "the offset in the model formula must have one finite value per ",
+          "row of 'newdata'"
         ),
         call. = FALSE
       )
@@ -56,15 +66,14 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
   offset_argument <- rep.int(0, n_obs)
   call_offset <- object$call$offset
   if (!is.null(call_offset)) {
-    check_offset_variables(call_offset, newdata, "'offset' argument")
     offset_env <- environment(stats::formula(object))
     offset_from_argument <- tryCatch(
       eval(call_offset, envir = newdata, enclos = offset_env),
       error = function(e) {
         stop(
-          paste0(
-            "could not evaluate the offset supplied via the 'offset' ",
-            "argument in 'newdata'"
+          sprintf(
+            "'offset' must be evaluable in 'newdata': %s",
+            conditionMessage(e)
           ),
           call. = FALSE
         )
@@ -77,10 +86,7 @@ evaluate_prediction_offset <- function(object, newdata, n_obs) {
         length(offset_from_argument) != n_obs ||
         any(!is.finite(offset_from_argument))) {
       stop(
-        paste0(
-          "prediction offset supplied via the 'offset' argument must be a ",
-          "finite numeric vector of the correct length"
-        ),
+        "'offset' must have one finite value per row of 'newdata'",
         call. = FALSE
       )
     }
@@ -168,7 +174,7 @@ fitted.geer <- function(object, ...) {
 #' or of the fitted data, and the offset, and transformed by the inverse link
 #' for \code{type = "response"}. Standard errors are obtained by the delta
 #' method. A prediction whose variance is negative or not finite under the
-#' selected estimator gets a standard error of \code{NA}, with a warning. When
+#' selected estimator gives an error. When
 #' \code{newdata} is supplied and the model has an offset, the
 #' variables of the offset must be in \code{newdata}.
 #'
@@ -241,8 +247,9 @@ predict.geer <- function(object,
       stop("'object$x' must have column names", call. = FALSE)
     }
     design_matrix <- design_matrix[, coef_names, drop = FALSE]
-    se <- compute_se_or_na(
+    se <- compute_se_or_stop(
       rowSums((design_matrix %*% vcov_matrix) * design_matrix),
+      context = "predict.geer",
       what = "prediction"
     )
     if (type == "response") {
@@ -254,6 +261,7 @@ predict.geer <- function(object,
   if (!is.data.frame(newdata)) {
     newdata <- as.data.frame(newdata)
   }
+  check_prediction_offsets(object, newdata)
   pred_terms <- stats::delete.response(object$terms)
   mf <- stats::model.frame(
     pred_terms,
@@ -299,8 +307,9 @@ predict.geer <- function(object,
   complete_rows <- !is.na(eta_vector)
   se <- rep.int(NA_real_, length(eta_vector))
   names(se) <- names(eta_vector)
-  se[complete_rows] <- compute_se_or_na(
+  se[complete_rows] <- compute_se_or_stop(
     variances[complete_rows],
+    context = "predict.geer",
     what = "prediction"
   )
   if (type == "response") {
@@ -336,8 +345,8 @@ compute_mahalanobis_residuals <- function(object) {
         stop(
           sprintf(
             paste0(
-              "Mahalanobis residual could not be computed for cluster '%s' ",
-              "because its working covariance matrix is not positive definite"
+              "residuals.geer failed: the working covariance matrix of ",
+              "cluster '%s' is not positive definite"
             ),
             as.character(cluster_id)
           ),
@@ -350,8 +359,8 @@ compute_mahalanobis_residuals <- function(object) {
         stop(
           sprintf(
             paste0(
-              "Mahalanobis residual could not be computed for cluster '%s' ",
-              "because the result is non-finite"
+              "residuals.geer failed: the Mahalanobis residual of cluster ",
+              "'%s' is not finite"
             ),
             as.character(cluster_id)
           ),
@@ -452,7 +461,10 @@ residuals.geer <- function(object,
         !is.finite(object$phi) || object$phi <= 0) {
       stop(
         sprintf(
-          "'%s' residuals require a finite positive dispersion estimate",
+          paste0(
+            "residuals.geer failed: '%s' residuals require a finite positive ",
+            "dispersion estimate"
+          ),
           type
         ),
         call. = FALSE
@@ -472,8 +484,8 @@ residuals.geer <- function(object,
       if (any(!is.finite(dev_contribution)) || any(dev_contribution < 0)) {
         stop(
           paste0(
-            "'deviance' residuals require finite nonnegative deviance ",
-            "contributions from the fitted family"
+            "residuals.geer failed: 'deviance' residuals require finite ",
+            "nonnegative deviance contributions from the fitted family"
           ),
           call. = FALSE
         )

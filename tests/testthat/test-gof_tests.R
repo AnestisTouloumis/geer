@@ -154,7 +154,10 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   expect_true(all(is.finite(out_brgee[["Pr(Test)"]])))
   expect_error(
     gof_score_test(fit_brgee, regions = ~treatment),
-    "'regions' and 'by_repeated' are used only with partition = \"covariates\"",
+    paste0(
+      "'regions' and 'by_repeated' must not be supplied unless ",
+      "partition = \"covariates\""
+    ),
     fixed = TRUE
   )
   expect_warning(
@@ -184,12 +187,12 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   )
   expect_error(
     gof_residual_test(fit_geewa_pois_exch),
-    "require a binary (0/1) response with unit prior weights",
+    "'object' must have a binary (0/1) response and unit prior weights",
     fixed = TRUE
   )
   expect_error(
     gof_score_test(fit_resp_or, cov_type = "jackknife"),
-    "cov_type = \"jackknife\" is not available",
+    "'cov_type' must not be \"jackknife\" for goodness-of-fit tests",
     fixed = TRUE
   )
   expect_error(
@@ -200,7 +203,7 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   expect_error(
     gof_score_test(fit_resp_or, partition = "covariates", n_groups = 5,
                    regions = ~treatment),
-    "'n_groups' is used only with partition = \"risk\"",
+    "'n_groups' must not be supplied unless partition = \"risk\"",
     fixed = TRUE
   )
   expect_error(
@@ -222,7 +225,7 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   expect_error(
     gof_score_test(fit_resp_or, partition = "covariates",
                    regions = ~unknown_variable),
-    "'regions' cannot be evaluated in the data used to fit the model",
+    "'regions' must be evaluable in the data used to fit the model",
     fixed = TRUE
   )
   incomplete <- test_data$respiratory2
@@ -231,7 +234,7 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   expect_error(
     gof_score_test(fit_incomplete, partition = "covariates",
                    regions = ~region),
-    "the variables in 'regions' have missing values for observations used",
+    "'regions' must not have missing values for observations used",
     fixed = TRUE
   )
   expect_error(
@@ -242,7 +245,7 @@ test_that("goodness-of-fit tests check the fit and their arguments", {
   )
   expect_error(
     gof_tests(fit_resp_or, by_repeated = FALSE),
-    "'by_repeated' is used only when 'regions' is supplied",
+    "'by_repeated' must not be supplied unless 'regions' is supplied",
     fixed = TRUE
   )
   expect_error(

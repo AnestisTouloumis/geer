@@ -161,12 +161,16 @@ test_that("a single cluster, K = p and K = p + 1 produce estimates and well-defi
     data = df[df$id == 1, ], id = id, repeated = visit, family = binomial(),
     beta_start = c(0, 0), phi_fixed = TRUE
   ))
-  expect_true(all(is.na(suppressWarnings(vcov(one, "bias-corrected")))))
+  expect_true(all(is.na(one$bias_corrected_covariance)))
+  expect_error(
+    vcov(one, "bias-corrected"),
+    "the bias-corrected covariance requires more clusters than coefficients"
+  )
   two <- suppressWarnings(geewa(y ~ x,
     data = df[df$id <= 2, ], id = id, repeated = visit, family = binomial(),
     beta_start = c(0, 0), phi_fixed = TRUE
   ))
-  expect_true(all(is.na(suppressWarnings(vcov(two, "bias-corrected")))))
+  expect_true(all(is.na(two$bias_corrected_covariance)))
   three <- suppressWarnings(geewa(y ~ x,
     data = df[df$id <= 3, ], id = id, repeated = visit, family = binomial(),
     beta_start = c(0, 0), phi_fixed = TRUE

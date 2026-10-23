@@ -162,11 +162,11 @@ test_that("anova and drop1 stop on a negative test statistic", {
   smaller <- update(fit_geewa_pois_indep, . ~ . - lnage)
   expect_error(
     anova(smaller, negative, test = "wald", cov_type = "robust"),
-    "Wald test failed: the test statistic is negative"
+    "anova.geer failed: the Wald test statistic is negative"
   )
   expect_error(
     drop1(negative, scope = "lnage", test = "wald", cov_type = "robust"),
-    "Wald test failed: the test statistic is negative"
+    "drop1.geer failed: the Wald test statistic is negative"
   )
 })
 
@@ -270,7 +270,7 @@ test_that("refits keep the user-facing call and the original subset rows", {
     weights = weights,
     subset = visit > 1
   )
-  refit <- refit_geer(fit, . ~ . - lnage)
+  refit <- refit_geer(fit, . ~ . - lnage, "drop1.geer")
   expect_identical(refit$call$data, quote(test_data$epilepsy))
   expect_identical(refit$call$subset, quote(visit > 1))
   expect_identical(refit$obs_no, fit$obs_no)

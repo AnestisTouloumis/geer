@@ -28,7 +28,7 @@ check_step_scope <- function(scope) {
   bad_names <- setdiff(scope_names, c("lower", "upper", ""))
   if (length(bad_names)) {
     stop(
-      "list 'scope' can only contain 'lower' and 'upper' components",
+      "list 'scope' must contain only 'lower' and 'upper' components",
       call. = FALSE
     )
   }
@@ -143,7 +143,8 @@ build_step_models <- function(object, cov_type, steps) {
 refit_step_model <- function(fitted_model, change, obs_no) {
   updated_model <- refit_geer(
     fitted_model,
-    stats::as.formula(paste(". ~ .", change))
+    stats::as.formula(paste(". ~ .", change)),
+    "step_p"
   )
   obs_no_new <- updated_model$obs_no
   if (all(is.finite(c(obs_no, obs_no_new))) && obs_no_new != obs_no) {

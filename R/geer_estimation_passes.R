@@ -67,24 +67,27 @@ get_solver_failure <- function(fit) {
 }
 
 
-check_geer_first_pass <- function(fit, method, tolerance) {
+check_geer_first_pass <- function(fit, method, tolerance, fit_function) {
   last_criterion <- fit$criterion[ncol(fit$beta_mat) - 1L]
   if (!isTRUE(last_criterion <= tolerance)) {
     reason <- get_solver_failure(fit)
     detail <- if (nzchar(reason)) paste0(": ", reason) else ""
-    if (method %in% geer_bcgee_methods) {
-      stop(
-        "bias-corrected estimator is undefined because the corresponding GEE ",
-        "model did not converge",
-        detail,
-        call. = FALSE
-      )
+    first_stage <- if (method %in% geer_bcgee_methods) {
+      "GEE"
+    } else {
+      "independence pgee-jeffreys"
     }
     stop(
-      method,
-      " estimator is undefined because the independence pgee-jeffreys model ",
-      "did not converge",
-      detail,
+      sprintf(
+        paste0(
+          "%s failed: the %s estimator is undefined because its first-stage ",
+          "%s fit did not converge%s"
+        ),
+        fit_function,
+        method,
+        first_stage,
+        detail
+      ),
       call. = FALSE
     )
   }

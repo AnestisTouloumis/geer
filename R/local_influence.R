@@ -133,13 +133,7 @@ local_influence <- function(object,
     names(object$coefficients)
   )
   if (!identical(object$method, "gee")) {
-    stop(
-      paste0(
-        "local_influence failed: local influence requires a fit with ",
-        "method = \"gee\""
-      ),
-      call. = FALSE
-    )
+    stop("'object' must be a fit with method = \"gee\"", call. = FALSE)
   }
   compute_local_influence(object, perturbation, type, parm)
 }

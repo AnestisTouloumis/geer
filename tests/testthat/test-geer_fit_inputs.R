@@ -391,16 +391,18 @@ test_that("extract_geer_id_repeated uses the supplied repeated variable", {
   data$when <- rep(c("second", "first"), times = 3)
   mf <- model.frame(y ~ x, data = data, id = id, repeated = when)
 
-  expect_warning(
-    out <- extract_geer_id_repeated(mf, 6L),
-    "'repeated' is a character vector",
+  expect_error(
+    extract_geer_id_repeated(mf, 6L),
+    paste0(
+      "'repeated' must be numeric or a factor; a character vector has no ",
+      "natural order"
+    ),
     fixed = TRUE
   )
+  data$when <- factor(data$when, levels = c("first", "second"))
+  mf <- model.frame(y ~ x, data = data, id = id, repeated = when)
+  out <- extract_geer_id_repeated(mf, 6L)
   expect_equal(out$repeated, rep(c(2, 1), times = 3))
-  expect_no_warning(
-    out_quiet <- extract_geer_id_repeated(mf, 6L, warn_character = FALSE)
-  )
-  expect_identical(out_quiet, out)
 })
 
 test_that("extract_geer_id_repeated validates id and repeated", {
@@ -576,9 +578,17 @@ test_that("a scalar offset is recycled and equals the equivalent vector offset",
 })
 
 test_that("refits for anova, add1, drop1 and step_p keep a formula offset", {
-  refit_drop <- refit_geer(fit_cc_offset_formula, . ~ . - treatment)
+  refit_drop <- refit_geer(
+    fit_cc_offset_formula,
+    . ~ . - treatment,
+    "anova.geer"
+  )
   expect_identical(extract_formula_offset_terms(refit_drop), "offset(period)")
-  refit_add <- refit_geer(fit_cc_offset_formula, . ~ . + factor(period))
+  refit_add <- refit_geer(
+    fit_cc_offset_formula,
+    . ~ . + factor(period),
+    "anova.geer"
+  )
   expect_identical(extract_formula_offset_terms(refit_add), "offset(period)")
   out_drop <- drop1(fit_cc_offset_formula, test = "wald", cov_type = "robust")
   expect_s3_class(out_drop, "anova")

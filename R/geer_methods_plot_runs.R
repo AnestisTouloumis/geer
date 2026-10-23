@@ -37,7 +37,7 @@
 #' expectation, and the p-value. At least three colors are needed, because
 #' with two the color would simply repeat the sign. Cluster boundaries are
 #' meaningful only under the natural ordering, and requesting them otherwise
-#' gives a warning.
+#' gives an error.
 #'
 #' @return
 #' Invisibly, a data frame with one row per tested residual and columns
@@ -111,9 +111,9 @@ plot.geer_runs_test <- function(x,
   if (is.null(cluster_breaks)) {
     cluster_breaks <- natural
   } else if (cluster_breaks && !natural) {
-    warning(
+    stop(
       paste0(
-        "cluster boundaries are only interpretable under the natural ",
+        "'cluster_breaks' must be FALSE or NULL unless 'x' uses the natural ",
         "cluster/repeated ordering"
       ),
       call. = FALSE
@@ -162,8 +162,8 @@ plot.geer_runs_test <- function(x,
   if ("type" %in% dot_names) {
     stop(
       paste0(
-        "'type' cannot be changed: the symbols are drawn separately to color ",
-        "them by run"
+        "'type' must not be supplied: the symbols are drawn separately to ",
+        "color them by run"
       ),
       call. = FALSE
     )

@@ -90,9 +90,11 @@
   `1 - pchisq()` and were exactly 0 for large statistics (above about 70 on one
   degree of freedom). They now use the upper tail.
 
-* The bias-corrected covariance (Morel, Bokossa and Neerchal, 2003) is `NA`,
-  with a warning, when the number of clusters does not exceed the number of
-  parameters. Before, it could be negative or was silently capped.
+* The bias-corrected covariance (Morel, Bokossa and Neerchal, 2003) is
+  undefined when the number of clusters does not exceed the number of
+  parameters: the fit warns, and `vcov()`, the methods that use it, and the
+  score tests give an error. Before, it could be negative or was silently
+  capped.
 
 * `opgee-jeffreys` and `hpgee-jeffreys` now estimate `alpha` and `phi` once, at
   the independence penalized estimate, instead of re-estimating them at the
@@ -227,22 +229,32 @@
   families, `beta_start` with `NA`, rank deficiency (naming the columns), an
   empty model matrix, and numerical failures in the C++ code.
 
+* Errors from numerical failures start with the name of the function that
+  failed, for example `anova.geer failed:` or `vcov.geer failed:`, and errors
+  in the arguments name the argument.
+
+* `predict()` checks that `newdata` contains the variables of the offset
+  before building the model frame, so a missing offset variable gives this
+  error instead of an error from `model.frame()`.
+
 * Small dispersion estimates are no longer rejected, only zero or nonfinite
   ones.
 
-* Standard errors from a negative variance are `NA` with a warning.
+* `summary()`, `tidy()`, and `predict()` stop when a variance is negative or
+  not finite, as `confint()` already did.
 
-* `step_p()`: the `Step` column is an integer, `direction = "forward"` without
-  `scope` warns, and `direction = "both"` requires `p_enter <= p_remove` and
-  stops instead of cycling.
+* `step_p()`: the `Step` column is an integer, `direction = "forward"` requires
+  `scope`, and `direction = "both"` requires `p_enter <= p_remove` and stops
+  instead of cycling.
 
-* `geecriteria()` warns when models differ in family or response.
+* `geecriteria()` stops when the models differ in the number of
+  observations, the family, or the response.
 
 * `summary()` and `tidy()` stop on unused or misspelled arguments, as `vcov()`,
   `confint()`, and the other methods already did.
 
-* A character `repeated` variable gives a warning, because its values are
-  ordered alphabetically (for example `"10"` before `"2"`).
+* A character `repeated` variable gives an error, because it has no natural
+  order (sorted alphabetically, `"10"` would precede `"2"`).
 
 * `glance()` computes only `QIC`, `QICu`, and `CIC`.
 

@@ -171,7 +171,10 @@ emm_basis.geer <- function(object,
   }
   if (is.null(colnames(design_matrix))) {
     stop(
-      "the model matrix reconstructed for 'emmeans' must have column names",
+      paste0(
+        "emm_basis.geer failed: the reconstructed model matrix has no column ",
+        "names"
+      ),
       call. = FALSE
     )
   }
@@ -180,8 +183,8 @@ emm_basis.geer <- function(object,
     stop(
       sprintf(
         paste0(
-          "failed to reconstruct the model matrix for 'emmeans'; missing ",
-          "columns: %s"
+          "emm_basis.geer failed: the reconstructed model matrix lacks the ",
+          "columns %s"
         ),
         paste(missing_cols, collapse = ", ")
       ),

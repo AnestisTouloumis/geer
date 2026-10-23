@@ -206,7 +206,7 @@ test_that("mcar_little_test validates inputs", {
   )
   expect_error(
     mcar_little_test(matrix(1:12, ncol = 2), data = data.frame()),
-    "only used when 'object'"
+    "'data' must not be supplied unless 'object' is a fitted 'geer' object"
   )
 })
 

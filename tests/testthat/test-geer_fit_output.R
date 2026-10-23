@@ -192,7 +192,7 @@ test_that("a non-converging fit warns through the public interface", {
   )
 })
 
-test_that("the bias-corrected covariance is NA and warned about when clusters do not exceed parameters", {
+test_that("the bias-corrected covariance needs more clusters than parameters", {
   few_clusters <- data.frame(
     id = rep(1:2, each = 5),
     y = c(1, 2, 0, 3, 1, 2, 1, 4, 0, 2),
@@ -211,7 +211,23 @@ test_that("the bias-corrected covariance is NA and warned about when clusters do
     "geewa: the bias-corrected covariance matrix is undefined"
   )
   expect_true(all(is.na(fit$bias_corrected_covariance)))
-  expect_true(all(is.na(vcov(fit))))
+  expect_error(
+    vcov(fit),
+    paste0(
+      "vcov.geer failed: the bias-corrected covariance requires more ",
+      "clusters than coefficients; use cov_type = \"robust\" or \"jackknife\""
+    ),
+    fixed = TRUE
+  )
+  fit_smaller <- suppressWarnings(update(fit, formula = . ~ . - x2))
+  expect_error(
+    anova(fit_smaller, fit, test = "score"),
+    paste0(
+      "anova.geer failed: the bias-corrected covariance requires more ",
+      "clusters than coefficients"
+    ),
+    fixed = TRUE
+  )
   expect_true(all(is.finite(fit$robust_covariance)))
   expect_true(all(is.finite(vcov(fit, cov_type = "robust"))))
 })

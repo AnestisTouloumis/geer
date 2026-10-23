@@ -5,13 +5,7 @@ check_gof_fit <- function(object, context) {
   if (!binary_family || !is_binary_response(y) ||
       !all(object$prior.weights == 1)) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: goodness-of-fit tests require a binary (0/1) response ",
-          "with unit prior weights"
-        ),
-        context
-      ),
+      "'object' must have a binary (0/1) response and unit prior weights",
       call. = FALSE
     )
   }
@@ -45,16 +39,10 @@ check_gof_fit <- function(object, context) {
 }
 
 
-check_gof_cov_type <- function(cov_type, context) {
+check_gof_cov_type <- function(cov_type) {
   if (identical(cov_type, "jackknife")) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: cov_type = \"jackknife\" is not available for ",
-          "goodness-of-fit tests"
-        ),
-        context
-      ),
+      "'cov_type' must not be \"jackknife\" for goodness-of-fit tests",
       call. = FALSE
     )
   }
@@ -108,16 +96,10 @@ build_gof_risk_groups <- function(object, n_groups, context) {
 }
 
 
-extract_gof_region_variables <- function(object, regions, env, context) {
+extract_gof_region_variables <- function(object, regions, env) {
   variables <- as.list(attr(stats::terms(regions), "variables"))[-1L]
   if (!length(variables)) {
-    stop(
-      sprintf(
-        "%s failed: 'regions' must contain at least one variable",
-        context
-      ),
-      call. = FALSE
-    )
+    stop("'regions' must contain at least one variable", call. = FALSE)
   }
   extracted <- extract_fit_data_variables(
     object,
@@ -127,25 +109,19 @@ extract_gof_region_variables <- function(object, regions, env, context) {
   )
   if (identical(extracted$status, "incomplete")) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: the variables in 'regions' have missing values for ",
-          "observations used to fit the model; supply a vector with one ",
-          "value per observation instead"
-        ),
-        context
+      paste0(
+        "'regions' must not have missing values for observations used to ",
+        "fit the model; supply a vector with one value per observation ",
+        "instead"
       ),
       call. = FALSE
     )
   }
   if (!identical(extracted$status, "ok")) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: 'regions' cannot be evaluated in the data used to fit ",
-          "the model; supply a vector with one value per observation instead"
-        ),
-        context
+      paste0(
+        "'regions' must be evaluable in the data used to fit the model; ",
+        "supply a vector with one value per observation instead"
       ),
       call. = FALSE
     )
@@ -154,31 +130,24 @@ extract_gof_region_variables <- function(object, regions, env, context) {
 }
 
 
-build_gof_regions <- function(object, regions, env, context) {
+build_gof_regions <- function(object, regions, env) {
   values <- if (inherits(regions, "formula") && length(regions) == 2L) {
-    extract_gof_region_variables(object, regions, env, context)
+    extract_gof_region_variables(object, regions, env)
   } else if (is.atomic(regions) && length(regions) == object$obs_no &&
              !anyNA(regions)) {
     list(regions)
   } else {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: 'regions' must be a one-sided formula or a vector with ",
-          "one non-missing value per observation, in the order stored in ",
-          "the fit"
-        ),
-        context
+      paste0(
+        "'regions' must be a one-sided formula or a vector with one ",
+        "non-missing value per observation, in the order stored in the fit"
       ),
       call. = FALSE
     )
   }
   region <- interaction(lapply(values, factor), drop = TRUE, lex.order = TRUE)
   if (nlevels(region) < 2L) {
-    stop(
-      sprintf("%s failed: 'regions' must define at least two regions", context),
-      call. = FALSE
-    )
+    stop("'regions' must define at least two regions", call. = FALSE)
   }
   region
 }
@@ -271,7 +240,12 @@ compute_gof_score_test <- function(object,
       call. = FALSE
     )
   }
-  compute_score_test(object, alternative, cov_type = cov_type)
+  compute_score_test(
+    object,
+    alternative,
+    cov_type = cov_type,
+    context = context
+  )
 }
 
 

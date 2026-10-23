@@ -83,14 +83,13 @@ gof_tests <- function(object,
   object <- check_geer_object(object)
   n_groups <- check_integer_at_least(n_groups, "n_groups", lower = 2L)
   cov_type <- check_gof_cov_type(
-    match_cov_type(cov_type, default = "bias-corrected"),
-    context
+    match_cov_type(cov_type, default = "bias-corrected")
   )
   covariance <- match_gof_covariance(covariance[1L])
   check_gof_by_repeated(by_repeated)
   if (missing(regions) && !missing(by_repeated)) {
     stop(
-      "'by_repeated' is used only when 'regions' is supplied",
+      "'by_repeated' must not be supplied unless 'regions' is supplied",
       call. = FALSE
     )
   }
@@ -107,8 +106,7 @@ gof_tests <- function(object,
     region <- build_gof_regions(
       object,
       regions,
-      env = parent.frame(),
-      context = context
+      env = parent.frame()
     )
     check_gof_regions(object, region, by_repeated)
     for (type in unique(c("naive", cov_type))) {

@@ -149,7 +149,13 @@ compute_mcar_inverse <- function(a, context) {
   )
   if (is.null(out) || any(!is.finite(out))) {
     stop(
-      sprintf("a covariance matrix was singular while %s", context),
+      sprintf(
+        paste0(
+          "mcar_homoscedasticity_test failed: a covariance matrix was ",
+          "singular while %s"
+        ),
+        context
+      ),
       call. = FALSE
     )
   }
@@ -167,8 +173,8 @@ compute_mcar_covariance_sqrt <- function(sigma, context) {
     stop(
       sprintf(
         paste0(
-          "a conditional covariance matrix was not positive semi-definite ",
-          "while %s"
+          "mcar_homoscedasticity_test failed: a conditional covariance ",
+          "matrix was not positive semi-definite while %s"
         ),
         context
       ),
@@ -192,8 +198,9 @@ compute_mcar_cc_moments <- function(x) {
   if (any(eigenvalues <= sqrt(.Machine$double.eps) * scale)) {
     stop(
       paste0(
-        "the complete-case covariance matrix is singular or nearly singular ",
-        "for distribution-free imputation"
+        "mcar_homoscedasticity_test failed: the complete-case covariance ",
+        "matrix is singular or nearly singular for distribution-free ",
+        "imputation"
       ),
       call. = FALSE
     )
@@ -213,18 +220,18 @@ build_mcar_imputation_setup <- function(x, imputation, maxiter, tolerance) {
 
   if (identical(imputation, "distribution-free") &&
       (n_complete < 10L || n_complete < 2L * p)) {
-    warning(
+    stop(
       sprintf(
         paste0(
-          "distribution-free imputation requires at least %d complete cases ",
-          "but only %d are available; normal-theory imputation is used instead"
+          "mcar_homoscedasticity_test failed: distribution-free imputation ",
+          "requires at least %d complete cases, but only %d are available; ",
+          "use imputation = \"normal\""
         ),
         max(10L, 2L * p),
         n_complete
       ),
       call. = FALSE
     )
-    imputation <- "normal"
   }
 
   if (identical(imputation, "distribution-free")) {
@@ -237,7 +244,12 @@ build_mcar_imputation_setup <- function(x, imputation, maxiter, tolerance) {
       converged = NA
     )
   } else {
-    em <- fit_mcar_normal_em(x, maxiter = maxiter, tolerance = tolerance)
+    em <- fit_mcar_normal_em(
+      x,
+      maxiter = maxiter,
+      tolerance = tolerance,
+      context = "mcar_homoscedasticity_test"
+    )
     out <- list(
       mu = em$mu,
       sigma = em$sigma,
@@ -270,8 +282,8 @@ compute_mcar_normal_imputation <- function(x, setup) {
     if (!length(observed)) {
       stop(
         paste0(
-          "rows with no observed values cannot be imputed by the ",
-          "Jamshidian-Jalal diagnostic"
+          "mcar_homoscedasticity_test failed: rows with no observed values ",
+          "cannot be imputed by the Jamshidian-Jalal diagnostic"
         ),
         call. = FALSE
       )
@@ -341,8 +353,8 @@ compute_mcar_df_imputation <- function(x, setup) {
     if (!length(observed)) {
       stop(
         paste0(
-          "rows with no observed values cannot be imputed by the ",
-          "Jamshidian-Jalal diagnostic"
+          "mcar_homoscedasticity_test failed: rows with no observed values ",
+          "cannot be imputed by the Jamshidian-Jalal diagnostic"
         ),
         call. = FALSE
       )
@@ -386,7 +398,10 @@ compute_mcar_imputation_draw <- function(x, setup) {
   }
   if (anyNA(completed) || any(!is.finite(completed))) {
     stop(
-      "imputation produced missing or non-finite completed values",
+      paste0(
+        "mcar_homoscedasticity_test failed: imputation produced missing or ",
+        "non-finite completed values"
+      ),
       call. = FALSE
     )
   }
@@ -522,8 +537,9 @@ compute_mcar_hawkins_test <- function(
     if (any(complement <= sqrt(.Machine$double.eps))) {
       stop(
         paste0(
-          "the Hawkins transformation is undefined because deleting a case ",
-          "leaves a singular pooled covariance matrix"
+          "mcar_homoscedasticity_test failed: the Hawkins transformation is ",
+          "undefined because deleting a case leaves a singular pooled ",
+          "covariance matrix"
         ),
         call. = FALSE
       )
@@ -718,8 +734,8 @@ compute_mcar_ad_test <- function(x, group, group_counts) {
   if (variance <= .Machine$double.eps) {
     stop(
       paste0(
-        "the Anderson-Darling standardization variance is zero or numerically ",
-        "negligible"
+        "mcar_homoscedasticity_test failed: the Anderson-Darling ",
+        "standardization variance is zero or numerically negligible"
       ),
       call. = FALSE
     )

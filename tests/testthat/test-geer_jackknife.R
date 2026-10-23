@@ -193,14 +193,16 @@ test_that("jackknife covariance needs two clusters and a known fitting function"
   one_cluster$id[] <- one_cluster$id[1L]
   expect_error(
     compute_jackknife_deletes(one_cluster),
-    "jackknife covariance requires at least two clusters"
+    "vcov.geer failed: the jackknife requires at least two clusters",
+    fixed = TRUE
   )
   unknown <- fit_geewa_pois_indep
   unknown$fit_function <- NULL
   unknown$call[[1L]] <- quote(some_wrapper)
   expect_error(
     compute_jackknife_deletes(unknown),
-    "could not determine whether the model was fitted by geewa\\(\\) or geewa_binary\\(\\)"
+    "'object' must be a geewa() or geewa_binary() fit",
+    fixed = TRUE
   )
 })
 
@@ -213,15 +215,24 @@ test_that("compute_jackknife_alpha_or expands the independence odds-ratio vector
     orstr = "independence",
     method = "gee"
   )
-  alpha <- compute_jackknife_alpha_or(fit, fit$repeated)
+  alpha <- compute_jackknife_alpha_or(fit, fit$repeated, "vcov.geer")
   expect_length(alpha, choose(max(fit$repeated), 2L))
   expect_true(all(alpha == 1))
 })
 
 test_that("select_jackknife_pair_subset rejects an alpha of the wrong length", {
   expect_error(
-    select_jackknife_pair_subset(1, full_max = 4L, subset_max = 3L),
-    "failed to map the fitted association parameters"
+    select_jackknife_pair_subset(
+      1,
+      full_max = 4L,
+      subset_max = 3L,
+      context = "vcov.geer"
+    ),
+    paste0(
+      "vcov.geer failed: the fitted association parameters could not be ",
+      "mapped to the remaining repeated positions"
+    ),
+    fixed = TRUE
   )
 })
 
@@ -354,12 +365,25 @@ test_that("jackknife convergence checks report the solver failure reason", {
   )
   expect_error(
     check_jackknife_convergence(bad, 1e-6, "7"),
-    "leave-one-cluster fit did not converge (singular matrix)",
+    paste0(
+      "vcov.geer failed: the fit without cluster '7' did not converge ",
+      "(singular matrix)"
+    ),
+    fixed = TRUE
+  )
+  expect_error(
+    check_jackknife_convergence(
+      bad, 1e-6, "7", "the preliminary GEE fit", "dfbeta.geer"
+    ),
+    paste0(
+      "dfbeta.geer failed: the preliminary GEE fit without cluster '7' did ",
+      "not converge (singular matrix)"
+    ),
     fixed = TRUE
   )
   expect_error(
     check_jackknife_solver_failure(bad, "7"),
-    "jackknife covariance failed for cluster '7': singular matrix",
+    "vcov.geer failed: the fit without cluster '7' stopped: singular matrix",
     fixed = TRUE
   )
   ok <- list(criterion = c(1, 0), beta_mat = matrix(0, 2, 3))

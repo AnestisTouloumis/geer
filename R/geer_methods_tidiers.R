@@ -96,7 +96,7 @@ tidy.geer <- function(x,
   }
   beta <- stats::coef(object)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)
-  se <- compute_se_or_na(diag(vcov_matrix))
+  se <- compute_se_or_stop(diag(vcov_matrix), context = "tidy.geer")
   z_stat <- rep(NA_real_, length(beta))
   ok <- is.finite(beta) & is.finite(se) & se > 0
   z_stat[ok] <- beta[ok] / se[ok]

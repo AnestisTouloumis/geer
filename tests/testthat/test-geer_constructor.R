@@ -63,7 +63,11 @@ test_that("new_geer rejects non-list input and missing required components", {
   expect_error(new_geer(1), "'x' must be a list")
   x <- make_valid_geer_input()
   x <- x[setdiff(names(x), "phi")]
-  expect_error(new_geer(x), "'x' is missing required component\\(s\\): phi")
+  expect_error(
+    new_geer(x),
+    "'x' must contain the component(s): phi",
+    fixed = TRUE
+  )
 })
 
 test_that("new_geer adds geer class and fills optional defaults", {
@@ -136,7 +140,10 @@ test_that("validate_geer checks fitted values, residuals, id, y, and repeated al
   expect_error(validate_geer(obj), "'y' must have one value per observation")
   obj <- make_valid_geer_object()
   obj$obs_no <- 2L
-  expect_error(validate_geer(obj), "'obs_no' is inconsistent with observation-level components")
+  expect_error(
+    validate_geer(obj),
+    "'obs_no' must equal the number of observations"
+  )
   obj <- make_valid_geer_object()
   obj$obs_no <- 2.5
   expect_error(validate_geer(obj), "'obs_no' must be a nonnegative integer")
@@ -226,7 +233,10 @@ test_that("validate_geer checks cluster counts and size metadata", {
   expect_error(validate_geer(obj), "'clusters_no' must be a positive integer")
   obj <- make_valid_geer_object()
   obj$clusters_no <- 3L
-  expect_error(validate_geer(obj), "'clusters_no' is inconsistent with 'id'")
+  expect_error(
+    validate_geer(obj),
+    "'clusters_no' must equal the number of distinct 'id' values"
+  )
   obj <- make_valid_geer_object()
   obj$min_cluster_size <- 0
   expect_error(validate_geer(obj), "'min_cluster_size' must be a positive integer")
@@ -236,7 +246,10 @@ test_that("validate_geer checks cluster counts and size metadata", {
   obj <- make_valid_geer_object()
   obj$min_cluster_size <- 3L
   obj$max_cluster_size <- 2L
-  expect_error(validate_geer(obj), "'min_cluster_size' cannot exceed 'max_cluster_size'")
+  expect_error(
+    validate_geer(obj),
+    "'min_cluster_size' must not exceed 'max_cluster_size'"
+  )
 })
 
 test_that("validate_geer checks covariance matrix type, dimensions, and dimnames", {

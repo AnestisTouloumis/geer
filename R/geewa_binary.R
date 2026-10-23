@@ -185,7 +185,7 @@ geewa_binary <- function(formula,
     method = method,
     beta_start = beta_zero,
     check_first = function(fit, method) {
-      check_geer_first_pass(fit, method, tolerance)
+      check_geer_first_pass(fit, method, tolerance, "geewa_binary")
     }
   )
   fit <- build_geer_output(

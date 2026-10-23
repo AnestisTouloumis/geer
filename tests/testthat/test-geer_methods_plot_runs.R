@@ -85,10 +85,14 @@ test_that("plot guards cluster breaks and its input", {
   expect_silent(plot(by_fitted))
   expect_silent(plot(by_fitted, ylim = c(-2, 2)))
   expect_silent(plot(by_fitted, yaxt = "s"))
-  expect_error(plot(by_fitted, type = "p"), "'type' cannot be changed")
-  expect_warning(
+  expect_error(plot(by_fitted, type = "p"), "'type' must not be supplied")
+  expect_error(
     plot(by_fitted, cluster_breaks = TRUE),
-    "only interpretable under the natural"
+    paste0(
+      "'cluster_breaks' must be FALSE or NULL unless 'x' uses the natural ",
+      "cluster/repeated ordering"
+    ),
+    fixed = TRUE
   )
 
   natural <- runs_test(fit_geewa_pois_exch)

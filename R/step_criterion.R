@@ -139,11 +139,8 @@ step_criterion <- function(object,
   }
   scope_value <- if (missing(scope)) NULL else scope
   if (is.null(scope_value) && identical(direction, "forward")) {
-    warning(
-      paste0(
-        "no 'scope' was supplied for direction = \"forward\", so the initial ",
-        "model is returned unchanged"
-      ),
+    stop(
+      "'scope' must be supplied for direction = \"forward\"",
       call. = FALSE
     )
   }

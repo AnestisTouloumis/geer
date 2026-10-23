@@ -256,8 +256,8 @@ mcar_logistic_test <- function(object,
   if (observed_no == 0L) {
     stop(
       paste0(
-        "all risk-set outcomes are missing; the missingness model cannot be ",
-        "fitted"
+        "mcar_logistic_test failed: all risk-set outcomes are missing; the ",
+        "missingness model cannot be fitted"
       ),
       call. = FALSE
     )

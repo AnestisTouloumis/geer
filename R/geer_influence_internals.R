@@ -55,27 +55,19 @@ warn_influence_na <- function(values, unit) {
 }
 
 
-check_influence_method <- function(object, unit, method, context) {
+check_influence_method <- function(object, unit, method) {
   if (identical(unit, "observations") && identical(method, "exact")) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: method = \"exact\" is available only for ",
-          "unit = \"clusters\""
-        ),
-        context
-      ),
+      "'method' must be \"one-step\" when unit = \"observations\"",
       call. = FALSE
     )
   }
   if (identical(method, "one-step") && !identical(object$method, "gee")) {
     stop(
-      sprintf(
-        paste0(
-          "%s failed: method = \"one-step\" requires a fit with ",
-          "method = \"gee\"; use method = \"exact\" with unit = \"clusters\""
-        ),
-        context
+      paste0(
+        "'object' must be a fit with method = \"gee\" for ",
+        "method = \"one-step\"; use method = \"exact\" with ",
+        "unit = \"clusters\""
       ),
       call. = FALSE
     )
@@ -101,7 +93,7 @@ compute_influence_hatvalues <- function(object, unit) {
 
 
 compute_influence_dfbeta <- function(object, unit, method, context) {
-  check_influence_method(object, unit, method, context)
+  check_influence_method(object, unit, method)
   coef_names <- names(object$coefficients)
   quantities <- get_cached_influence_values(object)
   if (identical(unit, "observations")) {
@@ -167,8 +159,7 @@ compute_influence_dfbetas <- function(object,
                                       context) {
   dfbeta_matrix <- compute_influence_dfbeta(object, unit, method, context)
   standard_errors <- compute_se_or_stop(
-    stats::vcov(object, cov_type = cov_type),
-    parm = colnames(dfbeta_matrix),
+    diag(stats::vcov(object, cov_type = cov_type))[colnames(dfbeta_matrix)],
     context = context
   )
   sweep(dfbeta_matrix, 2L, standard_errors, `/`)

@@ -190,7 +190,7 @@ test_that("geewa rejects factor, character and multi-column responses for non-bi
   )
 })
 
-test_that("character repeated values are sorted alphabetically with a warning", {
+test_that("character repeated values are rejected", {
   dat <- test_data$epilepsy
   visit_code <- c(1, 2, 10, 11)[as.integer(factor(dat$visit))]
   dat$visit_numeric <- visit_code
@@ -204,8 +204,8 @@ test_that("character repeated values are sorted alphabetically with a warning", 
     repeated = visit_numeric,
     corstr = "ar1"
   )
-  expect_warning(
-    fit_character <- geewa(
+  expect_error(
+    geewa(
       seizures ~ treatment,
       family = poisson,
       data = dat,
@@ -213,7 +213,10 @@ test_that("character repeated values are sorted alphabetically with a warning", 
       repeated = visit_character,
       corstr = "ar1"
     ),
-    "'repeated' is a character vector",
+    paste0(
+      "'repeated' must be numeric or a factor; a character vector has no ",
+      "natural order"
+    ),
     fixed = TRUE
   )
   expect_no_warning(
@@ -227,8 +230,6 @@ test_that("character repeated values are sorted alphabetically with a warning", 
     )
   )
   expect_equal(fit_factor$alpha, fit_numeric$alpha, tolerance = 1e-10)
-  expect_false(isTRUE(all.equal(fit_character$alpha, fit_numeric$alpha)))
-  expect_no_warning(runs_test(fit_character))
 })
 
 test_that("geewa rejects responses outside the support of the family", {
