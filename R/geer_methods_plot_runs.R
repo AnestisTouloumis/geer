@@ -107,7 +107,7 @@ plot.geer_runs_test <- function(x,
       )
     }
   }
-  natural <- isTRUE(x$natural_order)
+  natural <- isTRUE(x$natural.order)
   if (is.null(cluster_breaks)) {
     cluster_breaks <- natural
   } else if (cluster_breaks && !natural) {
@@ -137,7 +137,7 @@ plot.geer_runs_test <- function(x,
     sub <- sprintf(
       "T = %d, E(T) = %.4g, p = %.3g",
       x$runs,
-      x$expected_runs,
+      x$expected.runs,
       x$p.value
     )
     if (isTRUE(x$zero > 0L)) {

@@ -17,7 +17,7 @@ geewa(
   weights,
   beta_start = NULL,
   offset,
-  control_glm = list(...),
+  control_glm = list(),
   use_p = TRUE,
   alpha_vector = NULL,
   phi_fixed = FALSE,
@@ -84,7 +84,7 @@ added to any \code{offset()} terms in \code{formula}.}
 
 \item{control_glm}{optional list of control parameters passed to
 \code{\link[brglm2]{brglm_control}} for the starting values. Ignored when
-\code{beta_start} is supplied. Defaults to \code{list(...)}.}
+\code{beta_start} is supplied. Defaults to \code{list()}.}
 
 \item{use_p}{logical indicating whether the number of regression parameters
 is subtracted from the denominators of the estimators of the dispersion
@@ -110,9 +110,9 @@ in the fit, evaluated in \code{data} as in
 \code{\link[stats]{model.frame}}. Defaults to
 \code{getOption("na.action")}.}
 
-\item{...}{arguments used to build \code{control} and \code{control_glm} when
-these are not supplied. Supplying \code{...} together with both
-\code{control} and \code{control_glm} is an error.}
+\item{...}{arguments of \code{\link{geer_control}}, given by their full
+names, used to build \code{control} when it is not supplied. Supplying
+\code{...} together with \code{control} is an error.}
 }
 \value{
 An object of class \code{"geer"}, a list with components:
@@ -186,7 +186,10 @@ The estimation methods are:
   \item{\code{"bcgee-*"}}{bias-corrected GEE, which apply a one-step
     correction to the converged GEE estimate (Touloumis, 2026a).}
   \item{\code{"pgee-jeffreys"}}{GEE penalized by a Jeffreys-type penalty
-    (Touloumis, 2026b).}
+    (Touloumis, 2026b), developed there for binary responses with odds-ratio
+    working structures (\code{\link{geewa_binary}}). Other families and
+    correlation structures extend that paper, whose finiteness result covers
+    only binary responses under working independence.}
   \item{\code{"opgee-jeffreys"}, \code{"hpgee-jeffreys"}}{one penalized, or
     one ordinary, scoring step from the penalized estimate under working
     independence.}
@@ -206,6 +209,12 @@ products of Pearson residuals at consecutive \code{repeated} values, pooled
 over clusters, so it can differ from the estimates of other packages.
 }
 \section{Convergence and separation}{
+
+For the single-stage methods (\code{"gee"}, \code{"brgee-*"}, and
+\code{"pgee-jeffreys"}), \code{alpha} and \code{phi} are re-estimated at
+every iteration from the current estimates of the regression parameters,
+which is the joint updating of Touloumis (2026a, Algorithm 1), unless they
+are fixed by \code{corstr = "fixed"} or \code{phi_fixed = TRUE}.
 
 For the two-stage methods (\code{"bcgee-*"}, \code{"opgee-jeffreys"}, and
 \code{"hpgee-jeffreys"}), \code{alpha} and \code{phi} are estimated once at

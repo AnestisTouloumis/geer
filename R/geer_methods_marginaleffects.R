@@ -134,9 +134,8 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
   } else if (isFALSE(vcov)) {
     return(NULL)
   } else if (is.character(vcov) && length(vcov) == 1L && !is.na(vcov)) {
-    vcov_type <- tolower(vcov)
     choices <- geer_cov_type_choices
-    if (!(vcov_type %in% choices)) {
+    if (!(vcov %in% choices)) {
       stop(
         sprintf(
           "'vcov' must be one of: %s, or a covariance matrix or function",
@@ -145,7 +144,7 @@ get_vcov.geer <- function(model, vcov = NULL, ...) {
         call. = FALSE
       )
     }
-    out <- stats::vcov(model, cov_type = vcov_type)
+    out <- stats::vcov(model, cov_type = vcov)
   } else if (is.function(vcov)) {
     out <- vcov(model)
   } else {

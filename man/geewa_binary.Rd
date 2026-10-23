@@ -16,7 +16,7 @@ geewa_binary(
   weights,
   beta_start = NULL,
   offset,
-  control_glm = list(...),
+  control_glm = list(),
   alpha_vector = NULL,
   subset,
   na.action,
@@ -75,7 +75,7 @@ added to any \code{offset()} terms in \code{formula}.}
 
 \item{control_glm}{optional list of control parameters passed to
 \code{\link[brglm2]{brglm_control}} for the starting values. Ignored when
-\code{beta_start} is supplied. Defaults to \code{list(...)}.}
+\code{beta_start} is supplied. Defaults to \code{list()}.}
 
 \item{alpha_vector}{numeric vector of strictly positive, finite odds ratios
 for \code{orstr = "fixed"}, of length \code{choose(T, 2)}, where \eqn{T} is
@@ -90,9 +90,9 @@ in the fit, evaluated in \code{data} as in
 \code{\link[stats]{model.frame}}. Defaults to
 \code{getOption("na.action")}.}
 
-\item{...}{arguments used to build \code{control} and \code{control_glm} when
-these are not supplied. Supplying \code{...} together with both
-\code{control} and \code{control_glm} is an error.}
+\item{...}{arguments of \code{\link{geer_control}}, given by their full
+names, used to build \code{control} when it is not supplied. Supplying
+\code{...} together with \code{control} is an error.}
 }
 \value{
 An object of class \code{"geer"}, a list with components:

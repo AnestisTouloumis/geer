@@ -211,6 +211,39 @@ test_that("bcgee equals the one-step closed form built from the reference Lambda
   }
 })
 
+test_that("opgee and hpgee are one scoring step from the independence pgee", {
+  ctl <- geer_control(tolerance = 1e-12, maxiter = 200)
+  for (kind in c("cc", "or")) {
+    d <- if (kind == "cc") {
+      ref_sim("cc", times8, poisson(), "log", "ar1", 0.4, 1.5,
+        beta = c(1.5, 0.2, 0.1), seed = 8
+      )
+    } else {
+      ref_sim("or", times8,
+        link = "logit", alpha = c(1.5, 2.2, 0.8, 3, 1.1, 2), seed = 8
+      )
+    }
+    d_ind <- d
+    if (kind == "cc") d_ind$struct <- "independence" else d_ind$alpha[] <- 1
+    b0 <- unname(coef(ref_fit(d_ind, "pgee-jeffreys", ctl)))
+    lambda_ind <- ref_lambda(d_ind, "pgee-jeffreys", b0)
+    expect_lt(max(abs(ref_U(d_ind, b0) + lambda_ind)), 1e-6)
+    info <- ref_Sigma0(d, b0)
+    score <- ref_U(d, b0)
+    lambda <- ref_lambda(d, "pgee-jeffreys", b0)
+    expected <- list(
+      "hpgee-jeffreys" = b0 + solve(info, score),
+      "opgee-jeffreys" = b0 + solve(info, score + lambda)
+    )
+    for (m in names(expected)) {
+      expect_equal(unname(coef(ref_fit(d, m, ctl))), drop(expected[[m]]),
+        tolerance = 1e-6,
+        label = paste(kind, m)
+      )
+    }
+  }
+})
+
 test_that("E[robust Lambda] over the exact outcome distribution equals the M-estimation bias adjustment", {
   d0 <- ref_sim("cc", rep(list(1:3), 3), binomial(), "logit", "exchangeable", 0.25, 1, seed = 11)
   b <- d0$beta

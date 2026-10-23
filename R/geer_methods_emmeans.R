@@ -69,21 +69,11 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
       call. = FALSE
     )
   }
-  key <- tolower(vcov.method)
-  key <- gsub("[._]", "-", key)
-  choices <- geer_cov_type_choices
-  idx <- pmatch(key, choices)
-  if (is.na(idx)) {
-    stop(
-      sprintf(
-        "'vcov.method' must be one of: %s",
-        paste(choices, collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
-  choice <- choices[[idx]]
-  choice
+  match_choice_with_default(
+    x = vcov.method,
+    choices = geer_cov_type_choices,
+    name = "vcov.method"
+  )
 }
 
 
@@ -151,7 +141,7 @@ emm_basis.geer <- function(object,
                            ...) {
   object <- check_geer_object(object)
   if (!is.null(cov_type)) {
-    vcov.method <- cov_type
+    vcov.method <- match_cov_type(cov_type)
   }
   model_frame <- stats::model.frame(
     trms,

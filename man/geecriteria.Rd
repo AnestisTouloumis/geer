@@ -21,12 +21,15 @@ used in the covariance-based penalty terms: one of the estimators described
 in \code{\link{vcov.geer}}. Defaults to \code{"robust"}, which gives the
 classical definitions of the criteria.}
 
-\item{digits}{nonnegative integer giving the number of decimal places used
-to round the criteria. Defaults to \code{2}.}
+\item{digits}{nonnegative integer giving the number of decimal places shown
+when the result is printed. The returned values are not rounded. Defaults
+to \code{2}.}
 }
 \value{
-A data frame with one row per model, containing the requested criteria and
-\code{Parameters}. When more than one model is supplied, the row names are
+An object of class \code{c("geer_criteria", "data.frame")} with one row per
+model, containing the requested criteria and \code{Parameters}. The
+criteria are stored unrounded and printed with \code{digits} decimal places.
+When more than one model is supplied, the row names are
 the deparsed model expressions, or \code{"Model 1"}, \code{"Model 2"}, and
 so on for models supplied as objects rather than expressions, for example
 through \code{\link{do.call}}.

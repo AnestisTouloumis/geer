@@ -38,6 +38,14 @@ expect_published <- function(object, published, digits) {
   )
 }
 
+expect_published_table <- function(fit, estimate, std_error, p_value) {
+  coefs <- summary(fit)$coefficients
+  shown <- !is.na(p_value)
+  expect_published(unname(coefs[, "Estimate"]), estimate, 4)
+  expect_published(unname(coefs[, "Std. Error"]), std_error, 4)
+  expect_published(unname(coefs[shown, "Pr(>|z|)"]), p_value[shown], 4)
+}
+
 collect_warnings <- function(expr) {
   w <- character()
   value <- withCallingHandlers(

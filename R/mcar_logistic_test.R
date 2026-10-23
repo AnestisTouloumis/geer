@@ -8,16 +8,16 @@
 #' by generalized estimating equations. MCAR is defined as in Rubin (1976).
 #'
 #' @param object a fitted model object of class \code{"geer"}.
+#' @param data optional data frame containing the data used to fit
+#'   \code{object}. Used only when \code{object} is a fitted model object and
+#'   the data cannot be recovered from it. Defaults to \code{NULL}.
 #' @param formula optional one-sided formula of fully observed covariates of
 #'   missingness, for example \code{~ treatment + age}. The previous response is
 #'   added automatically and must not be included. Columns aliased with the
 #'   occasion effects or with earlier covariate columns are dropped and
-#'   reported in \code{dropped_covariates}, and an error is given if the
+#'   reported in \code{dropped.covariates}, and an error is given if the
 #'   previous response then has no estimable effect. Defaults to \code{NULL},
 #'   which uses the right-hand side of the mean model of \code{object}.
-#' @param data optional data frame containing the data used to fit
-#'   \code{object}. Used only when \code{object} is a fitted model object and
-#'   the data cannot be recovered from it. Defaults to \code{NULL}.
 #' @param orstr character string specifying the working odds-ratio structure of
 #'   the binary missingness model: \code{"independence"}, \code{"exchangeable"},
 #'   or \code{"unstructured"}. Defaults to \code{"independence"}.
@@ -90,7 +90,7 @@
 #'   \code{\link{geewa_binary}}, or \code{NULL} when no missing response
 #'   occurs in the risk set.}
 #' \item{formula}{the one-sided covariate formula.}
-#' \item{dropped_covariates}{the model-matrix columns omitted because they are
+#' \item{dropped.covariates}{the model-matrix columns omitted because they are
 #'   aliased with the occasion effects or with earlier covariate columns.}
 #' \item{missing, observed, transitions}{the numbers of missing outcomes,
 #'   observed outcomes, and transitions in the risk set.}
@@ -153,8 +153,8 @@
 #'
 #' @export
 mcar_logistic_test <- function(object,
-                               formula = NULL,
                                data = NULL,
+                               formula = NULL,
                                orstr = c("independence", "exchangeable",
                                          "unstructured"),
                                test = c("wald", "score", "working-wald",
@@ -239,7 +239,7 @@ mcar_logistic_test <- function(object,
         coefficients = NULL,
         model = NULL,
         formula = covariate_formula,
-        dropped_covariates = character(0),
+        dropped.covariates = character(0),
         missing = missing_no,
         observed = observed_no,
         transitions = transition_no,
@@ -429,7 +429,7 @@ mcar_logistic_test <- function(object,
       coefficients = coefficient_table,
       model = missing_fit,
       formula = covariate_formula,
-      dropped_covariates = selected$dropped_names,
+      dropped.covariates = selected$dropped_names,
       missing = missing_no,
       observed = observed_no,
       transitions = transition_no,

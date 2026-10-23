@@ -81,7 +81,7 @@ test_that("plot guards cluster breaks and its input", {
   on.exit(dev.off(), add = TRUE)
 
   by_fitted <- runs_test(fit_geewa_pois_exch, order_by = "fitted")
-  expect_false(by_fitted$natural_order)
+  expect_false(by_fitted$natural.order)
   expect_silent(plot(by_fitted))
   expect_silent(plot(by_fitted, ylim = c(-2, 2)))
   expect_silent(plot(by_fitted, yaxt = "s"))

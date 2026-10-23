@@ -16,8 +16,9 @@
 #'   used in the covariance-based penalty terms: one of the estimators described
 #'   in \code{\link{vcov.geer}}. Defaults to \code{"robust"}, which gives the
 #'   classical definitions of the criteria.
-#' @param digits nonnegative integer giving the number of decimal places used
-#'   to round the criteria. Defaults to \code{2}.
+#' @param digits nonnegative integer giving the number of decimal places shown
+#'   when the result is printed. The returned values are not rounded. Defaults
+#'   to \code{2}.
 #'
 #' @details
 #' The available criteria are:
@@ -108,8 +109,10 @@
 #' of them reach the boundary; use \code{CIC} instead.
 #'
 #' @return
-#' A data frame with one row per model, containing the requested criteria and
-#' \code{Parameters}. When more than one model is supplied, the row names are
+#' An object of class \code{c("geer_criteria", "data.frame")} with one row per
+#' model, containing the requested criteria and \code{Parameters}. The
+#' criteria are stored unrounded and printed with \code{digits} decimal places.
+#' When more than one model is supplied, the row names are
 #' the deparsed model expressions, or \code{"Model 1"}, \code{"Model 2"}, and
 #' so on for models supplied as objects rather than expressions, for example
 #' through \code{\link{do.call}}.
@@ -241,11 +244,6 @@ geecriteria <- function(object,
   )
   ans <- do.call(rbind, out_list)
   ans <- ans[, c(criteria, "Parameters"), drop = FALSE]
-  ans[, criteria] <- lapply(
-    ans[, criteria, drop = FALSE],
-    round,
-    digits = digits
-  )
   ans[, "Parameters"] <- as.integer(ans[, "Parameters"])
   if (length(models) > 1L && nrow(ans) == length(models)) {
     call_expr <- match.call(expand.dots = FALSE)
@@ -263,5 +261,19 @@ geecriteria <- function(object,
       character(1)
     ))
   }
-  ans
+  structure(ans, digits = digits, class = c("geer_criteria", "data.frame"))
+}
+
+
+#' @export
+print.geer_criteria <- function(x, ...) {
+  digits <- attr(x, "digits")
+  y <- as.data.frame(unclass(x), row.names = row.names(x))
+  attr(y, "digits") <- NULL
+  if (!is.null(digits)) {
+    criteria <- setdiff(names(y), "Parameters")
+    y[criteria] <- lapply(y[criteria], round, digits = digits)
+  }
+  print(y, ...)
+  invisible(x)
 }

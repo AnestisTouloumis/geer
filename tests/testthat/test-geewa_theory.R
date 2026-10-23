@@ -120,6 +120,39 @@ test_that("pgee-jeffreys matches brgee-naive for logit but not for probit", {
   )))
 })
 
+test_that("use_p = FALSE reproduces gee::gee 4.13.26 (ar1, unstructured)", {
+  fit_ar1 <- geewa(
+    seizures ~ treatment + lnbaseline + lnage,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    repeated = visit,
+    corstr = "ar1",
+    use_p = FALSE,
+    control = geer_control(tolerance = 1e-10)
+  )
+  fit_unstr <- update(fit_ar1, corstr = "unstructured")
+  expect_equal(
+    unname(coef(fit_ar1)),
+    c(-2.6467004621238, -0.0234155917577, 1.2452149614426, 0.6446043492813),
+    tolerance = 1e-6
+  )
+  expect_equal(unname(fit_ar1$alpha), 0.481015591440, tolerance = 1e-6)
+  expect_equal(
+    unname(coef(fit_unstr)),
+    c(-2.5133346699774, -0.0270451301904, 1.2336125872299, 0.6120666013723),
+    tolerance = 1e-6
+  )
+  expect_equal(
+    unname(fit_unstr$alpha),
+    c(
+      0.470858677472, 0.404341082539, 0.222763170694,
+      0.577551171276, 0.292495071726, 0.392603234262
+    ),
+    tolerance = 1e-6
+  )
+})
+
 test_that("pgee-jeffreys matches brglm2 Jeffreys fits for representative links", {
   skip_on_cran()
   fit_glm_jeffreys_logit <- fit_brglm(fit_glm_logit, "MPL_Jeffreys")

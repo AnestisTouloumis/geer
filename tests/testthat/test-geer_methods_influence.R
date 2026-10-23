@@ -52,7 +52,7 @@ test_that("leverages and one-step deletions match a direct implementation", {
 test_that("one-step deletion estimates are exact for a gaussian identity fit", {
   expect_equal(
     dfbeta(fit_gaussian_ar1),
-    dfbeta(fit_gaussian_ar1, method = "exact"),
+    dfbeta(fit_gaussian_ar1, deletion = "exact"),
     tolerance = 1e-6
   )
   expect_true(exists("jackknife_estimates", envir = fit_gaussian_ar1$cache))
@@ -172,7 +172,7 @@ test_that("deletions that leave coefficients inestimable give NA", {
   expect_identical(unname(which(is.na(out))), 2L)
   brgee <- update(fit, method = "brgee-robust")
   expect_warning(
-    exact <- dfbeta(brgee, method = "exact"),
+    exact <- dfbeta(brgee, deletion = "exact"),
     "deleting cluster 1 leaves coefficients that cannot be estimated",
     fixed = TRUE
   )
@@ -187,7 +187,7 @@ test_that("exact deletion errors name the calling function", {
     data = test_data$epilepsy[test_data$epilepsy$id == 1, ]
   ))
   expect_error(
-    dfbeta(fit, method = "exact"),
+    dfbeta(fit, deletion = "exact"),
     "dfbeta.geer failed: the jackknife requires at least two clusters",
     fixed = TRUE
   )
@@ -199,14 +199,14 @@ test_that("influence measures stop for estimators without a one-step form", {
     dfbeta(fit),
     paste0(
       "'object' must be a fit with method = \"gee\" for ",
-      "method = \"one-step\"; use method = \"exact\" with ",
+      "deletion = \"one-step\"; use deletion = \"exact\" with ",
       "unit = \"clusters\""
     ),
     fixed = TRUE
   )
   expect_error(
-    cooks.distance(fit, unit = "observations", method = "exact"),
-    "'method' must be \"one-step\" when unit = \"observations\"",
+    cooks.distance(fit, unit = "observations", deletion = "exact"),
+    "'deletion' must be \"one-step\" when unit = \"observations\"",
     fixed = TRUE
   )
   expect_error(
@@ -220,8 +220,11 @@ test_that("influence measures stop for estimators without a one-step form", {
 test_that("influence measures validate their arguments", {
   expect_error(hatvalues(fit_geewa_pois_exch, unit = "cluster"),
                "'unit' must be one of: clusters, observations")
-  expect_error(dfbeta(fit_geewa_pois_exch, method = "full"),
-               "'method' must be one of: one-step, exact")
+  expect_error(dfbeta(fit_geewa_pois_exch, deletion = "full"),
+               "'deletion' must be one of: one-step, exact")
+  expect_error(dfbeta(fit_geewa_pois_exch, method = "exact"),
+               "dfbeta.geer does not use the argument(s): 'method'",
+               fixed = TRUE)
   expect_error(cooks.distance(fit_geewa_pois_exch, coefs = "age"),
                "does not use the argument")
 })

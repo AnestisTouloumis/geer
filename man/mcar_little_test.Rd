@@ -42,8 +42,8 @@ the exact F reference. In addition, the object contains:
 \item{missing.patterns}{the number of distinct missing-data patterns.}
 \item{n}{the number of independent rows or clusters tested.}
 \item{variables}{the number of variables or repeated measurements tested.}
-\item{iterations}{the number of EM iterations used.}
-\item{converged}{whether the EM algorithm converged.}
+\item{em.iterations, em.converged}{the number of EM iterations and whether
+  the EM algorithm converged.}
 \item{mean}{the maximum-likelihood estimate of the common mean vector.}
 \item{covariance}{the degrees-of-freedom-corrected covariance matrix used
 in Little's statistic.}

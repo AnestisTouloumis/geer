@@ -191,10 +191,21 @@
 
 * Default `cov_type` of `geecriteria()` is now `"robust"`.
 
+* `geecriteria()` returns the criteria unrounded, as an object of class
+  `geer_criteria`, and `digits` sets the decimal places only when printing.
+
 * `cov_type` is validated in the same way by every function, requires an exact
   name, and its default is shown as a single value in the usage. Abbreviations
   such as `cov_type = "rob"`, which `vcov()`, `confint()`, `summary()`,
-  `predict()`, and `tidy()` accepted before, are now an error.
+  `predict()`, and `tidy()` accepted before, are now an error. The same holds
+  for `vcov.method` in the `emmeans` support, which also accepted other
+  capitalizations and separators (for example `"Bias.Corrected"`).
+
+* In `geewa()` and `geewa_binary()`, `...` builds only `control`, and
+  `control_glm` defaults to `list()`. Before, `...` also built `control_glm`:
+  `brglm2` settings in `...` failed in `geer_control()`, and a partial name
+  such as `maxit` silently set `maxiter`. Arguments of `geer_control()` must
+  now be given by their full names.
 
 * Deviance residuals are now divided by the square root of the dispersion, as in
   `glmtoolbox`.
@@ -258,7 +269,9 @@
 
 * `glance()` computes only `QIC`, `QICu`, and `CIC`.
 
-* P-values below 0.0001 are printed as `<0.0001`.
+* `anova()`, `add1()`, `drop1()`, and the `anova` component of `step_p()`
+  return objects of class `geer_anova`, which inherits from `anova`. P-values
+  below 0.0001 are printed as `<0.0001`.
 
 * Faster C++ solvers with lower memory use. Estimates are unchanged.
 

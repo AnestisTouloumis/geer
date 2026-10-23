@@ -72,7 +72,7 @@ geer_influence_units <- c(
   "clusters", "observations"
 )
 
-geer_influence_methods <- c(
+geer_deletions <- c(
   "one-step", "exact"
 )
 
@@ -162,6 +162,36 @@ check_nonnegative_integerish <- function(x, name) {
     )
   }
   as.integer(round(x))
+}
+
+
+check_exact_arg_names <- function(call, env, formal_names, fun_name) {
+  args <- as.list(call)[-1L]
+  arg_names <- names(args)
+  if (is.null(arg_names)) {
+    arg_names <- rep.int("", length(args))
+  }
+  is_dots <- vapply(
+    args,
+    function(arg) identical(arg, quote(...)),
+    logical(1)
+  )
+  if (any(is_dots)) {
+    dots_names <- names(eval(quote(list(...)), env))
+    arg_names <- c(arg_names[!is_dots], dots_names)
+  }
+  partial <- arg_names[nzchar(arg_names) & !(arg_names %in% formal_names)]
+  if (length(partial)) {
+    stop(
+      sprintf(
+        "%s must be the full name of an argument of %s()",
+        paste(sprintf("'%s'", partial), collapse = ", "),
+        fun_name
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(NULL)
 }
 
 
@@ -262,11 +292,11 @@ match_influence_unit <- function(unit) {
 }
 
 
-match_influence_method <- function(method) {
+match_deletion <- function(deletion) {
   match_choice_with_default(
-    x = method,
-    choices = geer_influence_methods,
-    name = "method"
+    x = deletion,
+    choices = geer_deletions,
+    name = "deletion"
   )
 }
 

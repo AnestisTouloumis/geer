@@ -31,14 +31,14 @@ components hold \eqn{Z} (\code{statistic}), \eqn{n_p} and \eqn{n_n}
 (\code{parameter}), \eqn{T} (\code{estimate}), and \eqn{E(T)}
 (\code{null.value}). In addition, the object contains:
 \item{runs}{the observed number of runs, \eqn{T}.}
-\item{expected_runs}{the null expectation \eqn{E(T)}.}
-\item{variance_runs}{the null variance \eqn{V(T)}.}
+\item{expected.runs}{the null expectation \eqn{E(T)}.}
+\item{variance.runs}{the null variance \eqn{V(T)}.}
 \item{positive}{the number of positive residuals, \eqn{n_p}.}
 \item{negative}{the number of negative residuals, \eqn{n_n}.}
 \item{zero}{the number of zero residuals omitted from the test.}
 \item{nonzero}{the number of residuals used in the test.}
 \item{order_by}{a description of the ordering used.}
-\item{natural_order}{a logical value indicating whether the natural
+\item{natural.order}{a logical value indicating whether the natural
   cluster/repeated ordering was used.}
 \item{signs}{the sign sequence whose runs were counted, in the order
   tested and with zero residuals removed.}

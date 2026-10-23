@@ -91,12 +91,12 @@ geewa_binary <- function(formula,
                          weights,
                          beta_start = NULL,
                          offset,
-                         control_glm = list(...),
+                         control_glm = list(),
                          alpha_vector = NULL,
                          subset,
                          na.action,
                          ...) {
-  if (!missing(control) && !missing(control_glm)) {
+  if (!missing(control)) {
     check_unused_dots(list(...), "geewa_binary")
   }
   call <- match.call(expand.dots = TRUE)

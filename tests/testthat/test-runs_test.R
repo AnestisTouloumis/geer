@@ -61,14 +61,14 @@ test_that("runs_test uses natural cluster/repeated ordering by default", {
   expect_identical(out$order_by, "natural cluster/repeated order")
   expect_identical(out$parameter, c(n_p = out$positive, n_n = out$negative))
   expect_identical(out$estimate, c("number of runs" = as.numeric(out$runs)))
-  expect_identical(out$null.value, c("number of runs" = out$expected_runs))
+  expect_identical(out$null.value, c("number of runs" = out$expected.runs))
   expect_identical(out$runs, as.integer(count_runs(signs)))
   expect_identical(out$positive, as.integer(sum(signs > 0)))
   expect_identical(out$negative, as.integer(sum(signs < 0)))
   expect_identical(out$zero, as.integer(sum(signs == 0)))
   expect_equal(
     unname(out$statistic),
-    (out$runs - out$expected_runs) / sqrt(out$variance_runs),
+    (out$runs - out$expected.runs) / sqrt(out$variance.runs),
     tolerance = 1e-12
   )
   expect_equal(
@@ -203,7 +203,7 @@ test_that("the result carries the tested sign sequence", {
   expect_s3_class(out, "geer_runs_test")
   expect_s3_class(out, "htest")
   expect_s3_class(out, "geer_htest")
-  expect_true(out$natural_order)
+  expect_true(out$natural.order)
   expect_length(out$signs, out$nonzero)
   expect_length(out$cluster, out$nonzero)
   expect_true(all(out$signs %in% c(-1L, 1L)))
@@ -219,16 +219,17 @@ test_that("the result carries the tested sign sequence", {
   )
 })
 
-test_that("natural_order reports the ordering obtained, not the one requested", {
+test_that("natural.order reports the ordering obtained, not requested", {
   tied <- runs_test(fit_geewa_pois_exch, order_by = rep(1, fit_geewa_pois_exch$obs_no))
   natural <- runs_test(fit_geewa_pois_exch)
 
-  expect_true(tied$natural_order)
+  expect_true(tied$natural.order)
   expect_identical(tied$signs, natural$signs)
   expect_identical(tied$runs, natural$runs)
   expect_identical(tied$order_by, "supplied ordering vector")
 
-  expect_false(runs_test(fit_geewa_pois_exch, order_by = "fitted")$natural_order)
+  by_fitted <- runs_test(fit_geewa_pois_exch, order_by = "fitted")
+  expect_false(by_fitted$natural.order)
 })
 
 test_that("runs_test validates the ordering", {

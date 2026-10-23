@@ -47,6 +47,12 @@ geer_control <- function(tolerance = 1e-06,
                          step_maxiter = 10L,
                          step_multiplier = 1,
                          jeffreys_power = 0.5) {
+  check_exact_arg_names(
+    sys.call(),
+    parent.frame(),
+    names(formals(sys.function())),
+    "geer_control"
+  )
   if (!is_positive_scalar(tolerance)) {
     stop("'tolerance' must be a positive finite number", call. = FALSE)
   }

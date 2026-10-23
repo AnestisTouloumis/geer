@@ -770,3 +770,16 @@ test_that("geecriteria labels models supplied through do.call by position", {
   out_named <- geecriteria(fit_geewa_pois_exch, fit_ar1, criteria = "QIC")
   expect_identical(rownames(out_named), c("fit_geewa_pois_exch", "fit_ar1"))
 })
+
+test_that("geecriteria stores unrounded criteria and rounds when printing", {
+  out <- geecriteria(
+    fit_geewa_pois_exch,
+    criteria = c("QIC", "CIC"),
+    digits = 1
+  )
+  full <- geecriteria(fit_geewa_pois_exch, criteria = c("QIC", "CIC"))
+  expect_identical(class(out), c("geer_criteria", "data.frame"))
+  expect_identical(out$QIC, full$QIC)
+  expect_false(isTRUE(all.equal(out$QIC, round(out$QIC, 1), tolerance = 0)))
+  expect_output(print(out), format(round(out$QIC, 1)), fixed = TRUE)
+})

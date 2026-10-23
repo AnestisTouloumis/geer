@@ -55,18 +55,18 @@ warn_influence_na <- function(values, unit) {
 }
 
 
-check_influence_method <- function(object, unit, method) {
-  if (identical(unit, "observations") && identical(method, "exact")) {
+check_influence_deletion <- function(object, unit, deletion) {
+  if (identical(unit, "observations") && identical(deletion, "exact")) {
     stop(
-      "'method' must be \"one-step\" when unit = \"observations\"",
+      "'deletion' must be \"one-step\" when unit = \"observations\"",
       call. = FALSE
     )
   }
-  if (identical(method, "one-step") && !identical(object$method, "gee")) {
+  if (identical(deletion, "one-step") && !identical(object$method, "gee")) {
     stop(
       paste0(
         "'object' must be a fit with method = \"gee\" for ",
-        "method = \"one-step\"; use method = \"exact\" with ",
+        "deletion = \"one-step\"; use deletion = \"exact\" with ",
         "unit = \"clusters\""
       ),
       call. = FALSE
@@ -92,8 +92,8 @@ compute_influence_hatvalues <- function(object, unit) {
 }
 
 
-compute_influence_dfbeta <- function(object, unit, method, context) {
-  check_influence_method(object, unit, method)
+compute_influence_dfbeta <- function(object, unit, deletion, context) {
+  check_influence_deletion(object, unit, deletion)
   coef_names <- names(object$coefficients)
   quantities <- get_cached_influence_values(object)
   if (identical(unit, "observations")) {
@@ -105,7 +105,7 @@ compute_influence_dfbeta <- function(object, unit, method, context) {
   cluster_order <- get_influence_cluster_order(object)
   ans <- quantities$cluster_dfbeta[cluster_order$index, , drop = FALSE]
   dimnames(ans) <- list(cluster_order$labels, coef_names)
-  if (identical(method, "exact")) {
+  if (identical(deletion, "exact")) {
     singular <- !stats::complete.cases(ans)
     delete_estimates <- if (any(singular)) {
       compute_jackknife_deletes(object, context, skip = singular)
@@ -121,11 +121,11 @@ compute_influence_dfbeta <- function(object, unit, method, context) {
 
 compute_cooks_distance <- function(object,
                                    unit,
-                                   method,
+                                   deletion,
                                    cov_type,
                                    parm,
                                    context) {
-  dfbeta_matrix <- compute_influence_dfbeta(object, unit, method, context)
+  dfbeta_matrix <- compute_influence_dfbeta(object, unit, deletion, context)
   vcov_matrix <- stats::vcov(object, cov_type = cov_type)[
     parm, parm, drop = FALSE
   ]
@@ -154,10 +154,10 @@ compute_cooks_distance <- function(object,
 
 compute_influence_dfbetas <- function(object,
                                       unit,
-                                      method,
+                                      deletion,
                                       cov_type,
                                       context) {
-  dfbeta_matrix <- compute_influence_dfbeta(object, unit, method, context)
+  dfbeta_matrix <- compute_influence_dfbeta(object, unit, deletion, context)
   standard_errors <- compute_se_or_stop(
     diag(stats::vcov(object, cov_type = cov_type))[colnames(dfbeta_matrix)],
     context = context

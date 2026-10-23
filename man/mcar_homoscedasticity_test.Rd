@@ -101,19 +101,19 @@ addition, the object contains:
 \item{patterns, pattern.counts}{the retained missingness patterns, with 1
   for a missing value, and their numbers of cases.}
 \item{omitted.patterns}{the patterns omitted by \code{min_pattern_size}.}
-\item{n, p}{the numbers of retained rows and of variables.}
+\item{n, variables}{the numbers of retained rows and of variables.}
 \item{imputation.requested, imputation.used}{the requested and the actual
   imputation method, \code{"user-supplied"} with \code{imputed_data}.}
 \item{complete.cases}{the number of retained complete cases.}
 \item{imputed.data}{the first completed data set.}
-\item{location, covariance}{the estimates used for imputation, \code{NULL}
+\item{mean, covariance}{the estimates used for imputation, \code{NULL}
   with \code{imputed_data}.}
 \item{em.iterations, em.converged}{the number of EM iterations and whether
   the EM algorithm converged, \code{NA} unless normal-theory imputation was
   used.}
 \item{method.requested, selected.test}{the requested diagnostic and the
   test giving the primary result.}
-\item{sig.level}{the significance level of the rule used with
+\item{sig_level}{the significance level of the rule used with
   \code{method = "auto"}.}
 \item{interpretation}{a short interpretation of the first imputation.}
 }

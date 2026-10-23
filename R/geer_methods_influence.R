@@ -13,7 +13,7 @@
 #' @param unit character string specifying whether the diagnostics refer to
 #'   clusters (\code{"clusters"}) or to single observations
 #'   (\code{"observations"}). Defaults to \code{"clusters"}.
-#' @param method character string specifying how the deletion estimates are
+#' @param deletion character string specifying how the deletion estimates are
 #'   obtained: the one-step approximation of Preisser and Qaqish (1996)
 #'   (\code{"one-step"}) or a refit of the model without each cluster
 #'   (\code{"exact"}). See Details. Defaults to \code{"one-step"}.
@@ -40,7 +40,7 @@
 #'
 #' \code{dfbeta()} returns \eqn{\hat\beta - \hat\beta_{(i)}}{beta - beta_(i)},
 #' where \eqn{\hat\beta_{(i)}}{beta_(i)} is the estimate without cluster or
-#' observation \eqn{i}. With \code{method = "one-step"}, it is a single
+#' observation \eqn{i}. With \code{deletion = "one-step"}, it is a single
 #' Fisher scoring step from \eqn{\hat\beta}{beta} with the association and
 #' dispersion parameters held at their full-data values (Preisser and Qaqish,
 #' 1996). For a cluster this is
@@ -55,21 +55,21 @@
 #' Both one-step approximations are exact for a Gaussian response with the
 #' identity link.
 #'
-#' With \code{method = "exact"}, every cluster is deleted in turn and the model
-#' refitted with the association parameters held at their full-data values,
-#' as for \code{cov_type = "jackknife"} in \code{\link{vcov.geer}}. The
-#' refits are computed once and cached on the fit. It is available only for
+#' With \code{deletion = "exact"}, every cluster is deleted in turn and the
+#' model refitted with the association parameters held at their full-data
+#' values, as for \code{cov_type = "jackknife"} in \code{\link{vcov.geer}}.
+#' The refits are computed once and cached on the fit. It is available only for
 #' \code{unit = "clusters"}. The one-step approximation is derived from the
 #' ordinary generalized estimating equations, so it is available only for
 #' fits with \code{method = "gee"}; for the other estimation methods, use
-#' \code{method = "exact"}.
+#' \code{deletion = "exact"}.
 #'
 #' When deleting a cluster or an observation leaves coefficients that cannot be
 #' estimated, for example the only cluster at a level of a factor, the
 #' leverage matrix \eqn{H_i} has an eigenvalue of 1 and the deletion estimate
 #' is undefined. Its values are then \code{NA}, with a warning naming the
 #' clusters or observations, and no refit is attempted for them with
-#' \code{method = "exact"}.
+#' \code{deletion = "exact"}.
 #'
 #' \code{dfbetas()} divides each column of \code{dfbeta()} by the standard
 #' error of the coefficient from \code{vcov(model, cov_type = cov_type)}.
@@ -146,13 +146,13 @@ hatvalues.geer <- function(model,
 #' @export
 dfbeta.geer <- function(model,
                         unit = c("clusters", "observations"),
-                        method = c("one-step", "exact"),
+                        deletion = c("one-step", "exact"),
                         ...) {
   check_unused_dots(list(...), "dfbeta.geer")
   model <- check_geer_object(model, name = "model")
   unit <- match_influence_unit(unit[1L])
-  method <- match_influence_method(method[1L])
-  compute_influence_dfbeta(model, unit, method, "dfbeta.geer")
+  deletion <- match_deletion(deletion[1L])
+  compute_influence_dfbeta(model, unit, deletion, "dfbeta.geer")
 }
 
 
@@ -161,15 +161,15 @@ dfbeta.geer <- function(model,
 #' @export
 dfbetas.geer <- function(model,
                          unit = c("clusters", "observations"),
-                         method = c("one-step", "exact"),
+                         deletion = c("one-step", "exact"),
                          cov_type = "naive",
                          ...) {
   check_unused_dots(list(...), "dfbetas.geer")
   model <- check_geer_object(model, name = "model")
   unit <- match_influence_unit(unit[1L])
-  method <- match_influence_method(method[1L])
+  deletion <- match_deletion(deletion[1L])
   cov_type <- match_cov_type(cov_type, default = "naive")
-  compute_influence_dfbetas(model, unit, method, cov_type, "dfbetas.geer")
+  compute_influence_dfbetas(model, unit, deletion, cov_type, "dfbetas.geer")
 }
 
 
@@ -178,14 +178,14 @@ dfbetas.geer <- function(model,
 #' @export
 cooks.distance.geer <- function(model,
                                 unit = c("clusters", "observations"),
-                                method = c("one-step", "exact"),
+                                deletion = c("one-step", "exact"),
                                 cov_type = "naive",
                                 parm,
                                 ...) {
   check_unused_dots(list(...), "cooks.distance.geer")
   model <- check_geer_object(model, name = "model")
   unit <- match_influence_unit(unit[1L])
-  method <- match_influence_method(method[1L])
+  deletion <- match_deletion(deletion[1L])
   cov_type <- match_cov_type(cov_type, default = "naive")
   parm <- match_parm(
     if (missing(parm)) NULL else parm,
@@ -194,7 +194,7 @@ cooks.distance.geer <- function(model,
   compute_cooks_distance(
     model,
     unit = unit,
-    method = method,
+    deletion = deletion,
     cov_type = cov_type,
     parm = parm,
     context = "cooks.distance.geer"

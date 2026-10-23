@@ -29,15 +29,31 @@ build_agresti_data <- function() {
   )
 }
 
+build_cholecystectomy_data <- function() {
+  data <- load_geer_data("cholecystectomy")
+  data$suction <- as.numeric(data$treatment == "active")
+  data$female <- as.numeric(data$gender == "female")
+  data$last_day <- as.numeric(data$time >= 5)
+  data
+}
+
+build_respiratory2_data <- function(respiratory) {
+  data <- respiratory[respiratory$center == "C2", , drop = FALSE]
+  data$active <- as.numeric(data$treatment == "active")
+  data$male <- as.numeric(data$gender == "male")
+  data
+}
+
 test_data <- local({
   respiratory <- load_geer_data("respiratory")
   list(
     agresti = build_agresti_data(),
     cerebrovascular = load_geer_data("cerebrovascular"),
+    cholecystectomy = build_cholecystectomy_data(),
     epilepsy = load_geer_data("epilepsy"),
     leprosy = load_geer_data("leprosy"),
     respiratory = respiratory,
-    respiratory2 = respiratory[respiratory$center == "C2", , drop = FALSE],
+    respiratory2 = build_respiratory2_data(respiratory),
     rinse = load_geer_data("rinse")
   )
 })

@@ -116,7 +116,7 @@ test_that("mcar_logistic_test agrees with a direct geewa_binary risk-set fit", {
   expect_null(out$pmethod)
   expect_true(all(out$tests$procedure == "wald"))
   expect_false(out$intermittent)
-  expect_true("visit" %in% out$dropped_covariates)
+  expect_true("visit" %in% out$dropped.covariates)
   expect_identical(
     out$coefficients$term[grepl("^(treatment|age|lag_response)$", out$coefficients$term)],
     c("treatment", "age", "lag_response")
@@ -166,7 +166,7 @@ test_that("mcar_logistic_test uses fitted predictors and absorbs occasion main e
 
   expect_equal(default$statistic, explicit$statistic, tolerance = 1e-8)
   expect_equal(default$tests$p.value, explicit$tests$p.value, tolerance = 1e-10)
-  expect_true("visit" %in% default$dropped_covariates)
+  expect_true("visit" %in% default$dropped.covariates)
 })
 
 test_that("mcar_logistic_test supports every geer hypothesis-test procedure", {

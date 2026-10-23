@@ -6,8 +6,8 @@
 \usage{
 mcar_logistic_test(
   object,
-  formula = NULL,
   data = NULL,
+  formula = NULL,
   orstr = c("independence", "exchangeable", "unstructured"),
   test = c("wald", "score", "working-wald", "working-score", "working-lrt"),
   cov_type = "bias-corrected",
@@ -18,17 +18,17 @@ mcar_logistic_test(
 \arguments{
 \item{object}{a fitted model object of class \code{"geer"}.}
 
+\item{data}{optional data frame containing the data used to fit
+\code{object}. Used only when \code{object} is a fitted model object and
+the data cannot be recovered from it. Defaults to \code{NULL}.}
+
 \item{formula}{optional one-sided formula of fully observed covariates of
 missingness, for example \code{~ treatment + age}. The previous response is
 added automatically and must not be included. Columns aliased with the
 occasion effects or with earlier covariate columns are dropped and
-reported in \code{dropped_covariates}, and an error is given if the
+reported in \code{dropped.covariates}, and an error is given if the
 previous response then has no estimable effect. Defaults to \code{NULL},
 which uses the right-hand side of the mean model of \code{object}.}
-
-\item{data}{optional data frame containing the data used to fit
-\code{object}. Used only when \code{object} is a fitted model object and
-the data cannot be recovered from it. Defaults to \code{NULL}.}
 
 \item{orstr}{character string specifying the working odds-ratio structure of
 the binary missingness model: \code{"independence"}, \code{"exchangeable"},
@@ -66,7 +66,7 @@ addition, the object contains:
   \code{\link{geewa_binary}}, or \code{NULL} when no missing response
   occurs in the risk set.}
 \item{formula}{the one-sided covariate formula.}
-\item{dropped_covariates}{the model-matrix columns omitted because they are
+\item{dropped.covariates}{the model-matrix columns omitted because they are
   aliased with the occasion effects or with earlier covariate columns.}
 \item{missing, observed, transitions}{the numbers of missing outcomes,
   observed outcomes, and transitions in the risk set.}

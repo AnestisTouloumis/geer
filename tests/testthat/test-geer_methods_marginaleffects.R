@@ -145,3 +145,15 @@ test_that("marginaleffects robust covariance is available for geer models", {
   expect_true(all(is.finite(default$std.error)))
   expect_true(all(is.finite(robust$std.error)))
 })
+
+test_that("marginaleffects covariance names are matched exactly", {
+  expect_equal(
+    get_vcov.geer(fit_geewa_pois_exch, vcov = "robust"),
+    vcov(fit_geewa_pois_exch, cov_type = "robust")
+  )
+  expect_error(
+    get_vcov.geer(fit_geewa_pois_exch, vcov = "Robust"),
+    "'vcov' must be one of: ",
+    fixed = TRUE
+  )
+})

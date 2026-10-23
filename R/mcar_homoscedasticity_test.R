@@ -147,19 +147,19 @@
 #' \item{patterns, pattern.counts}{the retained missingness patterns, with 1
 #'   for a missing value, and their numbers of cases.}
 #' \item{omitted.patterns}{the patterns omitted by \code{min_pattern_size}.}
-#' \item{n, p}{the numbers of retained rows and of variables.}
+#' \item{n, variables}{the numbers of retained rows and of variables.}
 #' \item{imputation.requested, imputation.used}{the requested and the actual
 #'   imputation method, \code{"user-supplied"} with \code{imputed_data}.}
 #' \item{complete.cases}{the number of retained complete cases.}
 #' \item{imputed.data}{the first completed data set.}
-#' \item{location, covariance}{the estimates used for imputation, \code{NULL}
+#' \item{mean, covariance}{the estimates used for imputation, \code{NULL}
 #'   with \code{imputed_data}.}
 #' \item{em.iterations, em.converged}{the number of EM iterations and whether
 #'   the EM algorithm converged, \code{NA} unless normal-theory imputation was
 #'   used.}
 #' \item{method.requested, selected.test}{the requested diagnostic and the
 #'   test giving the primary result.}
-#' \item{sig.level}{the significance level of the rule used with
+#' \item{sig_level}{the significance level of the rule used with
 #'   \code{method = "auto"}.}
 #' \item{interpretation}{a short interpretation of the first imputation.}
 #'
@@ -523,18 +523,18 @@ mcar_homoscedasticity_test <- function(
     pattern.counts = stats::setNames(pattern_info$group_counts, pattern_names),
     omitted.patterns = pattern_info$omitted_patterns,
     n = nrow(x_used),
-    p = ncol(x_used),
+    variables = ncol(x_used),
     imputation.requested = result$setup$requested,
     imputation.used = result$setup$used,
     complete.cases = result$setup$n_complete,
     imputed.data = result$completed[[1L]],
-    location = result$setup$mu,
+    mean = result$setup$mu,
     covariance = result$setup$sigma,
     em.iterations = result$setup$iterations,
     em.converged = result$setup$converged,
     method.requested = method,
     selected.test = selected_test,
-    sig.level = sig_level,
+    sig_level = sig_level,
     interpretation = build_mcar_interpretation(
       method = method,
       hawkins = hawkins,
@@ -542,6 +542,6 @@ mcar_homoscedasticity_test <- function(
       sig_level = sig_level
     )
   )
-  class(out) <- c("mcar_homoscedasticity_test", "geer_htest", "htest")
+  class(out) <- c("geer_htest", "htest")
   out
 }

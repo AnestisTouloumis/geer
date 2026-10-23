@@ -115,3 +115,12 @@ test_that("geer_control accepts any strictly positive real step_multiplier", {
     )
   }
 })
+
+test_that("geer_control rejects partial argument names", {
+  expect_error(
+    geer_control(maxit = 3),
+    "'maxit' must be the full name of an argument of geer_control()",
+    fixed = TRUE
+  )
+  expect_identical(do.call(geer_control, list(maxiter = 3))$maxiter, 3L)
+})

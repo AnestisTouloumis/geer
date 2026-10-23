@@ -66,8 +66,8 @@
 #' \item{missing.patterns}{the number of distinct missing-data patterns.}
 #' \item{n}{the number of independent rows or clusters tested.}
 #' \item{variables}{the number of variables or repeated measurements tested.}
-#' \item{iterations}{the number of EM iterations used.}
-#' \item{converged}{whether the EM algorithm converged.}
+#' \item{em.iterations, em.converged}{the number of EM iterations and whether
+#'   the EM algorithm converged.}
 #' \item{mean}{the maximum-likelihood estimate of the common mean vector.}
 #' \item{covariance}{the degrees-of-freedom-corrected covariance matrix used
 #' in Little's statistic.}
@@ -184,8 +184,8 @@ mcar_little_test <- function(object, data = NULL, maxiter = 1000L,
       missing.patterns = result$missing_patterns,
       n = nrow(x),
       variables = ncol(x),
-      iterations = result$iterations,
-      converged = result$converged,
+      em.iterations = result$iterations,
+      em.converged = result$converged,
       mean = result$mu,
       covariance = result$sigma,
       ml.covariance = result$sigma_ml,

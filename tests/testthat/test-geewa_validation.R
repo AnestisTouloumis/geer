@@ -337,3 +337,38 @@ test_that("geewa validates a fixed working correlation", {
     "fixed working correlation matrix is not positive definite"
   )
 })
+
+test_that("geewa passes ... only to geer_control, by full argument names", {
+  fit <- geewa(
+    formula = seizures ~ treatment,
+    family = poisson(),
+    data = test_data$epilepsy,
+    id = id,
+    control_glm = list(maxit = 50),
+    maxiter = 7L
+  )
+  expect_identical(fit$control$maxiter, 7L)
+  expect_error(
+    geewa(
+      formula = seizures ~ treatment,
+      family = poisson(),
+      data = test_data$epilepsy,
+      id = id,
+      maxit = 3
+    ),
+    "'maxit' must be the full name of an argument of geer_control()",
+    fixed = TRUE
+  )
+  expect_error(
+    geewa(
+      formula = seizures ~ treatment,
+      family = poisson(),
+      data = test_data$epilepsy,
+      id = id,
+      control = geer_control(),
+      maxiter = 3
+    ),
+    "geewa does not use the argument(s): 'maxiter'",
+    fixed = TRUE
+  )
+})

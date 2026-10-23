@@ -24,8 +24,8 @@ test_that("mcar_little_test reproduces Little's bivariate monotone result", {
   expect_identical(out$missing.patterns, 2L)
   expect_identical(out$n, 8L)
   expect_identical(out$variables, 2L)
-  expect_true(out$converged)
-  expect_gt(out$iterations, 0L)
+  expect_true(out$em.converged)
+  expect_gt(out$em.iterations, 0L)
 })
 
 test_that("mcar_little_test can force the asymptotic reference", {
@@ -164,8 +164,8 @@ test_that("mcar_little_test handles complete data explicitly", {
   expect_identical(unname(out$parameter), 0L)
   expect_equal(out$p.value, 1)
   expect_identical(out$missing.patterns, 1L)
-  expect_identical(out$iterations, 0L)
-  expect_true(out$converged)
+  expect_identical(out$em.iterations, 0L)
+  expect_true(out$em.converged)
   expect_equal(out$covariance, cov(x), tolerance = 1e-12)
   expect_equal(out$ml.covariance, cov(x) * 9 / 10, tolerance = 1e-12)
 })

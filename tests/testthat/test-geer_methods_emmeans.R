@@ -111,3 +111,15 @@ test_that("emmeans weights use the prior weights in the original row order", {
     as.data.frame(emmeans::emmeans(fit_sorted, ~treatment, weights = "cells"))$emmean
   )))
 })
+
+test_that("emmeans covariance names are matched exactly", {
+  expect_identical(normalize_emmeans_vcov_method(NULL), "bias-corrected")
+  expect_identical(normalize_emmeans_vcov_method("robust"), "robust")
+  for (bad in c("rob", "Robust", "bias.corrected")) {
+    expect_error(
+      normalize_emmeans_vcov_method(bad),
+      "'vcov.method' must be one of: ",
+      fixed = TRUE
+    )
+  }
+})
