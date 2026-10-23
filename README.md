@@ -12,16 +12,17 @@ status](https://www.r-pkg.org/badges/version/geer)](https://CRAN.R-project.org/p
 coverage](https://codecov.io/gh/AnestisTouloumis/geer/graph/badge.svg)](https://app.codecov.io/gh/AnestisTouloumis/geer)
 <!-- badges: end -->
 
-`geer` fits marginal models for clustered or repeated responses by
-generalized estimating equations (GEE; Liang and Zeger, 1986). Besides
+`geer` fits marginal models for clustered or repeated responses by the
+generalized estimating equations (GEE) of Liang and Zeger (1986). Besides
 ordinary GEE, it provides
 
 - bias-reduced and bias-corrected GEE, which reduce the finite-sample
   bias of the regression estimates when the number of clusters is small
   (Touloumis, 2026a), and
-- Jeffreys-type penalized GEE, which, for binary responses fitted by
-  `geewa_binary()`, also guard against infinite estimates under
-  separation (Touloumis, 2026b).
+- Jeffreys-type penalized GEE, which gives finite estimates for binary
+  responses fitted by `geewa_binary()` under working independence, even
+  under separation, and in practice usually under other odds-ratio
+  structures (Touloumis, 2026b).
 
 `geewa()` fits continuous, binary, and count responses with a working
 correlation structure, and `geewa_binary()` fits binary responses with a
@@ -157,6 +158,8 @@ summary(fit_bin)
 | `"pgee-jeffreys"` | Jeffreys-type penalized GEE |
 | `"opgee-jeffreys"`, `"hpgee-jeffreys"` | One-step and hybrid one-step penalized GEE |
 
+Iterations are controlled by `geer_control()`.
+
 **Working association structures:** `corstr` in `geewa()`
 (`"independence"`, `"exchangeable"`, `"ar1"`, `"m-dependent"`,
 `"unstructured"`, `"toeplitz"`, or `"fixed"`) and `orstr` in
@@ -187,7 +190,7 @@ QICu, QIC, QICC, AGPC, or SGPC.
   goodness-of-fit tests for binary responses (Barnhart and Williamson,
   1998, Horton et al., 1999, and Pan, 2002).
 - `runs_test()`, the Wald-Wolfowitz runs test of residual signs (Chang,
-  2000, and Hardin and Hilbe, 2013).
+  2000, and Hardin and Hilbe, 2013), with a `plot()` method.
 - `frechet_bounds_cor()`, which checks the working correlations of
   binary `geewa()` fits.
 - `mcar_little_test()` (Little, 1988), `mcar_logistic_test()` (in the
@@ -242,7 +245,7 @@ Jamshidian, M. and Jalal, S. (2010) Tests of homoscedasticity,
 normality, and missing completely at random for incomplete multivariate
 data. *Psychometrika*, **75**, 649–674.
 
-Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: An R package
+Jamshidian, M., Jalal, S. and Jansen, C. (2014) MissMech: an R package
 for testing homoscedasticity, multivariate normality, and missing
 completely at random (MCAR). *Journal of Statistical Software*, **56**,
 1–31.
@@ -258,7 +261,7 @@ Morel, J.G., Bokossa, M.C. and Neerchal, N.K. (2003) Small sample
 correction for the variance of GEE estimators. *Biometrical Journal*,
 **45**, 395–409.
 
-Pan, W. (2001) Akaike’s information criterion in generalized estimating
+Pan, W. (2001) Akaike's information criterion in generalized estimating
 equations. *Biometrics*, **57**, 120–125.
 
 Pan, W. (2002) Goodness-of-fit tests for GEE with correlated binary data.
@@ -275,9 +278,9 @@ parameters in semiparametric generalized linear models for cluster
 correlated data. *Biometrika*, **77**, 485–497.
 
 Touloumis, A. (2026a) Bias-reduced GEE via adjusted estimating
-equations, with odds-ratio extensions. *arXiv preprint*.
-[doi:10.48550/arXiv.2606.16043](https://doi.org/10.48550/arXiv.2606.16043)
+equations, with odds-ratio extensions. *arXiv preprint*
+[arXiv:2606.16043](https://arxiv.org/abs/2606.16043).
 
 Touloumis, A. (2026b) Jeffreys-type penalized GEE for correlated binary
-data with an odds-ratio parameterization. *arXiv preprint*.
-[doi:10.48550/arXiv.2606.16058](https://doi.org/10.48550/arXiv.2606.16058)
+data with an odds-ratio parameterization. *arXiv preprint*
+[arXiv:2606.16058](https://arxiv.org/abs/2606.16058).

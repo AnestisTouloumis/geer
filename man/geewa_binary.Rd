@@ -181,11 +181,18 @@ of the last accepted iteration and should not be interpreted.
 separated data the estimates can be very large, which is signaled by a
 warning that fitted probabilities are numerically 0 or 1, or, for a
 converged fit, within 1e-12 of 0 or 1. Because the dispersion is fixed,
-\code{"brgee-naive"} and the Jeffreys-penalized methods
-(\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
-\code{"hpgee-jeffreys"}) keep the estimates finite under separation.
-\code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
-bias-corrected methods fail because they start from the ordinary GEE fit.
+\code{"pgee-jeffreys"} gives finite estimates under separation with
+\code{orstr = "independence"} for every supported link (Touloumis, 2026b),
+and so does \code{"brgee-naive"} with the logit link, for which it coincides
+with \code{"pgee-jeffreys"} at the default \code{jeffreys_power = 0.5}.
+With other odds-ratio structures finiteness is not guaranteed, although
+\code{"pgee-jeffreys"} usually converges in practice.
+\code{"opgee-jeffreys"} and \code{"hpgee-jeffreys"} start from the finite
+independence estimate and are finite whenever their single scoring step is
+defined.
+\code{"brgee-robust"} and \code{"brgee-empirical"} do not keep the estimates
+finite, and the bias-corrected methods fail because they start from the
+ordinary GEE fit.
 }
 
 \examples{

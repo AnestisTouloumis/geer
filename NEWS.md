@@ -41,9 +41,10 @@
   warning.
 
 * Fitted objects store the cluster identifiers and the values of `repeated`
-  supplied, as `cluster_labels` and `repeated_labels`. Cluster-level
-  diagnostics are named by these identifiers, and observation-level
-  diagnostics by `"id(repeated)"`.
+  supplied, as `cluster_labels` and `repeated_labels`, and also
+  `fit_function`, `use_p`, and `phi_fixed`. Cluster-level diagnostics are
+  named by these identifiers, and observation-level diagnostics by
+  `"id(repeated)"`.
 
 * Added optional support for the `marginaleffects` package (predictions,
   comparisons, and slopes).
@@ -67,6 +68,10 @@
 * Added cluster-level Mahalanobis residuals, `residuals(type = "mahalanobis")`,
   named by the cluster identifiers supplied.
 
+* `geewa()` and `geewa_binary()` gain `subset` and `na.action`.
+
+* `residuals()` gains `type = "response"`, an alias of `"working"`.
+
 ## Bug fixes
 
 * The heading of the `step_p()` table split long formulas over several pieces
@@ -79,7 +84,7 @@
 
 * `test = "working-lrt"` scaled each model's working log-likelihood by its own
   estimated dispersion, so the statistic was not a likelihood ratio (for a
-  Gaussian response it always equalled the number of tested parameters). Both
+  Gaussian response it always equaled the number of tested parameters). Both
   models now use the dispersion of the larger model (Rotnitzky and Jewell,
   1990). Results change when the dispersion is estimated.
 
@@ -100,8 +105,8 @@
   the independence penalized estimate, instead of re-estimating them at the
   one-step estimate. Results change slightly.
 
-* One-step estimators with `corstr = "fixed"` reset the supplied association
-  parameters to zero in the second pass.
+* One-step estimators with `corstr = "fixed"` set the supplied association
+  parameters to zero in the second pass. They now keep them.
 
 * The bias-reduced and penalized methods of `geewa_binary()` used a wrong
   variance derivative for clusters of size one.
@@ -118,9 +123,10 @@
 * The `"unstructured"` and `"fixed"` structures failed when every cluster had a
   single observation.
 
-* A negative test statistic (possible with the bias-corrected covariance in
-  small samples) aborted `anova()`, `add1()`, `drop1()`, and `step_p()`. It now
-  gives `NA` with a warning.
+* A negative test statistic, possible with the bias-corrected covariance in
+  small samples, aborted `anova()`, `add1()`, `drop1()`, and `step_p()`. They
+  now stop with an error that names the test and says that the covariance
+  estimate is not positive semidefinite.
 
 * Refits in `add1()`, `drop1()`, `anova()`, and `step_p()` reused a
   `beta_start` of the wrong length.
@@ -163,10 +169,6 @@
   responses, are now omitted from the risk set with a warning.
 
 ## Changes
-
-* `anova()`, `add1()`, `drop1()`, and `step_p()` now stop with an error when a
-  test statistic is negative because the covariance estimate is not positive
-  semi-definite, instead of reporting `NA` with a warning.
 
 * `add1()`, `drop1()`, `model.matrix()`, `glance()`, and the `print()` methods
   for fits and their summaries now reject unused arguments. `anova()` rejects
@@ -229,10 +231,6 @@
   dispersion handling, or other settings. `anova()` with several models still
   omits, with a warning, a model with a different association structure.
 
-* `geewa()` and `geewa_binary()` gain `subset` and `na.action`.
-
-* `residuals()` gains `type = "response"`, an alias of `"working"`.
-
 * `step_multiplier` in `geer_control()` may be any positive number, and values
   below 1 damp the step.
 
@@ -278,13 +276,19 @@
 ## Documentation
 
 * `geewa()` and `geewa_binary()` now state that `converged = TRUE` does not
-  guarantee finite estimates under separation, that only `"brgee-naive"` and the
-  Jeffreys-penalized methods protect against infinite estimates, and that the
-  estimated dispersion of `geewa()` (the default) cancels this protection: use
-  `phi_fixed = TRUE` or `geewa_binary()`.
+  guarantee finite estimates under separation. The Jeffreys-penalized methods
+  give finite estimates for binary responses under working independence
+  (Touloumis, 2026b), with `phi_fixed = TRUE` in `geewa()` or with
+  `geewa_binary()`, because the estimated dispersion of `geewa()` (the
+  default) removes this protection.
 
 * The documentation of the score tests states that `alpha` and `phi` are those
   of the larger model, not re-estimated under the null model.
 
 * The AR(1) correlation estimator and the meaning of `Resid. Df` in `anova()`
   are documented.
+
+* `?geewa` states that the single-stage methods update `alpha` and `phi`
+  jointly with the regression parameters, and that its Jeffreys-penalized
+  methods extend Touloumis (2026b), which covers binary responses with
+  odds-ratio structures.

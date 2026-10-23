@@ -236,10 +236,16 @@ by the dispersion parameter, whose estimate tends to 0 under complete
 separation, so with the default estimated dispersion no method protects
 against infinite estimates. For binary responses with separation or rare
 events, use \code{phi_fixed = TRUE} or \code{\link{geewa_binary}}. Then
-\code{"brgee-naive"} and the Jeffreys-penalized methods
-(\code{"pgee-jeffreys"}, \code{"opgee-jeffreys"}, and
-\code{"hpgee-jeffreys"}) keep the estimates finite under separation.
-\code{"brgee-robust"} and \code{"brgee-empirical"} do not, and the
+\code{"pgee-jeffreys"} with \code{corstr = "independence"} gives finite
+estimates under separation for the logit, probit, cauchit, and cloglog links
+(Touloumis, 2026b), and so does \code{"brgee-naive"} with the logit link,
+for which it coincides with \code{"pgee-jeffreys"} at the default
+\code{jeffreys_power = 0.5}. With other working correlation structures
+finiteness is not guaranteed, and the moment estimates of the correlations
+can be unstable under separation. \code{"opgee-jeffreys"} and
+\code{"hpgee-jeffreys"} start from the finite independence estimate and are
+finite whenever their single scoring step is defined. \code{"brgee-robust"}
+and \code{"brgee-empirical"} do not keep the estimates finite, and the
 bias-corrected methods fail because they start from the ordinary GEE fit.
 }
 
