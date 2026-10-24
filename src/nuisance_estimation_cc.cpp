@@ -65,11 +65,12 @@ double get_alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec pearson_residuals_vector_i =
         pearson_residuals_vector.subvec(first_row, last_row);
-      const arma::uword cluster_size_i = cluster.end - cluster.start;
+      const arma::uword cluster_size_i =
+        cluster.after_last_row - cluster.first_row;
       for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
         for (arma::uword k = j + 1; k < cluster_size_i; ++k) {
           num += pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
@@ -107,12 +108,13 @@ double get_alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec pearson_residuals_vector_i =
         pearson_residuals_vector.subvec(first_row, last_row);
       const arma::vec repeated_vector_i = repeated_vector.subvec(first_row, last_row);
-      const arma::uword cluster_size_i = cluster.end - cluster.start;
+      const arma::uword cluster_size_i =
+        cluster.after_last_row - cluster.first_row;
       for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
         if (repeated_vector_i[j + 1] - repeated_vector_i[j] == 1.0) {
           num += pearson_residuals_vector_i[j] * pearson_residuals_vector_i[j + 1];
@@ -120,7 +122,7 @@ double get_alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
         }
       }
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_alpha_hat_exchangeable", cluster_index,
+      rethrow_with_cluster_context("get_alpha_hat_ar1", cluster_index,
                                    cluster.id_value, e);
     }
   }
@@ -152,12 +154,13 @@ arma::vec get_alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec repeated_vector_i = repeated_vector.subvec(first_row, last_row);
       const arma::vec pearson_residuals_vector_i =
         pearson_residuals_vector.subvec(first_row, last_row);
-      const arma::uword cluster_size_i = cluster.end - cluster.start;
+      const arma::uword cluster_size_i =
+        cluster.after_last_row - cluster.first_row;
       for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
         const arma::uword index_j =
           static_cast<arma::uword>(repeated_vector_i[j]);
@@ -203,12 +206,13 @@ arma::vec get_alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec repeated_vector_i = repeated_vector.subvec(first_row, last_row);
       const arma::vec pearson_residuals_vector_i =
         pearson_residuals_vector.subvec(first_row, last_row);
-      const arma::uword cluster_size_i = cluster.end - cluster.start;
+      const arma::uword cluster_size_i =
+        cluster.after_last_row - cluster.first_row;
       for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
         const arma::uword index_j =
           static_cast<arma::uword>(repeated_vector_i[j]);
@@ -264,12 +268,13 @@ arma::vec get_alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec repeated_vector_i = repeated_vector.subvec(first_row, last_row);
       const arma::vec pearson_residuals_vector_i =
         pearson_residuals_vector.subvec(first_row, last_row);
-      const arma::uword cluster_size_i = cluster.end - cluster.start;
+      const arma::uword cluster_size_i =
+        cluster.after_last_row - cluster.first_row;
       for (arma::uword j = 0; j + 1 < cluster_size_i; ++j) {
         const arma::uword index_j =
           static_cast<arma::uword>(repeated_vector_i[j]);

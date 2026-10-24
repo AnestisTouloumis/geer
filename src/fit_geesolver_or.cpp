@@ -33,8 +33,6 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   for (arma::uword cluster_index = 0;
@@ -42,17 +40,14 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector.subvec(first_row, last_row),
-                                   odds_ratios_vector_i,
-                                   weights_vector.subvec(first_row, last_row));
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
@@ -60,7 +55,7 @@ arma::vec update_beta_gee_or(const arma::vec& y_vector,
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(first_row, last_row);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_gee_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_gee_or");
@@ -93,9 +88,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
   const arma::vec delta_star_vector =
     link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::mat weights_matrix_sq_inverse_i;
@@ -110,22 +103,21 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const arma::vec mu_vector_i = mu_vector.subvec(first_row, last_row);
       const arma::vec weights_vector_i = weights_vector.subvec(first_row, last_row);
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
+      const arma::vec& odds_ratios_vector_i = workspace.odds_ratios;
       d_matrix_trans_i = d_matrix_i.t();
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector_i,
-                                   odds_ratios_vector_i,
-                                   weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(cluster_size, cluster_size));
       d_matrix_trans_v_matrix_inverse_i = d_matrix_trans_i * v_matrix_inverse_i;
@@ -163,7 +155,7 @@ arma::vec update_beta_naive_or(const arma::vec& y_vector,
         -1.0);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_naive_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_naive_or");
@@ -208,9 +200,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
   const arma::vec delta_star_vector =
     link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::mat weights_matrix_sq_inverse_i;
@@ -225,22 +215,21 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const arma::vec mu_vector_i = mu_vector.subvec(first_row, last_row);
       const arma::vec weights_vector_i = weights_vector.subvec(first_row, last_row);
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
+      const arma::vec& odds_ratios_vector_i = workspace.odds_ratios;
       d_matrix_trans_i = d_matrix_i.t();
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector_i,
-                                   odds_ratios_vector_i,
-                                   weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(cluster_size, cluster_size));
       d_matrix_trans_v_matrix_inverse_i = d_matrix_trans_i * v_matrix_inverse_i;
@@ -283,7 +272,7 @@ arma::vec update_beta_robust_or(const arma::vec& y_vector,
                                weights_vector_i));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_robust_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_robust_or");
@@ -415,9 +404,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
   const arma::vec delta_tilde_star_vector =
     (delta_vector % link_derivative_3(link_code, eta_vector) - 2.0 * arma::square(mueta2_vector)) /
     arma::pow(delta_vector, 4.0);
-  arma::mat d_matrix_i;
   arma::mat d_matrix_trans_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_i;
   arma::mat delta_star_matrix_i;
   arma::mat w_matrix_i;
@@ -432,22 +419,21 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const arma::vec mu_vector_i = mu_vector.subvec(first_row, last_row);
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
       const arma::vec weights_vector_i = weights_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
+      const arma::vec& odds_ratios_vector_i = workspace.odds_ratios;
       d_matrix_trans_i = d_matrix_i.t();
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector_i,
-                                   odds_ratios_vector_i,
-                                   weights_vector_i);
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(cluster_size, cluster_size));
       const arma::vec u_vector_i = d_matrix_trans_i * v_matrix_inverse_i * s_vector_i;
@@ -489,7 +475,7 @@ arma::vec update_beta_empirical_or(const arma::vec& y_vector,
                             epsilon_matrix_transpose_derivative_i);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_empirical_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
@@ -543,29 +529,26 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
   const arma::vec delta_star_vector =
     link_derivative_2(link_code, eta_vector) / arma::square(delta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_i;
   for (arma::uword cluster_index = 0;
        cluster_index < clusters.size();
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const arma::vec mu_vector_i = mu_vector.subvec(first_row, last_row);
       const arma::vec weights_vector_i = weights_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector_i,
-                                   odds_ratios_vector_i,
-                                   weights_vector_i);
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
+      const arma::vec& odds_ratios_vector_i = workspace.odds_ratios;
       v_matrix_inverse_i = solve_chol_or_lu_mat(
         v_matrix_i, arma::eye(cluster_size, cluster_size));
       d_matrix_trans_v_matrix_inverse_i = d_matrix_i.t() * v_matrix_inverse_i;
@@ -584,7 +567,7 @@ arma::vec update_beta_jeffreys_or(const arma::vec& y_vector,
                                weights_vector_i));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_jeffreys_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_jeffreys_or");

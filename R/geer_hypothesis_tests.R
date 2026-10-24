@@ -370,7 +370,7 @@ compute_score_components <- function(object0, object1) {
     )
   }
   list(
-    score_vector = score_vector,
+    score_vector = as.numeric(score_vector),
     naive_covariance = covariance$naive_covariance,
     robust_covariance = covariance$robust_covariance,
     bc_covariance = covariance$bc_covariance

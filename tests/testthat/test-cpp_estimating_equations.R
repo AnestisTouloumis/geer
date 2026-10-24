@@ -31,7 +31,7 @@ test_that("get_estimating_equations_cc equals the textbook sum of D' V^-1 (y - m
     list(inverse.gaussian(), "1/mu^2", "exchangeable", 0.3, 0.3),
     list(inverse.gaussian(), "log", "exchangeable", 0.3, 0.3)
   )
-  times <- list(1:3, c(1, 2, 4), 2:4, 1:4, c(1, 4), 3:4)
+  times <- test_data$cluster_layout
   for (cf in cfg) {
     beta <- if (cf[[2]] %in% c("inverse", "1/mu^2")) {
       c(1, 0.1, -0.1)
@@ -68,7 +68,7 @@ test_that("get_estimating_equations_cc handles every correlation structure", {
 test_that("get_estimating_equations_or equals the textbook sum under the Plackett working model", {
   tmax <- 4
   alpha <- c(1.5, 2.2, 0.8, 3, 1.1, 2)
-  times <- list(1:4, c(1, 2, 4), 2:4, 1:4, c(1, 3), 3:4)
+  times <- test_data$cluster_layout
   for (link in c("logit", "probit", "cloglog")) {
     for (wts in list(NULL, c(0.5, 1, 2.5, 1.5))) {
       d <- ref_sim("or", times, link = link, alpha = alpha, weights = wts, seed = 5)

@@ -70,6 +70,22 @@ test_data <- local({
       id = 1:10, y = c(1, 1, rep(0, 8L)),
       offset = seq(-1, 1, length.out = 10L)
     ),
+    cluster_influence = local({
+      times <- rep(list(1L, c(1L, 3L), 2:4, 1:4), 4L)
+      id <- rep(seq_along(times), lengths(times))
+      row <- seq_along(id)
+      data.frame(
+        id = id, visit = unlist(times), x = sin(row), z = cos(id),
+        y = 2 + sin(id) + cos(row / 3), offset = 0.2 * cos(row),
+        weight = rep_len(c(0.5, 2, 1.5), length(id))
+      )
+    }),
+    cluster_layout = list(1L, c(1L, 3L), 2:4, 1:4, c(1L, 4L), 3:4),
+    cpp_asymmetric = matrix(c(1, 0.1, 0.5, 1), 2L),
+    cpp_context = list(
+      y = c(0, 1, 1, 0), id = c(11, 11, 42, 42, 99, 99),
+      repeated = rep(1:2, 3L)
+    ),
     repeated_gaps = data.frame(
       id = rep(1:4, each = 3L), visit = rep(1:3, 4L),
       y = c(1, NA, 3, 2, 4, 1, 1, 3, 2, 4, 2, 5),

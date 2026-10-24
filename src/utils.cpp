@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -11,8 +12,15 @@ constexpr double symmetry_tolerance = 1e-10;
 bool lu_fallback_warned = false;
 
 double get_relative_asymmetry(const arma::mat& X) {
-  const double scale = std::max(1.0, arma::abs(X).max());
-  return arma::abs(X - X.t()).max() / scale;
+  if (!X.is_square()) {
+    Rcpp::stop("get_relative_asymmetry failed: the matrix must be square");
+  }
+  if (X.is_empty()) return 0.0;
+  if (!X.is_finite()) return NA_REAL;
+  const double scale = arma::abs(X).max();
+  if (scale == 0.0) return 0.0;
+  const arma::mat scaled = X / scale;
+  return arma::abs(scaled - scaled.t()).max();
 }
 }  // namespace
 
@@ -106,6 +114,9 @@ CholOrLuFactor::CholOrLuFactor(const arma::mat& X,
                                const char* context,
                                bool allow_chol)
     : context_(context), use_chol_(false), symmetric_not_pd_(false) {
+  if (!X.is_finite()) {
+    Rcpp::stop("%s failed: the matrix must be finite", context_);
+  }
   if (allow_chol && X.is_square() && X.n_elem > 0 &&
       get_relative_asymmetry(X) <= symmetry_tolerance) {
     if (arma::chol(chol_upper_, X)) {
@@ -208,11 +219,24 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X,
 //============================ symmetrize if close to symmetric ================
 void symmetrize_if_close(arma::mat& A, const char* context, double rel_tol) {
   const double relative_asymmetry = get_relative_asymmetry(A);
+  if (ISNAN(relative_asymmetry)) {
+    bool undefined = true;
+    for (double value : A) {
+      if (!ISNAN(value)) undefined = false;
+    }
+    if (undefined) return;
+    Rcpp::stop("%s failed: the matrix must be finite", context);
+  }
   if (relative_asymmetry > rel_tol) {
     Rcpp::stop("%s: the matrix has non-trivial asymmetry (%.2e)", context,
                relative_asymmetry);
   }
-  A = 0.5 * (A + A.t());
+  if (!A.is_empty() &&
+      arma::abs(A).max() > std::numeric_limits<double>::max() / 2.0) {
+    A = 0.5 * A + 0.5 * A.t();
+  } else {
+    A = 0.5 * (A + A.t());
+  }
 }
 //==============================================================================
 

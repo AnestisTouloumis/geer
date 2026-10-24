@@ -87,8 +87,6 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::vec u_vector_i;
@@ -97,25 +95,21 @@ Rcpp::List get_covariance_matrices_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      v_matrix_i = get_v_matrix_cc(family,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, parse_family(family), phi, correlation_matrix);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(first_row, last_row);
+      u_vector_i = d_matrix_trans_v_matrix_inverse_i * data.residuals;
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       meat_matrix += u_vector_i * u_vector_i.t();
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_covariance_matrices_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_sandwich_covariances(information_matrix, meat_matrix,
@@ -150,8 +144,6 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
   arma::mat meat_matrix(params_no, params_no, arma::fill::zeros);
   const arma::vec delta_vector = link_derivative_1(link, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::vec u_vector_i;
@@ -160,26 +152,21 @@ Rcpp::List get_covariance_matrices_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      v_matrix_i = get_v_matrix_or(mu_vector.subvec(first_row, last_row),
-                                   odds_ratios_vector_i,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
       v_matrix_inverse_d_matrix_i =
         solve_chol_or_lu_mat(v_matrix_i, d_matrix_i);
       d_matrix_trans_v_matrix_inverse_i = v_matrix_inverse_d_matrix_i.t();
-      u_vector_i = d_matrix_trans_v_matrix_inverse_i * s_vector.subvec(first_row, last_row);
+      u_vector_i = d_matrix_trans_v_matrix_inverse_i * data.residuals;
       information_matrix += d_matrix_trans_v_matrix_inverse_i * d_matrix_i;
       meat_matrix += u_vector_i * u_vector_i.t();
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_covariance_matrices_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_sandwich_covariances(information_matrix, meat_matrix,

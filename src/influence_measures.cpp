@@ -79,9 +79,10 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
         cluster_dfbeta.row(cluster_index).fill(NA_REAL);
       } else {
         const arma::mat h_matrix = d_matrix * scaled_matrix.t();
-        const arma::vec md_residuals = solve_chol_or_lu_vec(
-          arma::eye(cluster_size, cluster_size) - h_matrix, residuals,
-          "get_influence_quantities");
+        const CholOrLuFactor md_factor(
+          arma::eye(cluster_size, cluster_size) - h_matrix,
+          "get_influence_quantities: I - H", false);
+        const arma::vec md_residuals = md_factor.solve(residuals);
         cluster_dfbeta.row(cluster_index) =
           (scaled_matrix.t() * md_residuals).t();
       }
@@ -159,22 +160,19 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
   for (arma::uword cluster_index = 0; cluster_index < clusters.size(); ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::mat x_matrix_i = model_matrix.rows(first_row, last_row);
       const arma::vec delta_i = delta_vector.subvec(first_row, last_row);
       const arma::vec residuals_i = s_vector.subvec(first_row, last_row);
       const arma::vec ratio_i = variance_1_vector.subvec(first_row, last_row) /
         variance_vector.subvec(first_row, last_row);
-      arma::mat d_matrix_i = x_matrix_i;
-      d_matrix_i.each_col() %= delta_i;
-      const arma::mat v_matrix_i =
-        get_v_matrix_cc(family_code,
-                        mu_vector.subvec(first_row, last_row),
-                        repeated_vector.subvec(first_row, last_row),
-                        phi,
-                        correlation_matrix,
-                        weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
       const arma::vec z_vector_i =
         solve_chol_or_lu_vec(v_matrix_i, residuals_i, "get_influence_quantities_cc");
       const arma::vec a_vector = delta_2_vector.subvec(first_row, last_row) -
@@ -194,7 +192,7 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
          sensitivity_matrix_i});
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_influence_quantities(quantities, model_matrix.n_cols, y_vector.n_elem);
@@ -230,21 +228,20 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
   for (arma::uword cluster_index = 0; cluster_index < clusters.size(); ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::uword cluster_size = last_row - first_row + 1;
       const arma::mat x_matrix_i = model_matrix.rows(first_row, last_row);
       const arma::vec mu_vector_i = mu_vector.subvec(first_row, last_row);
       const arma::vec weights_vector_i = weights_vector.subvec(first_row, last_row);
       const arma::vec residuals_i = s_vector.subvec(first_row, last_row);
-      arma::mat d_matrix_i = x_matrix_i;
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      const arma::mat v_matrix_i =
-        get_v_matrix_or(mu_vector_i, odds_ratios_vector_i, weights_vector_i);
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
+      const arma::vec& odds_ratios_vector_i = workspace.odds_ratios;
       const arma::vec z_vector_i =
         solve_chol_or_lu_vec(v_matrix_i, residuals_i, "get_influence_quantities_or");
       const arma::mat v_matrix_mu_i =
@@ -269,7 +266,7 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
          sensitivity_matrix_i});
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_influence_quantities_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_influence_quantities(quantities, model_matrix.n_cols, y_vector.n_elem);

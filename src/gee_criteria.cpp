@@ -31,8 +31,8 @@ arma::mat get_information_matrix_independence(const arma::mat& model_matrix,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       d_matrix_i = model_matrix.rows(first_row, last_row);
       d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
       const arma::vec scale_i =
@@ -42,7 +42,7 @@ arma::mat get_information_matrix_independence(const arma::mat& model_matrix,
       result += d_matrix_i.t() * d_scaled_i;
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_information_matrix_independence", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return result / phi;
@@ -77,16 +77,12 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
-      const arma::mat v_matrix_i =
-        get_v_matrix_cc(family,
-                        mu_vector.subvec(first_row, last_row),
-                        repeated_vector.subvec(first_row, last_row),
-                        phi,
-                        correlation_matrix,
-                        weights_vector.subvec(first_row, last_row));
+      const arma::mat v_matrix_i = build_cluster_covariance_cc(
+        cluster, mu_vector, repeated_vector, weights_vector,
+        parse_family(family), phi, correlation_matrix);
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(
@@ -100,7 +96,7 @@ Rcpp::List get_working_covariance_criteria_cc(const arma::vec& y_vector,
       sum_log_det += 2.0 * arma::accu(arma::log(chol_upper.diag()));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_working_covariance_criteria_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return Rcpp::List::create(
@@ -133,17 +129,16 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
       const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
+        get_cluster_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
                                          repeated_max,
                                          alpha_vector);
-      const arma::mat v_matrix_i =
-        get_v_matrix_or(mu_vector.subvec(first_row, last_row),
-                        odds_ratios_vector_i,
-                        weights_vector.subvec(first_row, last_row));
+      const arma::mat v_matrix_i = build_cluster_covariance_or(
+        cluster, mu_vector, repeated_vector, weights_vector,
+        repeated_max, alpha_vector);
       arma::mat chol_upper;
       if (!arma::chol(chol_upper, v_matrix_i)) {
         throw std::runtime_error(
@@ -157,7 +152,7 @@ Rcpp::List get_working_covariance_criteria_or(const arma::vec& y_vector,
       sum_log_det += 2.0 * arma::accu(arma::log(chol_upper.diag()));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_working_covariance_criteria_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return Rcpp::List::create(

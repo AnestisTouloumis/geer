@@ -148,11 +148,17 @@ Rcpp::List get_small_sample_covariances(
     pooled_wb /= sample_size;
     for (arma::uword cluster_index = 0; cluster_index < clusters_no;
          ++cluster_index) {
-      arma::mat scaled_matrix = v_inverse_d_matrices[cluster_index];
-      scaled_matrix.each_col() %= sd_vectors[cluster_index];
-      meat_pan += scaled_matrix.t() * pooled_pan * scaled_matrix;
-      meat_wl += scaled_matrix.t() * pooled_wl * scaled_matrix;
-      meat_wb += scaled_matrix.t() * pooled_wb * scaled_matrix;
+      try {
+        arma::mat scaled_matrix = v_inverse_d_matrices[cluster_index];
+        scaled_matrix.each_col() %= sd_vectors[cluster_index];
+        meat_pan += scaled_matrix.t() * pooled_pan * scaled_matrix;
+        meat_wl += scaled_matrix.t() * pooled_wl * scaled_matrix;
+        meat_wb += scaled_matrix.t() * pooled_wb * scaled_matrix;
+      } catch (const std::exception& e) {
+        rethrow_with_cluster_context(
+          "get_small_sample_covariances", cluster_index,
+          clusters[cluster_index].id_value, e);
+      }
     }
   }
 
@@ -224,24 +230,14 @@ Rcpp::List get_small_sample_covariances_cc(const arma::vec& y_vector,
   for (arma::uword cluster_index = 0; cluster_index < clusters.size(); ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      arma::mat d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::mat v_matrix_i =
-        get_v_matrix_cc(family,
-                        mu_vector.subvec(first_row, last_row),
-                        repeated_vector.subvec(first_row, last_row),
-                        phi,
-                        correlation_matrix,
-                        weights_vector.subvec(first_row, last_row));
-      quantities.push_back({cluster.id_value,
-                            d_matrix_i,
-                            v_matrix_i,
-                            s_vector.subvec(first_row, last_row)});
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, parse_family(family), phi, correlation_matrix);
+      const ClusterData& data = workspace.data;
+      quantities.push_back(data);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_small_sample_covariances_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_small_sample_covariances(quantities, model_matrix.n_cols, repeated_max);
@@ -275,25 +271,14 @@ Rcpp::List get_small_sample_covariances_or(const arma::vec& y_vector,
   for (arma::uword cluster_index = 0; cluster_index < clusters.size(); ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      arma::mat d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      const arma::mat v_matrix_i =
-        get_v_matrix_or(mu_vector.subvec(first_row, last_row),
-                        odds_ratios_vector_i,
-                        weights_vector.subvec(first_row, last_row));
-      quantities.push_back({cluster.id_value,
-                            d_matrix_i,
-                            v_matrix_i,
-                            s_vector.subvec(first_row, last_row)});
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& data = workspace.data;
+      quantities.push_back(data);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_small_sample_covariances_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return get_small_sample_covariances(quantities, model_matrix.n_cols, repeated_max);

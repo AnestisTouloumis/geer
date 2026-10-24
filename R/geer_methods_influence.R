@@ -54,6 +54,8 @@
 #' rest of the cluster and agrees with it only under working independence.
 #' Both one-step approximations are exact for a Gaussian response with the
 #' identity link.
+#' The cluster calculation solves the generally nonsymmetric system involving
+#' \eqn{I - H_i} directly, without treating it as a symmetric matrix.
 #'
 #' With \code{deletion = "exact"}, every cluster is deleted in turn and the
 #' model refitted with the association parameters held at their full-data

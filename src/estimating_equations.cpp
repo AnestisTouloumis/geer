@@ -38,31 +38,22 @@ arma::vec get_estimating_equations_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec result(params_no, arma::fill::zeros);
-  arma::mat d_matrix_i;
   for (arma::uword cluster_index = 0;
        cluster_index < clusters.size();
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-
-      const arma::mat v_matrix_i =
-        get_v_matrix_cc(family,
-                        mu_vector.subvec(first_row, last_row),
-                        repeated_vector.subvec(first_row, last_row),
-                        phi,
-                        correlation_matrix,
-                        weights_vector.subvec(first_row, last_row));
-
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, parse_family(family), phi, correlation_matrix);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
       result += d_matrix_i.t() *
-                solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
+                solve_chol_or_lu_vec(v_matrix_i, data.residuals);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_estimating_equations_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return result;
@@ -93,31 +84,22 @@ arma::vec get_estimating_equations_or(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const auto clusters = clusters_from_sorted_id(id_vector);
   arma::vec result(params_no, arma::fill::zeros);
-  arma::mat d_matrix_i;
   for (arma::uword cluster_index = 0;
        cluster_index < clusters.size();
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-
-      const arma::vec odds_ratios_vector_i =
-        get_subject_specific_odds_ratios_or(repeated_vector.subvec(first_row, last_row),
-                                         repeated_max,
-                                         alpha_vector);
-      const arma::mat v_matrix_i =
-        get_v_matrix_or(mu_vector.subvec(first_row, last_row),
-                        odds_ratios_vector_i,
-                        weights_vector.subvec(first_row, last_row));
-
+      const ClusterWorkspace workspace = build_cluster_data_or(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, repeated_max, alpha_vector);
+      const ClusterData& data = workspace.data;
+      const arma::mat& d_matrix_i = data.d_matrix;
+      const arma::mat& v_matrix_i = data.v_matrix;
       result += d_matrix_i.t() *
-                solve_chol_or_lu_vec(v_matrix_i, s_vector.subvec(first_row, last_row));
+                solve_chol_or_lu_vec(v_matrix_i, data.residuals);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("get_estimating_equations_or", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   return result;

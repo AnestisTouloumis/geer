@@ -76,3 +76,21 @@ test_that("nuisance estimation errors are informative when association is not es
     "Toeplitz correlation cannot be estimated"
   )
 })
+
+test_that("association reconstruction failures identify the original cluster", {
+  d <- test_data$cpp_context
+  expect_error(
+    get_marginalized_odds_ratios_or(
+      d$y, d$id, d$repeated, rep(1, 6L), 0.5, "unstructured"
+    ),
+    "get_marginalized_odds_ratios_or: cluster 3 (id = 99)", fixed = TRUE
+  )
+  expect_error(
+    fit_geesolver_cc(
+      d$y, matrix(1, 4L, 1L), d$id, d$repeated, rep(1, 4L),
+      "logit", "binomial", 0, rep(0, 4L), 0L, 1e-6, 0L, 1, 0.5,
+      "gee", 0L, 0, 0L, "ar1", 1L, 1, 1L, 0L
+    ),
+    "get_alpha_hat_ar1: cluster 3 (id = 99)", fixed = TRUE
+  )
+})

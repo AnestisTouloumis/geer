@@ -141,7 +141,8 @@ test_that("compute_score_components returns expected matrix components for neste
     "score_vector", "naive_covariance", "robust_covariance",
     "bc_covariance"
   ) %in% names(sc)))
-  expect_true(is.numeric(sc$score_vector))
+  expect_type(sc$score_vector, "double")
+  expect_null(dim(sc$score_vector))
   expect_true(is.matrix(sc$naive_covariance))
   expect_true(is.matrix(sc$robust_covariance))
   expect_true(is.matrix(sc$bc_covariance))
@@ -739,4 +740,21 @@ test_that("nesting requires the shared design spaces to agree", {
   different <- geewa(formula = y ~ x + z, data = data, id = id,
                      phi_fixed = TRUE)
   expect_error(check_nested_models(fit, different))
+})
+
+test_that("odds-ratio score components contain a plain numeric score", {
+  fit <- geewa_binary(
+    formula = ecg ~ treatment + factor(period),
+    data = test_data$cerebrovascular, id = id, repeated = period
+  )
+  fit_null <- update(fit, formula = ecg ~ treatment)
+  observed <- compute_score_components(fit_null, fit)
+  expected <- as.numeric(get_estimating_equations_or(
+    fit$y, fit$x, fit$id, fit$repeated, fit$prior.weights,
+    fit$family$link, fit_null$fitted.values,
+    fit_null$linear.predictors, get_alpha_or(fit)
+  ))
+  expect_type(observed$score_vector, "double")
+  expect_null(dim(observed$score_vector))
+  expect_identical(observed$score_vector, expected)
 })

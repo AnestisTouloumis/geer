@@ -4,7 +4,7 @@
 
 #include <RcppArmadillo.h>
 
-arma::vec get_subject_specific_odds_ratios_or(const arma::vec& repeated_vector_i,
+arma::vec get_cluster_odds_ratios_or(const arma::vec& repeated_vector_i,
                                            const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector);
 arma::mat get_v_matrix_or(const arma::vec& mu_vector,

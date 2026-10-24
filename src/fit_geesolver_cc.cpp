@@ -42,8 +42,6 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
   const arma::vec delta_vector = link_derivative_1(link_code, eta_vector);
   const arma::vec s_vector = y_vector - mu_vector;
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   for (arma::uword cluster_index = 0;
@@ -51,18 +49,15 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const auto delta_vector_i = delta_vector.subvec(first_row, last_row);
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
       const auto s_vector_i = s_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family_code,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       const CholOrLuFactor v_factor(v_matrix_i);
       v_matrix_inverse_d_matrix_i =
         v_factor.solve(d_matrix_i);
@@ -71,7 +66,7 @@ arma::vec update_beta_gee_cc(const arma::vec& y_vector,
       u_vector += d_matrix_trans_v_matrix_inverse_i * s_vector_i;
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_gee_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_gee_cc");
@@ -117,8 +112,6 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::mat v_matrix_inverse_alpha_plus_delta_star_diag_i;
@@ -130,23 +123,22 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const auto delta_vector_i = delta_vector.subvec(first_row, last_row);
       const auto s_vector_i = s_vector.subvec(first_row, last_row);
       const auto delta_star_vector_i =
         delta_star_vector.subvec(first_row, last_row);
       const auto alpha_star_plus_delta_star_vector_i =
         alpha_star_plus_delta_star_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family_code,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       const CholOrLuFactor v_factor(v_matrix_i);
 
       v_matrix_inverse_d_matrix_i =
@@ -179,7 +171,7 @@ arma::vec update_beta_naive_cc(const arma::vec& y_vector,
           kronecker_left_identity_vecdiag(v_matrix_inverse_delta_star_diag_i));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_naive_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_naive_cc");
@@ -233,8 +225,6 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::vec u_vector_i(params_no, arma::fill::zeros);
@@ -247,23 +237,22 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const auto delta_vector_i = delta_vector.subvec(first_row, last_row);
       const auto s_vector_i = s_vector.subvec(first_row, last_row);
       const auto alpha_star_vector_i =
         alpha_star_vector.subvec(first_row, last_row);
       const auto alpha_star_plus_delta_star_vector_i =
         alpha_star_plus_delta_star_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family_code,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       const CholOrLuFactor v_factor(v_matrix_i);
       v_matrix_inverse_d_matrix_i =
         v_factor.solve(d_matrix_i);
@@ -313,7 +302,7 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
         u_vector_i.t();
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_robust_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_robust_cc");
@@ -390,8 +379,6 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
     alpha_star_vector + delta_star_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat v_matrix_inverse_i;
   arma::mat epsilon_matrix_i;
@@ -408,24 +395,22 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const arma::vec s_vector_i = s_vector.subvec(first_row, last_row);
       const arma::vec alpha_star_vector_i = alpha_star_vector.subvec(first_row, last_row);
       const arma::vec alpha_tilde_star_vector_i =
         alpha_tilde_star_vector.subvec(first_row, last_row);
       const arma::vec alpha_star_plus_delta_star_vector_i =
         alpha_star_plus_delta_star_vector.subvec(first_row, last_row);
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector.subvec(first_row, last_row);
-
-      v_matrix_i = get_v_matrix_cc(family_code,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       const CholOrLuFactor v_factor(v_matrix_i);
       v_matrix_inverse_d_matrix_i =
         v_factor.solve(d_matrix_i);
@@ -488,7 +473,7 @@ arma::vec update_beta_empirical_cc(const arma::vec& y_vector,
                             left_kronecker_correction);
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_empirical_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   arma::mat robust_matrix(params_no, params_no, arma::fill::zeros);
@@ -552,8 +537,6 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
   const arma::vec s_vector = y_vector - mu_vector;
   const arma::mat correlation_matrix =
     get_correlation_matrix_cc(correlation_structure, alpha_vector, repeated_max);
-  arma::mat d_matrix_i;
-  arma::mat v_matrix_i;
   arma::mat v_matrix_inverse_d_matrix_i;
   arma::mat d_matrix_trans_v_matrix_inverse_i;
   arma::mat alpha_star_plus_delta_star_matrix_i;
@@ -563,22 +546,21 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
        ++cluster_index) {
     const auto& cluster = clusters[cluster_index];
     try {
-      const arma::uword first_row = cluster.start;
-      const arma::uword last_row = cluster.end - 1;
-      const arma::uword cluster_size = cluster.end - cluster.start;
+      const arma::uword first_row = cluster.first_row;
+      const arma::uword last_row = cluster.after_last_row - 1;
+      const arma::uword cluster_size =
+        cluster.after_last_row - cluster.first_row;
       const auto delta_vector_i = delta_vector.subvec(first_row, last_row);
       const auto s_vector_i = s_vector.subvec(first_row, last_row);
       const auto alpha_star_plus_delta_star_vector_i =
         alpha_star_plus_delta_star_vector.subvec(first_row, last_row);
 
-      d_matrix_i = model_matrix.rows(first_row, last_row);
-      d_matrix_i.each_col() %= delta_vector_i;
-      v_matrix_i = get_v_matrix_cc(family_code,
-                                   mu_vector.subvec(first_row, last_row),
-                                   repeated_vector.subvec(first_row, last_row),
-                                   phi,
-                                   correlation_matrix,
-                                   weights_vector.subvec(first_row, last_row));
+      const ClusterWorkspace workspace = build_cluster_data_cc(
+        cluster, model_matrix, mu_vector, repeated_vector, weights_vector,
+        delta_vector, s_vector, family_code, phi, correlation_matrix);
+      const ClusterData& cluster_data = workspace.data;
+      const arma::mat& d_matrix_i = cluster_data.d_matrix;
+      const arma::mat& v_matrix_i = cluster_data.v_matrix;
       const CholOrLuFactor v_factor(v_matrix_i);
       v_matrix_inverse_d_matrix_i =
         v_factor.solve(d_matrix_i);
@@ -605,7 +587,7 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
         ));
     } catch (const std::exception& e) {
       rethrow_with_cluster_context("update_beta_jeffreys_cc", cluster_index,
-                                   id_vector[cluster.start], e);
+                                   id_vector[cluster.first_row], e);
     }
   }
   symmetrize_if_close(information_matrix, "update_beta_jeffreys_cc");

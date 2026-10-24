@@ -228,3 +228,23 @@ test_that("influence measures validate their arguments", {
   expect_error(cooks.distance(fit_geewa_pois_exch, coefs = "age"),
                "does not use the argument")
 })
+
+test_that("weighted cluster deletions solve nonsymmetric systems directly", {
+  fit <- geewa(
+    formula = y ~ x + z, family = gaussian(link = "identity"),
+    data = test_data$cluster_influence, id = id, repeated = visit,
+    corstr = "fixed", phi_fixed = TRUE, phi_value = 1.4,
+    weights = weight, offset = offset,
+    alpha_vector = c(0.3, 0.09, 0.027, 0.3, 0.09, 0.3)
+  )
+  reference <- ref_influence(fit)
+  index <- which(fit$id == 2)
+  design <- fit$x[index, , drop = FALSE]
+  covariance <- ref_fit_covariance(fit, index)
+  leverage <- design %*% fit$naive_covariance %*%
+    t(design) %*% solve(covariance)
+  expect_gt(max(abs(leverage - t(leverage))), 1e-4)
+  expect_equal(
+    unname(dfbeta(fit)), unname(reference$cluster_dfbeta), tolerance = 1e-6
+  )
+})

@@ -5,7 +5,7 @@
 
 
 //============================ subject specific odds ratios ====================
-arma::vec get_subject_specific_odds_ratios_or(const arma::vec& repeated_vector_i,
+arma::vec get_cluster_odds_ratios_or(const arma::vec& repeated_vector_i,
                                            const arma::uword cluster_size_max,
                                            const arma::vec& odds_ratios_vector) {
   const arma::uword cluster_size_i = repeated_vector_i.n_elem;
