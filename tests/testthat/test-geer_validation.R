@@ -33,7 +33,7 @@ test_that("check_step_count accepts valid counts and rejects invalid ones", {
 })
 
 test_that("normalize_geer_test_options drops pmethod for non-working tests", {
-  out <- normalize_geer_test_options("wald", "robust", "rao-scott")
+  out <- normalize_geer_test_options("wald", "robust", "ignored-value")
   expect_type(out, "list")
   expect_identical(out$test, "wald")
   expect_identical(out$cov_type, "robust")
@@ -165,4 +165,38 @@ test_that("scalar check helpers accept valid inputs and reject invalid ones", {
     check_choice(NA_character_, c("robust", "naive"), "cov_type"),
     "'cov_type' must be a character string"
   )
+})
+
+test_that("integer count validators reject overflow without coercion", {
+  expect_identical(
+    check_nonnegative_integerish(.Machine$integer.max, "n"),
+    .Machine$integer.max
+  )
+  expect_identical(check_nonnegative_integerish(0, "n"), 0L)
+  expect_error(
+    check_nonnegative_integerish(2^31, "n"),
+    "'n' must be a nonnegative integer", fixed = TRUE
+  )
+  expect_error(check_step_count(2^31))
+})
+
+test_that("fitting choice matchers are exact and retain strict NULL handling", {
+  matchers <- list(
+    method = match_method, family = match_family, link = match_link,
+    corstr = match_corstr, orstr = match_orstr, action = match_step_action
+  )
+  choices <- list(
+    method = geer_method_choices, family = geer_family_choices,
+    link = geer_link_choices, corstr = geer_corstr_choices,
+    orstr = geer_orstr_choices, action = geer_step_actions
+  )
+  for (name in names(matchers)) {
+    matcher <- matchers[[name]]
+    for (value in choices[[name]]) {
+      expect_identical(matcher(value), value)
+    }
+    expect_error(matcher(NULL))
+    expect_error(matcher(factor(choices[[name]][1L])))
+    expect_error(matcher(paste0(choices[[name]][1L], "-invalid")))
+  }
 })

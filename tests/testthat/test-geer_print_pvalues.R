@@ -49,3 +49,27 @@ test_that("htest results print p-values below 0.0001 as < 0.0001", {
   out <- capture.output(print(boundary))
   expect_false(any(grepl("< 0.0001", out, fixed = TRUE)))
 })
+
+test_that("test print methods reject unused formatting arguments", {
+  table <- drop1(fit_geewa_pois_exch)
+  expect_error(print(table, unused = TRUE))
+  test <- runs_test(fit_geewa_pois_exch)
+  expect_error(print(test, unused = TRUE))
+})
+
+test_that("test print methods retain standard formatting arguments", {
+  table <- drop1(fit_geewa_pois_exch)
+  plain <- table
+  class(plain) <- setdiff(class(plain), "geer_anova")
+  expect_identical(
+    capture.output(print(table, 3L, signif.stars = FALSE)),
+    normalize_pvalue_labels(capture.output(print(
+      plain, 3L, signif.stars = FALSE, eps.Pvalue = 1e-04
+    )))
+  )
+  test <- runs_test(fit_geewa_pois_exch)
+  expect_identical(
+    capture.output(print(test, dig = 4L, prefix = "test: ")),
+    capture.output(print(test, digits = 4L, prefix = "test: "))
+  )
+})

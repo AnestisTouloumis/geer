@@ -124,6 +124,11 @@ patterns, a consequence of MCAR, by the procedure of Jamshidian and Jalal
 2014).
 }
 \details{
+For fitted-model input, variables required by the formula, cluster
+identifier,
+repeated index, and subset must be available in the supplied data or the
+original formula environment. Missing required variables give an input error.
+
 The procedure completes the incomplete data by imputation, groups the cases
 by their original missingness pattern, and tests whether the completed data
 have a common covariance matrix across patterns. Patterns with fewer than

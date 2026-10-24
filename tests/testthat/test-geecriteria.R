@@ -659,7 +659,7 @@ test_that("odds-ratio pair indexing matches upper-triangular ordering", {
           pair[[1L]], pair[[2L]], 4L
         )
       },
-      integer(1)
+      numeric(1)
     ),
     seq_len(6L)
   )
@@ -781,4 +781,10 @@ test_that("geecriteria stores unrounded criteria and rounds when printing", {
   expect_identical(out$QIC, full$QIC)
   expect_false(isTRUE(all.equal(out$QIC, round(out$QIC, 1), tolerance = 0)))
   expect_output(print(out), format(round(out$QIC, 1)), fixed = TRUE)
+})
+
+test_that("criteria printing rejects unused and keeps supported arguments", {
+  result <- geecriteria(fit_geewa_pois_exch, criteria = "QIC")
+  expect_error(print(result, unused = TRUE))
+  expect_no_error(capture.output(print(result, row.names = FALSE, width = 80L)))
 })

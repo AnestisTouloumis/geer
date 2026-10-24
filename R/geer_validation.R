@@ -155,7 +155,8 @@ check_summary_geer_object <- function(x, name = "x") {
 
 check_nonnegative_integerish <- function(x, name) {
   check_single_numeric(x, name)
-  if (x < 0 || abs(x - round(x)) > geer_integer_tol) {
+  if (x < 0 || x > .Machine$integer.max ||
+        abs(x - round(x)) > geer_integer_tol) {
     stop(
       sprintf("'%s' must be a nonnegative integer", name),
       call. = FALSE
@@ -213,8 +214,9 @@ check_integer_at_least <- function(x, name, lower = 1L) {
 match_choice_with_default <- function(x,
                                       choices,
                                       name,
-                                      default = choices[1L]) {
-  if (missing(x) || is.null(x)) {
+                                      default = choices[1L],
+                                      allow_null = TRUE) {
+  if (missing(x) || (is.null(x) && allow_null)) {
     return(default)
   }
   check_choice(x, choices, name)
@@ -222,11 +224,72 @@ match_choice_with_default <- function(x,
 }
 
 
-match_test_type <- function(test) {
+match_method <- function(method) {
+  match_choice_with_default(
+    x = method,
+    choices = geer_method_choices,
+    name = "method",
+    allow_null = FALSE
+  )
+}
+
+
+match_family <- function(family) {
+  match_choice_with_default(
+    x = family,
+    choices = geer_family_choices,
+    name = "family",
+    allow_null = FALSE
+  )
+}
+
+
+match_link <- function(link) {
+  match_choice_with_default(
+    x = link,
+    choices = geer_link_choices,
+    name = "link",
+    allow_null = FALSE
+  )
+}
+
+
+match_corstr <- function(corstr) {
+  match_choice_with_default(
+    x = corstr,
+    choices = geer_corstr_choices,
+    name = "corstr",
+    allow_null = FALSE
+  )
+}
+
+
+match_orstr <- function(orstr) {
+  match_choice_with_default(
+    x = orstr,
+    choices = geer_orstr_choices,
+    name = "orstr",
+    allow_null = FALSE
+  )
+}
+
+
+match_step_action <- function(action) {
+  match_choice_with_default(
+    x = action,
+    choices = geer_step_actions,
+    name = "action",
+    allow_null = FALSE
+  )
+}
+
+
+match_test_type <- function(test, allow_null = TRUE) {
   match_choice_with_default(
     x = test,
     choices = geer_test_choices,
-    name = "test"
+    name = "test",
+    allow_null = allow_null
   )
 }
 

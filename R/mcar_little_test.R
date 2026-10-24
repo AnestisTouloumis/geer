@@ -22,6 +22,11 @@
 #'   reference (\code{"asymptotic"}). Defaults to \code{"auto"}.
 #'
 #' @details
+#' For fitted-model input, variables required by the formula, cluster
+#' identifier,
+#' repeated index, and subset must be available in the supplied data or the
+#' original formula environment. Missing required variables give an input error.
+#'
 #' Let the rows be grouped into missing-data patterns. For pattern \eqn{r},
 #' let \eqn{n_r} be its number of rows, \eqn{p_r} the number of observed
 #' variables, and \eqn{\bar y_r}{ybar_r} their mean vector. With
@@ -141,7 +146,9 @@ mcar_little_test <- function(object, data = NULL, maxiter = 1000L,
 
   if (inherits(object, "geer")) {
     object <- check_geer_object(object)
-    x <- extract_mcar_matrix(object, data = data)
+    x <- extract_mcar_matrix(
+      object, data = data, context = "mcar_little_test"
+    )
     data_name <- "repeated response from fitted geer object"
   } else {
     if (!is.null(data)) {

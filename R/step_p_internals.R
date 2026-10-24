@@ -1,5 +1,5 @@
 build_step_change_label <- function(term, action) {
-  check_choice(action, geer_step_actions, "action")
+  action <- match_step_action(action)
   prefix <- if (identical(action, "add")) "+ " else "- "
   paste0(prefix, term)
 }
@@ -212,10 +212,10 @@ build_step_results <- function(models, fit, object) {
   step_no <- as.integer(vapply(models, `[[`, numeric(1), "Step"))
   aod <- data.frame(
     Step = ifelse(step_no == 0L, NA_integer_, step_no),
-    Df = vapply(models, `[[`, NA_real_, "Df"),
-    Chi = vapply(models, `[[`, NA_real_, "Chi"),
-    `Pr(>Chi)` = vapply(models, `[[`, NA_real_, "Pr(>Chi)"),
-    CIC = vapply(models, `[[`, NA_real_, "CIC"),
+    Df = vapply(models, `[[`, numeric(1), "Df"),
+    Chi = vapply(models, `[[`, numeric(1), "Chi"),
+    `Pr(>Chi)` = vapply(models, `[[`, numeric(1), "Pr(>Chi)"),
+    CIC = vapply(models, `[[`, numeric(1), "CIC"),
     check.names = FALSE,
     stringsAsFactors = FALSE
   )

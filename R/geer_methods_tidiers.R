@@ -85,7 +85,8 @@ tidy.geer <- function(x,
       is.na(exponentiate)) {
     stop("'exponentiate' must be TRUE or FALSE", call. = FALSE)
   }
-  if (exponentiate && !object$family$link %in% c("log", "logit", "cloglog")) {
+  if (exponentiate &&
+        !(object$family$link %in% c("log", "logit", "cloglog"))) {
     warning(
       paste0(
         "'exponentiate = TRUE' is usually meaningful only for log, logit, and ",

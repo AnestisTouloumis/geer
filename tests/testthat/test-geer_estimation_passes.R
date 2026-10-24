@@ -25,7 +25,7 @@ test_that("run_geer_estimation_passes reproduces the pass schedule per method", 
 
   bc <- run("bcgee-robust")
   expect_equal(
-    vapply(bc$calls, function(z) z$pass$method, ""),
+    vapply(bc$calls, function(z) z$pass$method, character(1)),
     c("gee", "brgee-robust")
   )
   expect_true(bc$calls[[2L]]$pass$carry_nuisance)
@@ -36,7 +36,7 @@ test_that("run_geer_estimation_passes reproduces the pass schedule per method", 
 
   hp <- run("hpgee-jeffreys")
   expect_equal(
-    vapply(hp$calls, function(z) z$pass$method, ""),
+    vapply(hp$calls, function(z) z$pass$method, character(1)),
     c("pgee-jeffreys", "gee")
   )
   expect_true(hp$calls[[1L]]$pass$independence)
@@ -45,7 +45,7 @@ test_that("run_geer_estimation_passes reproduces the pass schedule per method", 
 
   op <- run("opgee-jeffreys")
   expect_equal(
-    vapply(op$calls, function(z) z$pass$method, ""),
+    vapply(op$calls, function(z) z$pass$method, character(1)),
     c("pgee-jeffreys", "pgee-jeffreys")
   )
 })

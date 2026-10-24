@@ -26,7 +26,8 @@ build_percent_labels <- function(probs, digits = 2, check = FALSE) {
 
 
 build_test_label <- function(test) {
-  out <- switch(
+  test <- match_test_type(test, allow_null = FALSE)
+  switch(
     test,
     wald = "Wald",
     score = "Score",
@@ -34,16 +35,35 @@ build_test_label <- function(test) {
     `working-score` = "Modified Working Score",
     `working-lrt` = "Modified Working LRT"
   )
-  if (is.null(out)) {
+}
+
+
+check_data_variables <- function(expression,
+                                 data,
+                                 name,
+                                 source,
+                                 enclos = NULL) {
+  needed <- setdiff(all.vars(expression), ".")
+  absent <- if (is.environment(data)) {
+    needed[!vapply(needed, exists, logical(1), envir = data)]
+  } else {
+    setdiff(needed, names(data))
+  }
+  if (!is.null(enclos)) {
+    absent <- absent[!vapply(absent, exists, logical(1), envir = enclos)]
+  }
+  if (length(absent)) {
     stop(
-      paste0(
-        "'test' must be one of: wald, score, working-wald, working-score, ",
-        "working-lrt"
+      sprintf(
+        "'%s' must contain the variable(s) %s used %s",
+        name,
+        paste(sprintf("'%s'", absent), collapse = ", "),
+        source
       ),
       call. = FALSE
     )
   }
-  out
+  invisible(NULL)
 }
 
 

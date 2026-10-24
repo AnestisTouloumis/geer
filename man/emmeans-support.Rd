@@ -27,7 +27,9 @@ emm_basis.geer(
 predictors. Defaults to \code{NULL}, which uses the data used to fit the
 model.}
 
-\item{...}{additional arguments passed through from \pkg{emmeans}.}
+\item{...}{additional framework arguments, forwarded to the recovery or
+covariance machinery where applicable. Arguments unused by those routes
+are ignored for compatibility with \pkg{emmeans}.}
 
 \item{trms}{the terms component supplied by \pkg{emmeans}.}
 

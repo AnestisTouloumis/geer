@@ -123,3 +123,11 @@ test_that("emmeans covariance names are matched exactly", {
     )
   }
 })
+
+test_that("emmeans default covariance retains integration dots", {
+  skip_if_no_emmeans()
+  fit <- fit_geewa_bin_exch
+  expect_identical(
+    get_emmeans_vcov(fit, framework_argument = TRUE), vcov(fit)
+  )
+})

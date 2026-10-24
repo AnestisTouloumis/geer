@@ -114,9 +114,7 @@ test_that("predict validates newdata and prediction type", {
     select = -lnage
   )
   expect_error(
-    predict(fit_geewa_pois_exch, newdata = newdata_missing),
-    "object 'lnage' not found",
-    fixed = FALSE
+    predict(fit_geewa_pois_exch, newdata = newdata_missing)
   )
   expect_error(
     predict(fit_geewa_pois_exch, type = "invalid-type"),
@@ -307,4 +305,16 @@ test_that("residuals validates type", {
     residuals(fit_geewa_pois_exch, type = "raw"),
     "should be one of"
   )
+})
+
+test_that("prediction input failures omit calls", {
+  newdata <- test_data$epilepsy
+  newdata$treatment <- rep.int("new-treatment", nrow(newdata))
+  error <- tryCatch(
+    predict(fit_geewa_pois_exch, newdata = newdata), error = identity
+  )
+  expect_s3_class(error, "error")
+  expect_null(conditionCall(error))
+  expect_match(conditionMessage(error), "'newdata' must be compatible",
+               fixed = TRUE)
 })

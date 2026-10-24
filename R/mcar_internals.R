@@ -358,7 +358,24 @@ get_mcar_data <- function(object, data) {
 }
 
 
-build_mcar_model_frame <- function(mcall, eval_env, formula_env, what) {
+build_mcar_model_frame <- function(mcall,
+                                   eval_env,
+                                   formula_env,
+                                   what,
+                                   context) {
+  model_formula <- eval(mcall$formula, envir = eval_env, enclos = formula_env)
+  data <- eval(mcall$data, envir = eval_env, enclos = formula_env)
+  check_data_variables(
+    model_formula, data, "data", "in the model formula", enclos = eval_env
+  )
+  for (name in c("id", "repeated", "subset")) {
+    if (!is.null(mcall[[name]])) {
+      check_data_variables(
+        mcall[[name]], data, "data", sprintf("in the '%s' argument", name),
+        enclos = eval_env
+      )
+    }
+  }
   tryCatch(
     if (is.null(mcall$id)) {
       eval(mcall, envir = eval_env, enclos = formula_env)
@@ -367,7 +384,9 @@ build_mcar_model_frame <- function(mcall, eval_env, formula_env, what) {
     },
     error = function(e) {
       stop(
-        sprintf("could not %s: %s", what, conditionMessage(e)),
+        sprintf(
+          "%s failed: could not %s: %s", context, what, conditionMessage(e)
+        ),
         call. = FALSE
       )
     }
@@ -383,7 +402,9 @@ check_mcar_univariate <- function(response) {
 }
 
 
-extract_mcar_matrix <- function(object, data = NULL) {
+extract_mcar_matrix <- function(object,
+                                data = NULL,
+                                context = "extract_mcar_matrix") {
   data <- get_mcar_data(object, data)
 
   mcall <- object$call
@@ -405,7 +426,8 @@ extract_mcar_matrix <- function(object, data = NULL) {
     mcall,
     eval_env,
     formula_env,
-    "reconstruct the data used by the fit"
+    "reconstruct the data used by the fit",
+    context = context
   )
 
   response <- stats::model.response(model_frame)

@@ -21,6 +21,10 @@
 #'   to \code{2}.
 #'
 #' @details
+#' Criterion names are matched exactly apart from case. Abbreviations are not
+#' accepted. Printing accepts supported data-frame and default print arguments
+#' and rejects unused arguments.
+#'
 #' The available criteria are:
 #' \describe{
 #'   \item{\code{QIC}, \code{QICu}}{quasi-likelihood information criteria of
@@ -267,6 +271,10 @@ geecriteria <- function(object,
 
 #' @export
 print.geer_criteria <- function(x, ...) {
+  check_print_dots(
+    list(...), "print.geer_criteria",
+    list(base::print.data.frame, base::print.default)
+  )
   digits <- attr(x, "digits")
   y <- as.data.frame(unclass(x), row.names = row.names(x))
   attr(y, "digits") <- NULL

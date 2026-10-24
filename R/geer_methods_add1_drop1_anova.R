@@ -253,7 +253,7 @@ drop1.geer <- function(object,
 #' @param pmethod character string specifying the approximation to the null
 #'   distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
 #'   or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
-#'   tests. Defaults to \code{"rao-scott"}.
+#'   tests, where it is not validated. Defaults to \code{"rao-scott"}.
 #'
 #' @details
 #' The tests are those of Rotnitzky and Jewell (1990). The Wald and score

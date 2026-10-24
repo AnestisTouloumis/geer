@@ -54,6 +54,11 @@
 #'   convergence tolerance of the EM algorithm. Defaults to \code{1e-08}.
 #'
 #' @details
+#' For fitted-model input, variables required by the formula, cluster
+#' identifier,
+#' repeated index, and subset must be available in the supplied data or the
+#' original formula environment. Missing required variables give an input error.
+#'
 #' The procedure completes the incomplete data by imputation, groups the cases
 #' by their original missingness pattern, and tests whether the completed data
 #' have a common covariance matrix across patterns. Patterns with fewer than
@@ -269,7 +274,9 @@ mcar_homoscedasticity_test <- function(
 
   if (inherits(object, "geer")) {
     object <- check_geer_object(object)
-    x <- extract_mcar_matrix(object, data = data)
+    x <- extract_mcar_matrix(
+      object, data = data, context = "mcar_homoscedasticity_test"
+    )
     data_name <- "repeated response from fitted geer object"
   } else {
     if (!is.null(data)) {

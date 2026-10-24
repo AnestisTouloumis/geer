@@ -22,11 +22,12 @@
 \arguments{
 \item{x}{a fitted model object of class \code{"geer"}.}
 
-\item{...}{additional arguments passed through by \pkg{marginaleffects}.}
+\item{...}{additional framework arguments, accepted and ignored for
+compatibility with \pkg{marginaleffects}.}
 
 \item{model}{a fitted model object of class \code{"geer"}.}
 
-\item{coefs}{a named numeric vector of regression coefficients.}
+\item{coefs}{a named numeric vector of finite regression coefficients.}
 
 \item{vcov}{covariance specification: \code{NULL} or \code{TRUE} for the
 bias-corrected covariance matrix, \code{FALSE} for none, the name of one
@@ -55,6 +56,10 @@ and \code{marginaleffects::slopes()}, to be applied to fitted \code{geer}
 objects. They are called by \pkg{marginaleffects} and not usually by the
 user. Inference uses the bias-corrected covariance matrix unless
 \code{vcov} requests another estimator.
+}
+\details{
+Supplied covariance matrices, including those returned by a covariance
+function, must contain only finite values.
 }
 \examples{
 if (requireNamespace("marginaleffects", quietly = TRUE)) {

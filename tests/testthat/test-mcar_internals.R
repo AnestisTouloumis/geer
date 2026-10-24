@@ -201,8 +201,7 @@ test_that("extract_mcar_matrix needs the original data", {
     "the original data are not available in the fitted object"
   )
   expect_error(
-    extract_mcar_matrix(fit, data = data.frame(z = 1)),
-    "could not reconstruct the data used by the fit"
+    extract_mcar_matrix(fit, data = data.frame(z = 1))
   )
 })
 
@@ -268,4 +267,13 @@ test_that("EM agrees with the monotone normal MLE in different units", {
                    ignore_attr = TRUE)
     }
   }
+})
+
+test_that("MCAR reconstruction errors identify the calling diagnostic", {
+  fit <- fit_geewa_pois_exch
+  fit$call$subset <- quote(stop("subset evaluation failed", call. = FALSE))
+  error <- tryCatch(mcar_little_test(fit), error = identity)
+  expect_s3_class(error, "error")
+  expect_null(conditionCall(error))
+  expect_match(conditionMessage(error), "^mcar_little_test failed:")
 })

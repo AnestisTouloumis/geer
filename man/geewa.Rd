@@ -180,6 +180,16 @@ estimating equations (GEE), using ordinary, bias-reduced, bias-corrected, or
 Jeffreys-type penalized GEE.
 }
 \details{
+Method, family, link, and association names must be exact character strings.
+Family objects must contain the standard callable components and an
+initialization expression. When dispersion is fixed, \code{phi_value} must be
+a positive finite numeric scalar.
+
+Inactive arguments are ignored without validation: \code{Mv} outside the
+m-dependent structure, \code{alpha_vector} outside the fixed structure,
+\code{phi_value} when dispersion is estimated, and \code{control_glm} when
+\code{beta_start} is supplied.
+
 The estimation methods are:
 \describe{
   \item{\code{"gee"}}{the estimating equations of Liang and Zeger (1986).}
@@ -200,7 +210,8 @@ The estimation methods are:
 
 With adjustment \eqn{A} added to the estimating equations \eqn{U}, the
 bias-corrected methods use the plus scoring step
-\eqn{\hat\beta_{BC} = \hat\beta_{GEE} + H^{-1} A}.
+\eqn{\hat\beta_{BC} = \hat\beta_{GEE} +
+H^{-1} A}{beta_BC = beta_GEE + H^(-1) A}.
 Here \eqn{H} is the working information for the naive and robust methods,
 and \eqn{-\partial U/\partial\beta^\top}{-dU/d beta'} for the empirical
 method. This differs from the printed minus sign with positive working

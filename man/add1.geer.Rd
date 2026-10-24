@@ -43,7 +43,7 @@ used for inference: one of the estimators described in
 \item{pmethod}{character string specifying the approximation to the null
 distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
 or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
-tests. Defaults to \code{"rao-scott"}.}
+tests, where it is not validated. Defaults to \code{"rao-scott"}.}
 
 \item{...}{not used. Supplying any argument is an error, so that a misspelled
 argument name is reported rather than silently ignored.}

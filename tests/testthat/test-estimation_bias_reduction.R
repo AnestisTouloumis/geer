@@ -295,7 +295,9 @@ test_that("E[robust Lambda] over the exact outcome distribution equals the M-est
   e_lambda <- numeric(p)
   for (r in seq_len(nrow(combos))) {
     y <- unlist(lapply(seq_along(laws), function(c) laws[[c]]$Y[combos[r, c], ]))
-    w <- prod(vapply(seq_along(laws), function(c) laws[[c]]$P[combos[r, c]], 0))
+    w <- prod(vapply(
+      seq_along(laws), function(c) laws[[c]]$P[combos[r, c]], numeric(1)
+    ))
     e_lambda <- e_lambda + w * drop(S0 %*% (step(y, "brgee-robust") - step(y, "gee")))
   }
   expect_lt(max(abs(e_lambda - lambda_ideal)), 1e-6)

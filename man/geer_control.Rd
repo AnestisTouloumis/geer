@@ -45,6 +45,10 @@ A list with components \code{tolerance}, \code{maxiter},
 Sets the control parameters of the fitting algorithm of \code{\link{geewa}}
 and \code{\link{geewa_binary}}.
 }
+\details{
+Integer iteration limits must not exceed \code{.Machine$integer.max}.
+Integer-like limits are rounded within the package's integer tolerance.
+}
 \examples{
 ## Default control parameters
 geer_control()

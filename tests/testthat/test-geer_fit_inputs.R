@@ -461,11 +461,11 @@ test_that("extract_geer_id_repeated validates id and repeated", {
 
 test_that("normalize_phi resolves fixed and estimated dispersion", {
   expect_identical(
-    normalize_phi(FALSE, 3),
+    normalize_phi(FALSE, "ignored"),
     list(phi_fixed = FALSE, phi_value = 1)
   )
   expect_identical(
-    normalize_phi(TRUE, 2),
+    normalize_phi(TRUE, 2L),
     list(phi_fixed = TRUE, phi_value = 2)
   )
 })
@@ -477,7 +477,8 @@ test_that("normalize_phi validates its arguments", {
       "'phi_fixed' must be TRUE or FALSE"
     )
   }
-  for (bad in list(0, -1, NA_real_, Inf, c(1, 2), numeric(0))) {
+  for (bad in list(0, -1, NA_real_, Inf, c(1, 2), numeric(0), "1",
+                   list(1), TRUE, 1 + 1i)) {
     expect_error(
       normalize_phi(TRUE, bad),
       "'phi_value' must be a positive finite number"
@@ -625,4 +626,54 @@ test_that("implicit occasions precede omission and subsetting", {
   expect_equal(binary$repeated, rep(c(1, 3), 4L), tolerance = 1e-12)
   expect_equal(update(binary, formula = . ~ .)$repeated, binary$repeated,
                tolerance = 1e-12)
+})
+
+test_that("family normalization validates callbacks and initialization", {
+  expect_error(
+    normalize_family(list(family = "gaussian", link = "identity")),
+    "'family' must contain function component(s):", fixed = TRUE
+  )
+  for (name in c("linkfun", "linkinv", "variance", "dev.resids", "mu.eta",
+                 "aic")) {
+    family <- gaussian()
+    family[[name]] <- 1
+    expect_error(normalize_family(family))
+  }
+  family <- gaussian()
+  family$initialize <- NULL
+  expect_error(
+    normalize_family(family),
+    "'family' must contain an initialization expression", fixed = TRUE
+  )
+  families <- list(gaussian(), poisson(), binomial(), Gamma(),
+                   inverse.gaussian(), quasi(), quasibinomial(), quasipoisson())
+  for (family in families) {
+    expect_identical(normalize_family(family), family)
+  }
+  family <- gaussian()
+  family$variance <- function(mu) rep.int(2, length(mu))
+  expect_identical(normalize_family(family), family)
+})
+
+test_that("inactive fitting association arguments remain unvalidated", {
+  fit <- geewa(
+    formula = ecg ~ treatment, family = binomial(),
+    data = test_data$cerebrovascular, id = id, corstr = "independence"
+  )
+  ignored <- update(
+    fit, Mv = "ignored", alpha_vector = "ignored", phi_value = "ignored"
+  )
+  expect_identical(coef(ignored), coef(fit))
+  fit <- geewa_binary(
+    formula = ecg ~ treatment, data = test_data$cerebrovascular, id = id
+  )
+  expect_identical(coef(update(fit, alpha_vector = "ignored")), coef(fit))
+})
+
+test_that("m-dependent order rejects integer overflow at the R boundary", {
+  expect_error(geewa(
+    formula = ecg ~ treatment, family = binomial(),
+    data = test_data$cerebrovascular, id = id, corstr = "m-dependent",
+    Mv = 2^31
+  ))
 })

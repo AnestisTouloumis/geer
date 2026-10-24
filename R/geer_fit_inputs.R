@@ -174,10 +174,34 @@ normalize_family <- function(family) {
   if (!is.list(family) || is.null(family$family) || is.null(family$link)) {
     stop("'family' must be a valid family object", call. = FALSE)
   }
-  check_choice(family$family, geer_family_choices, "family")
-  link <- as.character(family$link)
-  check_choice(link, geer_link_choices, "link")
+  family$family <- match_family(family$family)
+  family$link <- match_link(family$link)
+  check_family_components(family)
   family
+}
+
+
+check_family_components <- function(family) {
+  function_names <- c(
+    "linkfun", "linkinv", "variance", "dev.resids", "mu.eta", "aic"
+  )
+  invalid <- !vapply(family[function_names], is.function, logical(1))
+  if (any(invalid)) {
+    stop(
+      sprintf(
+        "'family' must contain function component(s): %s",
+        paste(function_names[invalid], collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  if (!is.expression(family$initialize) && !is.call(family$initialize)) {
+    stop(
+      "'family' must contain an initialization expression",
+      call. = FALSE
+    )
+  }
+  invisible(family)
 }
 
 
@@ -406,13 +430,13 @@ normalize_phi <- function(phi_fixed, phi_value) {
     )
   }
   if (phi_fixed) {
-    phi_value <- as.numeric(phi_value)
-    if (length(phi_value) != 1L || !is.finite(phi_value) || phi_value <= 0) {
+    if (is.complex(phi_value) || !is_positive_scalar(phi_value)) {
       stop(
         "'phi_value' must be a positive finite number when 'phi_fixed = TRUE'",
         call. = FALSE
       )
     }
+    phi_value <- as.numeric(phi_value)
   } else {
     phi_value <- 1
   }
@@ -449,8 +473,7 @@ build_geer_inputs <- function(mcall, family, env, control, method) {
   attr(model_matrix, "assign") <- design$assign
   attr(model_matrix, "contrasts") <- design$contrasts
   control <- normalize_geer_control(control)
-  method <- as.character(method)
-  check_choice(method, geer_method_choices, "method")
+  method <- match_method(method)
   list(
     row_order = ord,
     model_frame = model_frame,

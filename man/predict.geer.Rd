@@ -48,6 +48,10 @@ Generates predictions from a fitted \code{geer} object, optionally with
 approximate standard errors.
 }
 \details{
+Required prediction variables must be available in \code{newdata} or the
+formula environment. Missing variables and incompatible factor levels give
+an input error.
+
 The linear predictor is computed from the model matrix of \code{newdata},
 or of the fitted data, and the offset, and transformed by the inverse link
 for \code{type = "response"}. Standard errors are obtained by the delta

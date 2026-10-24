@@ -111,7 +111,8 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
     response_call,
     eval_env,
     formula_env,
-    "reconstruct the response used by the fit"
+    "reconstruct the response used by the fit",
+    context = "mcar_logistic_test"
   )
   response <- normalize_mcar_response(
     stats::model.response(response_frame),
@@ -143,7 +144,8 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
     mcall,
     eval_env,
     formula_env,
-    "construct the risk-set data"
+    "construct the risk-set data",
+    context = "mcar_logistic_test"
   )
 
   y <- stats::model.response(model_frame)
@@ -381,7 +383,10 @@ build_mcar_zero_test <- function() {
 
 build_mcar_coefficient_table <- function(fit, covariance, covariate_map) {
   beta <- stats::coef(fit)
-  standard_error <- sqrt(diag(covariance))
+  standard_error <- compute_se_or_stop(
+    diag(covariance),
+    context = "mcar_logistic_test"
+  )
   z_value <- as.numeric(beta) / standard_error
   display_names <- names(beta)
   if (length(covariate_map)) {

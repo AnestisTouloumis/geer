@@ -40,6 +40,10 @@ for comparing marginal mean models and for selecting the working association
 structure.
 }
 \details{
+Criterion names are matched exactly apart from case. Abbreviations are not
+accepted. Printing accepts supported data-frame and default print arguments
+and rejects unused arguments.
+
 The available criteria are:
 \describe{
   \item{\code{QIC}, \code{QICu}}{quasi-likelihood information criteria of

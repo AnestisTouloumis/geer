@@ -47,7 +47,7 @@ used for inference: one of the estimators described in
 \item{pmethod}{character string specifying the approximation to the null
 distribution of the modified working tests: Rao-Scott (\code{"rao-scott"})
 or Satterthwaite (\code{"satterthwaite"}). Ignored for the Wald and score
-tests. Defaults to \code{"rao-scott"}.}
+tests, where it is not validated. Defaults to \code{"rao-scott"}.}
 
 \item{control}{list of control parameters as returned by
 \code{\link{geer_control}} for the binary GEE fit. Defaults to
@@ -84,6 +84,9 @@ the spirit of Ridout (1991) and Fitzmaurice, Heath and Clifford (1996) fitted
 by generalized estimating equations. MCAR is defined as in Rubin (1976).
 }
 \details{
+The coefficient table gives an error if a coefficient variance is negative or
+non-finite.
+
 For each cluster \eqn{i} and occasion \eqn{t}, let
 \eqn{R_{it} = I(Y_{it} \text{ is missing})}{R_it = I(Y_it is missing)}. The transitions with
 \eqn{Y_{i,t-1}} observed form the risk set, on which the model

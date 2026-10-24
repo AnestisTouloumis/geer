@@ -26,7 +26,9 @@
 #'   \code{vcov.method}. Defaults to \code{NULL}.
 #' @param misc optional list passed through by \pkg{emmeans}. Defaults to
 #'   \code{NULL}.
-#' @param ... additional arguments passed through from \pkg{emmeans}.
+#' @param ... additional framework arguments, forwarded to the recovery or
+#'   covariance machinery where applicable. Arguments unused by those routes
+#'   are ignored for compatibility with \pkg{emmeans}.
 #'
 #' @return
 #' \code{recover_data.geer()} returns the predictor data, and

@@ -203,3 +203,27 @@ test_that("start value helpers validate beta_start and control_glm", {
   expect_identical(get_start_type("brgee-naive"), "AS_mean")
   expect_identical(get_start_type("pgee-jeffreys"), "MPL_Jeffreys")
 })
+
+test_that("supplied starts bypass control_glm validation", {
+  fit <- fit_geewa_pois_exch
+  expect_identical(
+    compute_geer_start_values(
+      model_matrix = fit$x, y = fit$y, family = fit$family,
+      weights = fit$prior.weights, offset = fit$offset, method = fit$method,
+      link = fit$family$link, beta_start = coef(fit), control = fit$control,
+      control_glm = 17
+    ),
+    as.numeric(coef(fit))
+  )
+  fit <- fit_geewa_bin_exch
+  expect_identical(
+    compute_binary_start_values(
+      model_matrix = fit$x, y = fit$y, family = fit$family,
+      weights = fit$prior.weights, offset = fit$offset, method = fit$method,
+      beta_start = coef(fit), control_glm = 17,
+      tolerance = fit$control$tolerance,
+      jeffreys_power = fit$control$jeffreys_power
+    ),
+    as.numeric(coef(fit))
+  )
+})

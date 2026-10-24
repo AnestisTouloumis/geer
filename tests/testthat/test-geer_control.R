@@ -124,3 +124,15 @@ test_that("geer_control rejects partial argument names", {
   )
   expect_identical(do.call(geer_control, list(maxiter = 3))$maxiter, 3L)
 })
+
+test_that("control iteration fields use bounded integer normalization", {
+  for (name in c("maxiter", "step_maxiter")) {
+    args <- list(2^31)
+    names(args) <- name
+    expect_error(do.call(geer_control, args))
+    args[[name]] <- .Machine$integer.max
+    expect_identical(do.call(geer_control, args)[[name]], .Machine$integer.max)
+    args[[name]] <- 2 - geer_integer_tol / 2
+    expect_identical(do.call(geer_control, args)[[name]], 2L)
+  }
+})

@@ -74,6 +74,16 @@
 
 ## Bug fixes
 
+* Rejected overflowing integer controls, incomplete family specifications,
+  nonnumeric fixed dispersion, and non-finite marginaleffects inputs.
+
+* Applied the shared variance checks to MCAR coefficient tables and improved
+  prediction and MCAR reconstruction input errors.
+
+* Rejected unused print arguments while retaining supported formatting options.
+
+* Corrected the plain-text alternative of the bias-correction equation in help.
+
 * Preserved Plackett association near probability boundaries and avoided
   overflow for extreme finite odds ratios, including covariance derivatives.
 
@@ -186,6 +196,14 @@
   responses, are now omitted from the risk set with a warning.
 
 ## Changes
+
+* Centralized fitting choice matching with exact character names and retained
+  strict NULL handling. Method factors are no longer coerced to character.
+
+* Documented the retained inactive-argument, case-insensitive criterion-name,
+  and integration-argument exceptions.
+
+* Standardized scalar vapply templates and negated membership syntax.
 
 * Reconciled the scoring signs of the bias-corrected estimators with
   Touloumis (2026a), including the empirical sensitivity convention and the

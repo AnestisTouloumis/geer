@@ -1,17 +1,24 @@
-check_offset_variables <- function(expression, newdata, source) {
-  needed <- all.vars(expression)
-  absent <- setdiff(needed, names(newdata))
-  if (length(absent)) {
-    stop(
-      sprintf(
-        "'newdata' must contain the variable(s) %s used %s",
-        paste(sprintf("'%s'", absent), collapse = ", "),
-        source
-      ),
-      call. = FALSE
-    )
-  }
-  invisible(NULL)
+build_prediction_frame <- function(object, newdata) {
+  pred_terms <- stats::delete.response(object$terms)
+  check_data_variables(
+    attr(pred_terms, "variables"), newdata, "newdata", "in the model formula",
+    enclos = environment(pred_terms)
+  )
+  tryCatch(
+    stats::model.frame(
+      pred_terms, newdata, xlev = object$xlevels,
+      na.action = stats::na.pass
+    ),
+    error = function(e) {
+      stop(
+        sprintf(
+          "'newdata' must be compatible with the fitted model: %s",
+          conditionMessage(e)
+        ),
+        call. = FALSE
+      )
+    }
+  )
 }
 
 
@@ -21,30 +28,31 @@ check_prediction_offsets <- function(object, newdata) {
   if (length(offset_position)) {
     variable_list <- as.list(attr(pred_terms, "variables"))[-1L]
     for (expression in variable_list[offset_position]) {
-      check_offset_variables(
-        expression,
-        newdata,
-        "in the offset of the model formula"
+      check_data_variables(
+        expression, newdata, "newdata", "in the offset of the model formula"
       )
     }
   }
   call_offset <- object$call$offset
   if (!is.null(call_offset)) {
-    check_offset_variables(call_offset, newdata, "in the 'offset' argument")
+    check_data_variables(
+      call_offset, newdata, "newdata", "in the 'offset' argument"
+    )
   }
   invisible(NULL)
 }
 
 
-evaluate_prediction_offset <- function(object, newdata, n_obs) {
+evaluate_prediction_offset <- function(object,
+                                       newdata,
+                                       n_obs,
+                                       model_frame = NULL) {
   offset_formula <- rep.int(0, n_obs)
-  pred_terms <- stats::delete.response(object$terms)
-  mf <- stats::model.frame(
-    pred_terms,
-    newdata,
-    xlev = object$xlevels,
-    na.action = stats::na.pass
-  )
+  mf <- if (is.null(model_frame)) {
+    build_prediction_frame(object, newdata)
+  } else {
+    model_frame
+  }
   offset_from_formula <- stats::model.offset(mf)
   if (!is.null(offset_from_formula)) {
     if (length(offset_from_formula) == 1L) {
@@ -170,6 +178,10 @@ fitted.geer <- function(object, ...) {
 #'   argument name is reported rather than silently ignored.
 #'
 #' @details
+#' Required prediction variables must be available in \code{newdata} or the
+#' formula environment. Missing variables and incompatible factor levels give
+#' an input error.
+#'
 #' The linear predictor is computed from the model matrix of \code{newdata},
 #' or of the fitted data, and the offset, and transformed by the inverse link
 #' for \code{type = "response"}. Standard errors are obtained by the delta
@@ -263,12 +275,7 @@ predict.geer <- function(object,
   }
   check_prediction_offsets(object, newdata)
   pred_terms <- stats::delete.response(object$terms)
-  mf <- stats::model.frame(
-    pred_terms,
-    newdata,
-    xlev = object$xlevels,
-    na.action = stats::na.pass
-  )
+  mf <- build_prediction_frame(object, newdata)
   design_matrix <- stats::model.matrix(
     pred_terms,
     mf,
@@ -292,7 +299,8 @@ predict.geer <- function(object,
   offset_vector <- evaluate_prediction_offset(
     object = object,
     newdata = newdata,
-    n_obs = nrow(design_matrix)
+    n_obs = nrow(design_matrix),
+    model_frame = mf
   )
   eta_vector <- eta_vector + offset_vector
   if (!se.fit) {

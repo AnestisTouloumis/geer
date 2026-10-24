@@ -161,6 +161,12 @@ responses modeled by marginalized pairwise odds ratios, using ordinary,
 bias-reduced, bias-corrected, or Jeffreys-type penalized GEE.
 }
 \details{
+Link, method, and association names must be exact character strings.
+\code{alpha_vector} is ignored without validation unless
+\code{orstr = "fixed"}.
+\code{control_glm} is ignored without validation when \code{beta_start} is
+supplied.
+
 The estimation methods are described in \code{\link{geewa}}. The marginal
 mean model uses the binomial family with the given \code{link}, the working
 odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables

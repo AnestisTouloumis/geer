@@ -22,6 +22,12 @@
 #'   other structures. Defaults to \code{NULL}.
 #'
 #' @details
+#' Link, method, and association names must be exact character strings.
+#' \code{alpha_vector} is ignored without validation unless
+#' \code{orstr = "fixed"}.
+#' \code{control_glm} is ignored without validation when \code{beta_start} is
+#' supplied.
+#'
 #' The estimation methods are described in \code{\link{geewa}}. The marginal
 #' mean model uses the binomial family with the given \code{link}, the working
 #' odds ratios are estimated from marginalized \eqn{2 \times 2}{2 x 2} tables
@@ -118,7 +124,7 @@ geewa_binary <- function(formula,
   call <- match.call(expand.dots = TRUE)
   mcall <- match.call(expand.dots = FALSE)
   caller_env <- parent.frame()
-  check_choice(link, geer_link_choices, "link")
+  link <- match_link(link)
   family <- normalize_family(stats::binomial(link = link))
   link <- family$link
   inputs <- build_geer_inputs(
@@ -153,7 +159,7 @@ geewa_binary <- function(formula,
     tolerance = tolerance,
     jeffreys_power = control$jeffreys_power
   )
-  check_choice(orstr, geer_orstr_choices, "orstr")
+  orstr <- match_orstr(orstr)
   if (identical(orstr, "independence")) {
     alpha_vector <- rep.int(1, choose(max(repeated), 2))
   } else if (identical(orstr, "fixed")) {

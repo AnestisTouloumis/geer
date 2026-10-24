@@ -157,3 +157,46 @@ test_that("marginaleffects covariance names are matched exactly", {
     fixed = TRUE
   )
 })
+
+test_that("marginaleffects replacement coefficients must be finite", {
+  fit <- fit_geewa_pois_exch
+  for (value in c(NA_real_, NaN, Inf, -Inf)) {
+    coefs <- coef(fit)
+    coefs[1L] <- value
+    expect_error(
+      set_coef.geer(fit, coefs),
+      "'coefs' must contain only finite values", fixed = TRUE
+    )
+  }
+})
+
+test_that("marginaleffects covariance inputs must be finite", {
+  fit <- fit_geewa_pois_exch
+  for (value in c(NA_real_, NaN, Inf, -Inf)) {
+    covariance <- diag(length(coef(fit)))
+    covariance[1L, 1L] <- value
+    expect_error(
+      get_vcov.geer(fit, vcov = covariance),
+      "'vcov' must contain only finite values", fixed = TRUE
+    )
+    expect_error(get_vcov.geer(fit, vcov = function(object) covariance))
+  }
+})
+
+test_that("marginaleffects adapters retain their integration dots contract", {
+  fit <- fit_geewa_pois_exch
+  expect_identical(get_coef.geer(fit, framework_argument = TRUE), coef(fit))
+  expect_identical(get_data.geer(fit, framework_argument = TRUE), fit$data)
+  expect_identical(
+    coef(set_coef.geer(fit, coef(fit), framework_argument = TRUE)), coef(fit)
+  )
+  expect_identical(
+    get_vcov.geer(fit, vcov = "robust", framework_argument = TRUE),
+    vcov(fit, cov_type = "robust")
+  )
+  newdata <- head(test_data$epilepsy)
+  expect_identical(
+    get_predict.geer(fit, newdata, framework_argument = TRUE),
+    get_predict.geer(fit, newdata)
+  )
+})

@@ -163,8 +163,8 @@ build_step_criterion_results <- function(models,
   step_no <- as.integer(vapply(models, `[[`, numeric(1), "Step"))
   aod <- data.frame(
     Step = ifelse(step_no == 0L, NA_integer_, step_no),
-    Df = vapply(models, `[[`, NA_real_, "Df"),
-    value = vapply(models, `[[`, NA_real_, "value"),
+    Df = vapply(models, `[[`, numeric(1), "Df"),
+    value = vapply(models, `[[`, numeric(1), "value"),
     check.names = FALSE,
     stringsAsFactors = FALSE
   )

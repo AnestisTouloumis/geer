@@ -152,3 +152,22 @@ test_that("refit_geer ignores a fixed-length beta_start of the original fit", {
   refit <- refit_geer(fit, . ~ . + lnbaseline, "add1.geer")
   expect_length(coef(refit), 3L)
 })
+
+test_that("data variable checks respect data and formula environments", {
+  data <- test_data$epilepsy
+  expect_null(check_data_variables(
+    quote(seizures + treatment), data, "data", "in the model formula"
+  ))
+  expect_error(
+    check_data_variables(quote(absent_variable), data, "data", "in a formula"),
+    "'data' must contain the variable(s) 'absent_variable'", fixed = TRUE
+  )
+  env <- new.env(parent = emptyenv())
+  env$constant <- 2
+  expect_null(check_data_variables(
+    quote(seizures + constant), data, "data", "in a formula", enclos = env
+  ))
+  expect_null(check_data_variables(
+    quote(constant), env, "data", "in a formula"
+  ))
+})

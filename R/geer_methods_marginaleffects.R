@@ -10,7 +10,7 @@
 #'
 #' @param model a fitted model object of class \code{"geer"}.
 #' @param x a fitted model object of class \code{"geer"}.
-#' @param coefs a named numeric vector of regression coefficients.
+#' @param coefs a named numeric vector of finite regression coefficients.
 #' @param vcov covariance specification: \code{NULL} or \code{TRUE} for the
 #'   bias-corrected covariance matrix, \code{FALSE} for none, the name of one
 #'   of the estimators described in \code{\link{vcov.geer}}, or a covariance
@@ -21,7 +21,12 @@
 #' @param type character string specifying the prediction scale,
 #'   \code{"response"} or \code{"link"}. Defaults to \code{NULL}, which is
 #'   treated as \code{"response"}.
-#' @param ... additional arguments passed through by \pkg{marginaleffects}.
+#' @param ... additional framework arguments, accepted and ignored for
+#'   compatibility with \pkg{marginaleffects}.
+#'
+#' @details
+#' Supplied covariance matrices, including those returned by a covariance
+#' function, must contain only finite values.
 #'
 #' @return
 #' These methods return objects in the formats required internally by
@@ -55,6 +60,9 @@ NULL
 check_marginaleffects_vcov <- function(vcov_matrix, coef_names) {
   if (!is.matrix(vcov_matrix) || !is.numeric(vcov_matrix)) {
     stop("'vcov' must be a numeric matrix", call. = FALSE)
+  }
+  if (any(!is.finite(vcov_matrix))) {
+    stop("'vcov' must contain only finite values", call. = FALSE)
   }
   if (nrow(vcov_matrix) != ncol(vcov_matrix)) {
     stop("'vcov' must be a square matrix", call. = FALSE)
@@ -108,6 +116,9 @@ set_coef.geer <- function(model, coefs, ...) {
   model <- check_geer_object(model)
   if (!is.numeric(coefs) || is.null(names(coefs))) {
     stop("'coefs' must be a named numeric vector", call. = FALSE)
+  }
+  if (any(!is.finite(coefs))) {
+    stop("'coefs' must contain only finite values", call. = FALSE)
   }
   coef_names <- names(model$coefficients)
   if (length(coefs) != length(coef_names) ||

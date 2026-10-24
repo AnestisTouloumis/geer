@@ -22,6 +22,10 @@
 #'   \code{"opgee-jeffreys"}, and \code{"hpgee-jeffreys"} (Touloumis, 2026b).
 #'   Defaults to \code{0.5}, the standard Jeffreys-type penalty.
 #'
+#' @details
+#' Integer iteration limits must not exceed \code{.Machine$integer.max}.
+#' Integer-like limits are rounded within the package's integer tolerance.
+#'
 #' @return
 #' A list with components \code{tolerance}, \code{maxiter},
 #' \code{or_adding}, \code{step_maxiter}, \code{step_multiplier}, and
@@ -56,15 +60,11 @@ geer_control <- function(tolerance = 1e-06,
   if (!is_positive_scalar(tolerance)) {
     stop("'tolerance' must be a positive finite number", call. = FALSE)
   }
-  if (!is_positive_integer_scalar(maxiter)) {
-    stop("'maxiter' must be a positive integer", call. = FALSE)
-  }
+  maxiter <- check_integer_at_least(maxiter, "maxiter")
   if (!is_positive_scalar(or_adding)) {
     stop("'or_adding' must be a positive finite number", call. = FALSE)
   }
-  if (!is_positive_integer_scalar(step_maxiter)) {
-    stop("'step_maxiter' must be a positive integer", call. = FALSE)
-  }
+  step_maxiter <- check_integer_at_least(step_maxiter, "step_maxiter")
   if (!is_positive_scalar(step_multiplier)) {
     stop("'step_multiplier' must be a positive finite number", call. = FALSE)
   }
@@ -73,9 +73,9 @@ geer_control <- function(tolerance = 1e-06,
   }
   list(
     tolerance = tolerance,
-    maxiter = as.integer(maxiter),
+    maxiter = maxiter,
     or_adding = or_adding,
-    step_maxiter = as.integer(step_maxiter),
+    step_maxiter = step_maxiter,
     step_multiplier = as.numeric(step_multiplier),
     jeffreys_power = jeffreys_power
   )
