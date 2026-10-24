@@ -12,7 +12,7 @@ generics::glance
 #' @description
 #' Summarizes the regression coefficients of a fitted \code{geer} object in a
 #' data frame with one row per coefficient, following the conventions of
-#' \pkg{broom} (Robinson, Hayes and Couch, 2024).
+#' \pkg{broom} (Robinson, Hayes, and Couch, 2024).
 #'
 #' @param x a fitted model object of class \code{"geer"}.
 #' @param conf.int logical indicating whether Wald confidence limits are
@@ -138,7 +138,7 @@ tidy.geer <- function(x,
 #'
 #' @description
 #' Summarizes a fitted \code{geer} object in a one-row data frame, following
-#' the conventions of \pkg{broom} (Robinson, Hayes and Couch, 2024).
+#' the conventions of \pkg{broom} (Robinson, Hayes, and Couch, 2024).
 #'
 #' @param x a fitted model object of class \code{"geer"}.
 #' @param ... not used. Supplying any argument is an error, so that a misspelled

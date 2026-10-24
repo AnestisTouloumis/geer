@@ -33,7 +33,7 @@
 #'   \item{\code{QICC}}{corrected QIC of Hardin and Hilbe (2013).}
 #'   \item{\code{CIC}}{correlation information criterion of Hin and Wang
 #'     (2009).}
-#'   \item{\code{RJC}}{Rotnitzky-Jewell criterion of Hin, Carey and Wang
+#'   \item{\code{RJC}}{Rotnitzky-Jewell criterion of Hin, Carey, and Wang
 #'     (2007), based on Rotnitzky and Jewell (1990).}
 #'   \item{\code{EQIC}}{extended quasi-likelihood information criterion of
 #'     Wang and Hin (2010).}
@@ -41,8 +41,8 @@
 #'     and Chaganty (1998) and Shults et al. (2009).}
 #'   \item{\code{GPC}, \code{AGPC}, \code{SGPC}}{Gaussian pseudolikelihood
 #'     criterion and its Akaike-type and Schwarz-type penalized versions
-#'     (Carey and Wang, 2011; Zhu and Zhu, 2013; Fu, Hao and Wang, 2018).}
-#'   \item{\code{GHYC}}{criterion of Gosho, Hamada and Yoshimura (2011),
+#'     (Carey and Wang, 2011; Zhu and Zhu, 2013; Fu, Hao, and Wang, 2018).}
+#'   \item{\code{GHYC}}{criterion of Gosho, Hamada, and Yoshimura (2011),
 #'     denoted DEW by Gosho (2014).}
 #'   \item{\code{PAC}}{criterion of Pardo and Alonso (2019).}
 #'   \item{\code{PT}, \code{WR}, \code{RMR}}{Pillai trace, Wilks ratio, and Roy
@@ -86,7 +86,7 @@
 #'   \item With \eqn{D_G = n^\star\log(2\pi) - 2\,\mathrm{GPC}}{D_G = n* log(2 pi) - 2 GPC},
 #'     \eqn{\mathrm{AGPC} = D_G + 2(p + m)}{AGPC = D_G + 2(p + m)} and
 #'     \eqn{\mathrm{SGPC} = D_G + \log(K)(p + m)}{SGPC = D_G + log(K)(p + m)}, on the scale used by
-#'     \pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023).
+#'     \pkg{glmtoolbox} (Vanegas, Rondon, and Paula, 2023).
 #'   \item With \eqn{\lambda_j} the eigenvalues of \eqn{\hat V\hat\Omega_I}{V Omega_I},
 #'     \eqn{\mathrm{PT} = \sum_j \lambda_j/(1 + \lambda_j)}{PT = sum_j lambda_j/(1 + lambda_j)},
 #'     \eqn{\mathrm{WR} = \prod_j \lambda_j/(1 + \lambda_j)}{WR = prod_j lambda_j/(1 + lambda_j)}, and
@@ -104,13 +104,21 @@
 #'     otherwise the adjusted deviance divided by \eqn{n^\star}{n*}.
 #' }
 #'
-#' The quasi-likelihood in \code{QIC}, \code{QICu}, \code{QICHH}, and
-#' \code{QICC} diverges when a fitted mean reaches the boundary of its support,
-#' for example a fitted probability of 0 or 1. Fitted means are therefore kept
-#' \code{sqrt(.Machine$double.eps)} away from the boundary. This does not
-#' affect the comparison of association structures for the same mean model,
-#' but these criteria should not be used to compare mean models when only some
-#' of them reach the boundary; use \code{CIC} instead.
+#' The quasi-likelihood calculations for \code{QIC}, \code{QICu},
+#' \code{QICHH}, and \code{QICC} replace binomial fitted probabilities
+#' below \code{sqrt(.Machine$double.eps)} or above
+#' \code{1 - sqrt(.Machine$double.eps)} by those limits. Positive fitted
+#' means for the Poisson, Gamma, and inverse Gaussian families are bounded
+#' below by \code{sqrt(.Machine$double.eps)} in these calculations. The
+#' stored fitted means are unchanged. This numerical approximation can
+#' affect criterion comparisons when fitted means enter these ranges,
+#' including comparisons of association structures with the same mean
+#' model but different fitted means. A boundary fitted mean does not
+#' always imply a divergent quasi-likelihood contribution, for example
+#' when a binary response and its fitted mean are both 0 or both 1.
+#' Interpret comparisons involving such fits with caution. \code{CIC}
+#' can be used for association selection with a specified mean model;
+#' it is not a general substitute for comparing mean models.
 #'
 #' @return
 #' An object of class \code{c("geer_criteria", "data.frame")} with one row per

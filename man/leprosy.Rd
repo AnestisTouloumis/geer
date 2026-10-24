@@ -7,7 +7,7 @@
 \format{
 A data frame with 60 rows and 4 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{period}{factor period identifier with levels \code{pre} and
     \code{post}.}
   \item{bacilli}{integer count of leprosy bacilli at six body sites.}
@@ -27,8 +27,8 @@ Data from a randomized clinical trial on the efficacy of antibiotic
 treatments for leprosy in the Philippines.
 }
 \details{
-Thirty subjects in the Philippines were enrolled in a randomized clinical
-trial, yielding 60 observations (two periods per subject). Subjects were
+Thirty participants in the Philippines were enrolled in a randomized clinical
+trial, yielding 60 observations (two periods per cluster). Participants were
 assigned to receive treatment A, B, or C (placebo). Before treatment, the
 number of leprosy bacilli at six body sites was recorded. After treatment,
 bacilli counts were recorded again. The trial aimed to assess whether

@@ -4,15 +4,17 @@
 #' @description
 #' Tests the homogeneity of the covariance matrices across missingness
 #' patterns, a consequence of MCAR, by the procedure of Jamshidian and Jalal
-#' (2010) as implemented in \pkg{MissMech} (Jamshidian, Jalal and Jansen,
+#' (2010) as implemented in \pkg{MissMech} (Jamshidian, Jalal, and Jansen,
 #' 2014).
 #'
 #' @param object a fitted model object of class \code{"geer"}, or a numeric
 #'   matrix or data frame with missing values. For a fitted model object, the
 #'   response is arranged with one row per cluster and one column per occasion.
 #' @param data optional data frame containing the data used to fit
-#'   \code{object}. Used only when \code{object} is a fitted model object and
-#'   the data cannot be recovered from it. Defaults to \code{NULL}.
+#'   \code{object}. Defaults to \code{NULL}, which uses the data stored
+#'   in \code{object}. When supplied, \code{data} takes precedence over
+#'   the stored data. It must not be supplied when \code{object} is a
+#'   matrix or data frame.
 #' @param method character string specifying the diagnostic: the modified
 #'   Hawkins test (\code{"hawkins"}), the k-sample Anderson-Darling test
 #'   (\code{"nonparametric"}), or the two-stage rule of Jamshidian and Jalal
@@ -104,21 +106,24 @@
 #' before excluding the maximum support point from the sum. If all transformed
 #' values coincide, this test is undefined, and an error is given.
 #'
-#' The implementation follows \pkg{MissMech} (Jamshidian, Jalal and Jansen,
-#' 2014), which differs from Jamshidian and Jalal (2010) in that one imputation
-#' method serves both tests, normal-theory imputation replaces
-#' distribution-free imputation when there are too few complete cases, and the
-#' chi-squared reference is used for the Neyman statistic in patterns with at
-#' least \code{n_min} cases. Setting \code{n_min} larger than the largest
-#' pattern simulates the reference for all patterns, as in Jamshidian and Jalal
-#' (2010). This function differs from \pkg{MissMech} in two respects: the
-#' simulated Neyman p-values use \eqn{(1 + b)/(n_replicates + 1)}, and the
-#' Anderson-Darling p-value is interpolated from the simulated quantiles of the
-#' \pkg{kSamples} package (Scholz and Zhu, 2025) instead of the five critical
-#' values of Scholz and Stephens (1987). P-values can therefore differ from
+#' The implementation follows \pkg{MissMech} (Jamshidian, Jalal, and Jansen,
+#' 2014) in using one imputation method for both tests and a chi-squared
+#' reference for the Neyman statistic in patterns with at least
+#' \code{n_min} cases. These choices differ from Jamshidian and Jalal
+#' (2010). Setting \code{n_min} larger than the largest pattern simulates
+#' the reference for all patterns, as in Jamshidian and Jalal (2010).
+#' Distribution-free imputation does not fall back to normal-theory
+#' imputation when there are too few complete cases: an error is given,
+#' and \code{imputation = "normal"} must be requested explicitly.
+#'
+#' The simulated Neyman p-values use
+#' \eqn{(1 + b)/(n_replicates + 1)}, and the Anderson-Darling p-value is
+#' interpolated from the simulated quantiles of the \pkg{kSamples} package
+#' (Scholz and Zhu, 2025) instead of the five critical values of Scholz
+#' and Stephens (1987). These choices can give p-values that differ from
 #' \pkg{MissMech}, particularly below 0.01. The quantiles cover upper-tail
-#' probabilities from \eqn{10^{-5}} to \eqn{1 - 10^{-5}}; beyond this range the
-#' p-value is extrapolated and \code{nonparametric$extrapolated} is
+#' probabilities from \eqn{10^{-5}} to \eqn{1 - 10^{-5}}; beyond this range
+#' the p-value is extrapolated and \code{nonparametric$extrapolated} is
 #' \code{TRUE}.
 #'
 #' With \code{n_imputations > 1} the tests are repeated on each completed data
@@ -128,12 +133,12 @@
 #' These results are exploratory and are not pooled.
 #'
 #' Both tests treat the cases within a pattern as approximately independent,
-#' which Jamshidian and Jalal (2010) and Jamshidian, Jalal and Jansen (2014)
+#' which Jamshidian and Jalal (2010) and Jamshidian, Jalal, and Jansen (2014)
 #' found adequate for patterns with at least four cases. Known groups with
 #' different covariance matrices can cause rejection even under MCAR;
 #' conversely, supplying complete data through \code{imputed_data} with each
 #' group given its own artificial pattern tests covariance homogeneity across
-#' the groups (Jamshidian, Jalal and Jansen, 2014, Example 5).
+#' the groups (Jamshidian, Jalal, and Jansen, 2014, Example 5).
 #'
 #' The procedure ignores the marginal regression model and is a screening
 #' diagnostic: failure to reject does not establish MCAR. For longitudinal

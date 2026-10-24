@@ -7,7 +7,7 @@
 \format{
 A data frame with 444 rows and 8 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{visit}{integer follow-up visit identifier.}
   \item{status}{binary indicator of respiratory status, 0 = poor and
     1 = good.}
@@ -30,11 +30,11 @@ respiratory
 Data from a randomized clinical trial on respiratory illness.
 }
 \details{
-One hundred eleven subjects from two clinical centers were enrolled in a
-randomized clinical trial, yielding 444 observations (four follow-up
-visits per subject). Subjects were randomly assigned to treatment groups.
-Baseline examinations were conducted before treatment began. After
-treatment, subjects were examined at four scheduled follow-up visits.
+One hundred eleven participants from two clinical centers were enrolled in a
+randomized clinical trial, yielding 444 observations (four follow-up visits
+per cluster). Participants were randomly assigned to treatment groups.
+Baseline examinations were conducted before treatment began. After treatment,
+participants were examined at four scheduled follow-up visits.
 }
 \examples{
 data("respiratory", package = "geer")

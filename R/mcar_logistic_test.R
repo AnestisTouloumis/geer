@@ -3,14 +3,16 @@
 #'
 #' @description
 #' Tests whether the missingness of a longitudinal response depends on the
-#' previous response or on observed covariates, using a logistic regression in
-#' the spirit of Ridout (1991) and Fitzmaurice, Heath and Clifford (1996) fitted
-#' by generalized estimating equations. MCAR is defined as in Rubin (1976).
+#' previous response or on observed covariates, using a logistic regression
+#' in the spirit of Ridout (1991) and Fitzmaurice, Heath, and Clifford (1996)
+#' fitted by generalized estimating equations. MCAR is defined as in Rubin
+#' (1976).
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param data optional data frame containing the data used to fit
-#'   \code{object}. Used only when \code{object} is a fitted model object and
-#'   the data cannot be recovered from it. Defaults to \code{NULL}.
+#'   \code{object}. Defaults to \code{NULL}, which uses the data stored
+#'   in \code{object}. When supplied, \code{data} takes precedence over
+#'   the stored data.
 #' @param formula optional one-sided formula of fully observed covariates of
 #'   missingness, for example \code{~ treatment + age}. The previous response is
 #'   added automatically and must not be included. Columns aliased with the

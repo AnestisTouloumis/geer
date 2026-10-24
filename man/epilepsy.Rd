@@ -7,7 +7,7 @@
 \format{
 A data frame with 236 rows and 6 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{visit}{integer identifier of the two-week interval.}
   \item{seizures}{integer count of epileptic seizures.}
   \item{treatment}{factor with levels \code{placebo} and \code{progabide}.}
@@ -28,12 +28,12 @@ Data from a randomized clinical trial on the efficacy of progabide in
 treating partial seizures.
 }
 \details{
-Fifty-nine subjects with partial seizures were enrolled in a randomized
-clinical trial, yielding 236 observations (four visits per subject). Subjects
-were assigned to receive either progabide or placebo. Seizure counts were
-recorded during the 8 weeks before treatment (baseline). After treatment,
-seizure counts were assessed at four 2-week clinic visits. Carey and Wang
-(2011) use these data to compare working covariance structures.
+Fifty-nine participants with partial seizures were enrolled in a randomized
+clinical trial, yielding 236 observations (four visits per cluster).
+Participants were assigned to receive either progabide or placebo. Seizure
+counts were recorded during the 8 weeks before treatment (baseline). After
+treatment, seizure counts were assessed at four 2-week clinic visits. Carey
+and Wang (2011) use these data to compare working covariance structures.
 }
 \examples{
 data("epilepsy", package = "geer")

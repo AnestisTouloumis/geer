@@ -90,7 +90,7 @@ the dependence of \eqn{V_i} on the means, which for
 measures are derived from the ordinary generalized estimating equations,
 so they are available only for fits with \code{method = "gee"}.
 
-\pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023) reports
+\pkg{glmtoolbox} (Vanegas, Rondon, and Paula, 2023) reports
 \eqn{\ell^\top \Delta^\top S^{-1} \Delta \ell}{l' Delta' S^(-1) Delta l}
 without the factor 2 and the absolute value, and leaves the dispersion out
 of \eqn{V_i}, so that its total local influence for the weight

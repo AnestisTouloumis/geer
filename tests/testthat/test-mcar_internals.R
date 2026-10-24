@@ -173,15 +173,18 @@ test_that("extract_mcar_matrix numbers occasions when repeated is absent", {
   expect_false(anyNA(out))
 })
 
-test_that("extract_mcar_matrix marks absent occasions as missing", {
+test_that("extract_mcar_matrix uses supplied data before stored data", {
   fit <- mcar_fit()
   incomplete <- test_data$epilepsy[-c(2, 3, 10), ]
+  incomplete$seizures[1L] <- incomplete$seizures[1L] + 1
 
   out <- extract_mcar_matrix(fit, data = incomplete)
 
   expect_identical(sum(is.na(out)), 3L)
   expect_true(is.na(out[1L, 2L]))
   expect_true(is.na(out[1L, 3L]))
+  expect_identical(out[1L, 1L], as.numeric(incomplete$seizures[1L]))
+  expect_identical(fit$data, test_data$epilepsy)
 })
 
 test_that("extract_mcar_matrix works when the formula has no environment", {

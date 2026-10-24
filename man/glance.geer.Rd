@@ -32,7 +32,7 @@ A one-row data frame, a tibble if \pkg{tibble} is installed, with columns:
 }
 \description{
 Summarizes a fitted \code{geer} object in a one-row data frame, following
-the conventions of \pkg{broom} (Robinson, Hayes and Couch, 2024).
+the conventions of \pkg{broom} (Robinson, Hayes, and Couch, 2024).
 }
 \details{
 \code{QIC} and \code{CIC} use the robust covariance matrix, as in

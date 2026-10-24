@@ -47,7 +47,7 @@ A data frame, a tibble if \pkg{tibble} is installed, with columns:
 \description{
 Summarizes the regression coefficients of a fitted \code{geer} object in a
 data frame with one row per coefficient, following the conventions of
-\pkg{broom} (Robinson, Hayes and Couch, 2024).
+\pkg{broom} (Robinson, Hayes, and Couch, 2024).
 }
 \examples{
 data("epilepsy", package = "geer")

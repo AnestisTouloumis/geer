@@ -446,6 +446,25 @@ test_that("the quasi-likelihood clamp keeps boundary fits finite", {
     phi = 1
   )
   expect_true(is.finite(binomial_value))
+
+  fitted_means <- c(eps / 10L, eps / 100L)
+  original_means <- fitted_means
+  bounded_values <- vapply(fitted_means, function(mu) {
+    compute_quasi_loglikelihood(
+      y = 0,
+      mu = mu,
+      weights = 1,
+      family_name = "binomial",
+      phi = 1
+    )
+  }, numeric(1))
+  expect_equal(
+    bounded_values,
+    rep(log1p(-eps), 2L),
+    tolerance = 1e-12
+  )
+  expect_true(all(bounded_values < log1p(-fitted_means)))
+  expect_identical(fitted_means, original_means)
 })
 
 test_that("criteria selects and orders the reported columns", {

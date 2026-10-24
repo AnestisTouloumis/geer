@@ -9,8 +9,10 @@
 #'   matrix or data frame with one row per independent unit and one column per
 #'   variable or repeated measurement. See Details.
 #' @param data optional data frame containing the data used to fit
-#'   \code{object}. Used only when \code{object} is a fitted model object and
-#'   the data cannot be recovered from it. Defaults to \code{NULL}.
+#'   \code{object}. Defaults to \code{NULL}, which uses the data stored
+#'   in \code{object}. When supplied, \code{data} takes precedence over
+#'   the stored data. It must not be supplied when \code{object} is a
+#'   matrix or data frame.
 #' @param maxiter positive integer giving the maximum number of iterations of
 #'   the EM algorithm used to estimate the multivariate normal mean and
 #'   covariance matrix. Defaults to \code{1000}.

@@ -74,6 +74,12 @@
 
 ## Bug fixes
 
+* Used scale-relative symmetry checks and general linear solves for the
+  nonsymmetric systems in cluster deletion diagnostics.
+
+* Corrected cluster error context in association estimation and pooled
+  covariance accumulation.
+
 * Rejected overflowing integer controls, incomplete family specifications,
   nonnumeric fixed dispersion, and non-finite marginaleffects inputs.
 
@@ -196,6 +202,15 @@
   responses, are now omitted from the risk set with a warning.
 
 ## Changes
+
+* Corrected the documented MCAR imputation policy and data precedence, and
+  clarified numerical limitations of the Plackett covariance and information
+  criteria. Updated cluster terminology, narrative citation punctuation, and
+  documentation section order. These documentation changes do not change
+  estimates, tests, or runtime behavior.
+
+* Shared cluster data construction between the correlation and odds-ratio
+  backends and normalized internal score vectors.
 
 * Centralized fitting choice matching with exact character names and retained
   strict NULL handling. Method factors are no longer coerced to character.

@@ -7,7 +7,7 @@
 \format{
 A data frame with 366 rows and 5 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{visit}{integer follow-up month identifier.}
   \item{score}{numeric Edinburgh Postnatal Depression Scale (EPDS) score.
     Higher scores indicate greater depression.}
@@ -28,7 +28,7 @@ in treating postnatal depression.
 \details{
 Sixty-one women with major depression were randomly assigned to either a
 placebo control group or an oestrogen patch group (Gregoire et al., 1996),
-yielding 366 observations (six monthly assessments per subject). Before
+yielding 366 observations (six monthly assessments per cluster). Before
 treatment, depressive symptoms were assessed using the Edinburgh Postnatal
 Depression Scale (EPDS). EPDS scores were then collected monthly for six
 months.

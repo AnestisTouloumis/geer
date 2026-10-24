@@ -134,7 +134,7 @@ test_that("distribution-free imputation stops with too few complete cases", {
   x[17:24, 2:3] <- NA_real_
 
   expect_error(
-    mcar_homoscedasticity_test(x, method = "nonparametric", seed = 10L),
+    mcar_homoscedasticity_test(x, seed = 10L),
     paste0(
       "mcar_homoscedasticity_test failed: distribution-free imputation ",
       "requires at least 10 complete cases, but only 8 are available; use ",

@@ -7,7 +7,7 @@
 \format{
 A data frame with 218 rows and 8 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{time}{integer follow-up month identifier.}
   \item{score}{numeric plaque score.}
   \item{treatment}{factor indicating the rinse group, with levels
@@ -34,13 +34,13 @@ reducing dental plaque.
 One hundred nine adults aged 18--55 with pre-existing dental plaque but
 without advanced periodontal disease were enrolled in a randomized,
 double-blind clinical trial, yielding 218 follow-up observations (up to two
-follow-up assessments per subject). Subjects were assigned to one
-of two novel mouth rinses (A or B) or to a control mouth rinse. Eligibility
-required at least 20 sound natural teeth and a mean plaque index of 2.0 or
-greater. Plaque was assessed at baseline, 3 months, and 6 months using the
-Turesky modification of the Quigley-Hein index. Four subjects had missing
-plaque scores. The trial aimed to evaluate the effectiveness of the three
-rinses in inhibiting dental plaque.
+follow-up assessments per cluster). Participants were assigned to one of two
+novel mouth rinses (A or B) or to a control mouth rinse. Eligibility required
+at least 20 sound natural teeth and a mean plaque index of 2.0 or greater.
+Plaque was assessed at baseline, 3 months, and 6 months using the Turesky
+modification of the Quigley-Hein index. Four participants had missing plaque
+scores. The trial aimed to evaluate the effectiveness of the three rinses in
+inhibiting dental plaque.
 }
 \examples{
 data("rinse", package = "geer")

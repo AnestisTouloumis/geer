@@ -7,7 +7,7 @@
 \format{
 A data frame with 134 rows and 4 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{period}{integer period identifier.}
   \item{ecg}{binary indicator of ECG status, 0 = abnormal and 1 = normal.}
   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
@@ -25,11 +25,11 @@ Data from a randomized two-period crossover trial on cerebrovascular
 deficiency.
 }
 \details{
-Sixty-seven subjects were enrolled in a two-period crossover trial, yielding
-134 observations (two per subject). Subjects were randomly assigned to
-receive either placebo followed by active treatment, or active treatment
-followed by placebo. ECG status was classified as normal or abnormal at each
-period.
+Sixty-seven participants were enrolled in a two-period crossover trial,
+yielding 134 observations (two per cluster). Participants were randomly
+assigned to receive either placebo followed by active treatment, or active
+treatment followed by placebo. ECG status was classified as normal or
+abnormal at each period.
 }
 \examples{
 data("cerebrovascular", package = "geer")

@@ -8,18 +8,18 @@
 #' @docType data
 #' @format A data frame with 134 rows and 4 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{period}{integer period identifier.}
 #'   \item{ecg}{binary indicator of ECG status, 0 = abnormal and 1 = normal.}
 #'   \item{treatment}{factor with levels \code{placebo} and \code{active}.}
 #' }
 #'
 #' @details
-#' Sixty-seven subjects were enrolled in a two-period crossover trial, yielding
-#' 134 observations (two per subject). Subjects were randomly assigned to
-#' receive either placebo followed by active treatment, or active treatment
-#' followed by placebo. ECG status was classified as normal or abnormal at each
-#' period.
+#' Sixty-seven participants were enrolled in a two-period crossover trial,
+#' yielding 134 observations (two per cluster). Participants were randomly
+#' assigned to receive either placebo followed by active treatment, or active
+#' treatment followed by placebo. ECG status was classified as normal or
+#' abnormal at each period.
 #'
 #' @source
 #' Jones, B. and Kenward, M.G. (1989) \emph{Design and Analysis of Cross-over
@@ -41,7 +41,7 @@
 #' @docType data
 #' @format A data frame with 246 rows and 6 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{time}{integer time identifier.}
 #'   \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
 #'     1 = low pain.}
@@ -51,12 +51,12 @@
 #' }
 #'
 #' @details
-#' Forty-one subjects were enrolled in a randomized clinical trial of shoulder
-#' pain after laparoscopic cholecystectomy (Jorgensen et al., 1995), yielding
-#' 246 observations (six per subject). Subjects were assigned to either the
-#' active group (with abdominal suction) or the placebo group (without abdominal
-#' suction). Shoulder pain was assessed on six occasions: morning and afternoon
-#' on each of the first three postoperative days.
+#' Forty-one participants were enrolled in a randomized clinical trial of
+#' shoulder pain after laparoscopic cholecystectomy (Jorgensen et al., 1995),
+#' yielding 246 observations (six per cluster). Participants were assigned to
+#' either the active group (with abdominal suction) or the placebo group
+#' (without abdominal suction). Shoulder pain was assessed on six occasions:
+#' morning and afternoon on each of the first three postoperative days.
 #'
 #' @source
 #' Lumley, T. (1996) Generalized estimating equations for ordinal data: a note
@@ -84,7 +84,7 @@
 #' @docType data
 #' @format A data frame with 366 rows and 5 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{visit}{integer follow-up month identifier.}
 #'   \item{score}{numeric Edinburgh Postnatal Depression Scale (EPDS) score.
 #'     Higher scores indicate greater depression.}
@@ -95,7 +95,7 @@
 #' @details
 #' Sixty-one women with major depression were randomly assigned to either a
 #' placebo control group or an oestrogen patch group (Gregoire et al., 1996),
-#' yielding 366 observations (six monthly assessments per subject). Before
+#' yielding 366 observations (six monthly assessments per cluster). Before
 #' treatment, depressive symptoms were assessed using the Edinburgh Postnatal
 #' Depression Scale (EPDS). EPDS scores were then collected monthly for six
 #' months.
@@ -124,7 +124,7 @@
 #' @docType data
 #' @format A data frame with 236 rows and 6 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{visit}{integer identifier of the two-week interval.}
 #'   \item{seizures}{integer count of epileptic seizures.}
 #'   \item{treatment}{factor with levels \code{placebo} and \code{progabide}.}
@@ -134,12 +134,12 @@
 #' }
 #'
 #' @details
-#' Fifty-nine subjects with partial seizures were enrolled in a randomized
-#' clinical trial, yielding 236 observations (four visits per subject). Subjects
-#' were assigned to receive either progabide or placebo. Seizure counts were
-#' recorded during the 8 weeks before treatment (baseline). After treatment,
-#' seizure counts were assessed at four 2-week clinic visits. Carey and Wang
-#' (2011) use these data to compare working covariance structures.
+#' Fifty-nine participants with partial seizures were enrolled in a randomized
+#' clinical trial, yielding 236 observations (four visits per cluster).
+#' Participants were assigned to receive either progabide or placebo. Seizure
+#' counts were recorded during the 8 weeks before treatment (baseline). After
+#' treatment, seizure counts were assessed at four 2-week clinic visits. Carey
+#' and Wang (2011) use these data to compare working covariance structures.
 #'
 #' @source
 #' Thall, P.F. and Vail, S.C. (1990) Some covariance models for longitudinal
@@ -166,7 +166,7 @@
 #' @docType data
 #' @format A data frame with 60 rows and 4 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{period}{factor period identifier with levels \code{pre} and
 #'     \code{post}.}
 #'   \item{bacilli}{integer count of leprosy bacilli at six body sites.}
@@ -175,8 +175,8 @@
 #' }
 #'
 #' @details
-#' Thirty subjects in the Philippines were enrolled in a randomized clinical
-#' trial, yielding 60 observations (two periods per subject). Subjects were
+#' Thirty participants in the Philippines were enrolled in a randomized clinical
+#' trial, yielding 60 observations (two periods per cluster). Participants were
 #' assigned to receive treatment A, B, or C (placebo). Before treatment, the
 #' number of leprosy bacilli at six body sites was recorded. After treatment,
 #' bacilli counts were recorded again. The trial aimed to assess whether
@@ -201,7 +201,7 @@
 #' @docType data
 #' @format A data frame with 444 rows and 8 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{visit}{integer follow-up visit identifier.}
 #'   \item{status}{binary indicator of respiratory status, 0 = poor and
 #'     1 = good.}
@@ -214,11 +214,11 @@
 #' }
 #'
 #' @details
-#' One hundred eleven subjects from two clinical centers were enrolled in a
-#' randomized clinical trial, yielding 444 observations (four follow-up
-#' visits per subject). Subjects were randomly assigned to treatment groups.
-#' Baseline examinations were conducted before treatment began. After
-#' treatment, subjects were examined at four scheduled follow-up visits.
+#' One hundred eleven participants from two clinical centers were enrolled in a
+#' randomized clinical trial, yielding 444 observations (four follow-up visits
+#' per cluster). Participants were randomly assigned to treatment groups.
+#' Baseline examinations were conducted before treatment began. After treatment,
+#' participants were examined at four scheduled follow-up visits.
 #'
 #' @source
 #' Stokes, M.E., Davis, C.S. and Koch, G.G. (1995) \emph{Categorical Data
@@ -240,7 +240,7 @@
 #' @docType data
 #' @format A data frame with 218 rows and 8 columns:
 #' \describe{
-#'   \item{id}{integer subject identifier.}
+#'   \item{id}{integer cluster identifier.}
 #'   \item{time}{integer follow-up month identifier.}
 #'   \item{score}{numeric plaque score.}
 #'   \item{treatment}{factor indicating the rinse group, with levels
@@ -255,13 +255,13 @@
 #' One hundred nine adults aged 18--55 with pre-existing dental plaque but
 #' without advanced periodontal disease were enrolled in a randomized,
 #' double-blind clinical trial, yielding 218 follow-up observations (up to two
-#' follow-up assessments per subject). Subjects were assigned to one
-#' of two novel mouth rinses (A or B) or to a control mouth rinse. Eligibility
-#' required at least 20 sound natural teeth and a mean plaque index of 2.0 or
-#' greater. Plaque was assessed at baseline, 3 months, and 6 months using the
-#' Turesky modification of the Quigley-Hein index. Four subjects had missing
-#' plaque scores. The trial aimed to evaluate the effectiveness of the three
-#' rinses in inhibiting dental plaque.
+#' follow-up assessments per cluster). Participants were assigned to one of two
+#' novel mouth rinses (A or B) or to a control mouth rinse. Eligibility required
+#' at least 20 sound natural teeth and a mean plaque index of 2.0 or greater.
+#' Plaque was assessed at baseline, 3 months, and 6 months using the Turesky
+#' modification of the Quigley-Hein index. Four participants had missing plaque
+#' scores. The trial aimed to evaluate the effectiveness of the three rinses in
+#' inhibiting dental plaque.
 #'
 #' @source
 #' Hadgu, A. and Koch, G. (1999) Application of generalized estimating

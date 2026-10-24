@@ -407,7 +407,7 @@ compute_mahalanobis_residuals <- function(object) {
 #' r^D_{ij} = \mathrm{sign}(y_{ij} - \hat\mu_{ij})
 #' \sqrt{d_{ij}/\hat\phi},}{r^P_ij = (y_ij - mu_ij)/sqrt(phi V(mu_ij)/w_ij),   r^D_ij = sign(y_ij - mu_ij) sqrt(d_ij/phi),}
 #' where \eqn{d_{ij}} is the weighted deviance contribution of the family, as
-#' in \pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023). The Mahalanobis
+#' in \pkg{glmtoolbox} (Vanegas, Rondon, and Paula, 2023). The Mahalanobis
 #' residual of cluster \eqn{i} is
 #' \deqn{r^M_i = \frac{1}{n_i}(y_i - \hat\mu_i)^\top \hat V_i^{-1}
 #' (y_i - \hat\mu_i),}{r^M_i = (1/n_i)(y_i - mu_i)' V_i^(-1) (y_i - mu_i),}

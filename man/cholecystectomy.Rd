@@ -7,7 +7,7 @@
 \format{
 A data frame with 246 rows and 6 columns:
 \describe{
-  \item{id}{integer subject identifier.}
+  \item{id}{integer cluster identifier.}
   \item{time}{integer time identifier.}
   \item{pain}{binary indicator of shoulder pain status, 0 = high pain and
     1 = low pain.}
@@ -28,12 +28,12 @@ Data from a randomized clinical trial on shoulder pain after laparoscopic
 cholecystectomy.
 }
 \details{
-Forty-one subjects were enrolled in a randomized clinical trial of shoulder
-pain after laparoscopic cholecystectomy (Jorgensen et al., 1995), yielding
-246 observations (six per subject). Subjects were assigned to either the
-active group (with abdominal suction) or the placebo group (without abdominal
-suction). Shoulder pain was assessed on six occasions: morning and afternoon
-on each of the first three postoperative days.
+Forty-one participants were enrolled in a randomized clinical trial of
+shoulder pain after laparoscopic cholecystectomy (Jorgensen et al., 1995),
+yielding 246 observations (six per cluster). Participants were assigned to
+either the active group (with abdominal suction) or the placebo group
+(without abdominal suction). Shoulder pain was assessed on six occasions:
+morning and afternoon on each of the first three postoperative days.
 }
 \examples{
 data("cholecystectomy", package = "geer")

@@ -22,8 +22,8 @@
 #' The criteria are those of \code{\link{geecriteria}} that are intended for
 #' comparing mean models: \code{QIC} and \code{QICu} (Pan, 2001), \code{QICC}
 #' (Hardin and Hilbe, 2013), and \code{AGPC} and \code{SGPC} (Carey and Wang,
-#' 2011; Fu, Hao and Wang, 2018), as used for variable selection by
-#' \pkg{glmtoolbox} (Vanegas, Rondon and Paula, 2023). The criteria that
+#' 2011; Fu, Hao, and Wang, 2018), as used for variable selection by
+#' \pkg{glmtoolbox} (Vanegas, Rondon, and Paula, 2023). The criteria that
 #' \code{\link{geecriteria}} provides for selecting the working association
 #' structure, such as \code{CIC}, are not accepted.
 #'

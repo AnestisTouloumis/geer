@@ -30,7 +30,7 @@
 #' The covariance estimator is selected by \code{cov_type}:
 #' \describe{
 #'   \item{\code{"bias-corrected"}}{the bias-corrected sandwich estimator of
-#'     Morel, Bokossa and Neerchal (2003).}
+#'     Morel, Bokossa, and Neerchal (2003).}
 #'   \item{\code{"robust"}}{the sandwich estimator of Liang and Zeger (1986),
 #'     \eqn{\Omega^{-1} M \Omega^{-1}}{Omega^-1 M Omega^-1} with
 #'     \eqn{M = \sum_i U_i U_i^\top}{M = sum_i U_i U_i'}.}
@@ -54,7 +54,7 @@
 #'     \eqn{\{1 - \min(0.75, Q_{jj})\}^{-1/2}}{(1 - min(0.75, Q_jj))^(-1/2)}
 #'     and \eqn{Q = D_i^\top V_i^{-1} D_i \Omega^{-1}}{Q = D_i' V_i^-1 D_i
 #'     Omega^-1}.}
-#'   \item{\code{"fan-zhang-zhang"}}{Fan, Zhang and Zhang (2013): the robust
+#'   \item{\code{"fan-zhang-zhang"}}{Fan, Zhang, and Zhang (2013): the robust
 #'     estimator with \eqn{e_i e_i^\top}{e_i e_i'} replaced by
 #'     \eqn{e_i e_i^\top - D_i \Omega^{-1} (\sum_{j \neq i} U_j U_j^\top)
 #'     \Omega^{-1} D_i^\top}{e_i e_i' - D_i Omega^-1 (sum_(j != i) U_j U_j')
@@ -66,7 +66,7 @@
 #'     e_i^\top}{e_i e_i'} is replaced by \eqn{A_i^{1/2} C A_i^{1/2}} with
 #'     \eqn{C = K^{-1} \sum_j A_j^{-1/2} e_j e_j^\top A_j^{-1/2}}{C = K^-1
 #'     sum_j A_j^(-1/2) e_j e_j' A_j^(-1/2)}.}
-#'   \item{\code{"gosho-sato-takeuchi"}}{Gosho, Sato and Takeuchi (2014): the
+#'   \item{\code{"gosho-sato-takeuchi"}}{Gosho, Sato, and Takeuchi (2014): the
 #'     Pan estimator multiplied by \eqn{K / (K - p)}.}
 #'   \item{\code{"wang-long"}}{Wang and Long (2011): the Pan estimator with
 #'     \eqn{e_j} replaced by \eqn{(I - H_j)^{-1} e_j}{(I - H_j)^-1 e_j} in
