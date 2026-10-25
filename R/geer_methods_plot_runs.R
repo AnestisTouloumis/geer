@@ -59,8 +59,9 @@
 #'   repeated = visit,
 #'   corstr = "exchangeable"
 #' )
-#' plot(runs_test(fit))
-#' plot(runs_test(fit, order_by = "lnage"))
+#' result <- runs_test(fit)
+#' plot(result)
+#' plot(result, cluster_breaks = FALSE)
 #'
 #' @export
 plot.geer_runs_test <- function(x,

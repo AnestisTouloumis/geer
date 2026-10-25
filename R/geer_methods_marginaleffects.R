@@ -49,8 +49,8 @@
 #'     repeated = period,
 #'     orstr = "exchangeable"
 #'   )
-#'   marginaleffects::avg_predictions(fit)
-#'   marginaleffects::avg_comparisons(fit, variables = "treatment")
+#'   print(marginaleffects::avg_predictions(fit))
+#'   print(marginaleffects::avg_comparisons(fit, variables = "treatment"))
 #' }
 #'
 #' @name marginaleffects-support

@@ -75,8 +75,8 @@ if (requireNamespace("emmeans", quietly = TRUE)) {
     repeated = period,
     orstr = "exchangeable"
   )
-  emmeans::emmeans(fit, ~ treatment)
-  emmeans::emmeans(fit, ~ treatment, type = "response")
+  print(emmeans::emmeans(fit, specs = ~ treatment))
+  print(emmeans::emmeans(fit, specs = ~ treatment, type = "response"))
 }
 
 }

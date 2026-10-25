@@ -203,6 +203,9 @@
 
 ## Changes
 
+* Integration examples now print both results. Examples for test printers cover
+  both result classes, and the runs plot shows how to omit cluster boundaries.
+
 * Corrected the documented MCAR imputation policy and data precedence, and
   clarified numerical limitations of the Plackett covariance and information
   criteria. Updated cluster terminology, narrative citation punctuation, and

@@ -2,6 +2,13 @@ skip_if_no_emmeans <- function() {
   skip_if_not_installed("emmeans", minimum_version = "2.0.0")
 }
 
+test_that("the emmeans example displays both prediction scales", {
+  skip_if_no_emmeans()
+  output <- compute_example_output("emmeans-support")
+  expect_true(any(grepl("emmean", output, fixed = TRUE)))
+  expect_true(any(grepl("prob", output, fixed = TRUE)))
+})
+
 test_that("emmeans support methods are available for geer objects", {
   skip_if_no_emmeans()
   expect_true(

@@ -5,6 +5,12 @@ skip_if_no_marginaleffects <- function() {
   )
 }
 
+test_that("the marginaleffects example displays both result tables", {
+  skip_if_no_marginaleffects()
+  output <- compute_example_output("marginaleffects-support")
+  expect_equal(sum(grepl("Estimate", output, fixed = TRUE)), 2L)
+})
+
 test_that("marginaleffects low-level methods expose geer components", {
   skip_if_no_marginaleffects()
   expect_equal(insight::get_data(fit_geewa_pois_exch), fit_geewa_pois_exch$data)

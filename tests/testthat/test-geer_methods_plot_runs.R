@@ -96,6 +96,7 @@ test_that("plot guards cluster breaks and its input", {
   )
 
   natural <- runs_test(fit_geewa_pois_exch)
+  expect_identical(plot(natural, cluster_breaks = FALSE), plot(natural))
   expect_error(
     plot(natural, cluster_breaks = "yes"),
     "must be NULL, TRUE or FALSE"

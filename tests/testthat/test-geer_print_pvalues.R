@@ -1,3 +1,9 @@
+test_that("the test-printer example displays both result classes", {
+  output <- compute_example_output("print.geer_htest")
+  expect_true(any(grepl("Single term deletions", output, fixed = TRUE)))
+  expect_equal(sum(grepl("Wald-Wolfowitz runs test", output, fixed = TRUE)), 2L)
+})
+
 test_that("normalize_pvalue_labels relabels tiny p-values and keeps width", {
   lines <- c("a  1.0  <1e-04 ***", "b  2.0  < 1e-04 ***", "c  3.0  0.0123 *")
   out <- normalize_pvalue_labels(lines)

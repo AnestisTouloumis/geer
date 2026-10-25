@@ -36,7 +36,10 @@ fit <- geewa(
   formula = seizures ~ treatment, family = poisson(), data = epilepsy,
   id = id
 )
-print(drop1(fit), digits = 3)
+print(drop1(fit), digits = 3L)
+result <- runs_test(fit)
+print(result)
+print(result, digits = 3L)
 
 }
 \seealso{
