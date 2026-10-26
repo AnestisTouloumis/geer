@@ -135,25 +135,33 @@ test_that("the odds-ratio solver rejects responses outside [0, 1]", {
 })
 
 test_that("indefinite working covariances stop at both boundaries", {
-  expect_error(
-    get_covariance_matrices_or(
-      c(0, 1, 0), matrix(c(-1, 1, 1), 3L, 1L), rep(1, 3L), 1:3,
-      rep(1, 3L), "logit", rep(0.5, 3L), rep(0, 3L), c(50, 50, 0.02)
-    ),
-    paste0(
-      "get_covariance_matrices_or failed: cluster 1 (id = 1): ",
-      "get_v_matrix_or failed: the working covariance matrix is not ",
-      "positive definite"
-    ),
-    fixed = TRUE
+  expect_no_warning(
+    expect_error(
+      get_covariance_matrices_or(
+        c(0, 1, 0), matrix(c(-1, 1, 1), 3L, 1L), rep(1, 3L), 1:3,
+        rep(1, 3L), "logit", rep(0.5, 3L), rep(0, 3L), c(50, 50, 0.02)
+      ),
+      paste0(
+        "get_covariance_matrices_or failed: cluster 1 (id = 1): ",
+        "get_v_matrix_or failed: the working covariance matrix is not ",
+        "positive definite"
+      ),
+      fixed = TRUE
+    )
   )
-  expect_error(
-    geewa_binary(
-      formula = y ~ 1, data = data.frame(y = c(0, 1, 0), id = 1, visit = 1:3),
-      id = id, repeated = visit, orstr = "fixed", beta_start = 0,
-      alpha_vector = c(50, 50, 0.02)
-    ),
-    "^geewa_binary failed:.*working covariance matrix is not positive definite"
+  expect_no_warning(
+    expect_error(
+      geewa_binary(
+        formula = y ~ 1,
+        data = data.frame(y = c(0, 1, 0), id = 1, visit = 1:3),
+        id = id, repeated = visit, orstr = "fixed", beta_start = 0,
+        alpha_vector = c(50, 50, 0.02)
+      ),
+      paste0(
+        "^geewa_binary failed:.*working covariance matrix is not ",
+        "positive definite"
+      )
+    )
   )
 })
 

@@ -70,8 +70,8 @@ preserves this space.
 
 With several models, the fits must use the same data and each consecutive
 pair must be nested. Different responses or working association structures
-are errors. Every supplied model is retained for the requested comparison;
-incompatible models are not omitted. Other differences in fitting settings,
+are errors. The entire comparison fails; no table from a reduced set of
+models is returned. Other differences in fitting settings,
 such as the estimation method or handling of dispersion, are also errors.
 
 With one model, the sequential models are refitted to the rows used by the

@@ -259,10 +259,12 @@
   small-sample covariances remain available for such fits. All small-sample
   covariances stop when the naive covariance is not positive definite.
 
-* A working covariance or information matrix that is symmetric but not positive
-  definite, such as an odds-ratio working covariance built from incompatible
-  pairwise odds ratios, is still solved by LU decomposition, but now with a
-  warning.
+* Working covariance matrices must be finite and positive definite. An invalid
+  working covariance at initialization is an error, rather than a warning plus
+  an LU solution. A numerical failure after an accepted fitting state returns
+  the last accepted estimates with a warning and `converged = FALSE`. General
+  matrix calculations that do not require a covariance matrix retain LU
+  fallback, with a warning for symmetric non-positive-definite matrices.
 
 * Default `cov_type` of `geecriteria()` is now `"robust"`.
 
@@ -301,8 +303,10 @@
   not converge.
 
 * Nested comparisons stop when the fits differ in fitting function, method,
-  dispersion handling, or other settings. `anova()` with several models still
-  omits, with a warning, a model with a different association structure.
+  dispersion handling, or other settings. `anova()` with several models also
+  rejects different responses or working association structures. The entire
+  comparison fails instead of omitting incompatible models with a warning;
+  no table from a reduced set of models is returned.
 
 * `step_multiplier` in `geer_control()` may be any positive number, and values
   below 1 damp the step.

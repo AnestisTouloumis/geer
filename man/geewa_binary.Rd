@@ -161,11 +161,12 @@ responses modeled by marginalized pairwise odds ratios, using ordinary,
 bias-reduced, bias-corrected, or Jeffreys-type penalized GEE.
 }
 \details{
-Working covariance matrices must be positive definite. A non-positive-
-definite working covariance is an error at initialization. If it arises
-after an accepted fitting state, the existing numerical-failure warning
-and last-accepted-estimate policy applies. General matrix calculations
-that do not require a covariance matrix may still use LU decomposition.
+Working covariance matrices must be finite and positive definite.
+A non-positive-definite working covariance is an error at initialization;
+it is not replaced by an LU solution. If it arises after an accepted fitting
+state, the existing numerical-failure warning and last-accepted-estimate
+policy applies. General matrix calculations that do not require a covariance
+matrix may still use LU decomposition.
 
 Link, method, and association names must be exact character strings.
 \code{alpha_vector} is ignored without validation unless

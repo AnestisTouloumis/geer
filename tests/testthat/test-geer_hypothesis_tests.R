@@ -347,21 +347,27 @@ test_that("check_nested_models rejects models fitted to different data", {
 })
 
 test_that("anova rejects incompatible model lists", {
-  expect_error(
-    anova(fit_bin_trt, fit_bin_full, fit_bin_full_exch, test = "wald"),
-    "models must have the same working association structure",
-    fixed = TRUE
+  expect_no_warning(
+    expect_error(
+      anova(fit_bin_trt, fit_bin_full, fit_bin_full_exch, test = "wald"),
+      "models must have the same working association structure",
+      fixed = TRUE
+    )
   )
   fit_other_response <- update(fit_bin_trt, I(1 - ecg) ~ .)
-  expect_error(
-    anova(fit_bin_trt, fit_other_response, fit_bin_full, test = "wald"),
-    "models must have the same response; differing response(s): I(1 - ecg)",
-    fixed = TRUE
+  expect_no_warning(
+    expect_error(
+      anova(fit_bin_trt, fit_other_response, fit_bin_full, test = "wald"),
+      "models must have the same response; differing response(s): I(1 - ecg)",
+      fixed = TRUE
+    )
   )
-  expect_error(
-    anova(fit_bin_full, fit_bin_full_exch, test = "wald"),
-    "models must have the same working association structure",
-    fixed = TRUE
+  expect_no_warning(
+    expect_error(
+      anova(fit_bin_full, fit_bin_full_exch, test = "wald"),
+      "models must have the same working association structure",
+      fixed = TRUE
+    )
   )
   fit_subset <- update(fit_bin_full, subset = as.numeric(id) > 10)
   expect_error(
