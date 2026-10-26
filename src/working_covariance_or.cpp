@@ -56,13 +56,13 @@ PlackettPair compute_plackett_pair(const double row_prob,
                                   const double col_prob,
                                   const double odds_ratio) {
   if (!(R_FINITE(row_prob) && row_prob >= 0.0 && row_prob <= 1.0)) {
-    Rcpp::stop("'row_prob' must lie between 0 and 1, inclusive");
+    signal_input_error("'row_prob' must lie between 0 and 1, inclusive");
   }
   if (!(R_FINITE(col_prob) && col_prob >= 0.0 && col_prob <= 1.0)) {
-    Rcpp::stop("'col_prob' must lie between 0 and 1, inclusive");
+    signal_input_error("'col_prob' must lie between 0 and 1, inclusive");
   }
   if (!(R_FINITE(odds_ratio) && odds_ratio > 0.0)) {
-    Rcpp::stop("'odds_ratio' must be a positive finite number");
+    signal_input_error("'odds_ratio' must be a positive finite number");
   }
   const bool complemented = odds_ratio < 1.0;
   const double reciprocal = complemented ? odds_ratio : 1.0 / odds_ratio;
@@ -142,6 +142,7 @@ arma::mat get_v_matrix_or(const arma::vec& mu_vector,
   }
   const arma::vec weights_sq_inv_vector = 1.0 / arma::sqrt(weights_vector);
   result %= (weights_sq_inv_vector * weights_sq_inv_vector.t());
+  check_working_covariance(result, "get_v_matrix_or");
   return result;
 }
 //==============================================================================

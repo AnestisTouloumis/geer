@@ -56,7 +56,9 @@ arma::mat get_correlation_matrix_mdependent(const arma::vec& alpha_vector,
   const arma::uword k = alpha_vector.n_elem;
 
   if (k + 1 > dimension) {
-    Rcpp::stop("get_correlation_matrix_mdependent: 'alpha_vector' is too long");
+    signal_input_error(
+      "'alpha_vector' must have at most %d elements for the m-dependent "
+      "correlation structure", static_cast<int>(dimension - 1));
   }
 
   arma::vec toeplitz_vector(dimension, arma::fill::zeros);
@@ -73,7 +75,9 @@ arma::mat get_correlation_matrix_mdependent(const arma::vec& alpha_vector,
 arma::mat get_correlation_matrix_toeplitz(const arma::vec& alpha_vector,
                                const arma::uword dimension) {
   if (!alpha_vector.is_empty() && alpha_vector.n_elem >= dimension) {
-    Rcpp::stop("get_correlation_matrix_toeplitz: 'alpha_vector' is too long");
+    signal_input_error(
+      "'alpha_vector' must have at most %d elements for the Toeplitz "
+      "correlation structure", static_cast<int>(dimension - 1));
   }
   arma::vec toeplitz_vector(dimension, arma::fill::zeros);
   toeplitz_vector[0] = 1.0;
@@ -104,11 +108,11 @@ arma::mat get_correlation_matrix_unstructured(const arma::vec& alpha_vector,
 void check_alpha_scalar(const char* correlation_structure,
                         const arma::vec& alpha_vector) {
   if (alpha_vector.n_elem < 1) {
-    Rcpp::stop("the %s correlation parameter must be supplied",
+    signal_input_error("the %s correlation parameter must be supplied",
                correlation_structure);
   }
   if (!R_FINITE(alpha_vector[0])) {
-    Rcpp::stop("the %s correlation parameter must be finite, not %.6g",
+    signal_input_error("the %s correlation parameter must be finite, not %.6g",
                correlation_structure, alpha_vector[0]);
   }
 }
@@ -128,7 +132,7 @@ arma::mat get_correlation_matrix_cc(const char* correlation_structure,
   if (std::strcmp(correlation_structure, "ar1") == 0) {
     check_alpha_scalar(correlation_structure, alpha_vector);
     if (alpha_vector[0] <= -1.0 || alpha_vector[0] >= 1.0) {
-      Rcpp::stop(
+      signal_input_error(
         "the ar1 correlation parameter must lie in (-1, 1), not %.6g",
         alpha_vector[0]
       );
@@ -139,8 +143,9 @@ arma::mat get_correlation_matrix_cc(const char* correlation_structure,
     check_alpha_scalar(correlation_structure, alpha_vector);
     const double lower = -1.0 / static_cast<double>(dimension - 1);
     if (alpha_vector[0] <= lower || alpha_vector[0] >= 1.0) {
-      Rcpp::stop(
-        "the exchangeable correlation parameter must lie in (%.6g, 1) for the largest cluster "
+      signal_input_error(
+        "the exchangeable correlation parameter must lie in "
+      "(%.6g, 1) for the largest cluster "
         "size of %d, not %.6g",
         lower,
         static_cast<int>(dimension),
@@ -151,11 +156,12 @@ arma::mat get_correlation_matrix_cc(const char* correlation_structure,
   }
   for (arma::uword i = 0; i < alpha_vector.n_elem; ++i) {
     if (!R_FINITE(alpha_vector[i])) {
-      Rcpp::stop("the %s correlation parameter alpha[%d] must be finite",
+      signal_input_error("the %s correlation parameter alpha[%d] must be "
+      "finite",
                  correlation_structure, static_cast<int>(i + 1));
     }
     if (alpha_vector[i] <= -1.0 || alpha_vector[i] >= 1.0) {
-      Rcpp::stop(
+      signal_input_error(
         "the %s correlation parameter alpha[%d] must lie in (-1, 1), not %.6g",
         correlation_structure,
         static_cast<int>(i + 1),
@@ -172,13 +178,16 @@ arma::mat get_correlation_matrix_cc(const char* correlation_structure,
              std::strcmp(correlation_structure, "fixed") == 0) {
     cor_mat = get_correlation_matrix_unstructured(alpha_vector, dimension);
   } else {
-    Rcpp::stop("unsupported correlation structure: %s",
+    signal_input_error("'correlation_structure' must be one of: "
+      "independence, exchangeable, ar1, m-dependent, "
+      "unstructured, toeplitz, fixed; received '%s'",
                correlation_structure);
   }
   arma::mat chol_result;
   if (!arma::chol(chol_result, cor_mat)) {
-    Rcpp::stop(
-      "the %s working correlation matrix is not positive definite; consider a simpler "
+    signal_input_error(
+      "the %s working correlation matrix is not positive "
+      "definite; consider a simpler "
       "correlation structure or fixing alpha",
       correlation_structure
     );
@@ -201,6 +210,7 @@ arma::mat get_v_matrix_cc(FamilyCode family_code,
   if (cluster_size == 1) {
     arma::mat result(1, 1);
     result(0, 0) = phi * sd_vector[0] * sd_vector[0];
+    check_working_covariance(result, "get_v_matrix_cc");
     return result;
   }
   arma::mat result;
@@ -214,6 +224,7 @@ arma::mat get_v_matrix_cc(FamilyCode family_code,
   result.each_col() %= sd_vector;
   result.each_row() %= sd_vector.t();
   result *= phi;
+  check_working_covariance(result, "get_v_matrix_cc");
   return result;
 }
 //==============================================================================

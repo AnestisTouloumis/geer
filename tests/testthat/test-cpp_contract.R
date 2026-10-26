@@ -87,10 +87,13 @@ test_that("non-finite response, offset and weights are errors at the C++ boundar
 })
 
 test_that("unknown method / structure / link / family names are errors", {
-  expect_error(solve_cc(method = "nope"), "unsupported method")
-  expect_error(solve_cc(correlation_structure = "nope"), "unsupported correlation structure")
-  expect_error(solve_cc(link = "nope"))
-  expect_error(solve_cc(family = "nope"))
+  expect_error(solve_cc(method = "nope"), "'method' must be one of")
+  expect_error(
+    solve_cc(correlation_structure = "nope"),
+    "'correlation_structure' must be one of"
+  )
+  expect_error(solve_cc(link = "nope"), "'link' must be one of")
+  expect_error(solve_cc(family = "nope"), "'family' must be one of")
 })
 
 test_that("negative iteration limits are rejected with an informative error", {
@@ -131,36 +134,27 @@ test_that("the odds-ratio solver rejects responses outside [0, 1]", {
   }
 })
 
-test_that("an indefinite working covariance warns once per call", {
-  withr::local_seed(1)
-  d <- data.frame(id = rep(1:60, each = 3), visit = rep(1:3, 60))
-  d$x <- rnorm(180)
-  d$y <- rbinom(180, 1, 0.5)
-  fit <- suppressWarnings(geewa_binary(
-    y ~ x,
-    data = d, id = id, repeated = visit, orstr = "fixed",
-    alpha_vector = c(50, 50, 0.02)
-  ))
-  messages <- character()
-  covariances <- withCallingHandlers(
+test_that("indefinite working covariances stop at both boundaries", {
+  expect_error(
     get_covariance_matrices_or(
-      fit$y, fit$x, fit$id, fit$repeated, fit$prior.weights, "logit",
-      fit$fitted.values, fit$linear.predictors, get_alpha_or(fit)
+      c(0, 1, 0), matrix(c(-1, 1, 1), 3L, 1L), rep(1, 3L), 1:3,
+      rep(1, 3L), "logit", rep(0.5, 3L), rep(0, 3L), c(50, 50, 0.02)
     ),
-    warning = function(w) {
-      messages <<- c(messages, conditionMessage(w))
-      invokeRestart("muffleWarning")
-    }
-  )
-  expect_identical(
-    messages,
     paste0(
-      "a symmetric matrix that is not positive definite was solved by LU ",
-      "decomposition; the working covariance or information matrix may be ",
-      "invalid"
-    )
+      "get_covariance_matrices_or failed: cluster 1 (id = 1): ",
+      "get_v_matrix_or failed: the working covariance matrix is not ",
+      "positive definite"
+    ),
+    fixed = TRUE
   )
-  expect_true(all(is.finite(covariances$robust_covariance)))
+  expect_error(
+    geewa_binary(
+      formula = y ~ 1, data = data.frame(y = c(0, 1, 0), id = 1, visit = 1:3),
+      id = id, repeated = visit, orstr = "fixed", beta_start = 0,
+      alpha_vector = c(50, 50, 0.02)
+    ),
+    "^geewa_binary failed:.*working covariance matrix is not positive definite"
+  )
 })
 
 

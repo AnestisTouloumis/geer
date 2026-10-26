@@ -21,7 +21,8 @@ struct InfluenceCluster {
 //============================ influence quantities ============================
 Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& clusters,
                                     const arma::uword params_no,
-                                    const arma::uword obs_no) {
+                                    const arma::uword obs_no,
+                                    const char* context) {
   const arma::uword clusters_no = clusters.size();
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
   arma::mat sensitivity_matrix(params_no, params_no, arma::fill::zeros);
@@ -34,24 +35,24 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
       v_inverse_matrices.push_back(
         solve_chol_or_lu_mat(cluster.data.v_matrix,
                              arma::eye(cluster_size, cluster_size),
-                             "get_influence_quantities"));
+                             context));
       information_matrix +=
         cluster.data.d_matrix.t() * v_inverse_matrices.back() * cluster.data.d_matrix;
       sensitivity_matrix += cluster.sensitivity_matrix;
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_influence_quantities", cluster_index,
+      rethrow_with_cluster_context(context, cluster_index,
                                    cluster.data.id_value, e);
     }
   }
-  symmetrize_if_close(information_matrix, "get_influence_quantities");
+  symmetrize_if_close(information_matrix, context);
   arma::mat naive_covariance = solve_chol_or_lu_mat(
     information_matrix, arma::eye(params_no, params_no),
-    "get_influence_quantities");
-  symmetrize_if_close(naive_covariance, "get_influence_quantities");
+    context);
+  symmetrize_if_close(naive_covariance, context);
   arma::mat naive_root;
   if (!arma::chol(naive_root, naive_covariance)) {
-    Rcpp::stop("get_influence_quantities: the naive covariance matrix is not "
-               "positive definite");
+    Rcpp::stop("%s failed: the naive covariance matrix is not positive "
+               "definite", context);
   }
 
   arma::vec hat_vector(obs_no);
@@ -106,7 +107,7 @@ Rcpp::List get_influence_quantities(const std::vector<InfluenceCluster>& cluster
       response_delta.rows(first_row, last_row) = response_block;
       first_row = last_row + 1;
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_influence_quantities", cluster_index,
+      rethrow_with_cluster_context(context, cluster_index,
                                    cluster.data.id_value, e);
     }
   }
@@ -195,7 +196,9 @@ Rcpp::List get_influence_quantities_cc(const arma::vec& y_vector,
                                    id_vector[cluster.first_row], e);
     }
   }
-  return get_influence_quantities(quantities, model_matrix.n_cols, y_vector.n_elem);
+  return get_influence_quantities(
+    quantities, model_matrix.n_cols, y_vector.n_elem,
+    "get_influence_quantities_cc");
 }
 //==============================================================================
 
@@ -269,6 +272,8 @@ Rcpp::List get_influence_quantities_or(const arma::vec& y_vector,
                                    id_vector[cluster.first_row], e);
     }
   }
-  return get_influence_quantities(quantities, model_matrix.n_cols, y_vector.n_elem);
+  return get_influence_quantities(
+    quantities, model_matrix.n_cols, y_vector.n_elem,
+    "get_influence_quantities_or");
 }
 //==============================================================================

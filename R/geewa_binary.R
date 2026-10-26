@@ -22,6 +22,12 @@
 #'   other structures. Defaults to \code{NULL}.
 #'
 #' @details
+#' Working covariance matrices must be positive definite. A non-positive-
+#' definite working covariance is an error at initialization. If it arises
+#' after an accepted fitting state, the existing numerical-failure warning
+#' and last-accepted-estimate policy applies. General matrix calculations
+#' that do not require a covariance matrix may still use LU decomposition.
+#'
 #' Link, method, and association names must be exact character strings.
 #' \code{alpha_vector} is ignored without validation unless
 #' \code{orstr = "fixed"}.
@@ -196,12 +202,15 @@ geewa_binary <- function(formula,
   alpha_independence <- rep.int(1, choose(max(repeated), 2))
   fit_pass <- function(beta, pass, previous) {
     iterations <- get_pass_iterations(pass, control)
-    fit_geesolver_or(
-      y, model_matrix, id, repeated, weights, link,
-      as.numeric(beta), offset,
-      iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
-      control$jeffreys_power, pass$method,
-      if (pass$independence) alpha_independence else alpha_vector
+    run_geer_solver(
+      fit_geesolver_or(
+        y, model_matrix, id, repeated, weights, link,
+        as.numeric(beta), offset,
+        iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
+        control$jeffreys_power, pass$method,
+        if (pass$independence) alpha_independence else alpha_vector
+      ),
+      "geewa_binary"
     )
   }
   geesolver_fit <- run_geer_estimation_passes(

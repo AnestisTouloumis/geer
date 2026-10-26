@@ -2,6 +2,7 @@
 #define GEER_LINK_CODES_H
 
 #include <RcppArmadillo.h>
+#include "utils.h"
 #include <string_view>
 
 enum class LinkCode {
@@ -18,7 +19,7 @@ enum class LinkCode {
 
 inline LinkCode parse_link(const char* link) {
   if (link == nullptr) {
-    Rcpp::stop("'link' must not be NULL");
+    signal_input_error("'link' must not be NULL");
   }
   const std::string_view lk(link);
   if (lk == "logit")    return LinkCode::logit;
@@ -30,7 +31,9 @@ inline LinkCode parse_link(const char* link) {
   if (lk == "sqrt")     return LinkCode::sqrt;
   if (lk == "1/mu^2")   return LinkCode::inverse_mu_squared;
   if (lk == "inverse")  return LinkCode::inverse;
-  Rcpp::stop("unsupported link: %s", link);
+  signal_input_error("'link' must be one of: logit, probit, cauchit, "
+      "cloglog, identity, log, sqrt, 1/mu^2, inverse; "
+      "received '%s'", link);
 }
 
 #endif

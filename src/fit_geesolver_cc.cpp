@@ -320,12 +320,14 @@ arma::vec update_beta_robust_cc(const arma::vec& y_vector,
       second_derivatives_matrix.rows(r * params_no, (r + 1) * params_no - 1);
     lambda_vector[r] =
       -(arma::trace(solve_chol_or_lu_mat(information_matrix, first_block,
-                                         "update_beta_robust_cc: naive information matrix")) +
+
+      "update_beta_robust_cc: naive information matrix")) +
         0.5 * arma::trace(robust_matrix * second_block));
   }
   return beta_vector +
          solve_chol_or_lu_vec(information_matrix, u_vector + lambda_vector,
-                              "update_beta_robust_cc: naive information matrix");
+
+      "update_beta_robust_cc: naive information matrix");
 }
 //==============================================================================
 
@@ -600,7 +602,8 @@ arma::vec update_beta_jeffreys_cc(const arma::vec& y_vector,
     jeffreys_power * (lambda_matrix.t() * naive_covariance_vectorized);
   return beta_vector +
          solve_chol_or_lu_vec(information_matrix, u_vector + lambda_vector,
-                              "update_beta_jeffreys_cc: naive information matrix");
+
+      "update_beta_jeffreys_cc: naive information matrix");
 }
 //==============================================================================
 
@@ -700,7 +703,7 @@ arma::vec update_beta_cc(const arma::vec& y_vector,
                                    phi,
                                    jeffreys_power);
   }
-  Rcpp::stop("update_beta_cc: unsupported method");
+  Rcpp::stop("update_beta_cc failed: invalid internal method code");
 }
 //==============================================================================
 
@@ -733,15 +736,20 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                             const int phi_fixed,
                             const int hold_nuisance) {
   reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, offset},
+                       model_matrix);
   if (maxiter < 0 || step_maxiter < 0) {
-    Rcpp::stop("'maxiter' and 'step_maxiter' must be nonnegative integers");
+    signal_input_error("'maxiter' and 'step_maxiter' must be nonnegative "
+      "integers");
   }
   if (!y_vector.is_finite() || !model_matrix.is_finite() || !offset.is_finite() ||
       !weights_vector.is_finite() || !beta_vector.is_finite()) {
-    Rcpp::stop("the response, model matrix, offset, weights and starting values must be finite");
+    signal_input_error("the response, model matrix, offset, weights and "
+      "starting values must be finite");
   }
   if (!R_FINITE(phi) || !(phi > 0.0)) {
-    Rcpp::stop("'phi' must be a positive finite number");
+    signal_input_error("'phi' must be a positive finite number");
   }
   const LinkCode link_code = parse_link(link);
   const FamilyCode family_code = parse_family(family);
@@ -755,14 +763,16 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
   arma::vec criterion_vector(maxiter, arma::fill::zeros);
   arma::vec eta_vector = model_matrix * beta_vector + offset;
   if (!is_valid_eta(link_code, eta_vector)) {
-    Rcpp::stop(
-      "the initial linear predictor is invalid; supply different 'beta_start' values"
+    signal_input_error(
+      "the initial linear predictor is invalid; supply "
+      "different 'beta_start' values"
     );
   }
   arma::vec mu_vector = inverse_link(link_code, eta_vector);
   if (!is_valid_mu(family_code, mu_vector)) {
-    Rcpp::stop(
-      "the initial fitted values are invalid; supply different 'beta_start' values"
+    signal_input_error(
+      "the initial fitted values are invalid; supply "
+      "different 'beta_start' values"
     );
   }
   arma::vec pearson_residuals_vector =
@@ -827,7 +837,8 @@ Rcpp::List fit_geesolver_cc(const arma::vec& y_vector,
                        jeffreys_power,
                        method) - beta_vector;
       if (!stepsize_vector.is_finite()) {
-        Rcpp::stop("the Newton step at the starting values contains non-finite values; supply "
+        Rcpp::stop("fit_geesolver_cc failed: the Newton step at the "
+      "starting values contains non-finite values; supply "
                    "different 'beta_start' values");
       }
     }

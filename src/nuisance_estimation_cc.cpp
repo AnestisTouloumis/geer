@@ -34,14 +34,17 @@ double get_phi_hat_cc(const arma::vec& pearson_residuals_vector,
   const double n = static_cast<double>(pearson_residuals_vector.n_elem);
   const double denominator = n - static_cast<double>(params_no);
   if (denominator <= 0.0) {
-    Rcpp::stop("the dispersion cannot be estimated: too few observations relative to the number "
+    Rcpp::stop("get_phi_hat_cc failed: the dispersion cannot be "
+      "estimated: too few observations relative to the "
+      "number "
                "of regression parameters");
   }
   const double result =
     arma::accu(arma::square(pearson_residuals_vector)) / denominator;
   if (!R_FINITE(result) || result <= 0.0) {
     Rcpp::stop(
-      "the dispersion estimate (%.6g) is not a usable positive value; the fitted means may "
+      "the dispersion estimate (%.6g) is not a usable "
+      "positive value; the fitted means may "
       "reproduce the data exactly",
       result
     );
@@ -86,7 +89,8 @@ double get_alpha_hat_exchangeable(const arma::vec& pearson_residuals_vector,
   const double denominator = (den - static_cast<double>(params_no)) * phi;
   if (denominator <= 0.0) {
     Rcpp::stop(
-      "the exchangeable correlation cannot be estimated: too few pairs of observations relative "
+      "the exchangeable correlation cannot be estimated: "
+      "too few pairs of observations relative "
       "to the number of regression parameters"
     );
   }
@@ -129,7 +133,8 @@ double get_alpha_hat_ar1(const arma::vec& pearson_residuals_vector,
   const double denominator_ar1 = (den - static_cast<double>(params_no)) * phi;
   if (denominator_ar1 <= 0.0) {
     Rcpp::stop(
-      "the AR(1) correlation cannot be estimated: too few pairs of consecutive observations "
+      "the AR(1) correlation cannot be estimated: too few "
+      "pairs of consecutive observations "
       "relative to the number of regression parameters"
     );
   }
@@ -183,7 +188,8 @@ arma::vec get_alpha_hat_unstructured(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_unstr = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_unstr <= 0.0)) {
     Rcpp::stop(
-      "the unstructured correlation cannot be estimated: some pairs of occasions have too few "
+      "the unstructured correlation cannot be estimated: "
+      "some pairs of occasions have too few "
       "observations relative to the number of regression parameters"
     );
   }
@@ -220,7 +226,9 @@ arma::vec get_alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
           const arma::uword index_k =
             static_cast<arma::uword>(repeated_vector_i[k]);
           if (index_k <= index_j) {
-            Rcpp::stop("'repeated' must be strictly increasing within each cluster");
+            signal_input_error(
+      "'repeated' must be strictly increasing within each "
+      "cluster");
           }
           const arma::uword diff_int = index_k - index_j;
 
@@ -239,7 +247,8 @@ arma::vec get_alpha_hat_mdependent(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_mdep = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_mdep <= 0.0)) {
     Rcpp::stop(
-      "the m-dependent correlation cannot be estimated: some lags have too few observations "
+      "the m-dependent correlation cannot be estimated: "
+      "some lags have too few observations "
       "relative to the number of regression parameters"
     );
   }
@@ -258,7 +267,8 @@ arma::vec get_alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
     static_cast<arma::uword>(arma::max(repeated_vector));
   if (time_max < 2) {
     Rcpp::stop(
-      "the Toeplitz correlation cannot be estimated: no cluster contains a pair of observations"
+      "the Toeplitz correlation cannot be estimated: no "
+      "cluster contains a pair of observations"
     );
   }
   arma::vec num(time_max - 1, arma::fill::zeros);
@@ -283,7 +293,9 @@ arma::vec get_alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
             static_cast<arma::uword>(repeated_vector_i[k]);
           const arma::uword lag = index_k - index_j;
           if (index_k <= index_j || lag > num.n_elem) {
-            Rcpp::stop("'repeated' must be strictly increasing within each cluster");
+            signal_input_error(
+      "'repeated' must be strictly increasing within each "
+      "cluster");
           }
           num[lag - 1] +=
             pearson_residuals_vector_i[j] * pearson_residuals_vector_i[k];
@@ -298,7 +310,8 @@ arma::vec get_alpha_hat_toeplitz(const arma::vec& pearson_residuals_vector,
   const arma::vec denominator_toep = (den - static_cast<double>(params_no)) * phi;
   if (arma::any(denominator_toep <= 0.0)) {
     Rcpp::stop(
-      "the Toeplitz correlation cannot be estimated: some lags have too few observations "
+      "the Toeplitz correlation cannot be estimated: some "
+      "lags have too few observations "
       "relative to the number of regression parameters"
     );
   }
@@ -354,12 +367,15 @@ arma::vec get_alpha_hat_cc(const char* correlation_structure,
                                 phi,
                                 params_no);
   } else if (std::strcmp(correlation_structure, "fixed") == 0) {
-    Rcpp::stop(
-      "get_alpha_hat_cc: 'alpha_fixed' must be 1 for the \"fixed\" correlation structure, so that "
+    signal_input_error(
+      "'alpha_fixed' must be 1 for the \"fixed\" correlation "
+      "structure, so that "
       "alpha is not re-estimated"
     );
   } else {
-    Rcpp::stop("unsupported correlation structure: %s",
+    signal_input_error("'correlation_structure' must be one of: "
+      "independence, exchangeable, ar1, m-dependent, "
+      "unstructured, toeplitz, fixed; received '%s'",
                correlation_structure);
   }
   return result;

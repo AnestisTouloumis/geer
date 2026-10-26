@@ -12,7 +12,7 @@ build_percent_labels <- function(probs, digits = 2, check = FALSE) {
     stop("'check' must be TRUE or FALSE", call. = FALSE)
   }
   if (check && any(probs < 0 | probs > 1)) {
-    warning("some probabilities are outside [0, 1]", call. = FALSE)
+    stop("'probs' must lie in [0, 1] when 'check = TRUE'", call. = FALSE)
   }
   formatted <- formatC(
     100 * probs,

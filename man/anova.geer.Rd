@@ -69,10 +69,10 @@ Rescaling or changing the basis of the shared columns is allowed when it
 preserves this space.
 
 With several models, the fits must use the same data and each consecutive
-pair must be nested. A model whose working association structure differs
-from that of the first model is omitted with a warning, and any other
-difference in the fitting settings, such as the estimation method or the
-handling of the dispersion, is an error.
+pair must be nested. Different responses or working association structures
+are errors. Every supplied model is retained for the requested comparison;
+incompatible models are not omitted. Other differences in fitting settings,
+such as the estimation method or handling of dispersion, are also errors.
 
 With one model, the sequential models are refitted to the rows used by the
 fit, as described in \code{\link{add1.geer}}.

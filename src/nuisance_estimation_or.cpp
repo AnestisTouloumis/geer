@@ -16,6 +16,8 @@ arma::vec get_marginalized_odds_ratios_or(const arma::vec& response_vector,
                                                  const double adding_constant,
                                                  const char* or_structure) {
   reset_lu_fallback_warning();
+  check_cluster_inputs(id_vector,
+                       {response_vector, repeated_vector, weights_vector});
   const auto clusters = clusters_from_sorted_id(id_vector);
   const arma::uword sample_size = clusters.size();
   const arma::uword cluster_size_max =

@@ -103,7 +103,7 @@ test_that("gosho-sato-takeuchi stops when clusters do not exceed coefficients", 
   expect_true(all(is.finite(vcov(fit, cov_type = "pan"))))
 })
 
-test_that("leverage-based covariances stop when a cluster has leverage 1", {
+test_that("leverage-based covariances identify clusters with singular I - H", {
   withr::local_seed(5)
   d <- data.frame(
     id = rep(sprintf("s%02d", 1:12), each = 4),
@@ -126,7 +126,7 @@ test_that("leverage-based covariances stop when a cluster has leverage 1", {
       sprintf(
         paste0(
           "vcov.geer failed: the %s covariance is undefined because I - H is ",
-          "singular for cluster(s) s01, whose leverage is 1"
+          "singular for cluster(s) s01"
         ),
         cov_type
       ),

@@ -97,3 +97,13 @@ test_that("check_geer_first_pass reports the solver failure reason", {
     "did not converge: singular matrix"
   )
 })
+
+
+test_that("solver boundaries retain public computation context", {
+  expect_error(
+    run_geer_solver(
+      stop("inner failed: numerical failure", call. = FALSE), "geewa"
+    ),
+    "geewa failed: numerical failure", fixed = TRUE
+  )
+})

@@ -69,21 +69,21 @@ test_that("nuisance estimation errors are informative when association is not es
   df$y <- rpois(30, 3)
   expect_error(
     geewa(y ~ x, data = df, id = id, repeated = visit, family = poisson(), corstr = "exchangeable"),
-    "cannot be estimated"
+    "^geewa failed:.*correlation cannot be estimated"
   )
   expect_error(
     geewa(y ~ x, data = df, id = id, repeated = visit, family = poisson(), corstr = "toeplitz"),
-    "Toeplitz correlation cannot be estimated"
+    "^geewa failed:.*Toeplitz correlation cannot be estimated"
   )
 })
 
-test_that("association reconstruction failures identify the original cluster", {
+test_that("association boundaries reject inconsistent observation inputs", {
   d <- test_data$cpp_context
   expect_error(
     get_marginalized_odds_ratios_or(
       d$y, d$id, d$repeated, rep(1, 6L), 0.5, "unstructured"
     ),
-    "get_marginalized_odds_ratios_or: cluster 3 (id = 99)", fixed = TRUE
+    "all observation-level inputs must have the same length", fixed = TRUE
   )
   expect_error(
     fit_geesolver_cc(
@@ -91,7 +91,7 @@ test_that("association reconstruction failures identify the original cluster", {
       "logit", "binomial", 0, rep(0, 4L), 0L, 1e-6, 0L, 1, 0.5,
       "gee", 0L, 0, 0L, "ar1", 1L, 1, 1L, 0L
     ),
-    "get_alpha_hat_ar1: cluster 3 (id = 99)", fixed = TRUE
+    "all observation-level inputs must have the same length", fixed = TRUE
   )
 })
 
@@ -107,4 +107,35 @@ test_that("sparse consecutive and occasion pairs reject zero denominators", {
       beta_start = c(0, 0)
     ), "correlation cannot be estimated")
   }
+})
+
+
+test_that("association-length diagnostics state the permitted size", {
+  for (structure in c("m-dependent", "toeplitz")) {
+    expect_error(
+      get_correlation_matrix_cc(structure, rep(0.1, 3L), 3L),
+      "'alpha_vector' must have at most 2 elements", fixed = TRUE
+    )
+  }
+})
+
+
+test_that("invalid repeated order keeps its input classification and cluster", {
+  error <- tryCatch(
+    fit_geesolver_cc(
+      seq_len(6L), matrix(1, 6L, 1L), rep(1:3, each = 2L),
+      rep(c(2L, 1L), 3L), rep(1, 6L), "identity", "gaussian", 0,
+      rep(0, 6L), 2L, 1e-6, 10L, 1, 0.5, "gee", 1L,
+      numeric(0), 0L, "m-dependent", 1L, 1, 1L, 0L
+    ),
+    error = identity
+  )
+  expect_identical(
+    conditionMessage(error),
+    paste0(
+      "'repeated' must be strictly increasing within each cluster; ",
+      "cluster 1 (id = 1)"
+    )
+  )
+  expect_null(conditionCall(error))
 })

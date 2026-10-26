@@ -14,7 +14,8 @@ namespace {
 Rcpp::List get_small_sample_covariances(
   const std::vector<ClusterData>& clusters,
   const arma::uword params_no,
-  const arma::uword repeated_max) {
+  const arma::uword repeated_max,
+  const char* context) {
   const arma::uword clusters_no = clusters.size();
   const double sample_size = static_cast<double>(clusters_no);
   arma::mat information_matrix(params_no, params_no, arma::fill::zeros);
@@ -37,20 +38,20 @@ Rcpp::List get_small_sample_covariances(
       meat_matrix += u_vector * u_vector.t();
       if (cluster.residuals.n_elem != repeated_max) complete_clusters = false;
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_small_sample_covariances",
+      rethrow_with_cluster_context(context,
                                    cluster_index, cluster.id_value, e);
     }
   }
-  symmetrize_if_close(information_matrix, "get_small_sample_covariances");
+  symmetrize_if_close(information_matrix, context);
   const arma::mat naive_covariance = solve_chol_or_lu_mat(
     information_matrix, arma::eye(params_no, params_no),
-    "get_small_sample_covariances");
+    context);
   arma::mat naive_root;
   const arma::mat naive_symmetric =
     0.5 * (naive_covariance + naive_covariance.t());
   if (!arma::chol(naive_root, naive_symmetric)) {
-    Rcpp::stop("get_small_sample_covariances: the naive covariance matrix is "
-               "not positive definite");
+    Rcpp::stop("%s failed: the naive covariance matrix is not positive "
+               "definite", context);
   }
   std::vector<double> singular_ids;
 
@@ -129,7 +130,7 @@ Rcpp::List get_small_sample_covariances(
         }
       }
     } catch (const std::exception& e) {
-      rethrow_with_cluster_context("get_small_sample_covariances", cluster_index,
+      rethrow_with_cluster_context(context, cluster_index,
                                    cluster.id_value, e);
     }
   }
@@ -156,7 +157,7 @@ Rcpp::List get_small_sample_covariances(
         meat_wb += scaled_matrix.t() * pooled_wb * scaled_matrix;
       } catch (const std::exception& e) {
         rethrow_with_cluster_context(
-          "get_small_sample_covariances", cluster_index,
+          context, cluster_index,
           clusters[cluster_index].id_value, e);
       }
     }
@@ -169,9 +170,9 @@ Rcpp::List get_small_sample_covariances(
     meat_wl = na_matrix;
     meat_wb = na_matrix;
   }
-  auto sandwich = [&naive_covariance](const arma::mat& meat) {
+  auto sandwich = [&naive_covariance, context](const arma::mat& meat) {
     arma::mat covariance = naive_covariance * meat * naive_covariance;
-    symmetrize_if_close(covariance, "get_small_sample_covariances");
+    symmetrize_if_close(covariance, context);
     return covariance;
   };
   const arma::mat kc_covariance = sandwich(meat_kc);
@@ -240,7 +241,9 @@ Rcpp::List get_small_sample_covariances_cc(const arma::vec& y_vector,
                                    id_vector[cluster.first_row], e);
     }
   }
-  return get_small_sample_covariances(quantities, model_matrix.n_cols, repeated_max);
+  return get_small_sample_covariances(
+    quantities, model_matrix.n_cols, repeated_max,
+    "get_small_sample_covariances_cc");
 }
 //==============================================================================
 
@@ -281,6 +284,8 @@ Rcpp::List get_small_sample_covariances_or(const arma::vec& y_vector,
                                    id_vector[cluster.first_row], e);
     }
   }
-  return get_small_sample_covariances(quantities, model_matrix.n_cols, repeated_max);
+  return get_small_sample_covariances(
+    quantities, model_matrix.n_cols, repeated_max,
+    "get_small_sample_covariances_or");
 }
 //==============================================================================

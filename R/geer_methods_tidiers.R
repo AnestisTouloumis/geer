@@ -74,13 +74,7 @@ tidy.geer <- function(x,
   if (!is.logical(conf.int) || length(conf.int) != 1L || is.na(conf.int)) {
     stop("'conf.int' must be TRUE or FALSE", call. = FALSE)
   }
-  if (!is.numeric(conf.level) || length(conf.level) != 1L ||
-      !is.finite(conf.level) || conf.level <= 0 || conf.level >= 1) {
-    stop(
-      "'conf.level' must be a number strictly between 0 and 1",
-      call. = FALSE
-    )
-  }
+  check_probability_open(conf.level, "conf.level")
   if (!is.logical(exponentiate) || length(exponentiate) != 1L ||
       is.na(exponentiate)) {
     stop("'exponentiate' must be TRUE or FALSE", call. = FALSE)

@@ -27,7 +27,7 @@ arma::vec get_estimating_equations_cc(const arma::vec& y_vector,
                        model_matrix);
 
   if (!R_FINITE(phi) || phi <= 0.0) {
-    Rcpp::stop("'phi' must be a positive finite number");
+    signal_input_error("'phi' must be a positive finite number");
   }
   const arma::uword params_no = model_matrix.n_cols;
   const arma::uword repeated_max =

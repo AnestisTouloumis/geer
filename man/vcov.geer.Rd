@@ -108,7 +108,8 @@ each repeated position once: otherwise they give an error. The
 Kauermann-Carroll, Mancl-DeRouen, Ford-Westgate, Fan-Zhang-Zhang,
 Wang-Long, and Westgate-Burchett estimators use
 \eqn{(I - H_i)^{-1}}{(I - H_i)^-1} and give an error that names the
-clusters with leverage 1, for which \eqn{I - H_i} is singular. All nine
+clusters for which \eqn{I - H_i} is singular. This does not require the
+cluster leverage \eqn{\mathrm{tr}(H_i)} to equal 1. All nine
 small-sample estimators give an error when the naive covariance is not
 positive definite.
 

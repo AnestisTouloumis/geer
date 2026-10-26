@@ -204,7 +204,13 @@ get_predict.geer <- function(model,
     estimate <- estimate$fit
   }
   if (!is.numeric(estimate) || length(estimate) != nrow(newdata)) {
-    stop("predict.geer() returned an invalid prediction vector", call. = FALSE)
+    stop(
+      paste0(
+        "get_predict.geer failed: predict.geer() must return a numeric ",
+        "vector with one value per prediction row"
+      ),
+      call. = FALSE
+    )
   }
 
   rowid <- if ("rowid" %in% names(newdata)) {

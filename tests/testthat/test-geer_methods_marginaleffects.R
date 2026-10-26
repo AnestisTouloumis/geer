@@ -218,3 +218,21 @@ test_that("marginaleffects adapters support recovery and coercion paths", {
   fit$data <- NULL
   expect_error(get_predict.geer(fit), "supply 'newdata' explicitly")
 })
+
+
+test_that("prediction adapters reject invalid delegated results with context", {
+  fit <- fit_geewa_pois_exch
+  class(fit) <- c("invalid_prediction", class(fit))
+  method <- function(object, ...) "invalid"
+  registerS3method(
+    "predict", "invalid_prediction", method, asNamespace("stats")
+  )
+  on.exit(rm(
+    "predict.invalid_prediction",
+    envir = get(".__S3MethodsTable__.", envir = asNamespace("stats"))
+  ))
+  expect_error(
+    get_predict.geer(fit, newdata = test_data$epilepsy[1:2, ]),
+    "^get_predict.geer failed: predict.geer"
+  )
+})

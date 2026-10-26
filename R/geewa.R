@@ -77,6 +77,12 @@
 #'   \code{...} together with \code{control} is an error.
 #'
 #' @details
+#' Working covariance matrices must be positive definite. A non-positive-
+#' definite working covariance is an error at initialization. If it arises
+#' after an accepted fitting state, the existing numerical-failure warning
+#' and last-accepted-estimate policy applies. General matrix calculations
+#' that do not require a covariance matrix may still use LU decomposition.
+#'
 #' Method, family, link, and association names must be exact character strings.
 #' Family objects must contain the standard callable components and an
 #' initialization expression. When dispersion is fixed, \code{phi_value} must be
@@ -428,13 +434,16 @@ geewa <- function(formula,
       phi_pass <- phi_value
       phi_fixed_pass <- phi_fixed
     }
-    fit_geesolver_cc(
-      y, model_matrix, id, repeated, weights,
-      link, family$family, as.numeric(beta), offset,
-      iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
-      control$jeffreys_power, pass$method, subtract_p,
-      alpha_pass, alpha_fixed_pass, corstr_pass, Mv,
-      phi_pass, phi_fixed_pass, as.integer(isTRUE(pass$hold_nuisance))
+    run_geer_solver(
+      fit_geesolver_cc(
+        y, model_matrix, id, repeated, weights,
+        link, family$family, as.numeric(beta), offset,
+        iterations[[1L]], tolerance, iterations[[2L]], iterations[[3L]],
+        control$jeffreys_power, pass$method, subtract_p,
+        alpha_pass, alpha_fixed_pass, corstr_pass, Mv,
+        phi_pass, phi_fixed_pass, as.integer(isTRUE(pass$hold_nuisance))
+      ),
+      "geewa"
     )
   }
   geesolver_fit <- run_geer_estimation_passes(

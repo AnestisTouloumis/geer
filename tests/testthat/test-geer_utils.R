@@ -5,10 +5,10 @@ test_that("build_percent_labels returns percent-suffixed labels", {
   expect_true(all(grepl("%$", out)))
 })
 
-test_that("build_percent_labels warns when probabilities are outside [0, 1] and check = TRUE", {
-  expect_warning(
+test_that("checked probability labels reject values outside [0, 1]", {
+  expect_error(
     build_percent_labels(c(-0.1, 0.5, 1.1), check = TRUE),
-    "outside \\[0, 1\\]"
+    "'probs' must lie in [0, 1] when 'check = TRUE'", fixed = TRUE
   )
 })
 

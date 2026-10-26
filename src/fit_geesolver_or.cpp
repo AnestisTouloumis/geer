@@ -663,7 +663,7 @@ arma::vec update_beta_or(const arma::vec& y_vector,
                                    alpha_vector,
                                    jeffreys_power);
   }
-  Rcpp::stop("update_beta_or: unsupported method");
+  Rcpp::stop("update_beta_or failed: invalid internal method code");
 }
 //==============================================================================
 
@@ -689,11 +689,13 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                             const arma::vec& alpha_vector) {
   reset_lu_fallback_warning();
   if (maxiter < 0 || step_maxiter < 0) {
-    Rcpp::stop("'maxiter' and 'step_maxiter' must be nonnegative integers");
+    signal_input_error("'maxiter' and 'step_maxiter' must be nonnegative "
+      "integers");
   }
   if (!model_matrix.is_finite() || !offset.is_finite() ||
       !weights_vector.is_finite() || !beta_vector.is_finite()) {
-    Rcpp::stop("the model matrix, offset, weights and starting values must be finite");
+    signal_input_error("the model matrix, offset, weights and starting "
+      "values must be finite");
   }
   const LinkCode link_code = parse_link(link);
   const arma::uword params_no = model_matrix.n_cols;
@@ -701,10 +703,15 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   for (arma::uword i = 0; i < y_vector.n_elem; ++i) {
     const double y_i = y_vector[i];
     if (!(y_i >= 0.0 && y_i <= 1.0)) {
-      Rcpp::stop("the response must lie in [0, 1]; observation %d has value %g",
+      signal_input_error(
+      "the response must lie in [0, 1]; observation %d has "
+      "value %g",
                  static_cast<int>(i + 1), y_i);
     }
   }
+  check_cluster_inputs(id_vector,
+                       {y_vector, repeated_vector, weights_vector, offset},
+                       model_matrix);
   std::vector<arma::vec> beta_history;
   beta_history.reserve(static_cast<size_t>(std::min(maxiter, 100)) + 1);
   beta_history.push_back(beta_vector);
@@ -712,14 +719,16 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
   arma::vec criterion_vector(maxiter, arma::fill::zeros);
   arma::vec eta_vector = model_matrix * beta_vector + offset;
   if (!is_valid_eta(link_code, eta_vector)) {
-    Rcpp::stop(
-      "the initial linear predictor is invalid; supply different 'beta_start' values"
+    signal_input_error(
+      "the initial linear predictor is invalid; supply "
+      "different 'beta_start' values"
     );
   }
   arma::vec mu_vector = inverse_link(link_code, eta_vector);
   if (!is_valid_mu(FamilyCode::binomial, mu_vector)) {
-    Rcpp::stop(
-      "the initial fitted values are invalid; supply different 'beta_start' values"
+    signal_input_error(
+      "the initial fitted values are invalid; supply "
+      "different 'beta_start' values"
     );
   }
   auto refresh_state = [&](const arma::vec& beta) {
@@ -746,7 +755,8 @@ Rcpp::List fit_geesolver_or(const arma::vec& y_vector,
                        jeffreys_power,
                        method) - beta_vector;
       if (!stepsize_vector.is_finite()) {
-        Rcpp::stop("the Newton step at the starting values contains non-finite values; supply "
+        Rcpp::stop("fit_geesolver_or failed: the Newton step at the "
+      "starting values contains non-finite values; supply "
                    "different 'beta_start' values");
       }
     }

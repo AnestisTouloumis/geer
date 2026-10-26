@@ -119,7 +119,13 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
     object
   )
   if (!length(response)) {
-    stop("the original response could not be recovered", call. = FALSE)
+    stop(
+      paste0(
+        "mcar_logistic_test failed: the reconstructed original response is ",
+        "empty"
+      ),
+      call. = FALSE
+    )
   }
   assign(".geer_mcar_response", response, envir = eval_env)
 
@@ -150,7 +156,13 @@ build_mcar_transition_frame <- function(object, formula, data = NULL) {
 
   y <- stats::model.response(model_frame)
   if (length(y) != nrow(model_frame)) {
-    stop("the response could not be reconstructed correctly", call. = FALSE)
+    stop(
+      paste0(
+        "mcar_logistic_test failed: the reconstructed response must have ",
+        "one value per risk-set row"
+      ),
+      call. = FALSE
+    )
   }
 
   id_repeated <- extract_geer_id_repeated(model_frame, length(y))

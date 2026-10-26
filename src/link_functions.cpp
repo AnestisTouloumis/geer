@@ -57,7 +57,7 @@ arma::vec inverse_link(LinkCode link_code, const arma::vec& eta_vector) {
   case LinkCode::inverse:
     return 1.0 / eta_vector;
   }
-  Rcpp::stop("unsupported link");
+  Rcpp::stop("inverse_link failed: invalid internal link code");
 }
 //==============================================================================
 
@@ -111,7 +111,7 @@ arma::vec link_derivative_1(LinkCode link_code, const arma::vec& eta_vector) {
   case LinkCode::inverse:
     return -1.0 / arma::square(eta_vector);
   }
-  Rcpp::stop("unsupported link");
+  Rcpp::stop("link_derivative_1 failed: invalid internal link code");
 }
 //==============================================================================
 
@@ -150,7 +150,7 @@ arma::vec link_derivative_2(LinkCode link_code, const arma::vec& eta_vector) {
   case LinkCode::inverse:
     return 2.0 / arma::pow(eta_vector, 3.0);
   }
-  Rcpp::stop("unsupported link");
+  Rcpp::stop("link_derivative_2 failed: invalid internal link code");
 }
 //==============================================================================
 
@@ -191,7 +191,7 @@ arma::vec link_derivative_3(LinkCode link_code, const arma::vec& eta_vector) {
   case LinkCode::inverse:
     return -6.0 / arma::pow(eta_vector, 4.0);
   }
-  Rcpp::stop("unsupported link");
+  Rcpp::stop("link_derivative_3 failed: invalid internal link code");
 }
 //==============================================================================
 
@@ -223,7 +223,7 @@ bool is_valid_eta(LinkCode link_code,
     }
     return true;
   }
-  Rcpp::stop("unsupported link");
+  Rcpp::stop("is_valid_eta failed: invalid internal link code");
 }
 //==============================================================================
 
@@ -254,7 +254,7 @@ bool is_valid_mu(FamilyCode family_code,
     }
     return true;
   }
-  Rcpp::stop("unsupported family");
+  Rcpp::stop("is_valid_mu failed: invalid internal family code");
 }
 //==============================================================================
 

@@ -76,7 +76,7 @@ select_small_sample_covariance <- function(covariances,
       sprintf(
         paste0(
           "%s failed: the %s covariance is undefined because I - H is ",
-          "singular for cluster(s) %s, whose leverage is 1"
+          "singular for cluster(s) %s"
         ),
         context,
         cov_type,

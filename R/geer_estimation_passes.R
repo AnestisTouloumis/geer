@@ -93,3 +93,19 @@ check_geer_first_pass <- function(fit, method, tolerance, fit_function) {
   }
   invisible(fit)
 }
+
+
+run_geer_solver <- function(expr, context) {
+  check_choice(context, c("geewa", "geewa_binary"), "context")
+  tryCatch(
+    force(expr),
+    error = function(error) {
+      message <- conditionMessage(error)
+      if (!inherits(error, "GeerInputError")) {
+        message <- sub("^[^:]+ failed: ", "", message)
+        message <- paste0(context, " failed: ", message)
+      }
+      stop(message, call. = FALSE)
+    }
+  )
+}

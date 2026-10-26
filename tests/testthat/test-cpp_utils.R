@@ -35,3 +35,28 @@ test_that("symmetry checks retain undefined covariance sentinels", {
     compute(x, numeric(2L), 0L), "the matrix must be finite"
   )
 })
+
+
+test_that("generic indefinite matrices retain the documented LU warning", {
+  compute <- get_cached_cpp_utils()
+  expect_warning(
+    out <- compute(matrix(c(1, 2, 2, 1), 2L), rep(1, 2L), 0L),
+    "a symmetric matrix that is not positive definite was solved by LU",
+    fixed = TRUE
+  )
+  expect_equal(as.numeric(out), rep(1 / 3, 2L), tolerance = 1e-14)
+})
+
+test_that("cluster wrappers distinguish input errors from numerical failures", {
+  compute <- get_cached_cpp_utils()
+  input <- tryCatch(compute(diag(2L), rep(1, 2L), 3L), error = identity)
+  expect_identical(
+    conditionMessage(input), "invalid repeated index; cluster 2 (id = 42)"
+  )
+  expect_null(conditionCall(input))
+  numerical <- tryCatch(compute(diag(2L), rep(1, 2L), 4L), error = identity)
+  expect_identical(
+    conditionMessage(numerical),
+    "compute_cpp_utils failed: cluster 2 (id = 42): the matrix is singular"
+  )
+})

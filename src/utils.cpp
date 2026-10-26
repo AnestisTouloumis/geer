@@ -32,8 +32,8 @@ arma::mat subset_matrix(const arma::mat& x, const arma::vec& y) {
   std::vector<arma::uword> zero_based_indices(subset_size);
   for (arma::uword i = 0; i < subset_size; ++i) {
     if (!(y[i] >= 1.0 && y[i] <= upper)) {
-      Rcpp::stop(
-        "subset_matrix: index out of range; values must be in [1, %d]",
+      signal_input_error(
+        "indices must lie in [1, %d]",
         static_cast<int>(x.n_rows)
       );
     }
@@ -126,14 +126,15 @@ CholOrLuFactor::CholOrLuFactor(const arma::mat& X,
     symmetric_not_pd_ = true;
   }
   if (!arma::lu(lu_lower_, lu_upper_, permutation_, X)) {
-    Rcpp::stop("%s: LU factorization failed; the matrix is singular or numerically unstable",
+    Rcpp::stop("%s failed: LU factorization failed; the matrix is "
+      "singular or numerically unstable",
                context_);
   }
   if (!allow_chol) {
     const arma::vec abs_pivots = arma::abs(lu_upper_.diag());
     if (abs_pivots.min() <
         abs_pivots.max() * arma::datum::eps * static_cast<double>(X.n_rows)) {
-      Rcpp::stop("%s: the matrix is numerically singular", context_);
+      Rcpp::stop("%s failed: the matrix is numerically singular", context_);
     }
   }
 }
@@ -151,13 +152,15 @@ T CholOrLuFactor::solve_impl(const T& rhs) const {
   T forward;
   if (!arma::solve(forward, arma::trimatl(lu_lower_), permuted_rhs,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("%s: LU forward solve failed; the matrix is singular or numerically unstable",
+    Rcpp::stop("%s failed: LU forward solve failed; the matrix is "
+      "singular or numerically unstable",
                context_);
   }
   T result;
   if (!arma::solve(result, arma::trimatu(lu_upper_), forward,
                    arma::solve_opts::no_approx)) {
-    Rcpp::stop("%s: LU back solve failed; the matrix is singular or numerically unstable",
+    Rcpp::stop("%s failed: LU back solve failed; the matrix is "
+      "singular or numerically unstable",
                context_);
   }
   if (symmetric_not_pd_ && !lu_fallback_warned) {
@@ -165,8 +168,7 @@ T CholOrLuFactor::solve_impl(const T& rhs) const {
     Rcpp::Function warning_function("warning");
     warning_function(
       "a symmetric matrix that is not positive definite was solved by LU "
-      "decomposition; the working covariance or information matrix may be "
-      "invalid",
+      "decomposition",
       Rcpp::Named("call.") = false);
   }
   return result;
@@ -207,11 +209,12 @@ arma::mat solve_chol_or_lu_mat(const arma::mat& X,
                                                arma::uword cluster_index,
                                                double id_value,
                                                const std::exception& e) {
-  Rcpp::stop("%s: cluster %d (id = %g): %s",
-             where,
-             static_cast<int>(cluster_index + 1),
-             id_value,
-             e.what());
+  if (dynamic_cast<const GeerInputError*>(&e) != nullptr) {
+    signal_input_error("%s; cluster %d (id = %g)", e.what(),
+                       static_cast<int>(cluster_index + 1), id_value);
+  }
+  Rcpp::stop("%s failed: cluster %d (id = %g): %s", where,
+             static_cast<int>(cluster_index + 1), id_value, e.what());
 }
 //==============================================================================
 
@@ -228,7 +231,8 @@ void symmetrize_if_close(arma::mat& A, const char* context, double rel_tol) {
     Rcpp::stop("%s failed: the matrix must be finite", context);
   }
   if (relative_asymmetry > rel_tol) {
-    Rcpp::stop("%s: the matrix has non-trivial asymmetry (%.2e)", context,
+    Rcpp::stop("%s failed: the matrix has non-trivial asymmetry "
+      "(%.2e)", context,
                relative_asymmetry);
   }
   if (!A.is_empty() &&
@@ -261,14 +265,15 @@ void check_cluster_inputs(const arma::vec& id_vector,
                           vector_refs observation_vectors) {
   const arma::uword n = id_vector.n_elem;
   if (n == 0) {
-    Rcpp::stop("input vectors must not be empty");
+    signal_input_error("input vectors must not be empty");
   }
   for (const arma::vec& observation_vector : observation_vectors) {
     if (observation_vector.n_elem != n) {
-      Rcpp::stop("all observation-level inputs must have the same length");
+      signal_input_error("all observation-level inputs must have the same "
+      "length");
     }
     if (!observation_vector.is_finite()) {
-      Rcpp::stop("all observation-level inputs must be finite");
+      signal_input_error("all observation-level inputs must be finite");
     }
   }
 }
@@ -279,10 +284,10 @@ void check_cluster_inputs(const arma::vec& id_vector,
                           const arma::mat& model_matrix) {
   check_cluster_inputs(id_vector, observation_vectors);
   if (model_matrix.n_rows != id_vector.n_elem) {
-    Rcpp::stop("'model_matrix' must have one row per observation");
+    signal_input_error("'model_matrix' must have one row per observation");
   }
   if (!model_matrix.is_finite()) {
-    Rcpp::stop("'model_matrix' must be finite");
+    signal_input_error("'model_matrix' must be finite");
   }
 }
 //==============================================================================
@@ -305,3 +310,16 @@ void reset_lu_fallback_warning() {
   lu_fallback_warned = false;
 }
 //==============================================================================
+
+
+void check_working_covariance(const arma::mat& matrix, const char* context) {
+  if (!matrix.is_finite()) {
+    Rcpp::stop("%s failed: the working covariance matrix must be finite",
+               context);
+  }
+  arma::mat root;
+  if (!arma::chol(root, matrix)) {
+    Rcpp::stop("%s failed: the working covariance matrix is not positive "
+               "definite", context);
+  }
+}

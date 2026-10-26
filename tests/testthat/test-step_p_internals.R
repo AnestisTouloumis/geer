@@ -251,3 +251,18 @@ test_that("cycle detection depends on the underlying term", {
   expect_false(is_step_cycle("+ x1", "- x2"))
   expect_false(is_step_cycle("+ x1", NA_character_))
 })
+
+
+test_that("step refits explain how to align incomplete candidate data", {
+  data <- test_data$epilepsy
+  data$partial <- seq_len(nrow(data))
+  data$partial[1L] <- NA_real_
+  fit <- geewa(
+    formula = seizures ~ treatment, data = data, id = id,
+    family = poisson(link = "log")
+  )
+  expect_error(
+    refit_step_model(fit, "+ partial", fit$obs_no),
+    "all models in the search must use the same observations", fixed = TRUE
+  )
+})

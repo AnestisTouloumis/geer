@@ -346,25 +346,23 @@ test_that("check_nested_models rejects models fitted to different data", {
   }
 })
 
-test_that("anova omits models with a different response or association structure", {
-  reference <- anova(fit_bin_trt, fit_bin_full, test = "wald")
-  expect_warning(
-    out <- anova(fit_bin_trt, fit_bin_full, fit_bin_full_exch, test = "wald"),
-    "association structure differs from that of the first model were omitted: exchangeable"
-  )
-  expect_equal(out, reference)
-  fit_other_response <- update(fit_bin_trt, I(1 - ecg) ~ .)
-  expect_warning(
-    out <- anova(fit_bin_trt, fit_other_response, fit_bin_full, test = "wald"),
-    "response differs from that of the first model were omitted: I(1 - ecg)",
+test_that("anova rejects incompatible model lists", {
+  expect_error(
+    anova(fit_bin_trt, fit_bin_full, fit_bin_full_exch, test = "wald"),
+    "models must have the same working association structure",
     fixed = TRUE
   )
-  expect_equal(out, reference)
-  expect_warning(
-    out <- anova(fit_bin_full, fit_bin_full_exch, test = "wald"),
-    "association structure differs from that of the first model"
+  fit_other_response <- update(fit_bin_trt, I(1 - ecg) ~ .)
+  expect_error(
+    anova(fit_bin_trt, fit_other_response, fit_bin_full, test = "wald"),
+    "models must have the same response; differing response(s): I(1 - ecg)",
+    fixed = TRUE
   )
-  expect_equal(out, anova(fit_bin_full, test = "wald"))
+  expect_error(
+    anova(fit_bin_full, fit_bin_full_exch, test = "wald"),
+    "models must have the same working association structure",
+    fixed = TRUE
+  )
   fit_subset <- update(fit_bin_full, subset = as.numeric(id) > 10)
   expect_error(
     anova(fit_bin_trt, fit_subset, test = "wald"),
@@ -408,7 +406,7 @@ test_that("Wald and working Wald tests report singular and negative statistics",
 test_that("covariance helpers of the tests validate their inputs", {
   expect_error(
     compute_df_adjusted_covariance(diag(2), NA_real_, 2L, "vcov.geer"),
-    "vcov.geer failed: the number of clusters is not a positive integer",
+    "'clusters_no' must be a positive integer",
     fixed = TRUE
   )
   expect_error(
@@ -707,4 +705,14 @@ test_that("odds-ratio score components contain a plain numeric score", {
   expect_type(observed$score_vector, "double")
   expect_null(dim(observed$score_vector))
   expect_identical(observed$score_vector, expected)
+})
+
+
+test_that("df-adjustment rejects non-integer cluster metadata", {
+  for (clusters in list(2.5, "3", numeric(0), Inf, 0)) {
+    expect_error(
+      compute_df_adjusted_covariance(diag(2L), clusters, 1L, "vcov.geer"),
+      "'clusters_no' must be", fixed = TRUE
+    )
+  }
 })

@@ -150,8 +150,9 @@ refit_step_model <- function(fitted_model, change, obs_no) {
   if (all(is.finite(c(obs_no, obs_no_new))) && obs_no_new != obs_no) {
     stop(
       paste0(
-        "the number of observations changed during the search; remove missing ",
-        "values from the data"
+        "all models in the search must use the same observations; refit the ",
+        "initial model using rows complete for every variable in the ",
+        "search scope"
       ),
       call. = FALSE
     )

@@ -6,6 +6,20 @@
 #include <functional>
 #include <initializer_list>
 
+struct GeerInputError : public Rcpp::exception {
+  explicit GeerInputError(const char* message)
+      : Rcpp::exception(message, false) {}
+};
+
+template <typename... Args>
+[[noreturn]] inline void signal_input_error(const char* format, Args... args) {
+  try {
+    Rcpp::stop(format, args...);
+  } catch (const Rcpp::exception& error) {
+    throw GeerInputError(error.what());
+  }
+}
+
 inline arma::uword upper_triangular_pairs(const arma::uword n) {
   return n * (n - 1) / 2;
 }
@@ -61,6 +75,7 @@ void symmetrize_if_close(arma::mat& A, const char* context,
                          double rel_tol = 1e-10);
 constexpr double leverage_tolerance = 1e-8;
 void reset_lu_fallback_warning();
+void check_working_covariance(const arma::mat& matrix, const char* context);
 double get_max_cluster_leverage(const arma::mat& naive_root,
                                 const arma::mat& v_inverse_d_matrix,
                                 const arma::mat& d_matrix);

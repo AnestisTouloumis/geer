@@ -2,6 +2,7 @@
 #define GEER_CLUSTER_UTILS_H
 
 #include <RcppArmadillo.h>
+#include "utils.h"
 #include "family_codes.h"
 #include <algorithm>
 #include <vector>
@@ -50,7 +51,7 @@ inline std::vector<Cluster> clusters_from_sorted_id(const arma::vec& id) {
   std::vector<Cluster> clusters;
   if (n == 0) return clusters;
   if (!id.is_finite()) {
-    Rcpp::stop("'id' must contain only finite values");
+    signal_input_error("'id' must contain only finite values");
   }
   arma::uword n_clusters = 1;
   for (arma::uword i = 1; i < n; ++i) {
@@ -74,7 +75,9 @@ inline std::vector<Cluster> clusters_from_sorted_id(const arma::vec& id) {
     }
     std::sort(cluster_ids.begin(), cluster_ids.end());
     if (std::adjacent_find(cluster_ids.begin(), cluster_ids.end()) != cluster_ids.end()) {
-      Rcpp::stop("the observations of each cluster must be in adjacent rows; an 'id' value "
+      signal_input_error(
+      "the observations of each cluster must be in adjacent"
+      " rows; an 'id' value "
                  "occurs in non-adjacent rows");
     }
   }

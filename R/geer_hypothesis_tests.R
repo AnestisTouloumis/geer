@@ -188,16 +188,7 @@ compute_df_adjusted_covariance <- function(robust_covariance,
                                            clusters_no,
                                            coef_no,
                                            context) {
-  if (length(clusters_no) != 1L || !is.finite(clusters_no) ||
-      clusters_no < 1L) {
-    stop(
-      sprintf(
-        "%s failed: the number of clusters is not a positive integer",
-        context
-      ),
-      call. = FALSE
-    )
-  }
+  clusters_no <- check_integer_at_least(clusters_no, "clusters_no")
   if (clusters_no <= coef_no) {
     stop(
       sprintf(
@@ -666,12 +657,10 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   same_response <- response_vector == response_vector[1L]
   if (!all(same_response)) {
     removed <- unique(response_vector[!same_response])
-    object <- object[same_response]
-    warning(
+    stop(
       sprintf(
         paste0(
-          "models whose response differs from that of the first model were ",
-          "omitted: %s"
+          "models must have the same response; differing response(s): %s"
         ),
         paste(removed, collapse = ", ")
       ),
@@ -689,12 +678,11 @@ compute_anova_geer_list <- function(object, ..., test, cov_type, pmethod) {
   same_association <- association_vector == association_vector[1L]
   if (!all(same_association)) {
     removed <- unique(association_vector[!same_association])
-    object <- object[same_association]
-    warning(
+    stop(
       sprintf(
         paste0(
-          "models whose association structure differs from that of the first ",
-          "model were omitted: %s"
+          "models must have the same working association structure; ",
+          "differing structure(s): %s"
         ),
         paste(removed, collapse = ", ")
       ),
