@@ -1,12 +1,4 @@
-or_V <- function(mu, psi, w = c(1, 1)) {
-  ee <- function(r) {
-    get_estimating_equations_or(
-      mu + r, diag(2), c(1, 1), c(1, 2), w,
-      "identity", mu, mu, psi
-    )
-  }
-  solve(cbind(ee(c(1, 0)), ee(c(0, 1))))
-}
+list2env(get_cached_test_fixtures("cpp_odds_ratio_model"), environment())
 
 test_that("Plackett covariance matches the stable closed form for moderate odds ratios", {
   for (mu in list(c(0.3, 0.6), c(0.05, 0.9), c(0.5, 0.5), c(0.2, 0.2))) {
@@ -197,4 +189,33 @@ test_that("Plackett covariance preserves degenerate probability boundaries", {
       compute_plackett_covariance(0.4, probability, 5), 0
     )
   }
+})
+
+test_that("near-complementary margins retain a valid Plackett covariance", {
+  row <- 1 - 1e-16
+  column <- 1e-16
+  covariance <- compute_plackett_covariance(row, column, 1e-200)
+  reversed <- compute_plackett_covariance(column, row, 1e-200)
+  expect_equal(covariance / -9.9999999999999986e-17, 1,
+               tolerance = 1e-12)
+  expect_equal(covariance / reversed, 1, tolerance = 1e-12)
+  expect_gte(covariance + row * column, 0)
+  reference <- test_data$plackett_tail
+  actual <- mapply(compute_plackett_covariance, reference$row,
+                   reference$column, reference$odds_ratio)
+  expect_lt(max(abs(actual / reference$covariance - 1)), 1e-12)
+})
+
+test_that("negative-association derivatives match an independent Jacobian", {
+  probabilities <- c(0.2, 0.8)
+  beta <- qlogis(probabilities)
+  response <- c(0, 1)
+  quantities <- get_influence_quantities_or(
+    response, diag(2L), c(1, 1), c(1, 2), c(1, 1), "logit",
+    probabilities, beta, 1e-4
+  )
+  expected <- -ref_jac(function(value) {
+    compute_reference_or_score(value, response, 1e-4)
+  }, beta, h = 1e-6)
+  expect_equal(quantities$sensitivity, expected, tolerance = 1e-6)
 })

@@ -1,11 +1,4 @@
-make_jj_screening_data <- function() {
-  withr::local_seed(9104)
-  x <- matrix(rnorm(180), nrow = 60, ncol = 3)
-  colnames(x) <- c("visit1", "visit2", "visit3")
-  x[31:45, 3] <- NA_real_
-  x[46:60, 2:3] <- NA_real_
-  x
-}
+list2env(get_cached_test_fixtures("mcar_homoscedasticity_test"), environment())
 
 test_that("internal Anderson-Darling calculation follows Scholz-Stephens", {
   x <- c(
@@ -108,7 +101,7 @@ test_that("mcar_homoscedasticity_test returns both diagnostics in auto mode", {
     ), nrow = 3L, byrow = TRUE)
   )
   expect_false(anyNA(out$imputed.data))
-  expect_true(out$selected.test %in% c("hawkins", "nonparametric"))
+  expect_identical(out$selected.test, "nonparametric")
   expect_identical(.Random.seed, rng_before)
 })
 
@@ -535,4 +528,14 @@ test_that("AD rejects a sample with no distinct support points", {
   expect_error(compute_mcar_ad_test(rep(1, 6L), rep(1:2, each = 3L),
                                     c(3, 3)),
                "at least two distinct", fixed = TRUE)
+})
+
+test_that("automatic MCAR selection reports the Hawkins components", {
+  out <- mcar_homoscedasticity_test(
+    make_jj_screening_data(), method = "auto", n_min = 2L,
+    n_replicates = 100L, sig_level = 1e-12, seed = 110L
+  )
+  expect_identical(out$selected.test, "hawkins")
+  expect_equal(unname(out$statistic), out$hawkins$statistic, tolerance = 0)
+  expect_equal(out$p.value, out$hawkins$p.value, tolerance = 0)
 })

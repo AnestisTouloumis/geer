@@ -1,23 +1,4 @@
-runs_order_data <- function() {
-  data <- test_data$epilepsy
-  data$date <- as.Date("2020-01-01") + 7 * data$visit
-  data$label <- c("first", "second", "third", "fourth")[data$visit]
-  data$late <- data$visit > 2
-  data$stage <- factor(data$label, levels = c("first", "second", "third", "fourth"))
-  data$complex_key <- complex(real = 1, imaginary = data$visit)
-  data
-}
-
-fit_runs_order <- function(data) {
-  geewa(
-    formula = seizures ~ treatment + lnbaseline + lnage,
-    data = data,
-    id = id,
-    family = poisson(link = "log"),
-    corstr = "independence",
-    method = "gee"
-  )
-}
+list2env(get_cached_test_fixtures("runs_test_internals"), environment())
 
 test_that("get_runs_order requires a single non-empty character value", {
   for (bad in list(character(0), NA_character_, "", c("natural", "fitted"))) {

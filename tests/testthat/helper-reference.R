@@ -246,9 +246,9 @@ ref_times_unbalanced <- c(
 )
 
 ref_fit_unquiet <- function(
-    d, method = "gee",
-    control = geer_control(tolerance = 1e-10, maxiter = 200),
-    beta_start = NULL) {
+  d, method = "gee",
+  control = geer_control(tolerance = 1e-10, maxiter = 200),
+  beta_start = NULL) {
   f <- y ~ x1 + x2
   if (d$kind == "cc") {
     n <- d$tmax
@@ -414,7 +414,7 @@ ref_influence <- function(object) {
     list(
       hat = diag(h_matrix),
       cluster = drop(bread %*% t(z$vd) %*% solve(diag(length(z$e)) - h_matrix,
-                                                   z$e)),
+                                                 z$e)),
       observation = t(vapply(seq_along(z$e), observation_dfbeta,
                              numeric(ncol(z$d)), z = z)),
       cluster_delta = drop(crossprod(z$d, z_vector)),
@@ -621,4 +621,96 @@ compute_reference_empirical <- function(response, offset) {
     0.5 * meat * second / information^2
   list(beta = beta, corrected = beta + adjustment / information,
        printed = beta + printed / information)
+}
+
+compute_reference_info <- function(object, mu = object$fitted.values,
+                                   eta = object$linear.predictors,
+                                   phi = object$phi) {
+  if (!is.list(object) || !is.matrix(object$x)) {
+    stop("'object' must contain a model matrix", call. = FALSE)
+  }
+  n <- nrow(object$x)
+  if (!is.numeric(mu) || length(mu) != n || any(!is.finite(mu))) {
+    stop("'mu' must contain one finite mean per row", call. = FALSE)
+  }
+  if (!is.numeric(eta) || length(eta) != n || any(!is.finite(eta))) {
+    stop("'eta' must contain one finite predictor per row", call. = FALSE)
+  }
+  if (!is.numeric(phi) || length(phi) != 1L || !is.finite(phi) || phi <= 0) {
+    stop("'phi' must be a positive finite number", call. = FALSE)
+  }
+  derivative <- object$family$mu.eta(eta)
+  variance <- object$family$variance(mu)
+  crossprod(object$x, object$prior.weights * derivative^2 /
+              (phi * variance) * object$x)
+}
+
+compute_reference_quasi <- function(y, mu, weights, family, phi) {
+  if (!is.numeric(y) || !is.numeric(mu) || !is.numeric(weights) ||
+        length(y) != length(mu) || length(y) != length(weights) ||
+        any(!is.finite(c(y, mu, weights))) || any(weights <= 0)) {
+    stop("'y', 'mu', and 'weights' must be compatible finite vectors",
+         call. = FALSE)
+  }
+  if (!is.character(family) || length(family) != 1L || is.na(family) ||
+        !(family %in% c("gaussian", "poisson", "binomial", "Gamma",
+                        "inverse.gaussian"))) {
+    stop("'family' must name a supported variance function", call. = FALSE)
+  }
+  if (!is.numeric(phi) || length(phi) != 1L || !is.finite(phi) || phi <= 0) {
+    stop("'phi' must be a positive finite number", call. = FALSE)
+  }
+  if ((family != "gaussian" && any(mu <= 0)) ||
+        (family == "binomial" && any(mu >= 1))) {
+    stop("'mu' must lie in the interior of its family domain", call. = FALSE)
+  }
+  contributions <- switch(family,
+    gaussian = -(y - mu)^2 / 2,
+    poisson = y * log(mu) - mu,
+    binomial = y * log(mu) + (1 - y) * log1p(-mu),
+    Gamma = -(y / mu + log(mu)),
+    inverse.gaussian = 1 / mu - y / (2 * mu^2)
+  )
+  sum(weights * contributions) / phi
+}
+
+compute_reference_independence <- function(object) {
+  if (!is.list(object) || !is.matrix(object$x)) {
+    stop("'object' must contain a model matrix", call. = FALSE)
+  }
+  fit <- stats::glm.fit(
+    x = object$x, y = object$y, weights = object$prior.weights,
+    offset = object$offset, family = object$family,
+    control = stats::glm.control(epsilon = 1e-12, maxit = 1000L),
+    intercept = FALSE
+  )
+  if (!isTRUE(fit$converged)) {
+    stop("compute_reference_independence failed: GLM did not converge",
+         call. = FALSE)
+  }
+  mu <- as.numeric(fit$fitted.values)
+  eta <- as.numeric(fit$linear.predictors)
+  fixed <- identical(object$fit_function, "geewa_binary") ||
+    isTRUE(object$phi_fixed)
+  phi <- if (fixed) {
+    object$phi
+  } else {
+    sum(object$prior.weights * (object$y - mu)^2 /
+          object$family$variance(mu)) / (nrow(object$x) - ncol(object$x))
+  }
+  list(
+    phi = phi,
+    naive_inverse = compute_reference_info(object, mu, eta, phi),
+    quasi_loglikelihood = compute_reference_quasi(
+      object$y, mu, object$prior.weights, object$family$family, phi
+    )
+  )
+}
+
+compute_reference_robust <- function(object) {
+  if (!is.list(object) || !is.matrix(object$x)) {
+    stop("'object' must contain a model matrix", call. = FALSE)
+  }
+  reference <- ref_influence(object)
+  reference$bread %*% crossprod(reference$cluster_delta) %*% reference$bread
 }

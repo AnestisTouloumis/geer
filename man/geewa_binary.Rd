@@ -178,12 +178,11 @@ values are recoded to consecutive integers. Implicit positions retain gaps
 after subsetting or missing-value removal.
 
 The Plackett covariance and its derivatives are evaluated using scaled
-expressions to reduce cancellation and overflow. Accuracy is not
-guaranteed for extreme combinations of marginal probabilities and odds
-ratios. In particular, near-complementary probabilities with very small
-odds ratios can produce a covariance outside the bounds of a valid
-bivariate Bernoulli distribution. The intended working model is that
-of Touloumis (2026a).
+expressions to reduce cancellation and overflow. Compensated summation
+preserves the discriminant for near-complementary marginal probabilities.
+Accuracy remains limited by double precision and representability of the
+required quantities. The intended working model is that of Touloumis
+(2026a).
 }
 \section{Convergence and separation}{
 

@@ -1,35 +1,4 @@
-mcar_internals_matrix <- function() {
-  cbind(
-    y1 = c(1.0, 2.1, 2.9, 4.2, 5.1, 5.8, 7.2, 8.0, 9.1, 9.9),
-    y2 = c(2.2, 1.7, 3.9, 3.1, 6.3, 5.2, 7.9, 6.8, 9.6, 8.7),
-    y3 = c(0.5, 1.9, 1.1, 3.4, 2.8, 4.1, 3.6, 5.9, 5.2, 6.4)
-  )
-}
-
-mcar_fit <- function(data = test_data$epilepsy, repeated = TRUE, ...) {
-  if (repeated) {
-    geewa(
-      formula = seizures ~ treatment + lnbaseline + lnage,
-      data = data,
-      id = id,
-      repeated = visit,
-      family = poisson(link = "log"),
-      corstr = "independence",
-      method = "gee",
-      ...
-    )
-  } else {
-    geewa(
-      formula = seizures ~ treatment + lnbaseline + lnage,
-      data = data,
-      id = id,
-      family = poisson(link = "log"),
-      corstr = "independence",
-      method = "gee",
-      ...
-    )
-  }
-}
+list2env(get_cached_test_fixtures("mcar_internals"), environment())
 
 test_that("initial parameters use available-case means and a valid covariance", {
   x <- mcar_internals_matrix()

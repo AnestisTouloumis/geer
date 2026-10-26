@@ -1,10 +1,4 @@
-conv_df <- withr::with_seed(11, local({
-  n <- 20
-  df <- data.frame(id = rep(1:n, each = 4), visit = rep(1:4, n), x = rnorm(4 * n))
-  u <- rep(rnorm(n, sd = 0.7), each = 4)
-  df$y <- rbinom(nrow(df), 1, plogis(-0.3 + 0.8 * df$x + u))
-  df
-}))
+list2env(get_cached_test_fixtures("estimation_convergence"), environment())
 
 test_that("the solution does not depend on the starting value", {
   ctl <- geer_control(tolerance = 1e-11, maxiter = 500)
@@ -139,19 +133,18 @@ test_that("near-separation: bias-reduced fits stay finite from zero starting val
   expect_true(all(is.finite(coef(f))))
 })
 
-test_that("extreme linear predictors give finite estimating equations and covariances", {
+test_that("extreme linear predictors give finite estimating equations", {
   eta <- c(-800, -40, 0, 40, 800)
   for (link in c("logit", "probit", "cloglog")) {
     mu <- make.link(link)$linkinv(eta)
-    u <- tryCatch(
-      get_estimating_equations_cc(
+    expect_no_error(
+      u <- get_estimating_equations_cc(
         c(0, 0, 1, 1, 1), cbind(1, seq_along(eta)), rep(1:5, each = 1),
         rep(1, 5), rep(1, 5), link, "binomial", mu, eta,
         "independence", numeric(0), 1
-      ),
-      error = function(e) e
+      )
     )
-    if (!inherits(u, "error")) expect_true(all(is.finite(u)), label = link)
+    expect_true(all(is.finite(u)), label = link)
   }
 })
 

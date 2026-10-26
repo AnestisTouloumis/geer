@@ -20,7 +20,6 @@ expect_geecriteria_table <- function(out, n_rows = NULL, row_names = NULL) {
   potentially_undefined <- intersect(undefined_geecriteria_cols, expected_cols)
   always_finite <- setdiff(expected_cols, potentially_undefined)
   expect_true(all(is.finite(as.matrix(out[always_finite]))))
-  for (criterion in potentially_undefined) {
-    expect_true(all(is.finite(out[[criterion]]) | is.na(out[[criterion]])))
-  }
+  values <- as.matrix(out[potentially_undefined])
+  expect_true(all(is.finite(values) | is.na(values)))
 }

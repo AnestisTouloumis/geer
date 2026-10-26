@@ -1,33 +1,4 @@
-adjusted_residual <- function(d, method, ...) {
-  fit <- ref_fit(d, method, ...)
-  b <- unname(coef(fit))
-  lam <- ref_lambda(d, method, b)
-  list(converged = fit$converged, res = ref_U(d, b) + lam, lam = lam)
-}
-
-expect_adjusted_equation <- function(d, method, label, ...) {
-  r <- adjusted_residual(d, method, ...)
-  expect_true(r$converged, label = paste(label, "converged"))
-  expect_lt(max(abs(r$res)), 1e-5 * max(1, max(abs(r$lam))))
-}
-
-cc_methods <- c("brgee-robust", "brgee-naive", "brgee-empirical", "pgee-jeffreys")
-
-joint_binary <- function(mu, lam) {
-  m <- length(mu)
-  Y <- as.matrix(expand.grid(rep(list(0:1), m)))
-  pr <- combn(m, 2)
-  pair <- rowSums(Y[, pr[1, ], drop = FALSE] * Y[, pr[2, ], drop = FALSE])
-  th <- qlogis(mu)
-  for (it in 1:500) {
-    lp <- drop(Y %*% th) + lam * pair
-    P <- exp(lp - max(lp))
-    P <- P / sum(P)
-    marg <- colSums(Y * P)
-    th <- th + 0.8 * (qlogis(mu) - qlogis(pmin(pmax(marg, 1e-12), 1 - 1e-12)))
-  }
-  list(Y = Y, P = drop(P))
-}
+list2env(get_cached_test_fixtures("estimation_bias_reduction"), environment())
 
 test_that("correlation-based adjustments satisfy the preprint definitions (non-canonical links, weights)", {
   cases <- list(
@@ -163,7 +134,7 @@ test_that("geewa bcgee methods return geer objects and one-step updates match co
     )
     expect_s3_class(fit_conv, "geer")
     expect_equal(coef(fit_conv), coef(fit_one),
-      tolerance = 1e-5, label = variant
+      tolerance = 1e-10, label = variant
     )
   }
 })

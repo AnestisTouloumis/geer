@@ -1,22 +1,4 @@
-fit_agresti <- geewa(
-  formula = abnormal ~ time + diagnosis + treatment,
-  data = test_data$agresti,
-  id = id,
-  repeated = time,
-  family = binomial(link = "logit"),
-  corstr = "independence",
-  phi_fixed = TRUE,
-  phi_value = 1
-)
-
-fit_resp_or <- geewa_binary(
-  formula = status ~ baseline + treatment + gender + visit + age,
-  data = test_data$respiratory2,
-  id = id,
-  repeated = visit,
-  link = "logit",
-  orstr = "exchangeable"
-)
+list2env(get_cached_test_fixtures("gof_tests"), environment())
 
 test_that("the covariate-region test reproduces Barnhart and Williamson", {
   main <- gof_score_test(

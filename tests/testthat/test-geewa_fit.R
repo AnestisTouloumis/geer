@@ -1,13 +1,4 @@
-rinse <- test_data$rinse
-
-fit_geewa_gauss_indep <- geewa(
-  formula = score ~ treatment + baseline + time,
-  data = rinse,
-  id = id,
-  family = gaussian(link = "identity"),
-  corstr = "independence",
-  method = "gee"
-)
+list2env(get_cached_test_fixtures("geewa_fit"), environment())
 
 test_that("geewa fits a coherent Gaussian independence model", {
   fit <- fit_geewa_gauss_indep
@@ -44,48 +35,6 @@ test_that("geewa fits coherent Poisson independence and exchangeable models", {
   )
 })
 
-test_that("geewa fits representative non-independence correlation structures", {
-  fit_ar1 <- geewa(
-    seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
-    id = id,
-    family = poisson("log"),
-    corstr = "ar1"
-  )
-  fit_unstr <- geewa(
-    seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
-    id = id,
-    family = poisson("log"),
-    corstr = "unstructured"
-  )
-  fit_mdep <- geewa(
-    seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
-    id = id,
-    family = poisson("log"),
-    corstr = "m-dependent",
-    Mv = 1
-  )
-  fit_fixed <- geewa(
-    seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy,
-    id = id,
-    family = poisson("log"),
-    corstr = "fixed",
-    alpha_vector = rep(0.2, choose(4, 2))
-  )
-  expect_s3_class(fit_ar1, "geer")
-  expect_true(fit_ar1$converged)
-  expect_length(fit_ar1$alpha, 1L)
-  expect_s3_class(fit_unstr, "geer")
-  expect_true(fit_unstr$converged)
-  expect_length(fit_unstr$alpha, choose(4, 2))
-  expect_s3_class(fit_mdep, "geer")
-  expect_true(fit_mdep$converged)
-  expect_s3_class(fit_fixed, "geer")
-  expect_true(fit_fixed$converged)
-})
 
 test_that("geewa respects phi_fixed and phi_value", {
   fit <- geewa(

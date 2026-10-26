@@ -94,3 +94,17 @@ test_that("association reconstruction failures identify the original cluster", {
     "get_alpha_hat_ar1: cluster 3 (id = 99)", fixed = TRUE
   )
 })
+
+test_that("sparse consecutive and occasion pairs reject zero denominators", {
+  data <- data.frame(
+    id = rep(1:3, each = 2L), visit = c(1, 2, 1, 3, 2, 3),
+    x = c(0, 1, 0, 2, 1, 2), y = c(1, 3, 2, 4, 1, 2)
+  )
+  for (structure in c("ar1", "unstructured")) {
+    expect_error(geewa(
+      formula = y ~ x, data = data, id = id, repeated = visit,
+      corstr = structure, phi_fixed = TRUE, phi_value = 1,
+      beta_start = c(0, 0)
+    ), "correlation cannot be estimated")
+  }
+})

@@ -1,6 +1,4 @@
-skip_if_no_emmeans <- function() {
-  skip_if_not_installed("emmeans", minimum_version = "2.0.0")
-}
+list2env(get_cached_test_fixtures("geer_methods_emmeans"), environment())
 
 test_that("the emmeans example displays both prediction scales", {
   skip_if_no_emmeans()
@@ -136,5 +134,37 @@ test_that("emmeans default covariance retains integration dots", {
   fit <- fit_geewa_bin_exch
   expect_identical(
     get_emmeans_vcov(fit, framework_argument = TRUE), vcov(fit)
+  )
+})
+
+test_that("Gaussian emmeans uses sigma and agrees with lm under independence", {
+  skip_if_no_emmeans()
+  fit <- geewa(
+    formula = score ~ treatment + baseline + time,
+    data = test_data$rinse, id = id, corstr = "independence"
+  )
+  reference <- lm(
+    formula = score ~ treatment + baseline + time,
+    data = test_data$rinse
+  )
+  expect_no_error(emmeans::emmeans(fit, specs = ~ treatment))
+  observed <- as.data.frame(emmeans::emmeans(
+    fit, specs = ~ treatment, vcov.method = "naive"
+  ))
+  expected <- as.data.frame(emmeans::emmeans(reference, specs = ~ treatment))
+  expect_equal(observed$emmean, expected$emmean, tolerance = 1e-6)
+  expect_equal(observed$SE, expected$SE, tolerance = 1e-6)
+  legacy <- fit
+  legacy$frame_rows <- NULL
+  recovered <- as.data.frame(emmeans::emmeans(
+    legacy, specs = ~ treatment, vcov.method = "naive"
+  ))
+  expect_equal(recovered$emmean, expected$emmean, tolerance = 1e-6)
+  invalid <- fit
+  invalid$frame_rows <- rep(1L, nrow(fit$x))
+  expect_error(
+    emmeans::recover_data(invalid),
+    "recover_data.geer failed: the fitting rows could not be recovered",
+    fixed = TRUE
   )
 })

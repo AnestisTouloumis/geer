@@ -1,19 +1,6 @@
-fit_null <- geewa(
-  formula = seizures ~ 1,
-  data = test_data$epilepsy,
-  id = id,
-  family = poisson(link = "log"),
-  corstr = "independence",
-  method = "gee"
-)
-
-fit_trt <- geewa(
-  formula = seizures ~ treatment,
-  data = test_data$epilepsy,
-  id = id,
-  family = poisson(link = "log"),
-  corstr = "independence",
-  method = "gee"
+list2env(
+  get_cached_test_fixtures("geer_methods_add1_drop1_anova"),
+  environment()
 )
 
 test_that("add1 requires a non-empty scope", {

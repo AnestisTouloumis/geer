@@ -1,28 +1,4 @@
-finalize_fit <- function(criterion = 1e-8,
-                         fitted = c(0.2, 0.5, 0.8, 0.3, 0.6, 0.7),
-                         method = "gee",
-                         family = binomial(),
-                         structure = "exchangeable",
-                         repeated = c(1, 2, 3, 1, 2, 3),
-                         alpha = 0.3,
-                         fit_function = "geewa",
-                         tolerance = 1e-6,
-                         iter = 1L,
-                         failure = NULL) {
-  build_geer_final_fit(
-    fit = list(iter = iter, fitted.values = fitted),
-    geesolver_fit = list(
-      criterion = criterion, alpha = alpha,
-      failure = failure
-    ),
-    tolerance = tolerance,
-    method = method,
-    family = family,
-    association_structure = structure,
-    repeated = repeated,
-    fit_function = fit_function
-  )
-}
+list2env(get_cached_test_fixtures("geer_fit_output"), environment())
 
 test_that("a converged fit is flagged as such and raises no warning", {
   expect_no_warning(out <- finalize_fit())

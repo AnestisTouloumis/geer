@@ -1,32 +1,4 @@
-independence_formula <- status ~ baseline + treatment + gender + visit + age + center
-
-fit_independence_pair <- function(method, link = "probit",
-                                  control = ctl_tight) {
-  list(
-    or = geewa_binary(
-      formula = independence_formula,
-      id = id,
-      repeated = visit,
-      data = test_data$respiratory,
-      link = link,
-      orstr = "independence",
-      method = method,
-      control = control
-    ),
-    cor = geewa(
-      formula = independence_formula,
-      id = id,
-      repeated = visit,
-      family = binomial(link = link),
-      data = test_data$respiratory,
-      phi_fixed = TRUE,
-      phi_value = 1,
-      corstr = "independence",
-      method = method,
-      control = control
-    )
-  )
-}
+list2env(get_cached_test_fixtures("geewa_binary_theory"), environment())
 
 test_that("geewa_binary and geewa agree under independence for representative methods", {
   methods <- c(

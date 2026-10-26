@@ -51,7 +51,7 @@
 #' @importFrom brglm2 brglmFit brglm_control
 #' @importFrom generics tidy glance
 #' @importFrom stats add1 anova coef confint drop1 fitted model.matrix
-#' @importFrom stats predict residuals vcov
+#' @importFrom stats predict residuals sigma vcov
 #' @importFrom stats cooks.distance dfbeta dfbetas hatvalues
 #' @importFrom stats Gamma binomial gaussian inverse.gaussian poisson
 #' @importFrom stats quasi quasibinomial quasipoisson

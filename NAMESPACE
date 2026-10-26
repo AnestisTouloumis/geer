@@ -25,6 +25,7 @@ S3method(print,geer_criteria)
 S3method(print,geer_htest)
 S3method(print,summary.geer)
 S3method(residuals,geer)
+S3method(sigma,geer)
 S3method(summary,geer)
 S3method(tidy,geer)
 S3method(vcov,geer)
@@ -78,6 +79,7 @@ importFrom(stats,
   quasibinomial,
   quasipoisson,
   residuals,
+  sigma,
   vcov
 )
 useDynLib(geer, .registration = TRUE)

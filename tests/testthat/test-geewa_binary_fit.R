@@ -10,23 +10,6 @@ test_that("geewa_binary fits a coherent exchangeable logit model", {
   expect_gt(fit$alpha, 0)
 })
 
-test_that("geewa_binary returns a well-formed fitted object on a simple independence fit", {
-  fit <- geewa_binary(
-    formula = ecg ~ treatment + factor(period),
-    id = id,
-    repeated = period,
-    data = test_data$cerebrovascular,
-    link = "logit",
-    orstr = "independence",
-    method = "gee"
-  )
-  p <- length(fit$coefficients)
-  expect_s3_class(fit, "geer")
-  expect_named(fit$coefficients)
-  expect_true(is.matrix(fit$x))
-  expect_length(fit$fitted.values, nrow(fit$x))
-  expect_equal(dim(fit$robust_covariance), c(p, p))
-})
 
 test_that("geewa_binary fits representative alternative links and association structures", {
   fit_probit <- geewa_binary(

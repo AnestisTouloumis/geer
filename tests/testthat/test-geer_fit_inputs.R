@@ -1,39 +1,4 @@
-fit_inputs_data <- data.frame(
-  id = rep(1:3, each = 2),
-  t = rep(1:2, times = 3),
-  y = c(1.2, 0.4, 2.2, 1.9, 0.7, 3.1),
-  x = c(0.1, 0.5, 0.2, 0.9, 0.4, 0.8)
-)
-
-fit_or_offset_formula <- geewa_binary(
-  formula = ecg ~ treatment + offset(period),
-  link = "logit",
-  id = id,
-  data = test_data$cerebrovascular,
-  orstr = "independence",
-  method = "gee"
-)
-
-fit_or_offset_argument <- geewa_binary(
-  formula = ecg ~ treatment,
-  link = "logit",
-  id = id,
-  offset = period,
-  data = test_data$cerebrovascular,
-  orstr = "independence",
-  method = "gee"
-)
-
-fit_cc_offset_formula <- geewa(
-  formula = ecg ~ treatment + offset(period),
-  family = binomial(link = "logit"),
-  id = id,
-  data = test_data$cerebrovascular,
-  corstr = "independence",
-  method = "gee",
-  phi_fixed = TRUE,
-  phi_value = 1
-)
+list2env(get_cached_test_fixtures("geer_fit_inputs"), environment())
 
 test_that("extract_geer_offset returns zeros when no offset is supplied", {
   mf <- model.frame(y ~ x, data = fit_inputs_data)

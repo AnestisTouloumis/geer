@@ -1,36 +1,4 @@
-jackknife_gaussian_data <- data.frame(
-  id = rep(seq_len(8), each = 3),
-  time = rep(seq_len(3), times = 8),
-  group = rep(rep(c(0, 1), each = 4), each = 3),
-  y = c(
-    1.2, 1.7, 2.4,
-    2.0, 2.2, 2.9,
-    1.5, 2.1, 2.5,
-    2.3, 2.7, 3.2,
-    2.1, 2.8, 3.4,
-    2.7, 3.0, 3.8,
-    2.4, 2.6, 3.5,
-    3.0, 3.5, 3.9
-  )
-)
-
-jackknife_binary_data <- data.frame(
-  id = rep(seq_len(10), each = 3),
-  time = rep(seq_len(3), times = 10),
-  group = rep(rep(c(0, 1), each = 5), each = 3),
-  y = c(
-    0, 0, 1,
-    0, 1, 1,
-    1, 0, 1,
-    0, 1, 0,
-    1, 1, 0,
-    0, 1, 1,
-    1, 1, 1,
-    0, 0, 1,
-    1, 0, 0,
-    1, 1, 0
-  )
-)
+list2env(get_cached_test_fixtures("geer_jackknife"), environment())
 
 test_that("jackknife covariance uses full leave-one-cluster refits with fixed correlation", {
   fit <- geewa(

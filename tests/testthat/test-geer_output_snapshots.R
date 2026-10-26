@@ -1,19 +1,9 @@
+list2env(get_cached_test_fixtures("geer_output_snapshots"), environment())
+
 skip_on_cran()
 
 
-fit_full <- geewa(
-  seizures ~ treatment + lnbaseline + lnage,
-  data = test_data$epilepsy,
-  id = id,
-  repeated = visit
-)
 
-fit_reduced <- geewa(
-  seizures ~ treatment,
-  data = test_data$epilepsy,
-  id = id,
-  repeated = visit
-)
 
 test_that("core printed outputs remain stable", {
   expect_snapshot_output(print(fit_full))

@@ -1,30 +1,4 @@
-fit_binary_indep <- geewa_binary(
-  formula = ecg ~ period * treatment,
-  id = id,
-  data = test_data$cerebrovascular,
-  link = "logit",
-  orstr = "independence",
-  method = "gee"
-)
-
-fit_binary_exch <- update(
-  fit_binary_indep,
-  orstr = "exchangeable"
-)
-
-cerebrovascular_small <- test_data$cerebrovascular[
-  seq_len(nrow(test_data$cerebrovascular) - 1L), ,
-  drop = FALSE
-]
-
-fit_binary_small <- geewa_binary(
-  formula = ecg ~ period * treatment,
-  id = id,
-  data = cerebrovascular_small,
-  link = "logit",
-  orstr = "independence",
-  method = "gee"
-)
+list2env(get_cached_test_fixtures("geecriteria"), environment())
 
 test_that("geecriteria returns the expected structure for single and multiple models", {
   out_single <- geecriteria(fit_geewa_pois_exch)
@@ -120,8 +94,8 @@ test_that("QICHH agrees with QIC for binomial geewa fits with estimated phi", {
 
 test_that("QICHH uses independence estimates in its quasi-likelihood and penalty", {
   object <- fit_geewa_pois_exch
-  quantities <- compute_independence_fit(object)
-  covariance <- vcov(object, cov_type = "robust")
+  quantities <- compute_reference_independence(object)
+  covariance <- compute_reference_robust(object)
   penalty <- sum(quantities$naive_inverse * covariance)
   expected <- 2 * (penalty - quantities$quasi_loglikelihood)
   observed <- geecriteria(object, digits = 15)$QICHH
@@ -231,11 +205,11 @@ test_that("EQIC uses the adjusted extended quasi-likelihood", {
   log_variance_term <- sum(
     weights * log(2 * pi * phi * mu_adjusted)
   )
-  independence_inverse <- compute_independence_info(
+  independence_inverse <- compute_reference_info(
     object,
     phi = phi
   )
-  covariance <- vcov(object, cov_type = "robust")
+  covariance <- compute_reference_robust(object)
   penalty <- sum(independence_inverse * covariance)
   expected <- deviance / phi + log_variance_term + 2 * penalty
   observed <- geecriteria(object, digits = 15)$EQIC
@@ -596,8 +570,8 @@ test_that("PT, WR and RMR match a direct generalized eigenvalue calculation", {
   object <- fit_geewa_pois_exch
   out <- geecriteria(object, digits = 15)
 
-  omega_i <- compute_independence_info(object)
-  covariance <- vcov(object, cov_type = "robust")
+  omega_i <- compute_reference_info(object)
+  covariance <- compute_reference_robust(object)
   lambda <- sort(Re(eigen(covariance %*% omega_i, only.values = TRUE)$values))
   expect_true(all(lambda > 0))
   ratios <- lambda / (1 + lambda)

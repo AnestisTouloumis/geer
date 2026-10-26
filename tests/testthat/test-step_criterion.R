@@ -1,18 +1,4 @@
-fit_resp_main <- geewa_binary(
-  formula = status ~ baseline + treatment + gender + visit + age,
-  id = id,
-  repeated = visit,
-  data = test_data$respiratory2,
-  link = "probit",
-  orstr = "exchangeable",
-  method = "pgee-jeffreys"
-)
-
-fit_resp_small <- update(fit_resp_main, formula = status ~ baseline)
-
-qicu_trace <- capture.output(
-  qicu_search <- step_criterion(fit_resp_main, criterion = "QICu", trace = TRUE)
-)
+list2env(get_cached_test_fixtures("step_criterion"), environment())
 
 test_that("step_criterion moves to the candidate with the smallest criterion", {
   expect_gt(nrow(qicu_search$anova), 1L)

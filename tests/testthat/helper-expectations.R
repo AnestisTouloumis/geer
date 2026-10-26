@@ -31,12 +31,33 @@ expect_jackknife_vcov <- function(fit, delete_estimates) {
 }
 
 expect_published <- function(object, published, digits) {
-  expect_equal(
-    object,
-    published,
-    tolerance = 0.5 * 10^(-digits) / mean(abs(published))
-  )
+  if (!is.numeric(object) || !length(object) || any(!is.finite(object))) {
+    stop("'object' must contain finite numeric values", call. = FALSE)
+  }
+  if (!is.numeric(published) || any(!is.finite(published))) {
+    stop("'published' must contain finite numeric values", call. = FALSE)
+  }
+  if (length(object) != length(published) ||
+        !identical(dim(object), dim(published)) ||
+        !identical(names(object), names(published)) ||
+        !identical(dimnames(object), dimnames(published))) {
+    stop("'object' and 'published' must have matching shapes", call. = FALSE)
+  }
+  if (!is.numeric(digits) || length(digits) != 1L ||
+        !is.finite(digits) || digits < 0 || digits != floor(digits)) {
+    stop("'digits' must be a nonnegative integer", call. = FALSE)
+  }
+  tolerance <- 0.5 * 10^(-digits)
+  if (tolerance <= 0) {
+    stop("'digits' must give a positive rounding unit", call. = FALSE)
+  }
+  for (index in seq_along(object)) {
+    expect_equal(as.numeric(object[index] - published[index]), 0,
+      tolerance = tolerance, info = paste("published coordinate", index)
+    )
+  }
 }
+
 
 expect_published_table <- function(fit, estimate, std_error, p_value) {
   coefs <- summary(fit)$coefficients
@@ -59,29 +80,30 @@ collect_warnings <- function(expr) {
 }
 
 in_subprocess <- function(code) {
+  if (!is.character(code) || length(code) != 1L || is.na(code)) {
+    stop("'code' must be a character string", call. = FALSE)
+  }
+  parse(text = code)
   dev <- requireNamespace("pkgload", quietly = TRUE) &&
     isTRUE(pkgload::is_dev_package("geer"))
-  if (dev) {
-    out <- capture.output(
-      eval(parse(text = code), envir = new.env(parent = asNamespace("geer")))
+  startup <- if (dev) {
+    path <- getNamespaceInfo(asNamespace("geer"), "path")
+    paste0(
+      "suppressMessages(pkgload::load_all(", deparse(path),
+      ", quiet = TRUE, compile = FALSE, helpers = FALSE))"
     )
-    return(list(status = 0L, output = paste(out, collapse = "\n")))
+  } else {
+    "suppressMessages(library(geer))"
   }
-  old_libs <- Sys.getenv("R_LIBS", unset = NA)
-  Sys.setenv(R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep))
-  restore_libs <- function() {
-    if (is.na(old_libs)) {
-      Sys.unsetenv("R_LIBS")
-    } else {
-      Sys.setenv(R_LIBS = old_libs)
-    }
-  }
-  on.exit(restore_libs(), add = TRUE)
+  script <- tempfile(fileext = ".R")
+  on.exit(unlink(script), add = TRUE)
+  writeLines(c(startup, code), script)
+  withr::local_envvar(
+    R_LIBS = paste(.libPaths(), collapse = .Platform$path.sep)
+  )
   out <- suppressWarnings(system2(
     file.path(R.home("bin"), "Rscript"),
-    c("-e", shQuote(paste0("suppressMessages(library(geer)); ", code))),
-    stdout = TRUE,
-    stderr = TRUE
+    shQuote(script), stdout = TRUE, stderr = TRUE
   ))
   list(
     status = attr(out, "status") %||% 0L,

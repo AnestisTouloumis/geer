@@ -1,41 +1,4 @@
-fit_bin_exch_T2 <- geewa(
-  formula = ecg ~ treatment + factor(period),
-  family = binomial(link = "logit"),
-  data = test_data$cerebrovascular,
-  id = id,
-  corstr = "exchangeable",
-  method = "gee"
-)
-
-fit_bin_exch_T4 <- geewa(
-  formula = status ~ baseline + treatment,
-  family = binomial(link = "logit"),
-  data = test_data$respiratory2,
-  id = id,
-  repeated = visit,
-  corstr = "exchangeable",
-  method = "gee"
-)
-
-fit_bin_unstr_T4 <- geewa(
-  formula = status ~ baseline + treatment,
-  family = binomial(link = "logit"),
-  data = test_data$respiratory2,
-  id = id,
-  repeated = visit,
-  corstr = "unstructured",
-  method = "gee"
-)
-
-fit_bin_ar1_T4 <- geewa(
-  formula = status ~ baseline + treatment,
-  family = binomial(link = "logit"),
-  data = test_data$respiratory2,
-  id = id,
-  repeated = visit,
-  corstr = "ar1",
-  method = "gee"
-)
+list2env(get_cached_test_fixtures("frechet_bounds_cor"), environment())
 
 test_that("frechet_bounds_cor returns a data frame with the documented columns", {
   out <- frechet_bounds_cor(fit_bin_exch_T4)

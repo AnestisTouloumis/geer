@@ -7,6 +7,10 @@
 #' They are called by \pkg{emmeans} and not usually by the user. Inference is
 #' asymptotic, with infinite degrees of freedom, and uses the bias-corrected
 #' covariance matrix unless \code{vcov.method} requests another estimator.
+#' Gaussian models supply their working residual standard deviation through
+#' \code{\link{sigma.geer}}.
+#' Stored-data recovery uses the rows retained by the fit, including its
+#' subsetting and missing-value exclusions.
 #'
 #' @param object a fitted model object of class \code{"geer"}.
 #' @param data optional data frame from which \pkg{emmeans} recovers the
@@ -62,7 +66,7 @@ normalize_emmeans_vcov_method <- function(vcov.method) {
     return("bias-corrected")
   }
   if (!is.character(vcov.method) || length(vcov.method) != 1L ||
-      is.na(vcov.method)) {
+        is.na(vcov.method)) {
     stop(
       paste0(
         "'vcov.method' must be a character string, a covariance matrix, or a ",
@@ -110,13 +114,31 @@ recover_data.geer <- function(object,
                               ...) {
   object <- check_geer_object(object)
   recovered_data <- if (is.null(data) && is.data.frame(object$data)) {
-    object$data
+    rows <- object$frame_rows
+    if (is.null(rows)) {
+      model_call <- object$call
+      model_call$data <- object$data
+      model_call$formula <- object$formula
+      frame <- build_geer_model_frame(
+        model_call, env = environment(object$formula)
+      )
+      rows <- get_geer_frame_rows(frame, object$data)
+    }
+    if (!is.numeric(rows) || length(rows) != nrow(object$x) ||
+          any(!is.finite(rows)) || any(rows != floor(rows)) ||
+          any(rows < 1L | rows > nrow(object$data)) || anyDuplicated(rows)) {
+      stop(
+        "recover_data.geer failed: the fitting rows could not be recovered",
+        call. = FALSE
+      )
+    }
+    object$data[rows, , drop = FALSE]
   } else {
     data
   }
   prior_weights <- object$prior.weights
   if (!is.null(object$row_order) &&
-      length(object$row_order) == length(prior_weights)) {
+        length(object$row_order) == length(prior_weights)) {
     prior_weights <- prior_weights[order(object$row_order)]
   }
   emmeans::recover_data(
@@ -200,11 +222,6 @@ emm_basis.geer <- function(object,
   dffun <- function(k, dfargs) dfargs$df
   misc <- misc %||% list()
   misc <- emmeans::.std.link.labels(object$family, misc)
-  if (identical(object$family$family, "gaussian") &&
-      is.numeric(object$phi) && length(object$phi) == 1L &&
-      is.finite(object$phi)) {
-    misc$sigma <- sqrt(object$phi)
-  }
   offset <- emmeans::.get.offset(trms, grid)
   ans <- list(
     X = design_matrix,

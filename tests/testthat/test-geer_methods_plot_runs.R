@@ -1,4 +1,4 @@
-plot_runs_method <- getS3method("plot", "geer_runs_test")
+list2env(get_cached_test_fixtures("geer_methods_plot_runs"), environment())
 
 test_that("plot only accepts runs-test results", {
   expect_error(

@@ -40,8 +40,17 @@ struct PlackettPair {
   double reciprocal;
   double departure;
   double root;
+  double difference;
   bool complemented;
 };
+
+double compute_sum_minus_one(const double first, const double second) {
+  const double larger = std::max(first, second);
+  const double smaller = std::min(first, second);
+  const double sum = larger + smaller;
+  const double error = smaller - (sum - larger);
+  return (sum - 1.0) + error;
+}
 
 PlackettPair compute_plackett_pair(const double row_prob,
                                   const double col_prob,
@@ -62,8 +71,10 @@ PlackettPair compute_plackett_pair(const double row_prob,
   const double col = complemented ? 1.0 - col_prob : col_prob;
   const double col_complement = complemented ? col_prob : 1.0 - col_prob;
   const double row_complement = 1.0 - row_prob;
+  const double difference = complemented ?
+    compute_sum_minus_one(row_prob, col_prob) : row_prob - col_prob;
   const double root = std::hypot(
-    departure * (row_prob - col),
+    departure * difference,
     std::sqrt(reciprocal) * std::sqrt(
       2.0 * departure *
         (row_prob * col_complement + col * row_complement) + reciprocal));
@@ -72,7 +83,7 @@ PlackettPair compute_plackett_pair(const double row_prob,
                "a representable positive value");
   }
   return {row_prob, col, row_complement, col_complement,
-          reciprocal, departure, root, complemented};
+          reciprocal, departure, root, difference, complemented};
 }
 
 double get_bivariate_covariance(const double row_prob,
@@ -142,7 +153,7 @@ double get_bivariate_distribution_d_mu_row(const double row_prob,
                                           const double col_prob,
                                           const double odds_ratio) {
   const auto pair = compute_plackett_pair(row_prob, col_prob, odds_ratio);
-  const double numerator = -pair.departure * (pair.row_prob - pair.col_prob) +
+  const double numerator = -pair.departure * pair.difference +
     pair.reciprocal * (2.0 * pair.col_prob - 1.0);
   const double direction = pair.complemented ? -1.0 : 1.0;
   const double signed_numerator = direction * numerator;

@@ -1,39 +1,4 @@
-cc_args <- function(...) {
-  withr::local_seed(1)
-  N <- 10
-  a <- list(
-    y_vector = rbinom(30, 1, 0.5), model_matrix = cbind(1, rnorm(30)),
-    id_vector = rep(1:N, each = 3), repeated_vector = rep(1:3, N), weights_vector = rep(1, 30),
-    link = "logit", family = "binomial", beta_vector = c(0, 0), offset = rep(0, 30),
-    maxiter = 50L, tolerance = 1e-10, step_maxiter = 10L, step_multiplier = 1,
-    jeffreys_power = 0.5, method = "gee", use_params = 1L, alpha_vector = numeric(0),
-    alpha_fixed = 1L, correlation_structure = "independence", mdependence = 1L,
-    phi = 1, phi_fixed = 1L, hold_nuisance = 0L
-  )
-  mod <- list(...)
-  a[names(mod)] <- mod
-  a
-}
-
-solve_cc <- function(...) do.call(fit_geesolver_cc, cc_args(...))
-
-or_solver_x <- c(
-  -1.2, 0.3, 0.8, -0.5, 1.1, -0.2, 0.9, -1.4, 0.1, 0.4, -0.7, 1.3,
-  -0.9, 0.6, -0.1, 1.5, -0.3, 0.2, -1.1, 0.7, -0.6, 0.0, 1.0, -0.8
-)
-
-or_solver_y <- c(
-  0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1,
-  0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0
-)
-
-call_or_solver <- function(y) {
-  fit_geesolver_or(
-    y, cbind(1, or_solver_x), rep(1:8, each = 3), rep(1:3, times = 8),
-    rep(1, 24), "logit", c(0, 0), rep(0, 24), 100L, 1e-6, 10L, 1, 0.5,
-    "gee", rep(1.5, 3)
-  )
-}
+list2env(get_cached_test_fixtures("cpp_contract"), environment())
 
 test_that("a missing association parameter is an R error, never a crash or an uninitialized read", {
   skip_on_cran()
@@ -198,3 +163,24 @@ test_that("an indefinite working covariance warns once per call", {
   expect_true(all(is.finite(covariances$robust_covariance)))
 })
 
+
+test_that("the odds-ratio boundary validates iterations and finite inputs", {
+  args <- list(
+    y_vector = or_solver_y, model_matrix = cbind(1, or_solver_x),
+    id_vector = rep(1:8, each = 3L), repeated_vector = rep(1:3, 8L),
+    weights_vector = rep(1, 24L), link = "logit", beta_vector = c(0, 0),
+    offset = rep(0, 24L), maxiter = 100L, tolerance = 1e-6,
+    step_maxiter = 10L, step_multiplier = 1, jeffreys_power = 0.5,
+    method = "gee", alpha_vector = rep(1.5, 3L)
+  )
+  for (field in c("maxiter", "step_maxiter")) {
+    invalid <- args
+    invalid[[field]] <- -1L
+    expect_error(do.call(fit_geesolver_or, invalid))
+  }
+  for (field in c("model_matrix", "offset", "weights_vector", "beta_vector")) {
+    invalid <- args
+    invalid[[field]][1L] <- NaN
+    expect_error(do.call(fit_geesolver_or, invalid))
+  }
+})

@@ -1,19 +1,4 @@
-cc_ee <- function(d, b) {
-  eta <- drop(d$X %*% b)
-  mu <- d$lk$linkinv(eta)
-  drop(get_estimating_equations_cc(
-    d$y, d$X, as.numeric(d$id), as.numeric(d$tt), d$w, d$link, d$family$family,
-    mu, eta, d$struct, ref_corr_alpha(d), d$phi
-  ))
-}
-
-or_ee <- function(d, b) {
-  eta <- drop(d$X %*% b)
-  mu <- d$lk$linkinv(eta)
-  drop(get_estimating_equations_or(
-    d$y, d$X, as.numeric(d$id), as.numeric(d$tt), d$w, d$link, mu, eta, d$alpha
-  ))
-}
+list2env(get_cached_test_fixtures("cpp_estimating_equations"), environment())
 
 test_that("get_estimating_equations_cc equals the textbook sum of D' V^-1 (y - mu)", {
   cfg <- list(

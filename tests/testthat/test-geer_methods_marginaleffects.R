@@ -1,9 +1,7 @@
-skip_if_no_marginaleffects <- function() {
-  skip_if_not_installed(
-    "marginaleffects",
-    minimum_version = "0.32.0"
-  )
-}
+list2env(
+  get_cached_test_fixtures("geer_methods_marginaleffects"),
+  environment()
+)
 
 test_that("the marginaleffects example displays both result tables", {
   skip_if_no_marginaleffects()
@@ -205,4 +203,18 @@ test_that("marginaleffects adapters retain their integration dots contract", {
     get_predict.geer(fit, newdata, framework_argument = TRUE),
     get_predict.geer(fit, newdata)
   )
+})
+
+test_that("marginaleffects adapters support recovery and coercion paths", {
+  fit <- fit_geewa_pois_exch
+  expect_identical(get_predict.geer(fit), get_predict.geer(fit, fit$data))
+  newdata <- head(fit$data)
+  expect_identical(
+    get_predict.geer(fit, as.list(newdata)), get_predict.geer(fit, newdata)
+  )
+  covariance <- unname(vcov(fit, cov_type = "robust"))
+  expected <- list(names(coef(fit)), names(coef(fit)))
+  expect_identical(dimnames(get_vcov.geer(fit, vcov = covariance)), expected)
+  fit$data <- NULL
+  expect_error(get_predict.geer(fit), "supply 'newdata' explicitly")
 })

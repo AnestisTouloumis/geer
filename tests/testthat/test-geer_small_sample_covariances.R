@@ -1,14 +1,7 @@
-expect_small_sample_reference <- function(fit) {
-  reference <- ref_small_sample_covariances(fit)
-  for (cov_type in geer_ss_cov_types) {
-    expect_equal(
-      unname(vcov(fit, cov_type = cov_type)),
-      unname(reference[[cov_type]]),
-      tolerance = 1e-10,
-      label = cov_type
-    )
-  }
-}
+list2env(
+  get_cached_test_fixtures("geer_small_sample_covariances"),
+  environment()
+)
 
 test_that("small-sample covariances agree with a direct implementation for geewa fits", {
   expect_small_sample_reference(geewa(

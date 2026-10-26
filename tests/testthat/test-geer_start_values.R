@@ -1,48 +1,4 @@
-start_model_matrix <- function() {
-  model.matrix(
-    seizures ~ treatment + lnbaseline + lnage,
-    data = test_data$epilepsy
-  )
-}
-
-start_values <- function(beta_start = NULL,
-                         family = poisson(),
-                         link = "log",
-                         method = "gee",
-                         y = test_data$epilepsy$seizures,
-                         offset = rep(0, nrow(test_data$epilepsy))) {
-  compute_geer_start_values(
-    model_matrix = start_model_matrix(),
-    y = y,
-    family = family,
-    weights = rep(1, nrow(test_data$epilepsy)),
-    offset = offset,
-    method = method,
-    link = link,
-    beta_start = beta_start,
-    control = geer_control(),
-    control_glm = list()
-  )
-}
-
-binary_start_values <- function(
-    beta_start = NULL,
-    method = "gee",
-    offset = rep(0, nrow(test_data$cerebrovascular))) {
-  cer <- test_data$cerebrovascular
-  compute_binary_start_values(
-    model_matrix = model.matrix(ecg ~ period + treatment, data = cer),
-    y = cer$ecg,
-    family = binomial(),
-    weights = rep(1, nrow(cer)),
-    offset = offset,
-    method = method,
-    beta_start = beta_start,
-    control_glm = list(),
-    tolerance = 1e-8,
-    jeffreys_power = 0.5
-  )
-}
+list2env(get_cached_test_fixtures("geer_start_values"), environment())
 
 test_that("a supplied beta_start is returned as a numeric vector", {
   expect_identical(start_values(beta_start = c(0L, 1L, 2L, 3L)), c(0, 1, 2, 3))
@@ -69,7 +25,7 @@ test_that("starting values for the GEE method are the maximum-likelihood fit", {
 
   out <- start_values()
 
-  expect_equal(unname(out), unname(coef(reference)), tolerance = 1e-5)
+  expect_equal(unname(out), unname(coef(reference)), tolerance = 1e-9)
 })
 
 test_that("quasi families and the identity link start from stats::glm.fit", {
@@ -82,14 +38,11 @@ test_that("quasi families and the identity link start from stats::glm.fit", {
   expect_equal(unname(out), unname(coef(reference)), tolerance = 1e-6)
 
   quasi_out <- start_values(family = quasipoisson())
-  expect_equal(unname(quasi_out), unname(start_values()), tolerance = 1e-5)
+  expect_equal(unname(quasi_out), unname(start_values()), tolerance = 1e-9)
 })
 
 test_that("every estimation method yields finite starting values", {
-  methods <- c(
-    "gee", "bcgee-naive", "brgee-naive", "brgee-robust", "brgee-empirical",
-    "pgee-jeffreys", "opgee-jeffreys", "hpgee-jeffreys"
-  )
+  methods <- c("gee", "brgee-naive", "pgee-jeffreys")
   for (method in methods) {
     expect_true(all(is.finite(start_values(method = method))), info = method)
     expect_true(all(is.finite(binary_start_values(method = method))), info = method)

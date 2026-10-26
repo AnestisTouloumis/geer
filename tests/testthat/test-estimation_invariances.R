@@ -1,9 +1,4 @@
-all_methods <- c(
-  "gee", "brgee-robust", "brgee-naive", "brgee-empirical", "bcgee-robust",
-  "bcgee-naive", "bcgee-empirical", "pgee-jeffreys"
-)
-
-times6 <- list(1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3, 1:3)
+list2env(get_cached_test_fixtures("estimation_invariances"), environment())
 
 test_that("estimators are equivariant under invertible linear reparametrization of the design", {
   A <- cbind(c(1, 0, 0), c(0, 1, 2), c(0, -1, 1))

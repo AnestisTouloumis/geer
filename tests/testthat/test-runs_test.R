@@ -1,7 +1,4 @@
-count_runs <- function(signs) {
-  signs <- signs[signs != 0]
-  1L + sum(signs[-1L] != signs[-length(signs)])
-}
+list2env(get_cached_test_fixtures("runs_test"), environment())
 
 test_that("runs-test calculation matches the Chang sign-sequence example", {
   signs <- c(1, 1, -1, -1, 1, -1, 1, 1, -1, -1, -1)

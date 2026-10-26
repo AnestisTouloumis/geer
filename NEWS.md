@@ -2,6 +2,9 @@
 
 ## New features
 
+* Added a `sigma()` method returning the square root of a fitted model's
+  working dispersion.
+
 * Added `cov_type = "jackknife"`, the leave-one-cluster-out jackknife covariance
   (each estimate a full refit with the association parameters held at their
   full-data values), available for all estimation methods and wherever
@@ -73,6 +76,14 @@
 * `residuals()` gains `type = "response"`, an alias of `"working"`.
 
 ## Bug fixes
+
+* Fixed Gaussian `emmeans` integration and reference-grid recovery after
+  missing observations or subsetting. Reference grids now use the fitting rows
+  with their corresponding prior weights.
+
+* Improved the Plackett covariance and derivative calculations for
+  near-complementary marginal probabilities and extreme negative association
+  by retaining the rounding residual in the discriminant.
 
 * Used scale-relative symmetry checks and general linear solves for the
   nonsymmetric systems in cluster deletion diagnostics.
@@ -202,6 +213,10 @@
   responses, are now omitted from the risk set with a warning.
 
 ## Changes
+
+* Strengthened scalar checks against rounded published values, independent
+  model-selection references, subprocess isolation, and regression coverage.
+  Removed redundant smoke checks and reduced repeated test fitting.
 
 * Integration examples now print both results. Examples for test printers cover
   both result classes, and the runs plot shows how to omit cluster boundaries.

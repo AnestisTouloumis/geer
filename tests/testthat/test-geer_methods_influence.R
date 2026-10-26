@@ -1,47 +1,4 @@
-gaussian_sim <- ref_sim(
-  "cc",
-  rep(list(1:4), 20),
-  family = gaussian(),
-  link = "identity"
-)
-
-fit_gaussian_ar1 <- geewa(
-  formula = y ~ x1 + x2,
-  data = gaussian_sim$df,
-  id = id,
-  repeated = visit,
-  family = gaussian(link = "identity"),
-  corstr = "ar1",
-  control = geer_control(tolerance = 1e-10)
-)
-
-expect_influence_reference <- function(fit) {
-  reference <- ref_influence(fit)
-  cluster_hat <- vapply(split(reference$hat, fit$id), sum, numeric(1))
-  expect_equal(unname(hatvalues(fit)), unname(cluster_hat), tolerance = 1e-10)
-  expect_equal(
-    unname(hatvalues(fit, unit = "observations")),
-    reference$hat,
-    tolerance = 1e-10
-  )
-  expect_equal(
-    unname(dfbeta(fit)),
-    unname(reference$cluster_dfbeta),
-    tolerance = 1e-10
-  )
-  expect_equal(
-    unname(dfbeta(fit, unit = "observations")),
-    unname(reference$observation_dfbeta),
-    tolerance = 1e-10
-  )
-  bread_inverse <- solve(reference$bread)
-  expect_equal(
-    unname(cooks.distance(fit)),
-    unname(rowSums((reference$cluster_dfbeta %*% bread_inverse) *
-                     reference$cluster_dfbeta)) / ncol(bread_inverse),
-    tolerance = 1e-10
-  )
-}
+list2env(get_cached_test_fixtures("geer_methods_influence"), environment())
 
 test_that("leverages and one-step deletions match a direct implementation", {
   expect_influence_reference(fit_geewa_pois_exch)

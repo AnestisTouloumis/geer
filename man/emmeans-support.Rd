@@ -63,6 +63,10 @@ Methods that allow \pkg{emmeans} functions, such as
 They are called by \pkg{emmeans} and not usually by the user. Inference is
 asymptotic, with infinite degrees of freedom, and uses the bias-corrected
 covariance matrix unless \code{vcov.method} requests another estimator.
+Gaussian models supply their working residual standard deviation through
+\code{\link{sigma.geer}}.
+Stored-data recovery uses the rows retained by the fit, including its
+subsetting and missing-value exclusions.
 }
 \examples{
 if (requireNamespace("emmeans", quietly = TRUE)) {
